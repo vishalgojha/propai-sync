@@ -1,0 +1,191 @@
+import type { TranslationMap } from "../lib/types.ts";
+
+export const pt_BR: TranslationMap = {
+  common: {
+    version: "Versão",
+    health: "Saúde",
+    ok: "OK",
+    offline: "Offline",
+    connect: "Conectar",
+    refresh: "Atualizar",
+    enabled: "Ativado",
+    disabled: "Desativado",
+    na: "n/a",
+    docs: "Docs",
+    resources: "Recursos",
+  },
+  nav: {
+    chat: "Chat",
+    control: "Controle",
+    agent: "Agente",
+    settings: "Configurações",
+    expand: "Expandir barra lateral",
+    collapse: "Recolher barra lateral",
+  },
+  tabs: {
+    agents: "Agentes",
+    overview: "Visão Geral",
+    channels: "Canais",
+    instances: "Instâncias",
+    sessions: "Sessões",
+    usage: "Uso",
+    cron: "Tarefas do Agente",
+    skills: "Habilidades",
+    nodes: "Nós",
+    chat: "Chat",
+    config: "Config",
+    debug: "Debug",
+    logs: "Logs",
+  },
+  subtitles: {
+    agents: "Gerenciar espaços de trabalho, ferramentas e identidades de agentes.",
+    overview: "Status do gateway, pontos de entrada e leitura rápida de saúde.",
+    channels: "Gerenciar canais e configurações.",
+    instances: "Beacons de presença de clientes e nós conectados.",
+    sessions: "Inspecionar sessões ativas e ajustar padrões por sessão.",
+    usage: "Monitorar uso e custos da API.",
+    cron: "Agendar despertares e execuções recorrentes de agentes.",
+    skills: "Gerenciar disponibilidade de habilidades e injeção de chaves de API.",
+    nodes: "Dispositivos pareados, capacidades e exposição de comandos.",
+    chat: "Sessão de chat direta com o gateway para intervenções rápidas.",
+    config: "Editar ~/.openclaw/openclaw.json com segurança.",
+    debug: "Snapshots do gateway, eventos e chamadas RPC manuais.",
+    logs: "Acompanhamento ao vivo dos logs de arquivo do gateway.",
+  },
+  overview: {
+    access: {
+      title: "Acesso ao Gateway",
+      subtitle: "Onde o dashboard se conecta e como ele se autentica.",
+      wsUrl: "URL WebSocket",
+      token: "Token do Gateway",
+      password: "Senha (não armazenada)",
+      sessionKey: "Chave de Sessão Padrão",
+      language: "Idioma",
+      connectHint: "Clique em Conectar para aplicar as alterações de conexão.",
+      trustedProxy: "Autenticado por proxy confiável.",
+    },
+    snapshot: {
+      title: "Snapshot",
+      subtitle: "Informações mais recentes do handshake do gateway.",
+      status: "Status",
+      uptime: "Tempo de Atividade",
+      tickInterval: "Intervalo de Tick",
+      lastChannelsRefresh: "Última Atualização de Canais",
+      channelsHint: "Use Canais para vincular WhatsApp, Telegram, Discord, Signal ou iMessage.",
+    },
+    stats: {
+      instances: "Instâncias",
+      instancesHint: "Beacons de presença nos últimos 5 minutos.",
+      sessions: "Sessões",
+      sessionsHint: "Chaves de sessão recentes rastreadas pelo gateway.",
+      cron: "Tarefas do Agente",
+      cronNext: "Próximo despertar {time}",
+    },
+    notes: {
+      title: "Notas",
+      subtitle: "Lembretes rápidos para configurações de controle remoto.",
+      tailscaleTitle: "Tailscale serve",
+      tailscaleText:
+        "Prefira o modo serve para manter o gateway em loopback com autenticação tailnet.",
+      sessionTitle: "Higiene de sessão",
+      sessionText: "Use /new ou sessions.patch para redefinir o contexto.",
+      cronTitle: "Lembretes de tarefas do agente",
+      cronText: "Use sessões isoladas para execuções recorrentes.",
+    },
+    auth: {
+      required:
+        "Este gateway requer autenticação. Adicione um token ou senha e clique em Conectar.",
+      failed:
+        "Falha na autenticação. Recopie uma URL com token usando {command}, ou atualize o token e clique em Conectar.",
+    },
+    pairing: {
+      hint: "Este dispositivo precisa de aprovação de pareamento do host do gateway.",
+      mobileHint:
+        "No celular? Copie a URL completa (incluindo #token=...) executando openclaw dashboard --no-open no desktop.",
+    },
+    insecure: {
+      hint: "Esta página é HTTP, então o navegador bloqueia a identidade do dispositivo. Use HTTPS (Tailscale Serve) ou abra {url} no host do gateway.",
+      stayHttp: "Se você precisar permanecer em HTTP, defina {config} (apenas token).",
+    },
+  },
+  chat: {
+    disconnected: "Desconectado do gateway.",
+    refreshTitle: "Atualizar dados do chat",
+    thinkingToggle: "Alternar saída de pensamento/trabalho do assistente",
+    focusToggle: "Alternar modo de foco (ocultar barra lateral + cabeçalho da página)",
+    hideCronSessions: "Ocultar sessões de tarefas do agente",
+    showCronSessions: "Mostrar sessões de tarefas do agente",
+    showCronSessionsHidden: "Mostrar sessões de tarefas do agente ({count} ocultas)",
+    onboardingDisabled: "Desativado durante a integração",
+  },
+  languages: {
+    en: "English",
+    zhCN: "简体中文 (Chinês Simplificado)",
+    zhTW: "繁體中文 (Chinês Tradicional)",
+    ptBR: "Português (Português Brasileiro)",
+    de: "Deutsch (Alemão)",
+  },
+  cron: {
+    templates: {
+      title: "Modelos rápidos",
+      subtitle: "Escolha uma tarefa pronta e personalize os detalhes em segundos.",
+      apply: "Usar modelo",
+      schedule: {
+        every15Minutes: "A cada 15 min",
+        every30Minutes: "A cada 30 min",
+        every2Hours: "A cada 2 h",
+        every6Hours: "A cada 6 h",
+        daily10am: "Diário 10:00",
+        monday8am: "Seg 08:00",
+      },
+      listingBroadcast: {
+        title: "Listing Broadcast",
+        subtitle: "Publicar os últimos imóveis em grupos de WhatsApp aprovados.",
+        name: "Listing Broadcast",
+        description: "Compartilhe inventário novo com formato limpo para corretores.",
+        prompt:
+          "Reúna os anúncios mais recentes e prepare uma atualização curta para WhatsApp com preço, área e principais destaques.",
+      },
+      buyerMatchAlerts: {
+        title: "Buyer Match Alerts",
+        subtitle: "Encontrar correspondências de compradores e avisar rapidamente o corretor.",
+        name: "Buyer Match Alerts",
+        description: "Cruzar continuamente novos requisitos com inventário ativo.",
+        prompt:
+          "Analise novos requisitos de compradores, compare com anúncios ativos e envie correspondências com alta confiança e justificativa.",
+      },
+      leadFollowup: {
+        title: "Lead Follow-up Plan",
+        subtitle: "Montar a fila de follow-up do dia com leads quentes e mornos.",
+        name: "Lead Follow-up Plan",
+        description: "Priorizar retornos e follow-ups no WhatsApp por urgência.",
+        prompt:
+          "Revise conversas de leads, classifique por urgência e crie uma lista clara de ações de follow-up para hoje.",
+      },
+      groupEngagement: {
+        title: "Group Engagement Pulse",
+        subtitle: "Sugerir conteúdo útil para grupos com base no inventário ativo.",
+        name: "Group Engagement Pulse",
+        description: "Manter grupos da imobiliária ativos sem spam.",
+        prompt:
+          "Crie uma atualização de grupo orientada a valor com inventário ativo e inclua um CTA curto para interessados.",
+      },
+      staleLeadRescue: {
+        title: "Stale Lead Rescue",
+        subtitle: "Detectar leads inativos e sugerir mensagem de reengajamento.",
+        name: "Stale Lead Rescue",
+        description: "Recuperar leads que ficaram em silêncio após interesse inicial.",
+        prompt:
+          "Identifique leads sem resposta recente, proponha mensagem personalizada de reengajamento e priorize os de maior potencial.",
+      },
+      weeklyDigest: {
+        title: "Weekly Broker Digest",
+        subtitle: "Enviar resumo semanal de anúncios, leads e correspondências.",
+        name: "Weekly Broker Digest",
+        description: "Resumo gerencial para um ou vários corretores.",
+        prompt:
+          "Resuma a semana: novos anúncios, leads de alta intenção, resultados de correspondência e próximos passos recomendados.",
+      },
+    },
+  },
+};

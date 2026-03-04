@@ -1,0 +1,9 @@
+{
+  "name": "PropAI Studio",
+  "description": "A comprehensive AI agent management and orchestration platform for PropAI Studio.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

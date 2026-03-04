@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-brand-50: #f0f7ff;
+  --color-brand-100: #e0effe;
+  --color-brand-200: #bae0fd;
+  --color-brand-300: #7cc8fb;
+  --color-brand-400: #36aaf4;
+  --color-brand-500: #0c8ee0;
+  --color-brand-600: #0671bd;
+  --color-brand-700: #075a99;
+  --color-brand-800: #0a4c7e;
+  --color-brand-900: #0e406a;
+  --color-brand-950: #092946;
+}
+
+:root {
+  color-scheme: dark;
+  --surface-white: #0f172a;
+  --surface-white-80: rgba(15, 23, 42, 0.8);
+  --surface-50: #111827;
+  --surface-100: #1f2937;
+  --surface-200: #334155;
+  --surface-300: #475569;
+  --border-100: #1e293b;
+  --border-200: #334155;
+  --text-900: #f8fafc;
+  --text-800: #e2e8f0;
+  --text-700: #cbd5e1;
+  --text-600: #94a3b8;
+  --text-500: #94a3b8;
+  --text-400: #64748b;
+  --text-300: #475569;
+  --brand-soft-bg: rgba(12, 142, 224, 0.16);
+  --brand-soft-text: #93d5ff;
+  --glass-bg: rgba(15, 23, 42, 0.72);
+  --glass-border: rgba(51, 65, 85, 0.65);
+  --overlay-40: rgba(2, 6, 23, 0.7);
+  --overlay-60: rgba(2, 6, 23, 0.82);
+  --focus-brand: rgba(12, 142, 224, 0.28);
+  --app-bg: #020617;
+  --chart-primary: #36aaf4;
+  --chart-grid: #1e293b;
+  --chart-tick: #94a3b8;
+  --chart-dot-stroke: #0f172a;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --surface-white: #ffffff;
+  --surface-white-80: rgba(255, 255, 255, 0.8);
+  --surface-50: #f8fafc;
+  --surface-100: #f1f5f9;
+  --surface-200: #e2e8f0;
+  --surface-300: #cbd5e1;
+  --border-100: #f1f5f9;
+  --border-200: #e2e8f0;
+  --text-900: #0f172a;
+  --text-800: #1e293b;
+  --text-700: #334155;
+  --text-600: #475569;
+  --text-500: #64748b;
+  --text-400: #94a3b8;
+  --text-300: #cbd5e1;
+  --brand-soft-bg: #f0f7ff;
+  --brand-soft-text: #075a99;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(148, 163, 184, 0.35);
+  --overlay-40: rgba(15, 23, 42, 0.4);
+  --overlay-60: rgba(15, 23, 42, 0.6);
+  --focus-brand: rgba(12, 142, 224, 0.2);
+  --app-bg: #f8fafc;
+  --chart-primary: #0c8ee0;
+  --chart-grid: #f1f5f9;
+  --chart-tick: #64748b;
+  --chart-dot-stroke: #ffffff;
+}
+
+@layer base {
+  body {
+    @apply antialiased;
+    background-color: var(--app-bg);
+    color: var(--text-900);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  input::placeholder {
+    color: var(--text-400);
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 1px 2px 0 rgb(15 23 42 / 12%);
+  }
+  
+  .nav-item-active {
+    background-color: var(--brand-soft-bg);
+    color: var(--brand-soft-text);
+    font-weight: 500;
+  }
+}
+
+.bg-white { background-color: var(--surface-white) !important; }
+.bg-slate-50 { background-color: var(--surface-50) !important; }
+.bg-slate-100 { background-color: var(--surface-100) !important; }
+.bg-slate-200 { background-color: var(--surface-200) !important; }
+.bg-slate-300 { background-color: var(--surface-300) !important; }
+.bg-brand-50 { background-color: var(--brand-soft-bg) !important; }
+.bg-white\/80 { background-color: var(--surface-white-80) !important; }
+.bg-slate-900\/40 { background-color: var(--overlay-40) !important; }
+.bg-slate-900\/60 { background-color: var(--overlay-60) !important; }
+
+.text-slate-900 { color: var(--text-900) !important; }
+.text-slate-800 { color: var(--text-800) !important; }
+.text-slate-700 { color: var(--text-700) !important; }
+.text-slate-600 { color: var(--text-600) !important; }
+.text-slate-500 { color: var(--text-500) !important; }
+.text-slate-400 { color: var(--text-400) !important; }
+.text-slate-300 { color: var(--text-300) !important; }
+.text-brand-700 { color: var(--brand-soft-text) !important; }
+
+.border-slate-100 { border-color: var(--border-100) !important; }
+.border-slate-200 { border-color: var(--border-200) !important; }
+.divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border-100) !important; }
+
+.hover\:bg-slate-50:hover { background-color: var(--surface-100) !important; }
+.hover\:bg-slate-100:hover { background-color: var(--surface-200) !important; }
+.hover\:text-slate-600:hover { color: var(--text-700) !important; }
+.hover\:text-slate-700:hover { color: var(--text-800) !important; }
+.hover\:text-slate-900:hover { color: var(--text-900) !important; }
+
+.focus\:ring-brand-500\/20:focus { --tw-ring-color: var(--focus-brand) !important; }
