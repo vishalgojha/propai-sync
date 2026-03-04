@@ -1,17 +1,17 @@
 {
-  "name": "propaiclaw",
+  "name": "propai-sync",
   "version": "2026.2.27",
-  "description": "WhatsApp-first realtor CLI wrapper built on OpenClaw",
+  "description": "PropAI Sync runtime and dashboard",
   "keywords": [],
-  "homepage": "https://github.com/vishalgojha/propaiclaw#readme",
+  "homepage": "https://github.com/vishalgojha/propai-sync#readme",
   "bugs": {
-    "url": "https://github.com/vishalgojha/propaiclaw/issues"
+    "url": "https://github.com/vishalgojha/propai-sync/issues"
   },
   "license": "MIT",
   "author": "",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vishalgojha/propaiclaw.git"
+    "url": "git+https://github.com/vishalgojha/propai-sync.git"
   },
   "bin": {
     "propai": "propai.mjs",
