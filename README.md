@@ -136,12 +136,13 @@ Propaiclaw uses the current configuration/runtime model.
 - Gateway configuration: docs/gateway/configuration.md
 - WhatsApp channel docs: docs/channels/whatsapp.md
 - Skills docs: docs/tools/skills.md
+- Hosted platform (BYOK multi-agent): docs/hosted-platform.md
 
 ## Development
 
 ```bash
-git clone https://github.com/vishalgojha/propaiclaw.git
-cd propaiclaw
+git clone https://github.com/vishalgojha/propai-sync.git
+cd propai-sync
 pnpm install
 pnpm build
 pnpm test

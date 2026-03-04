@@ -32,8 +32,8 @@ x-i18n:
 
 ```bash
 # Clone the repo
-git clone https://github.com/openclaw/openclaw.git
-cd openclaw
+git clone https://github.com/vishalgojha/propai-sync.git
+cd propai-sync
 
 # Create a new Fly app (pick your own name)
 fly apps create my-openclaw

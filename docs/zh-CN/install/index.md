@@ -100,8 +100,8 @@ openclaw onboard --install-daemon
 ### 3）从源代码（贡献者/开发）
 
 ```bash
-git clone https://github.com/openclaw/openclaw.git
-cd openclaw
+git clone https://github.com/vishalgojha/propai-sync.git
+cd propai-sync
 pnpm install
 pnpm ui:build # 首次运行时自动安装 UI 依赖
 pnpm build

@@ -106,8 +106,8 @@ docker compose version
 ## 3) 克隆 OpenClaw 仓库
 
 ```bash
-git clone https://github.com/openclaw/openclaw.git
-cd openclaw
+git clone https://github.com/vishalgojha/propai-sync.git
+cd propai-sync
 ```
 
 本指南假设你将构建自定义镜像以保证二进制文件持久化。

@@ -191,8 +191,8 @@ docker compose version
 ## 6) Clone the OpenClaw repository
 
 ```bash
-git clone https://github.com/openclaw/openclaw.git
-cd openclaw
+git clone https://github.com/vishalgojha/propai-sync.git
+cd propai-sync
 ```
 
 This guide assumes you will build a custom image to guarantee binary persistence.

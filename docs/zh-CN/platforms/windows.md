@@ -141,8 +141,8 @@ systemctl --user status
 在 WSL 内按照 Linux 入门指南流程：
 
 ```bash
-git clone https://github.com/openclaw/openclaw.git
-cd openclaw
+git clone https://github.com/vishalgojha/propai-sync.git
+cd propai-sync
 pnpm install
 pnpm ui:build # auto-installs UI deps on first run
 pnpm build

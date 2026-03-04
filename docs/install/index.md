@@ -109,11 +109,11 @@ For VPS/cloud hosts, avoid third-party "1-click" marketplace images when possibl
 
     <Steps>
       <Step title="Clone and build">
-        Clone the [OpenClaw repo](https://github.com/openclaw/openclaw) and build:
+        Clone the [PropAI Sync repo](https://github.com/vishalgojha/propai-sync) and build:
 
         ```bash
-        git clone https://github.com/openclaw/openclaw.git
-        cd openclaw
+        git clone https://github.com/vishalgojha/propai-sync.git
+        cd propai-sync
         pnpm install
         pnpm ui:build
         pnpm build
