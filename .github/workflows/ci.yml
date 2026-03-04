@@ -30,6 +30,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
+      - name: Ensure A2UI fallback bundle
+        shell: bash
+        run: |
+          if [[ ! -f src/canvas-host/a2ui/a2ui.bundle.js ]]; then
+            mkdir -p src/canvas-host/a2ui
+            cat > src/canvas-host/a2ui/a2ui.bundle.js <<'EOF'
+            // CI fallback bundle when A2UI sources are not present in checkout.
+            globalThis.__A2UI_CI_PLACEHOLDER__ = true;
+            EOF
+          fi
+
       - name: Build runtime
         run: pnpm build
 
