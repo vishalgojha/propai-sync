@@ -15,6 +15,7 @@ import {
   handleA2uiHttpRequest,
   resolveAliasBasePath,
 } from "../canvas-host/a2ui.js";
+import { handleHostedPlatformHttpRequest } from "../hosted-platform/rest-handler.js";
 import type { CanvasHostHandler } from "../canvas-host/server.js";
 import { loadConfig } from "../config/config.js";
 import type { createSubsystemLogger } from "../logging/subsystem.js";
@@ -511,6 +512,9 @@ export function createGatewayHttpServer(opts: {
       }
       const requestPath = new URL(req.url ?? "/", "http://localhost").pathname;
       if (await handleHooksRequest(req, res)) {
+        return;
+      }
+      if (await handleHostedPlatformHttpRequest(req, res)) {
         return;
       }
       if (

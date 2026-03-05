@@ -3,6 +3,69 @@
 Date: 2026-03-02
 Branch: main
 
+## Update (2026-03-05) - Hosted Platform BYOK (pass 1)
+
+### Done
+
+1. Hosted platform backend slice
+
+- Added hosted-platform runtime modules:
+  - `src/hosted-platform/rest-handler.ts`
+  - `src/hosted-platform/runtime.ts`
+  - `src/hosted-platform/store.ts`
+  - `src/hosted-platform/crypto.ts`
+  - `src/hosted-platform/paths.ts`
+  - `src/hosted-platform/types.ts`
+- Exposed hosted API surface for bootstrap/auth, keys, agents, tools, recipes, triggers, orchestration, CLI passthrough, and logs.
+
+2. Gateway integration
+
+- Wired hosted API handler into main HTTP server request flow:
+  - `src/gateway/server-http.ts`
+
+3. Studio integration
+
+- Added hosted control screens in studio:
+  - `propai-studio/src/HostedPlatformScreens.tsx`
+- Added hosted nav entries and route rendering:
+  - `propai-studio/src/App.tsx`
+
+4. Deployment + docs
+
+- Added hosted deployment artifacts:
+  - `Dockerfile.hosted`
+  - `railway.toml`
+- Added architecture and endpoint doc:
+  - `docs/hosted-platform.md`
+
+5. Env/config documentation
+
+- Added hosted env guidance:
+  - `PROPAI_HOSTED_ADMIN_TOKEN`
+  - `PROPAI_VAULT_MASTER_KEY`
+- File:
+  - `.env.example`
+
+### Pending
+
+1. Coverage and reliability
+
+- Add automated tests for hosted runtime/store/rest API behaviors.
+- Add negative-path tests for authz/authn, malformed payloads, and per-user isolation guarantees.
+
+2. Security hardening
+
+- Add production guardrails (rate limiting, stricter bootstrap policy defaults, and audit log review pass).
+- Validate secret/key rotation and recovery flows.
+
+3. Deployment verification
+
+- Run end-to-end Railway deploy validation and operational smoke checks.
+
+### Verification
+
+- Not run in this handoff pass (tests/build/deploy verification still pending).
+
 ## Done
 
 1. Propaiclaw wrapper and command surface

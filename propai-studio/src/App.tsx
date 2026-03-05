@@ -50,6 +50,7 @@ import {
 import Markdown from 'react-markdown';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { HostedPlatformScreen, type HostedScreenId } from './HostedPlatformScreens';
 
 // --- Utility ---
 function cn(...inputs: ClassValue[]) {
@@ -60,6 +61,12 @@ function cn(...inputs: ClassValue[]) {
 type ScreenId = 
   | 'chat' 
   | 'overview' 
+  | 'hostedKeys'
+  | 'hostedAgents'
+  | 'hostedTools'
+  | 'hostedRecipes'
+  | 'hostedTriggers'
+  | 'hostedLogs'
   | 'channels' 
   | 'instances' 
   | 'sessions' 
@@ -83,6 +90,12 @@ interface NavItem {
 // --- Constants ---
 const NAV_ITEMS: NavItem[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'hostedKeys', label: 'Keys', icon: Settings },
+  { id: 'hostedAgents', label: 'Hosted Agents', icon: Users },
+  { id: 'hostedTools', label: 'Hosted Tools', icon: Layers },
+  { id: 'hostedRecipes', label: 'Recipes', icon: Cpu },
+  { id: 'hostedTriggers', label: 'Triggers', icon: Clock },
+  { id: 'hostedLogs', label: 'Hosted Logs', icon: FileText },
   { id: 'chat', label: 'Chat', icon: MessageSquare },
   { id: 'agents', label: 'Agents', icon: Users },
   { id: 'skills', label: 'Skills', icon: Zap },
@@ -828,6 +841,29 @@ export default function App() {
   const renderScreen = () => {
     switch (activeScreen) {
       case 'overview': return <OverviewScreen />;
+      case 'hostedKeys':
+      case 'hostedAgents':
+      case 'hostedTools':
+      case 'hostedRecipes':
+      case 'hostedTriggers':
+      case 'hostedLogs':
+        return (
+          <HostedPlatformScreen
+            screen={
+              ({
+                hostedKeys: 'hosted-keys',
+                hostedAgents: 'hosted-agents',
+                hostedTools: 'hosted-tools',
+                hostedRecipes: 'hosted-recipes',
+                hostedTriggers: 'hosted-triggers',
+                hostedLogs: 'hosted-logs',
+              } satisfies Record<
+                'hostedKeys' | 'hostedAgents' | 'hostedTools' | 'hostedRecipes' | 'hostedTriggers' | 'hostedLogs',
+                HostedScreenId
+              >)[activeScreen]
+            }
+          />
+        );
       case 'chat': return <ChatScreen />;
       case 'agents': return <AgentsScreen />;
       case 'channels': return <ChannelsScreen />;
