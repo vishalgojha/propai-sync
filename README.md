@@ -1,6 +1,6 @@
-# Propaiclaw
+# PropAI Sync
 
-Propaiclaw is a WhatsApp-first realtor CLI built as a clean wrapper with realtor-focused defaults.
+PropAI is a WhatsApp-first realtor CLI built as a clean wrapper with realtor-focused defaults.
 
 It translates business-focused commands into runtime commands, keeps defaults tuned for realtor workflows, and ships with bundled lead-management skills.
 
@@ -9,9 +9,9 @@ It translates business-focused commands into runtime commands, keeps defaults tu
 Runtime: Node 22+
 
 ```bash
-npm install -g propaiclaw@latest
+npm install -g propai-sync@latest
 # or
-pnpm add -g propaiclaw@latest
+pnpm add -g propai-sync@latest
 ```
 
 ## Quick Start
@@ -108,9 +108,9 @@ Run `propai --help` for the complete command list.
 Use `propai --debug ...` to print the underlying runtime command and full diagnostics.
 `propaiclaw` is also available as a compatibility alias.
 
-## What Propaiclaw Wraps
+## What PropAI Wraps
 
-Propaiclaw keeps the wrapper-based runtime path under the hood and maps commands like:
+PropAI keeps the wrapper-based runtime path under the hood and maps commands like:
 
 - `propai start` -> `gateway run`
 - `propai sync` -> `onboard --flow quickstart --skip-ui`
@@ -119,7 +119,7 @@ Propaiclaw keeps the wrapper-based runtime path under the hood and maps commands
 
 ## Bundled Skills (Realtor Context)
 
-When Propaiclaw mode is enabled, bundled skill loading defaults to:
+When PropAI mode is enabled, bundled skill loading defaults to:
 
 - `message-parser`
 - `lead-extractor`
@@ -130,7 +130,7 @@ When Propaiclaw mode is enabled, bundled skill loading defaults to:
 
 ## Configuration and Docs
 
-Propaiclaw uses the current configuration/runtime model.
+PropAI uses the current configuration/runtime model.
 
 - Getting started: docs/start/getting-started.md
 - Gateway configuration: docs/gateway/configuration.md
