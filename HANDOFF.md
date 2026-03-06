@@ -3,6 +3,84 @@
 Date: 2026-03-02
 Branch: main
 
+## Update (2026-03-06) - Release prep + skill publish
+
+### Verification
+
+- Command: `git status --short`
+  - Result:
+    ```text
+     M .env.example
+     M HANDOFF.md
+     M docs/hosted-platform.md
+     M src/hosted-platform/paths.ts
+     M src/hosted-platform/rest-handler.ts
+    ?? skills/propai-sync/
+    ?? src/hosted-platform/rest-handler.test.ts
+    ?? src/hosted-platform/store.test.ts
+    ```
+- Command: `git diff --name-only`
+  - Result:
+    ```text
+    .env.example
+    HANDOFF.md
+    docs/hosted-platform.md
+    src/hosted-platform/paths.ts
+    src/hosted-platform/rest-handler.ts
+    ```
+- Command: `pnpm test`
+  - Result: failed full suite (multiple unrelated existing failures).
+- Command: `pnpm vitest src/hosted-platform/store.test.ts src/hosted-platform/rest-handler.test.ts`
+  - Result: passed (`2` test files, `10` tests).
+- Command: `pnpm build`
+  - Result: passed.
+- Command: local hosted smoke check on built gateway
+  - Result: passed via `node skills/propai-sync/scripts/hosted-smoke.mjs` (`health_ok=true`, bootstrap + `/api/users/me` succeeded).
+- Command: Railway E2E validation
+  - Result: skipped (self-hosting managed by OpenClaw).
+
+## Update (2026-03-05) - Hosted Platform BYOK (pass 2)
+
+### Done
+
+1. Coverage and reliability
+
+- Added hosted-platform automated tests:
+  - `src/hosted-platform/store.test.ts`
+  - `src/hosted-platform/rest-handler.test.ts`
+- Coverage now includes:
+  - service key rotation and API key recovery behavior
+  - hosted API negative paths (invalid/missing auth, malformed payloads)
+  - per-user isolation enforcement for user-scoped writes
+
+2. Security hardening
+
+- Added production guardrails and auth throttling in hosted API handler:
+  - `src/hosted-platform/rest-handler.ts`
+  - production bootstrap policy now requires `PROPAI_HOSTED_ADMIN_TOKEN` unless `PROPAI_HOSTED_ALLOW_INSECURE_BOOTSTRAP=1`
+  - in-memory auth rate limiting for bootstrap and `X-API-Key` auth failures
+- Added security audit log output:
+  - `src/hosted-platform/paths.ts`
+  - security events now append to `hosted-platform/security-audit.ndjson`
+- Updated hosted docs/env guidance:
+  - `.env.example`
+  - `docs/hosted-platform.md`
+
+### Pending
+
+1. Deployment verification
+
+- Run end-to-end Railway deploy validation against live Railway environment (credentials + service linkage).
+
+### Verification
+
+- Command: `pnpm vitest src/hosted-platform/store.test.ts src/hosted-platform/rest-handler.test.ts`
+  - Result: passed (`2` test files, `10` tests).
+- Command: `pnpm build`
+  - Result: passed.
+- Command: local hosted smoke check on built gateway (`/api/health`, `/api/auth/bootstrap`, `/api/users/me`)
+  - Result: passed (`health_ok=true`, bootstrap + authenticated user read succeeded).
+
 ## Update (2026-03-05) - Hosted Platform BYOK (pass 1)
 
 ### Done

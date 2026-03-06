@@ -48,6 +48,25 @@ This document describes the hosted architecture layered on top of the existing P
 - Runtime execution isolation is per user under:
   - `hosted-platform/users/<userId>/workspace`
   - `hosted-platform/users/<userId>/runtime-state`
+- Hosted auth endpoints now include in-memory auth throttling for:
+  - invalid/missing `X-API-Key` requests
+  - bootstrap token failures on `POST /api/auth/bootstrap`
+- Security audit events are appended to:
+  - `hosted-platform/security-audit.ndjson`
+
+## Bootstrap Policy
+
+- `PROPAI_HOSTED_ADMIN_TOKEN` is required by default in production (`NODE_ENV=production`).
+- Tokenless bootstrap can be enabled only with explicit override:
+  - `PROPAI_HOSTED_ALLOW_INSECURE_BOOTSTRAP=1`
+- Development/non-production defaults still allow local bootstrap without an admin token.
+
+## Auth Throttling Controls
+
+- `PROPAI_HOSTED_AUTH_RATE_LIMIT_MAX_ATTEMPTS` (default `30`)
+- `PROPAI_HOSTED_AUTH_RATE_LIMIT_WINDOW_MS` (default `60000`)
+- `PROPAI_HOSTED_AUTH_RATE_LIMIT_LOCKOUT_MS` (default `300000`)
+- `PROPAI_HOSTED_AUTH_RATE_LIMIT_EXEMPT_LOOPBACK` (default `1`)
 
 ## Recipe + Trigger Model
 

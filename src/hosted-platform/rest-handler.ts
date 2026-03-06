@@ -1,20 +1,38 @@
+import { randomUUID } from "node:crypto";
+import fs from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import path from "node:path";
 import { parse as parseYaml } from "yaml";
-import { getHeader } from "../gateway/http-utils.js";
+import {
+  createAuthRateLimiter,
+  normalizeRateLimitClientIp,
+  type AuthRateLimiter,
+} from "../gateway/auth-rate-limit.js";
 import {
   readJsonBodyOrError,
   sendInvalidRequest,
   sendJson,
   sendMethodNotAllowed,
+  sendRateLimited,
   sendUnauthorized,
 } from "../gateway/http-common.js";
+import { getHeader } from "../gateway/http-utils.js";
+import { resolveHostedSecurityAuditLogPath } from "./paths.js";
 import { HostedPlatformRuntime } from "./runtime.js";
 import type { HostedRecipeStep } from "./types.js";
 
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const ADMIN_BOOTSTRAP_ENV_KEY = "PROPAI_HOSTED_ADMIN_TOKEN";
+const ALLOW_INSECURE_BOOTSTRAP_ENV_KEY = "PROPAI_HOSTED_ALLOW_INSECURE_BOOTSTRAP";
+const AUTH_RATE_LIMIT_MAX_ATTEMPTS_ENV_KEY = "PROPAI_HOSTED_AUTH_RATE_LIMIT_MAX_ATTEMPTS";
+const AUTH_RATE_LIMIT_WINDOW_MS_ENV_KEY = "PROPAI_HOSTED_AUTH_RATE_LIMIT_WINDOW_MS";
+const AUTH_RATE_LIMIT_LOCKOUT_MS_ENV_KEY = "PROPAI_HOSTED_AUTH_RATE_LIMIT_LOCKOUT_MS";
+const AUTH_RATE_LIMIT_EXEMPT_LOOPBACK_ENV_KEY = "PROPAI_HOSTED_AUTH_RATE_LIMIT_EXEMPT_LOOPBACK";
+const AUTH_RATE_LIMIT_SCOPE_API_KEY = "hosted-api-key";
+const AUTH_RATE_LIMIT_SCOPE_BOOTSTRAP = "hosted-bootstrap";
 
 const runtime = new HostedPlatformRuntime();
+const hostedAuthRateLimiter = createHostedAuthRateLimiter();
 
 function enableCors(res: ServerResponse): void {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -28,20 +46,161 @@ type AuthenticatedRequest = {
   keyId: string;
 };
 
+type SecurityAuditEvent = {
+  id: string;
+  ts: string;
+  event: string;
+  ip: string;
+  method: string;
+  path: string;
+  userId?: string;
+  reason?: string;
+  detail?: Record<string, unknown>;
+};
+
+function parseBooleanEnv(value: string | undefined): boolean | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) {
+    return undefined;
+  }
+  if (["1", "true", "yes", "on"].includes(normalized)) {
+    return true;
+  }
+  if (["0", "false", "no", "off"].includes(normalized)) {
+    return false;
+  }
+  return undefined;
+}
+
+function readPositiveIntegerEnv(key: string, fallback: number): number {
+  const raw = process.env[key];
+  if (typeof raw !== "string" || !raw.trim()) {
+    return fallback;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return Math.floor(parsed);
+}
+
+function createHostedAuthRateLimiter(): AuthRateLimiter {
+  return createAuthRateLimiter({
+    maxAttempts: readPositiveIntegerEnv(AUTH_RATE_LIMIT_MAX_ATTEMPTS_ENV_KEY, 30),
+    windowMs: readPositiveIntegerEnv(AUTH_RATE_LIMIT_WINDOW_MS_ENV_KEY, 60_000),
+    lockoutMs: readPositiveIntegerEnv(AUTH_RATE_LIMIT_LOCKOUT_MS_ENV_KEY, 300_000),
+    exemptLoopback: parseBooleanEnv(process.env[AUTH_RATE_LIMIT_EXEMPT_LOOPBACK_ENV_KEY]) ?? true,
+  });
+}
+
+function resolveRequestPath(req: IncomingMessage): string {
+  try {
+    return new URL(req.url ?? "/", "http://localhost").pathname;
+  } catch {
+    return "/";
+  }
+}
+
+function resolveRequestIp(req: IncomingMessage): string {
+  return normalizeRateLimitClientIp(req.socket?.remoteAddress);
+}
+
+function isInsecureBootstrapAllowed(env: NodeJS.ProcessEnv = process.env): boolean {
+  const explicit = parseBooleanEnv(env[ALLOW_INSECURE_BOOTSTRAP_ENV_KEY]);
+  if (explicit !== undefined) {
+    return explicit;
+  }
+  return env.NODE_ENV !== "production";
+}
+
+async function appendSecurityAudit(entry: SecurityAuditEvent): Promise<void> {
+  try {
+    const filePath = resolveHostedSecurityAuditLogPath();
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.appendFile(filePath, `${JSON.stringify(entry)}\n`, "utf8");
+  } catch {
+    // Swallow audit I/O failures to avoid request-path regressions.
+  }
+}
+
+function writeSecurityAudit(
+  req: IncomingMessage,
+  event: string,
+  extras: {
+    userId?: string;
+    reason?: string;
+    detail?: Record<string, unknown>;
+  } = {},
+): void {
+  void appendSecurityAudit({
+    id: randomUUID(),
+    ts: new Date().toISOString(),
+    event,
+    ip: resolveRequestIp(req),
+    method: String(req.method ?? "GET"),
+    path: resolveRequestPath(req),
+    userId: extras.userId,
+    reason: extras.reason,
+    detail: extras.detail,
+  });
+}
+
+function enforceAuthRateLimit(
+  req: IncomingMessage,
+  res: ServerResponse,
+  scope: string,
+  eventName: string,
+): boolean {
+  const ip = resolveRequestIp(req);
+  const check = hostedAuthRateLimiter.check(ip, scope);
+  if (check.allowed) {
+    return true;
+  }
+  sendRateLimited(res, check.retryAfterMs);
+  writeSecurityAudit(req, eventName, {
+    reason: "rate_limited",
+    detail: { retryAfterMs: check.retryAfterMs },
+  });
+  return false;
+}
+
+function recordAuthFailure(
+  req: IncomingMessage,
+  scope: string,
+  eventName: string,
+  reason: string,
+): void {
+  hostedAuthRateLimiter.recordFailure(resolveRequestIp(req), scope);
+  writeSecurityAudit(req, eventName, { reason });
+}
+
+function recordAuthSuccess(req: IncomingMessage, scope: string): void {
+  hostedAuthRateLimiter.reset(resolveRequestIp(req), scope);
+}
+
 async function authenticateApiRequest(
   req: IncomingMessage,
   res: ServerResponse,
 ): Promise<AuthenticatedRequest | null> {
+  if (!enforceAuthRateLimit(req, res, AUTH_RATE_LIMIT_SCOPE_API_KEY, "api_auth_rate_limited")) {
+    return null;
+  }
   const apiKey = getHeader(req, "x-api-key")?.trim();
   if (!apiKey) {
+    recordAuthFailure(req, AUTH_RATE_LIMIT_SCOPE_API_KEY, "api_auth_failed", "missing_x_api_key");
     sendUnauthorized(res);
     return null;
   }
   const auth = await runtime.authenticateApiKey(apiKey);
   if (!auth) {
+    recordAuthFailure(req, AUTH_RATE_LIMIT_SCOPE_API_KEY, "api_auth_failed", "invalid_x_api_key");
     sendUnauthorized(res);
     return null;
   }
+  recordAuthSuccess(req, AUTH_RATE_LIMIT_SCOPE_API_KEY);
   return auth;
 }
 
@@ -54,11 +213,17 @@ function bodyUserIdOrFallback(body: Record<string, unknown>, fallbackUserId: str
 }
 
 function requireSameUser(
+  req: IncomingMessage,
   requestedUserId: string,
   auth: AuthenticatedRequest,
   res: ServerResponse,
 ): boolean {
   if (requestedUserId !== auth.userId) {
+    writeSecurityAudit(req, "api_forbidden_user_mismatch", {
+      userId: auth.userId,
+      reason: "user_id_mismatch",
+      detail: { requestedUserId },
+    });
     sendJson(res, 403, {
       error: { type: "forbidden", message: "userId does not match the API key owner" },
     });
@@ -121,6 +286,9 @@ async function handleBootstrap(req: IncomingMessage, res: ServerResponse): Promi
     sendMethodNotAllowed(res, "POST");
     return true;
   }
+  if (!enforceAuthRateLimit(req, res, AUTH_RATE_LIMIT_SCOPE_BOOTSTRAP, "bootstrap_rate_limited")) {
+    return true;
+  }
   const bodyUnknown = await readJsonBodyOrError(req, res, MAX_BODY_BYTES);
   if (bodyUnknown === undefined) {
     return true;
@@ -128,15 +296,37 @@ async function handleBootstrap(req: IncomingMessage, res: ServerResponse): Promi
   const body = (bodyUnknown ?? {}) as Record<string, unknown>;
   const userId = typeof body.userId === "string" ? body.userId.trim() : "";
   if (!userId) {
+    recordAuthFailure(req, AUTH_RATE_LIMIT_SCOPE_BOOTSTRAP, "bootstrap_denied", "missing_user_id");
     sendInvalidRequest(res, "bootstrap requires body.userId");
     return true;
   }
   const expectedToken = process.env[ADMIN_BOOTSTRAP_ENV_KEY]?.trim();
+  if (!expectedToken && !isInsecureBootstrapAllowed(process.env)) {
+    recordAuthFailure(
+      req,
+      AUTH_RATE_LIMIT_SCOPE_BOOTSTRAP,
+      "bootstrap_denied",
+      "admin_token_required",
+    );
+    sendJson(res, 503, {
+      error: {
+        type: "config_error",
+        message: `${ADMIN_BOOTSTRAP_ENV_KEY} must be set unless ${ALLOW_INSECURE_BOOTSTRAP_ENV_KEY}=1`,
+      },
+    });
+    return true;
+  }
   if (expectedToken) {
     const suppliedToken =
       getHeader(req, "x-admin-token")?.trim() ||
       (typeof body.adminToken === "string" ? body.adminToken.trim() : "");
     if (!suppliedToken || suppliedToken !== expectedToken) {
+      recordAuthFailure(
+        req,
+        AUTH_RATE_LIMIT_SCOPE_BOOTSTRAP,
+        "bootstrap_denied",
+        "invalid_admin_token",
+      );
       sendJson(res, 403, {
         error: { type: "forbidden", message: "invalid admin bootstrap token" },
       });
@@ -149,6 +339,11 @@ async function handleBootstrap(req: IncomingMessage, res: ServerResponse): Promi
       userId,
       label: typeof body.label === "string" ? body.label : undefined,
     });
+    recordAuthSuccess(req, AUTH_RATE_LIMIT_SCOPE_BOOTSTRAP);
+    writeSecurityAudit(req, "bootstrap_success", {
+      userId: created.record.userId,
+      detail: { keyId: created.record.id, label: created.record.label },
+    });
     sendJson(res, 201, {
       userId: created.record.userId,
       keyId: created.record.id,
@@ -157,8 +352,12 @@ async function handleBootstrap(req: IncomingMessage, res: ServerResponse): Promi
       apiKey: created.apiKey,
     });
   } catch (error) {
+    recordAuthFailure(req, AUTH_RATE_LIMIT_SCOPE_BOOTSTRAP, "bootstrap_denied", "invalid_request");
     sendJson(res, 400, {
-      error: { type: "invalid_request", message: error instanceof Error ? error.message : String(error) },
+      error: {
+        type: "invalid_request",
+        message: error instanceof Error ? error.message : String(error),
+      },
     });
   }
   return true;
@@ -243,16 +442,12 @@ export async function handleHostedPlatformHttpRequest(
     }
     const body = (bodyUnknown ?? {}) as Record<string, unknown>;
     const userId = bodyUserIdOrFallback(body, auth.userId);
-    if (!requireSameUser(userId, auth, res)) {
+    if (!requireSameUser(req, userId, auth, res)) {
       return true;
     }
     const service = typeof body.service === "string" ? body.service : "";
     const plainTextKey =
-      typeof body.key === "string"
-        ? body.key
-        : typeof body.apiKey === "string"
-          ? body.apiKey
-          : "";
+      typeof body.key === "string" ? body.key : typeof body.apiKey === "string" ? body.apiKey : "";
     if (!service || !plainTextKey) {
       sendInvalidRequest(res, "POST /api/keys requires body.service and body.key");
       return true;
@@ -267,7 +462,10 @@ export async function handleHostedPlatformHttpRequest(
       sendJson(res, 201, saved);
     } catch (error) {
       sendJson(res, 400, {
-        error: { type: "invalid_request", message: error instanceof Error ? error.message : String(error) },
+        error: {
+          type: "invalid_request",
+          message: error instanceof Error ? error.message : String(error),
+        },
       });
     }
     return true;
@@ -314,7 +512,7 @@ export async function handleHostedPlatformHttpRequest(
     }
     const body = (bodyUnknown ?? {}) as Record<string, unknown>;
     const userId = bodyUserIdOrFallback(body, auth.userId);
-    if (!requireSameUser(userId, auth, res)) {
+    if (!requireSameUser(req, userId, auth, res)) {
       return true;
     }
     if (typeof body.task !== "string" || !body.task.trim()) {
@@ -325,7 +523,12 @@ export async function handleHostedPlatformHttpRequest(
       const result = await runtime.orchestrate({
         userId,
         task: body.task,
-        mode: body.mode === "parallel" ? "parallel" : body.mode === "sequential" ? "sequential" : undefined,
+        mode:
+          body.mode === "parallel"
+            ? "parallel"
+            : body.mode === "sequential"
+              ? "sequential"
+              : undefined,
         pipeline:
           Array.isArray(body.pipeline) && body.pipeline.every((entry) => typeof entry === "string")
             ? (body.pipeline as string[])
@@ -334,7 +537,10 @@ export async function handleHostedPlatformHttpRequest(
       sendJson(res, 200, result);
     } catch (error) {
       sendJson(res, 400, {
-        error: { type: "invalid_request", message: error instanceof Error ? error.message : String(error) },
+        error: {
+          type: "invalid_request",
+          message: error instanceof Error ? error.message : String(error),
+        },
       });
     }
     return true;
@@ -356,7 +562,7 @@ export async function handleHostedPlatformHttpRequest(
     }
     const body = (bodyUnknown ?? {}) as Record<string, unknown>;
     const requestedUserId = bodyUserIdOrFallback(body, auth.userId);
-    if (!requireSameUser(requestedUserId, auth, res)) {
+    if (!requireSameUser(req, requestedUserId, auth, res)) {
       return true;
     }
     try {
@@ -376,7 +582,10 @@ export async function handleHostedPlatformHttpRequest(
       sendJson(res, 201, saved);
     } catch (error) {
       sendJson(res, 400, {
-        error: { type: "invalid_request", message: error instanceof Error ? error.message : String(error) },
+        error: {
+          type: "invalid_request",
+          message: error instanceof Error ? error.message : String(error),
+        },
       });
     }
     return true;
@@ -395,7 +604,7 @@ export async function handleHostedPlatformHttpRequest(
     }
     const body = (bodyUnknown ?? {}) as Record<string, unknown>;
     const userId = bodyUserIdOrFallback(body, auth.userId);
-    if (!requireSameUser(userId, auth, res)) {
+    if (!requireSameUser(req, userId, auth, res)) {
       return true;
     }
     try {
@@ -403,7 +612,10 @@ export async function handleHostedPlatformHttpRequest(
       sendJson(res, 200, result);
     } catch (error) {
       sendJson(res, 400, {
-        error: { type: "invalid_request", message: error instanceof Error ? error.message : String(error) },
+        error: {
+          type: "invalid_request",
+          message: error instanceof Error ? error.message : String(error),
+        },
       });
     }
     return true;
@@ -436,7 +648,7 @@ export async function handleHostedPlatformHttpRequest(
     }
     const body = (bodyUnknown ?? {}) as Record<string, unknown>;
     const userId = bodyUserIdOrFallback(body, auth.userId);
-    if (!requireSameUser(userId, auth, res)) {
+    if (!requireSameUser(req, userId, auth, res)) {
       return true;
     }
     try {
@@ -454,7 +666,10 @@ export async function handleHostedPlatformHttpRequest(
       sendJson(res, 201, trigger);
     } catch (error) {
       sendJson(res, 400, {
-        error: { type: "invalid_request", message: error instanceof Error ? error.message : String(error) },
+        error: {
+          type: "invalid_request",
+          message: error instanceof Error ? error.message : String(error),
+        },
       });
     }
     return true;
@@ -483,7 +698,7 @@ export async function handleHostedPlatformHttpRequest(
     }
     const body = (bodyUnknown ?? {}) as Record<string, unknown>;
     const userId = bodyUserIdOrFallback(body, auth.userId);
-    if (!requireSameUser(userId, auth, res)) {
+    if (!requireSameUser(req, userId, auth, res)) {
       return true;
     }
     const result = await runtime.fireEvent(userId, eventName, body.payload ?? {});
@@ -502,7 +717,7 @@ export async function handleHostedPlatformHttpRequest(
     }
     const body = (bodyUnknown ?? {}) as Record<string, unknown>;
     const userId = bodyUserIdOrFallback(body, auth.userId);
-    if (!requireSameUser(userId, auth, res)) {
+    if (!requireSameUser(req, userId, auth, res)) {
       return true;
     }
     try {
@@ -517,7 +732,10 @@ export async function handleHostedPlatformHttpRequest(
       sendJson(res, 200, result);
     } catch (error) {
       sendJson(res, 400, {
-        error: { type: "invalid_request", message: error instanceof Error ? error.message : String(error) },
+        error: {
+          type: "invalid_request",
+          message: error instanceof Error ? error.message : String(error),
+        },
       });
     }
     return true;
@@ -538,7 +756,9 @@ export async function handleHostedPlatformHttpRequest(
     };
     const selectedArgs = argsByAction[cliAction];
     if (!selectedArgs) {
-      sendJson(res, 404, { error: { type: "not_found", message: `Unknown CLI action: ${cliAction}` } });
+      sendJson(res, 404, {
+        error: { type: "not_found", message: `Unknown CLI action: ${cliAction}` },
+      });
       return true;
     }
     const bodyUnknown = await readJsonBodyOrError(req, res, MAX_BODY_BYTES);
@@ -547,7 +767,7 @@ export async function handleHostedPlatformHttpRequest(
     }
     const body = (bodyUnknown ?? {}) as Record<string, unknown>;
     const userId = bodyUserIdOrFallback(body, auth.userId);
-    if (!requireSameUser(userId, auth, res)) {
+    if (!requireSameUser(req, userId, auth, res)) {
       return true;
     }
     const result = await runtime.runCliEndpoint({

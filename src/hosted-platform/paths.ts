@@ -7,7 +7,7 @@ export function assertValidUserId(userId: string): string {
   const trimmed = userId.trim();
   if (!USER_ID_RE.test(trimmed)) {
     throw new Error(
-      'invalid userId: use 2-64 chars [a-zA-Z0-9_-] and start with an alphanumeric character',
+      "invalid userId: use 2-64 chars [a-zA-Z0-9_-] and start with an alphanumeric character",
     );
   }
   return trimmed;
@@ -21,7 +21,10 @@ export function resolveHostedUsersRoot(env: NodeJS.ProcessEnv = process.env): st
   return path.join(resolveHostedPlatformRoot(env), "users");
 }
 
-export function resolveHostedUserRoot(userId: string, env: NodeJS.ProcessEnv = process.env): string {
+export function resolveHostedUserRoot(
+  userId: string,
+  env: NodeJS.ProcessEnv = process.env,
+): string {
   const normalized = assertValidUserId(userId);
   return path.join(resolveHostedUsersRoot(env), normalized);
 }
@@ -69,8 +72,15 @@ export function resolveHostedTriggersPath(
   return path.join(resolveHostedUserRoot(userId, env), "triggers.json");
 }
 
-export function resolveHostedLogsPath(userId: string, env: NodeJS.ProcessEnv = process.env): string {
+export function resolveHostedLogsPath(
+  userId: string,
+  env: NodeJS.ProcessEnv = process.env,
+): string {
   return path.join(resolveHostedUserRoot(userId, env), "logs.ndjson");
+}
+
+export function resolveHostedSecurityAuditLogPath(env: NodeJS.ProcessEnv = process.env): string {
+  return path.join(resolveHostedPlatformRoot(env), "security-audit.ndjson");
 }
 
 export function resolveHostedUserAgentsPath(
