@@ -144,7 +144,7 @@ export function registerBrowserBasicRoutes(app: BrowserRouteRegistrar, ctx: Brow
     const color = toStringOrEmpty((req.body as { color?: unknown })?.color);
     const cdpUrl = toStringOrEmpty((req.body as { cdpUrl?: unknown })?.cdpUrl);
     const driver = toStringOrEmpty((req.body as { driver?: unknown })?.driver) as
-      | "openclaw"
+      | "PropAi Sync"
       | "extension"
       | "";
 
@@ -190,3 +190,4 @@ export function registerBrowserBasicRoutes(app: BrowserRouteRegistrar, ctx: Brow
     }
   });
 }
+

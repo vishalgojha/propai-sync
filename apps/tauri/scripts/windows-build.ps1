@@ -2,11 +2,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 function Write-Step([string]$Message) {
-  Write-Host ("[openclaw-desktop] " + $Message)
+  Write-Host ("[propai-desktop] " + $Message)
 }
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
-$installer = Join-Path $repoRoot "apps\tauri\src-tauri\target\release\bundle\nsis\OpenClaw_0.1.0_x64-setup.exe"
+$installer = Join-Path $repoRoot "apps\tauri\src-tauri\target\release\bundle\nsis\PROPAI_0.1.0_x64-setup.exe"
 
 Write-Step ("Repo root: " + $repoRoot)
 
@@ -23,4 +23,6 @@ if (Test-Path $installer) {
 }
 
 throw ("Build finished but installer not found at: " + $installer)
+
+
 

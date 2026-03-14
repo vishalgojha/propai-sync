@@ -3,7 +3,7 @@ import {
   hasConfiguredSecretInput,
   normalizeResolvedSecretInputString,
   normalizeSecretInputString,
-} from "openclaw/plugin-sdk/matrix";
+} from "propai/plugin-sdk/matrix";
 
 export {
   buildSecretInputSchema,
@@ -11,3 +11,5 @@ export {
   normalizeResolvedSecretInputString,
   normalizeSecretInputString,
 };
+
+

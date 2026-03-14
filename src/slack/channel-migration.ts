@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import type { SlackChannelConfig } from "../config/types.slack.js";
 import { normalizeAccountId } from "../routing/session-key.js";
 
@@ -13,7 +13,7 @@ export type SlackChannelMigrationResult = {
 };
 
 function resolveAccountChannels(
-  cfg: OpenClawConfig,
+  cfg: PropAiSyncConfig,
   accountId?: string | null,
 ): { channels?: SlackChannels } {
   if (!accountId) {
@@ -57,7 +57,7 @@ export function migrateSlackChannelsInPlace(
 }
 
 export function migrateSlackChannelConfig(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   oldChannelId: string;
   newChannelId: string;
@@ -100,3 +100,5 @@ export function migrateSlackChannelConfig(params: {
 
   return { migrated, skippedExisting, scopes };
 }
+
+

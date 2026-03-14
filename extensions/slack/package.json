@@ -1,12 +1,14 @@
 {
-  "name": "@openclaw/slack",
+  "name": "@propai/slack",
   "version": "2026.3.11",
   "private": true,
-  "description": "OpenClaw Slack channel plugin",
+  "description": "PropAi Sync Slack channel plugin",
   "type": "module",
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

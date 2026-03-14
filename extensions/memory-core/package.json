@@ -1,20 +1,22 @@
 {
-  "name": "@openclaw/memory-core",
+  "name": "@propai/memory-core",
   "version": "2026.3.11",
   "private": true,
-  "description": "OpenClaw core memory search plugin",
+  "description": "PropAi Sync core memory search plugin",
   "type": "module",
   "peerDependencies": {
-    "openclaw": ">=2026.3.7"
+    "PropAi Sync": ">=2026.3.7"
   },
   "peerDependenciesMeta": {
-    "openclaw": {
+    "PropAi Sync": {
       "optional": true
     }
   },
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

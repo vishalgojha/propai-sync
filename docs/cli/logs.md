@@ -1,12 +1,12 @@
 ---
-summary: "CLI reference for `openclaw logs` (tail gateway logs via RPC)"
+summary: "CLI reference for `propai logs` (tail gateway logs via RPC)"
 read_when:
   - You need to tail Gateway logs remotely (without SSH)
   - You want JSON log lines for tooling
 title: "logs"
 ---
 
-# `openclaw logs`
+# `propai logs`
 
 Tail Gateway file logs over RPC (works in remote mode).
 
@@ -17,12 +17,14 @@ Related:
 ## Examples
 
 ```bash
-openclaw logs
-openclaw logs --follow
-openclaw logs --json
-openclaw logs --limit 500
-openclaw logs --local-time
-openclaw logs --follow --local-time
+propai logs
+propai logs --follow
+propai logs --json
+propai logs --limit 500
+propai logs --local-time
+propai logs --follow --local-time
 ```
 
 Use `--local-time` to render timestamps in your local timezone.
+
+

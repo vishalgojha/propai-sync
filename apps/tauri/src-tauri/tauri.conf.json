@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "OpenClaw",
+  "productName": "PropAi Sync",
   "version": "2026.3.11",
-  "identifier": "ai.openclaw.desktop",
+  "identifier": "ai.propai.desktop",
   "build": {
     "beforeDevCommand": "node scripts/tauri-before-dev.mjs",
     "beforeBuildCommand": "node scripts/tauri-before-build.mjs",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "OpenClaw",
+        "title": "PropAi Sync",
         "width": 1200,
         "height": 800,
         "resizable": true
@@ -30,4 +30,6 @@
     "resources": ["resources/**/*"]
   }
 }
+
+
 

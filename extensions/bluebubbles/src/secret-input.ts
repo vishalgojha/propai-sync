@@ -3,7 +3,7 @@ import {
   hasConfiguredSecretInput,
   normalizeResolvedSecretInputString,
   normalizeSecretInputString,
-} from "openclaw/plugin-sdk/bluebubbles";
+} from "propai/plugin-sdk/bluebubbles";
 
 export {
   buildSecretInputSchema,
@@ -11,3 +11,5 @@ export {
   normalizeResolvedSecretInputString,
   normalizeSecretInputString,
 };
+
+

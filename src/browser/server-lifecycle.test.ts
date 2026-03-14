@@ -5,8 +5,8 @@ const { resolveProfileMock, ensureChromeExtensionRelayServerMock } = vi.hoisted(
   ensureChromeExtensionRelayServerMock: vi.fn(),
 }));
 
-const { stopOpenClawChromeMock, stopChromeExtensionRelayServerMock } = vi.hoisted(() => ({
-  stopOpenClawChromeMock: vi.fn(async () => {}),
+const { stopPropAiSyncChromeMock, stopChromeExtensionRelayServerMock } = vi.hoisted(() => ({
+  stopPropAiSyncChromeMock: vi.fn(async () => {}),
   stopChromeExtensionRelayServerMock: vi.fn(async () => true),
 }));
 
@@ -16,7 +16,7 @@ const { createBrowserRouteContextMock, listKnownProfileNamesMock } = vi.hoisted(
 }));
 
 vi.mock("./chrome.js", () => ({
-  stopOpenClawChrome: stopOpenClawChromeMock,
+  stopPropAiSyncChrome: stopPropAiSyncChromeMock,
 }));
 
 vi.mock("./config.js", () => ({
@@ -46,7 +46,7 @@ describe("ensureExtensionRelayForProfiles", () => {
       if (name === "chrome") {
         return { driver: "extension", cdpUrl: "http://127.0.0.1:18888" };
       }
-      return { driver: "openclaw", cdpUrl: "http://127.0.0.1:18889" };
+      return { driver: "PropAi Sync", cdpUrl: "http://127.0.0.1:18889" };
     });
     ensureChromeExtensionRelayServerMock.mockResolvedValue(undefined);
 
@@ -54,7 +54,7 @@ describe("ensureExtensionRelayForProfiles", () => {
       resolved: {
         profiles: {
           chrome: {},
-          openclaw: {},
+          "PropAi Sync": {},
         },
       } as never,
       onWarn: vi.fn(),
@@ -86,14 +86,14 @@ describe("stopKnownBrowserProfiles", () => {
   beforeEach(() => {
     createBrowserRouteContextMock.mockClear();
     listKnownProfileNamesMock.mockClear();
-    stopOpenClawChromeMock.mockClear();
+    stopPropAiSyncChromeMock.mockClear();
     stopChromeExtensionRelayServerMock.mockClear();
   });
 
   it("stops all known profiles and ignores per-profile failures", async () => {
-    listKnownProfileNamesMock.mockReturnValue(["openclaw", "chrome"]);
+    listKnownProfileNamesMock.mockReturnValue(["PropAi Sync", "chrome"]);
     const stopMap: Record<string, ReturnType<typeof vi.fn>> = {
-      openclaw: vi.fn(async () => {}),
+      "PropAi Sync": vi.fn(async () => {}),
       chrome: vi.fn(async () => {
         throw new Error("profile stop failed");
       }),
@@ -111,7 +111,7 @@ describe("stopKnownBrowserProfiles", () => {
       onWarn,
     });
 
-    expect(stopMap.openclaw).toHaveBeenCalledTimes(1);
+    expect(stopMap.propai).toHaveBeenCalledTimes(1);
     expect(stopMap.chrome).toHaveBeenCalledTimes(1);
     expect(onWarn).not.toHaveBeenCalled();
   });
@@ -126,7 +126,7 @@ describe("stopKnownBrowserProfiles", () => {
     const localRuntime = {
       profile: {
         name: "deleted-local",
-        driver: "openclaw",
+        driver: "PropAi Sync",
       },
       running: {
         pid: 42,
@@ -156,7 +156,7 @@ describe("stopKnownBrowserProfiles", () => {
       onWarn: vi.fn(),
     });
 
-    expect(stopOpenClawChromeMock).toHaveBeenCalledWith(launchedBrowser);
+    expect(stopPropAiSyncChromeMock).toHaveBeenCalledWith(launchedBrowser);
     expect(localRuntime.running).toBeNull();
     expect(stopChromeExtensionRelayServerMock).toHaveBeenCalledWith({
       cdpUrl: "http://127.0.0.1:19999",
@@ -177,6 +177,9 @@ describe("stopKnownBrowserProfiles", () => {
       onWarn,
     });
 
-    expect(onWarn).toHaveBeenCalledWith("openclaw browser stop failed: Error: oops");
+    expect(onWarn).toHaveBeenCalledWith("PropAi Sync browser stop failed: Error: oops");
   });
 });
+
+
+

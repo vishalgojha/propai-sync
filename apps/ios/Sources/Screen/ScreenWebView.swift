@@ -1,4 +1,4 @@
-import OpenClawKit
+import PropAiSyncKit
 import SwiftUI
 import WebKit
 
@@ -125,7 +125,7 @@ final class ScreenWebViewCoordinator: NSObject {
 
 // MARK: - Navigation Delegate
 
-/// Handles navigation policy to intercept openclaw:// deep links from canvas
+/// Handles navigation policy to intercept PropAi Sync:// deep links from canvas
 @MainActor
 private final class ScreenNavigationDelegate: NSObject, WKNavigationDelegate {
     weak var controller: ScreenController?
@@ -140,8 +140,8 @@ private final class ScreenNavigationDelegate: NSObject, WKNavigationDelegate {
             return
         }
 
-        // Intercept openclaw:// deep links.
-        if url.scheme?.lowercased() == "openclaw" {
+        // Intercept PropAi Sync:// deep links.
+        if url.scheme?.lowercased() == "PropAi Sync" {
             decisionHandler(.cancel)
             self.controller?.onDeepLink?(url)
             return
@@ -170,7 +170,7 @@ private final class ScreenNavigationDelegate: NSObject, WKNavigationDelegate {
 }
 
 private final class CanvasA2UIActionMessageHandler: NSObject, WKScriptMessageHandler {
-    static let messageName = "openclawCanvasA2UIAction"
+    static let messageName = "PropAiSyncCanvasA2UIAction"
     static let handlerNames = [messageName]
 
     weak var controller: ScreenController?
@@ -192,3 +192,5 @@ private final class CanvasA2UIActionMessageHandler: NSObject, WKScriptMessageHan
         controller.onA2UIAction?(body)
     }
 }
+
+

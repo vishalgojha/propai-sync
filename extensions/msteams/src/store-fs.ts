@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { readJsonFileWithFallback, writeJsonFileAtomically } from "openclaw/plugin-sdk/msteams";
+import { readJsonFileWithFallback, writeJsonFileAtomically } from "propai/plugin-sdk/msteams";
 import { withFileLock as withPathLock } from "./file-lock.js";
 
 const STORE_LOCK_OPTIONS = {
@@ -42,3 +42,5 @@ export async function withFileLock<T>(
     return await fn();
   });
 }
+
+

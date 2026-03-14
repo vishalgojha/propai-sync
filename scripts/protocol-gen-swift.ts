@@ -15,14 +15,14 @@ type JsonSchema = {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const outPaths = [
-  path.join(repoRoot, "apps", "macos", "Sources", "OpenClawProtocol", "GatewayModels.swift"),
+  path.join(repoRoot, "apps", "macos", "Sources", "PropAiSyncProtocol", "GatewayModels.swift"),
   path.join(
     repoRoot,
     "apps",
     "shared",
-    "OpenClawKit",
+    "PropAiSyncKit",
     "Sources",
-    "OpenClawProtocol",
+    "PropAiSyncProtocol",
     "GatewayModels.swift",
   ),
 ];
@@ -245,3 +245,7 @@ generate().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
+
+
+

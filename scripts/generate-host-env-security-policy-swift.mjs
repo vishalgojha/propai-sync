@@ -20,7 +20,7 @@ const outputPath = path.join(
   "apps",
   "macos",
   "Sources",
-  "OpenClaw",
+  "PropAi Sync",
   "HostEnvSecurityPolicy.generated.swift",
 );
 
@@ -76,3 +76,4 @@ if (writeMode) {
   }
   console.log(`Wrote ${path.relative(repoRoot, outputPath)}`);
 }
+

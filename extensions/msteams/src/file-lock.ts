@@ -1,1 +1,3 @@
-export { withFileLock } from "openclaw/plugin-sdk/msteams";
+export { withFileLock } from "propai/plugin-sdk/msteams";
+
+

@@ -3,7 +3,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { normalizeTestText } from "../../test/helpers/normalize-text.js";
 import { withTempHome } from "../../test/helpers/temp-home.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { applyModelOverrideToSessionEntry } from "../sessions/model-overrides.js";
 import { createSuccessfulImageMediaDecision } from "./media-understanding.test-fixtures.js";
 import {
@@ -49,7 +49,7 @@ describe("buildStatusMessage", () => {
             },
           },
         },
-      } as unknown as OpenClawConfig,
+      } as unknown as PropAiSyncConfig,
       agent: {
         model: "anthropic/pi:opus",
         contextTokens: 32_000,
@@ -75,7 +75,7 @@ describe("buildStatusMessage", () => {
     });
     const normalized = normalizeTestText(text);
 
-    expect(normalized).toContain("OpenClaw");
+    expect(normalized).toContain("PropAi Sync");
     expect(normalized).toContain("Model: anthropic/pi:opus");
     expect(normalized).toContain("api-key");
     expect(normalized).toContain("Tokens: 1.2k in / 800 out");
@@ -123,7 +123,7 @@ describe("buildStatusMessage", () => {
             },
           },
         },
-      } as unknown as OpenClawConfig,
+      } as unknown as PropAiSyncConfig,
       agent: {
         model: "openai/gpt-4.1",
       },
@@ -156,7 +156,7 @@ describe("buildStatusMessage", () => {
             },
           },
         },
-      } as unknown as OpenClawConfig,
+      } as unknown as PropAiSyncConfig,
       agent: {
         model: "anthropic/claude-opus-4-6",
       },
@@ -215,7 +215,7 @@ describe("buildStatusMessage", () => {
             { id: "discord", sandbox: { mode: "all" } },
           ],
         },
-      } as unknown as OpenClawConfig,
+      } as unknown as PropAiSyncConfig,
       agent: {},
       sessionKey: "agent:discord:discord:channel:1456350065223270435",
       sessionScope: "per-sender",
@@ -493,7 +493,7 @@ describe("buildStatusMessage", () => {
             },
           },
         },
-      } as unknown as OpenClawConfig,
+      } as unknown as PropAiSyncConfig,
       agent: { model: "anthropic/claude-opus-4-5" },
       sessionEntry: { sessionId: "c1", updatedAt: 0, inputTokens: 10 },
       sessionKey: "agent:main:main",
@@ -519,7 +519,7 @@ describe("buildStatusMessage", () => {
   }) {
     const logPath = path.join(
       params.dir,
-      ".openclaw",
+      ".propai",
       "agents",
       params.agentId,
       "sessions",
@@ -598,7 +598,7 @@ describe("buildStatusMessage", () => {
 
         expect(normalizeTestText(text)).toContain("Context: 1.0k/32k");
       },
-      { prefix: "openclaw-status-" },
+      { prefix: "propai-status-" },
     );
   });
 
@@ -619,7 +619,7 @@ describe("buildStatusMessage", () => {
 
         expect(normalizeTestText(text)).toContain("Context: 1.0k/32k");
       },
-      { prefix: "openclaw-status-" },
+      { prefix: "propai-status-" },
     );
   });
 
@@ -661,7 +661,7 @@ describe("buildStatusMessage", () => {
 
         expect(normalizeTestText(text)).toContain("Context: 1.2k/32k");
       },
-      { prefix: "openclaw-status-" },
+      { prefix: "propai-status-" },
     );
   });
 });
@@ -670,7 +670,7 @@ describe("buildCommandsMessage", () => {
   it("lists commands with aliases and hints", () => {
     const text = buildCommandsMessage({
       commands: { config: false, debug: false },
-    } as unknown as OpenClawConfig);
+    } as unknown as PropAiSyncConfig);
     expect(text).toContain("ℹ️ Slash commands");
     expect(text).toContain("Status");
     expect(text).toContain("/commands - List all slash commands.");
@@ -685,7 +685,7 @@ describe("buildCommandsMessage", () => {
     const text = buildCommandsMessage(
       {
         commands: { config: false, debug: false },
-      } as unknown as OpenClawConfig,
+      } as unknown as PropAiSyncConfig,
       [
         {
           name: "demo_skill",
@@ -702,7 +702,7 @@ describe("buildHelpMessage", () => {
   it("hides config/debug when disabled", () => {
     const text = buildHelpMessage({
       commands: { config: false, debug: false },
-    } as unknown as OpenClawConfig);
+    } as unknown as PropAiSyncConfig);
     expect(text).toContain("Skills");
     expect(text).toContain("/skill <name> [input]");
     expect(text).not.toContain("/config");
@@ -715,7 +715,7 @@ describe("buildCommandsMessagePaginated", () => {
     const result = buildCommandsMessagePaginated(
       {
         commands: { config: false, debug: false },
-      } as unknown as OpenClawConfig,
+      } as unknown as PropAiSyncConfig,
       undefined,
       { surface: "telegram", page: 1 },
     );
@@ -731,7 +731,7 @@ describe("buildCommandsMessagePaginated", () => {
     const result = buildCommandsMessagePaginated(
       {
         commands: { config: false, debug: false },
-      } as unknown as OpenClawConfig,
+      } as unknown as PropAiSyncConfig,
       undefined,
       { surface: "telegram", page: 99 },
     );
@@ -739,3 +739,6 @@ describe("buildCommandsMessagePaginated", () => {
     expect(result.text).toContain("/plugin_cmd (demo-plugin) - Plugin command");
   });
 });
+
+
+

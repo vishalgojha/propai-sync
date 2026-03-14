@@ -3,7 +3,7 @@ import type {
   DmPolicy,
   GroupPolicy,
   SecretInput,
-} from "openclaw/plugin-sdk/mattermost";
+} from "propai/plugin-sdk/mattermost";
 
 export type MattermostChatMode = "oncall" | "onmessage" | "onchar";
 
@@ -89,3 +89,5 @@ export type MattermostConfig = {
   /** Optional default account id when multiple accounts are configured. */
   defaultAccount?: string;
 } & MattermostAccountConfig;
+
+

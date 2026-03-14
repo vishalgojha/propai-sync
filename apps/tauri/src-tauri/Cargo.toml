@@ -1,16 +1,16 @@
 [package]
-name = "openclaw-desktop"
+name = "propai-desktop"
 version = "2026.3.11"
-description = "OpenClaw Desktop (Tauri wrapper)"
-authors = ["OpenClaw Contributors"]
+description = "PropAi Sync Desktop (Tauri wrapper)"
+authors = ["PropAi Sync Contributors"]
 edition = "2021"
 
 [lib]
-name = "openclaw_desktop"
+name = "PROPAI_desktop"
 path = "src/lib.rs"
 
 [[bin]]
-name = "openclaw-desktop"
+name = "propai-desktop"
 path = "src/main.rs"
 
 [build-dependencies]
@@ -24,3 +24,5 @@ tauri = { version = "2", features = [] }
 tauri-plugin-updater = { version = "2" }
 thiserror = "2.0"
 zip = "0.6.6"
+
+

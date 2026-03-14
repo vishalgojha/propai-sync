@@ -1,6 +1,6 @@
 import { createEmptyPluginRegistry, type PluginRegistry } from "./registry.js";
 
-const REGISTRY_STATE = Symbol.for("openclaw.pluginRegistryState");
+const REGISTRY_STATE = Symbol.for("PropAiSync.pluginRegistryState");
 
 type RegistryState = {
   registry: PluginRegistry | null;
@@ -47,3 +47,5 @@ export function getActivePluginRegistryKey(): string | null {
 export function getActivePluginRegistryVersion(): number {
   return state.version;
 }
+
+

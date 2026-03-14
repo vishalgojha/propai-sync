@@ -1,5 +1,5 @@
 {
-  "name": "openclaw-desktop-tauri",
+  "name": "propai-desktop-tauri",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,3 +15,5 @@
     "@tauri-apps/cli": "^2.0.0"
   }
 }
+
+

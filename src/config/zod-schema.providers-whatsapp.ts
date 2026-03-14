@@ -40,6 +40,7 @@ const WhatsAppSharedSchema = z.object({
   messagePrefix: z.string().optional(),
   responsePrefix: z.string().optional(),
   dmPolicy: DmPolicySchema.optional().default("pairing"),
+  autoReply: z.boolean().optional().default(false),
   selfChatMode: z.boolean().optional(),
   allowFrom: z.array(z.string()).optional(),
   defaultTo: z.string().optional(),

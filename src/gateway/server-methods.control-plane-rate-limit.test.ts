@@ -35,7 +35,7 @@ describe("gateway control-plane write rate limit", () => {
       role: "operator",
       scopes: ["operator.admin"],
       client: {
-        id: "openclaw-control-ui",
+        id: "propai-control-ui",
         version: "1.0.0",
         platform: "darwin",
         mode: "ui",
@@ -148,3 +148,5 @@ describe("gateway control-plane write rate limit", () => {
     expect(key).toBe("unknown-device|10.0.0.10");
   });
 });
+
+

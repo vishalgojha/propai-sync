@@ -1,5 +1,5 @@
-import type { LookupFn } from "openclaw/plugin-sdk/tlon";
-import { SsrFBlockedError } from "openclaw/plugin-sdk/tlon";
+import type { LookupFn } from "propai/plugin-sdk/tlon";
+import { SsrFBlockedError } from "propai/plugin-sdk/tlon";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authenticate } from "./auth.js";
 
@@ -42,3 +42,5 @@ describe("tlon urbit auth ssrf", () => {
     expect(mockFetch).toHaveBeenCalled();
   });
 });
+
+

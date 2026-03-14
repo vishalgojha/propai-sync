@@ -18,8 +18,8 @@ vi.mock("../config/config.js", () => ({
 }));
 
 vi.mock("../daemon/constants.js", () => ({
-  resolveGatewayLaunchAgentLabel: vi.fn(() => "ai.openclaw.gateway"),
-  resolveNodeLaunchAgentLabel: vi.fn(() => "ai.openclaw.node"),
+  resolveGatewayLaunchAgentLabel: vi.fn(() => "ai.propai.gateway"),
+  resolveNodeLaunchAgentLabel: vi.fn(() => "ai.propai.node"),
 }));
 
 vi.mock("../daemon/diagnostics.js", () => ({
@@ -192,3 +192,5 @@ describe("maybeRepairGatewayDaemon", () => {
     expect(healthCommand).not.toHaveBeenCalled();
   });
 });
+
+

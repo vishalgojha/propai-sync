@@ -1,10 +1,10 @@
 import type {
   ChannelAccountSnapshot,
   ChatType,
-  OpenClawConfig,
+  PropAiSyncConfig,
   ReplyPayload,
   RuntimeEnv,
-} from "openclaw/plugin-sdk/mattermost";
+} from "propai/plugin-sdk/mattermost";
 import {
   buildAgentMediaPayload,
   buildModelsProviderData,
@@ -30,7 +30,7 @@ import {
   warnMissingProviderGroupPolicyFallbackOnce,
   listSkillCommandsForAgents,
   type HistoryEntry,
-} from "openclaw/plugin-sdk/mattermost";
+} from "propai/plugin-sdk/mattermost";
 import { getMattermostRuntime } from "../runtime.js";
 import { resolveMattermostAccount } from "./accounts.js";
 import {
@@ -99,7 +99,7 @@ export type MonitorMattermostOpts = {
   botToken?: string;
   baseUrl?: string;
   accountId?: string;
-  config?: OpenClawConfig;
+  config?: PropAiSyncConfig;
   runtime?: RuntimeEnv;
   abortSignal?: AbortSignal;
   statusSink?: (patch: Partial<ChannelAccountSnapshot>) => void;
@@ -181,7 +181,7 @@ function channelChatType(kind: ChatType): "direct" | "group" | "channel" {
 }
 
 export type MattermostRequireMentionResolverInput = {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   channel: "mattermost";
   accountId: string;
   groupId: string;
@@ -190,7 +190,7 @@ export type MattermostRequireMentionResolverInput = {
 
 export type MattermostMentionGateInput = {
   kind: ChatType;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId: string;
   channelId: string;
   threadRootId?: string;
@@ -348,10 +348,10 @@ export async function monitorMattermostProvider(opts: MonitorMattermostOpts = {}
     try {
       const teams = await fetchMattermostUserTeams(client, botUserId);
 
-      // Use the *runtime* listener port when available (e.g. `openclaw gateway run --port <port>`).
-      // The gateway sets OPENCLAW_GATEWAY_PORT when it boots, but the config file may still contain
+      // Use the *runtime* listener port when available (e.g. `PropAi Sync gateway run --port <port>`).
+      // The gateway sets PROPAI_GATEWAY_PORT when it boots, but the config file may still contain
       // a different port.
-      const envPortRaw = process.env.OPENCLAW_GATEWAY_PORT?.trim();
+      const envPortRaw = process.env.propai_GATEWAY_PORT?.trim();
       const envPort = parseStrictPositiveInteger(envPortRaw);
       const slashGatewayPort = envPort ?? cfg.gateway?.port ?? 18789;
 
@@ -1952,3 +1952,6 @@ export async function monitorMattermostProvider(opts: MonitorMattermostOpts = {}
     await slashShutdownCleanup;
   }
 }
+
+
+

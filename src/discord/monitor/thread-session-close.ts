@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { resolveStorePath, updateSessionStore } from "../../config/sessions.js";
 
 /**
@@ -11,7 +11,7 @@ import { resolveStorePath, updateSessionStore } from "../../config/sessions.js";
  * any on-disk transcript history.
  */
 export async function closeDiscordThreadSessions(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId: string;
   threadId: string;
 }): Promise<number> {
@@ -57,3 +57,5 @@ export async function closeDiscordThreadSessions(params: {
 
   return resetCount;
 }
+
+

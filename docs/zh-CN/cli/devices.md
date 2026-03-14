@@ -2,7 +2,7 @@
 read_when:
   - 你正在批准设备配对请求
   - 你需要轮换或撤销设备 token
-summary: "`openclaw devices` 的 CLI 参考（设备配对 + token 轮换/撤销）"
+summary: "`propai devices` 的 CLI 参考（设备配对 + token 轮换/撤销）"
 title: devices
 x-i18n:
   generated_at: "2026-02-03T07:44:52Z"
@@ -13,51 +13,51 @@ x-i18n:
   workflow: 15
 ---
 
-# `openclaw devices`
+# `propai devices`
 
 管理设备配对请求和设备范围的 token。
 
 ## 命令
 
-### `openclaw devices list`
+### `propai devices list`
 
 列出待处理的配对请求和已配对的设备。
 
 ```
-openclaw devices list
-openclaw devices list --json
+propai devices list
+propai devices list --json
 ```
 
-### `openclaw devices approve <requestId>`
+### `propai devices approve <requestId>`
 
 批准待处理的设备配对请求。
 
 ```
-openclaw devices approve <requestId>
+propai devices approve <requestId>
 ```
 
-### `openclaw devices reject <requestId>`
+### `propai devices reject <requestId>`
 
 拒绝待处理的设备配对请求。
 
 ```
-openclaw devices reject <requestId>
+propai devices reject <requestId>
 ```
 
-### `openclaw devices rotate --device <id> --role <role> [--scope <scope...>]`
+### `propai devices rotate --device <id> --role <role> [--scope <scope...>]`
 
 为特定角色轮换设备 token（可选更新 scope）。
 
 ```
-openclaw devices rotate --device <deviceId> --role operator --scope operator.read --scope operator.write
+propai devices rotate --device <deviceId> --role operator --scope operator.read --scope operator.write
 ```
 
-### `openclaw devices revoke --device <id> --role <role>`
+### `propai devices revoke --device <id> --role <role>`
 
 为特定角色撤销设备 token。
 
 ```
-openclaw devices revoke --device <deviceId> --role node
+propai devices revoke --device <deviceId> --role node
 ```
 
 ## 通用选项
@@ -72,3 +72,5 @@ openclaw devices revoke --device <deviceId> --role node
 
 - Token 轮换会返回新 token（敏感信息）。请像对待密钥一样对待它。
 - 这些命令需要 `operator.pairing`（或 `operator.admin`）scope。
+
+

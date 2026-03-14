@@ -25,7 +25,7 @@ async function writePluginFixture(params: {
     manifest.channels = params.channels;
   }
   await fs.writeFile(
-    path.join(params.dir, "openclaw.plugin.json"),
+    path.join(params.dir, "PropAiSync.plugin.json"),
     JSON.stringify(manifest, null, 2),
     "utf-8",
   );
@@ -41,15 +41,15 @@ describe("config plugin validation", () => {
   const suiteEnv = () =>
     ({
       ...process.env,
-      OPENCLAW_STATE_DIR: path.join(suiteHome, ".openclaw"),
-      OPENCLAW_PLUGIN_MANIFEST_CACHE_MS: "10000",
+      PROPAI_STATE_DIR: path.join(suiteHome, ".propai"),
+      PROPAI_PLUGIN_MANIFEST_CACHE_MS: "10000",
     }) satisfies NodeJS.ProcessEnv;
 
   const validateInSuite = (raw: unknown) =>
     validateConfigObjectWithPlugins(raw, { env: suiteEnv() });
 
   beforeAll(async () => {
-    fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-config-plugin-validation-"));
+    fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "propai-config-plugin-validation-"));
     suiteHome = path.join(fixtureRoot, "home");
     await fs.mkdir(suiteHome, { recursive: true });
     badPluginDir = path.join(suiteHome, "bad-plugin");
@@ -92,7 +92,7 @@ describe("config plugin validation", () => {
       process.cwd(),
       "extensions",
       "voice-call",
-      "openclaw.plugin.json",
+      "PropAiSync.plugin.json",
     );
     const voiceCallManifest = JSON.parse(await fs.readFile(voiceCallManifestPath, "utf-8")) as {
       configSchema?: Record<string, unknown>;
@@ -352,3 +352,6 @@ describe("config plugin validation", () => {
     }
   });
 });
+
+
+

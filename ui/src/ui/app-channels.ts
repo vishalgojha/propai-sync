@@ -1,4 +1,4 @@
-import type { OpenClawApp } from "./app.ts";
+import type { PropAiSyncApp } from "./app.ts";
 import {
   loadChannels,
   logoutWhatsApp,
@@ -9,28 +9,28 @@ import { loadConfig, saveConfig } from "./controllers/config.ts";
 import type { NostrProfile } from "./types.ts";
 import { createNostrProfileFormState } from "./views/channels.nostr-profile-form.ts";
 
-export async function handleWhatsAppStart(host: OpenClawApp, force: boolean) {
+export async function handleWhatsAppStart(host: PropAiSyncApp, force: boolean) {
   await startWhatsAppLogin(host, force);
   await loadChannels(host, true);
 }
 
-export async function handleWhatsAppWait(host: OpenClawApp) {
+export async function handleWhatsAppWait(host: PropAiSyncApp) {
   await waitWhatsAppLogin(host);
   await loadChannels(host, true);
 }
 
-export async function handleWhatsAppLogout(host: OpenClawApp) {
+export async function handleWhatsAppLogout(host: PropAiSyncApp) {
   await logoutWhatsApp(host);
   await loadChannels(host, true);
 }
 
-export async function handleChannelConfigSave(host: OpenClawApp) {
+export async function handleChannelConfigSave(host: PropAiSyncApp) {
   await saveConfig(host);
   await loadConfig(host);
   await loadChannels(host, true);
 }
 
-export async function handleChannelConfigReload(host: OpenClawApp) {
+export async function handleChannelConfigReload(host: PropAiSyncApp) {
   await loadConfig(host);
   await loadChannels(host, true);
 }
@@ -57,7 +57,7 @@ function parseValidationErrors(details: unknown): Record<string, string> {
   return errors;
 }
 
-function resolveNostrAccountId(host: OpenClawApp): string {
+function resolveNostrAccountId(host: PropAiSyncApp): string {
   const accounts = host.channelsSnapshot?.channelAccounts?.nostr ?? [];
   return accounts[0]?.accountId ?? host.nostrProfileAccountId ?? "default";
 }
@@ -66,7 +66,7 @@ function buildNostrProfileUrl(accountId: string, suffix = ""): string {
   return `/api/channels/nostr/${encodeURIComponent(accountId)}/profile${suffix}`;
 }
 
-function resolveGatewayHttpAuthHeader(host: OpenClawApp): string | null {
+function resolveGatewayHttpAuthHeader(host: PropAiSyncApp): string | null {
   const deviceToken = host.hello?.auth?.deviceToken?.trim();
   if (deviceToken) {
     return `Bearer ${deviceToken}`;
@@ -82,13 +82,13 @@ function resolveGatewayHttpAuthHeader(host: OpenClawApp): string | null {
   return null;
 }
 
-function buildGatewayHttpHeaders(host: OpenClawApp): Record<string, string> {
+function buildGatewayHttpHeaders(host: PropAiSyncApp): Record<string, string> {
   const authorization = resolveGatewayHttpAuthHeader(host);
   return authorization ? { Authorization: authorization } : {};
 }
 
 export function handleNostrProfileEdit(
-  host: OpenClawApp,
+  host: PropAiSyncApp,
   accountId: string,
   profile: NostrProfile | null,
 ) {
@@ -96,13 +96,13 @@ export function handleNostrProfileEdit(
   host.nostrProfileFormState = createNostrProfileFormState(profile ?? undefined);
 }
 
-export function handleNostrProfileCancel(host: OpenClawApp) {
+export function handleNostrProfileCancel(host: PropAiSyncApp) {
   host.nostrProfileFormState = null;
   host.nostrProfileAccountId = null;
 }
 
 export function handleNostrProfileFieldChange(
-  host: OpenClawApp,
+  host: PropAiSyncApp,
   field: keyof NostrProfile,
   value: string,
 ) {
@@ -123,7 +123,7 @@ export function handleNostrProfileFieldChange(
   };
 }
 
-export function handleNostrProfileToggleAdvanced(host: OpenClawApp) {
+export function handleNostrProfileToggleAdvanced(host: PropAiSyncApp) {
   const state = host.nostrProfileFormState;
   if (!state) {
     return;
@@ -134,7 +134,7 @@ export function handleNostrProfileToggleAdvanced(host: OpenClawApp) {
   };
 }
 
-export async function handleNostrProfileSave(host: OpenClawApp) {
+export async function handleNostrProfileSave(host: PropAiSyncApp) {
   const state = host.nostrProfileFormState;
   if (!state || state.saving) {
     return;
@@ -206,7 +206,7 @@ export async function handleNostrProfileSave(host: OpenClawApp) {
   }
 }
 
-export async function handleNostrProfileImport(host: OpenClawApp) {
+export async function handleNostrProfileImport(host: PropAiSyncApp) {
   const state = host.nostrProfileFormState;
   if (!state || state.importing) {
     return;
@@ -277,3 +277,5 @@ export async function handleNostrProfileImport(host: OpenClawApp) {
     };
   }
 }
+
+

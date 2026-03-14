@@ -1,4 +1,4 @@
-import type { ChannelAccountSnapshot } from "openclaw/plugin-sdk/zalo";
+import type { ChannelAccountSnapshot } from "propai/plugin-sdk/zalo";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createStartAccountContext } from "../../test-utils/start-account-context.js";
 import type { ResolvedZaloAccount } from "./accounts.js";
@@ -98,3 +98,5 @@ describe("zaloPlugin gateway.startAccount", () => {
     );
   });
 });
+
+

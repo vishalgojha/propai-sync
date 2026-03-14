@@ -29,9 +29,17 @@ function makeProcessMessageArgs(params: {
   groupHistory?: Array<{ sender: string; body: string }>;
   rememberSentText?: (text: string | undefined, opts: unknown) => void;
 }) {
+  const cfg =
+    // oxlint-disable-next-line typescript/no-explicit-any
+    ((params.cfg ?? { messages: {}, session: { store: sessionStorePath } }) as any) ?? {};
+  cfg.channels ??= {};
+  cfg.channels.whatsapp ??= {};
+  if (cfg.channels.whatsapp.autoReply === undefined) {
+    cfg.channels.whatsapp.autoReply = true;
+  }
   return {
     // oxlint-disable-next-line typescript/no-explicit-any
-    cfg: (params.cfg ?? { messages: {}, session: { store: sessionStorePath } }) as any,
+    cfg,
     // oxlint-disable-next-line typescript/no-explicit-any
     msg: params.msg as any,
     route: {
@@ -115,7 +123,7 @@ describe("web processMessage inbound contract", () => {
     capturedDispatchParams = undefined;
     backgroundTasks = new Set();
     deliverWebReplyMock.mockClear();
-    sessionDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-process-message-"));
+    sessionDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-process-message-"));
     sessionStorePath = path.join(sessionDir, "sessions.json");
   });
 
@@ -227,7 +235,7 @@ describe("web processMessage inbound contract", () => {
     expect(getDispatcherResponsePrefix()).toBe("[Mainbot]");
   });
 
-  it("does not force an [openclaw] response prefix in self-chats when identity is unset", async () => {
+  it("does not force an [PropAi Sync] response prefix in self-chats when identity is unset", async () => {
     await processSelfDirectMessage({
       messages: {},
       session: { store: sessionStorePath },
@@ -434,3 +442,5 @@ describe("web processMessage inbound contract", () => {
     expect(updateLastRouteMock).toHaveBeenCalledTimes(1);
   });
 });
+
+

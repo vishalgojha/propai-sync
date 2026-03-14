@@ -3,8 +3,8 @@ import {
   buildCatchallMultiAccountChannelSchema,
   DmPolicySchema,
   GroupPolicySchema,
-} from "openclaw/plugin-sdk/compat";
-import { MarkdownConfigSchema, ToolPolicySchema } from "openclaw/plugin-sdk/zalouser";
+} from "propai/plugin-sdk/compat";
+import { MarkdownConfigSchema, ToolPolicySchema } from "propai/plugin-sdk/zalouser";
 import { z } from "zod";
 
 const groupConfigSchema = z.object({
@@ -30,3 +30,5 @@ const zalouserAccountSchema = z.object({
 });
 
 export const ZalouserConfigSchema = buildCatchallMultiAccountChannelSchema(zalouserAccountSchema);
+
+

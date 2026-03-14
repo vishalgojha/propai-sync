@@ -98,7 +98,7 @@ export type ImageDescriptionRequest = {
   profile?: string;
   preferredProfile?: string;
   agentDir: string;
-  cfg: import("../config/config.js").OpenClawConfig;
+  cfg: import("../config/config.js").propaiConfig;
 };
 
 export type ImageDescriptionResult = {
@@ -113,3 +113,5 @@ export type MediaUnderstandingProvider = {
   describeVideo?: (req: VideoDescriptionRequest) => Promise<VideoDescriptionResult>;
   describeImage?: (req: ImageDescriptionRequest) => Promise<ImageDescriptionResult>;
 };
+
+

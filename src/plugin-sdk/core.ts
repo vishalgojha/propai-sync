@@ -1,13 +1,13 @@
 export type {
   AnyAgentTool,
-  OpenClawPluginApi,
-  OpenClawPluginService,
+  PropAiSyncPluginApi,
+  PropAiSyncPluginService,
   ProviderAuthContext,
   ProviderAuthResult,
 } from "../plugins/types.js";
 export type { ChannelPlugin } from "../channels/plugins/types.plugin.js";
 export type { PluginRuntime } from "../plugins/runtime/types.js";
-export type { OpenClawConfig } from "../config/config.js";
+export type { PropAiSyncConfig } from "../config/config.js";
 export type { GatewayRequestHandlerOptions } from "../gateway/server-methods/types.js";
 
 export { emptyPluginConfigSchema } from "../plugins/config-schema.js";
@@ -31,7 +31,7 @@ export {
   type PluginCommandRunOptions,
   type PluginCommandRunResult,
 } from "./run-command.js";
-export { resolvePreferredOpenClawTmpDir } from "../infra/tmp-openclaw-dir.js";
+export { resolvePreferredPropAiSyncTmpDir } from "../infra/tmp-propai-dir.js";
 
 export { resolveGatewayBindUrl } from "../shared/gateway-bind-url.js";
 export type { GatewayBindUrlResult } from "../shared/gateway-bind-url.js";
@@ -41,3 +41,6 @@ export type {
   TailscaleStatusCommandResult,
   TailscaleStatusCommandRunner,
 } from "../shared/tailscale-status.js";
+
+
+

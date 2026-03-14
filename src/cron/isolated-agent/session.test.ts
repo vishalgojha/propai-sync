@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 
 vi.mock("../../config/sessions.js", () => ({
   loadSessionStore: vi.fn(),
@@ -41,7 +41,7 @@ function resolveWithStoredEntry(params?: {
   vi.mocked(evaluateSessionFreshness).mockReturnValue({ fresh: params?.fresh ?? true });
 
   return resolveCronSession({
-    cfg: {} as OpenClawConfig,
+    cfg: {} as PropAiSyncConfig,
     sessionKey,
     agentId: "main",
     nowMs: NOW_MS,
@@ -263,3 +263,5 @@ describe("resolveCronSession", () => {
     });
   });
 });
+
+

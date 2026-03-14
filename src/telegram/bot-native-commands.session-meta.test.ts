@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   registerTelegramNativeCommands,
   type RegisterTelegramHandlerParams,
@@ -131,7 +131,7 @@ function buildStatusTopicCommandContext() {
       chat: {
         id: -1001234567890,
         type: "supergroup" as const,
-        title: "OpenClaw",
+        title: "PropAi Sync",
         is_forum: true,
       },
       message_thread_id: 42,
@@ -141,7 +141,7 @@ function buildStatusTopicCommandContext() {
 }
 
 function registerAndResolveStatusHandler(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   allowFrom?: string[];
   groupAllowFrom?: string[];
   resolveTelegramGroupConfig?: RegisterTelegramHandlerParams["resolveTelegramGroupConfig"];
@@ -162,7 +162,7 @@ function registerAndResolveStatusHandler(params: {
 
 function registerAndResolveCommandHandlerBase(params: {
   commandName: string;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   allowFrom: string[];
   groupAllowFrom: string[];
   useAccessGroups: boolean;
@@ -207,7 +207,7 @@ function registerAndResolveCommandHandlerBase(params: {
 
 function registerAndResolveCommandHandler(params: {
   commandName: string;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   allowFrom?: string[];
   groupAllowFrom?: string[];
   useAccessGroups?: boolean;
@@ -281,7 +281,7 @@ describe("registerTelegramNativeCommands — session metadata", () => {
       sessionKey: "agent:codex:acp:binding:telegram:default:seed",
     });
     sessionMocks.recordSessionMetaFromInbound.mockClear().mockResolvedValue(undefined);
-    sessionMocks.resolveStorePath.mockClear().mockReturnValue("/tmp/openclaw-sessions.json");
+    sessionMocks.resolveStorePath.mockClear().mockReturnValue("/tmp/propai-sessions.json");
     replyMocks.dispatchReplyWithBufferedBlockDispatcher
       .mockClear()
       .mockResolvedValue(dispatchReplyResult);
@@ -291,7 +291,7 @@ describe("registerTelegramNativeCommands — session metadata", () => {
   });
 
   it("calls recordSessionMetaFromInbound after a native slash command", async () => {
-    const cfg: OpenClawConfig = {};
+    const cfg: PropAiSyncConfig = {};
     const { handler } = registerAndResolveStatusHandler({ cfg });
     await handler(buildStatusCommandContext());
 
@@ -310,7 +310,7 @@ describe("registerTelegramNativeCommands — session metadata", () => {
     const deferred = createDeferred<void>();
     sessionMocks.recordSessionMetaFromInbound.mockReturnValue(deferred.promise);
 
-    const cfg: OpenClawConfig = {};
+    const cfg: PropAiSyncConfig = {};
     const { handler } = registerAndResolveStatusHandler({ cfg });
     const runPromise = handler(buildStatusCommandContext());
 
@@ -548,3 +548,6 @@ describe("registerTelegramNativeCommands — session metadata", () => {
     expectUnauthorizedNewCommandBlocked(sendMessage);
   });
 });
+
+
+

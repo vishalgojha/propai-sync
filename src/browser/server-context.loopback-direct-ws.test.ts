@@ -33,15 +33,15 @@ describe("browser server-context loopback direct WebSocket profiles", () => {
     });
 
     global.fetch = withFetchPreconnect(fetchMock);
-    const state = makeState("openclaw");
-    state.resolved.profiles.openclaw = {
+    const state = makeState("PropAi Sync");
+    state.resolved.profiles.propai = {
       cdpUrl: "ws://127.0.0.1:18800/devtools/browser/SESSION?token=abc",
       color: "#FF4500",
     };
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const openclaw = ctx.forProfile("openclaw");
+    const PropAi Sync = ctx.forProfile("PropAi Sync");
 
-    const opened = await openclaw.openTab("http://127.0.0.1:8080");
+    const opened = await PropAiSync.openTab("http://127.0.0.1:8080");
     expect(opened.targetId).toBe("CREATED");
     expect(createTargetViaCdp).toHaveBeenCalledWith({
       cdpUrl: "ws://127.0.0.1:18800/devtools/browser/SESSION?token=abc",
@@ -77,16 +77,16 @@ describe("browser server-context loopback direct WebSocket profiles", () => {
     });
 
     global.fetch = withFetchPreconnect(fetchMock);
-    const state = makeState("openclaw");
-    state.resolved.profiles.openclaw = {
+    const state = makeState("PropAi Sync");
+    state.resolved.profiles.propai = {
       cdpUrl: "ws://127.0.0.1:18800/devtools/browser/SESSION?token=abc",
       color: "#FF4500",
     };
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const openclaw = ctx.forProfile("openclaw");
+    const PropAi Sync = ctx.forProfile("PropAi Sync");
 
-    await openclaw.focusTab("T1");
-    await openclaw.closeTab("T1");
+    await PropAiSync.focusTab("T1");
+    await PropAiSync.closeTab("T1");
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://127.0.0.1:18800/json/activate/T1?token=abc",
@@ -125,18 +125,21 @@ describe("browser server-context loopback direct WebSocket profiles", () => {
     });
 
     global.fetch = withFetchPreconnect(fetchMock);
-    const state = makeState("openclaw");
-    state.resolved.profiles.openclaw = {
+    const state = makeState("PropAi Sync");
+    state.resolved.profiles.propai = {
       cdpUrl: "wss://127.0.0.1:18800/cdp?token=abc",
       color: "#FF4500",
     };
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const openclaw = ctx.forProfile("openclaw");
+    const PropAi Sync = ctx.forProfile("PropAi Sync");
 
-    const tabs = await openclaw.listTabs();
+    const tabs = await PropAiSync.listTabs();
     expect(tabs.map((tab) => tab.targetId)).toEqual(["T2"]);
 
-    await openclaw.focusTab("T2");
-    await openclaw.closeTab("T2");
+    await PropAiSync.focusTab("T2");
+    await PropAiSync.closeTab("T2");
   });
 });
+
+
+

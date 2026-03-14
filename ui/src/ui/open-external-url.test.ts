@@ -7,7 +7,7 @@ afterEach(() => {
 });
 
 describe("resolveSafeExternalUrl", () => {
-  const baseHref = "https://openclaw.ai/chat";
+  const baseHref = "https://propai.ai/chat";
 
   it("allows absolute https URLs", () => {
     expect(resolveSafeExternalUrl("https://example.com/a.png?x=1#y", baseHref)).toBe(
@@ -17,13 +17,13 @@ describe("resolveSafeExternalUrl", () => {
 
   it("allows relative URLs resolved against the current origin", () => {
     expect(resolveSafeExternalUrl("/assets/pic.png", baseHref)).toBe(
-      "https://openclaw.ai/assets/pic.png",
+      "https://propai.ai/assets/pic.png",
     );
   });
 
   it("allows blob URLs", () => {
-    expect(resolveSafeExternalUrl("blob:https://openclaw.ai/abc-123", baseHref)).toBe(
-      "blob:https://openclaw.ai/abc-123",
+    expect(resolveSafeExternalUrl("blob:https://propai.ai/abc-123", baseHref)).toBe(
+      "blob:https://propai.ai/abc-123",
     );
   });
 
@@ -91,7 +91,7 @@ describe("openExternalUrlSafe", () => {
     } as unknown as WindowProxy;
     const openMock = vi.fn(() => openedLikeProxy);
     vi.stubGlobal("window", {
-      location: { href: "https://openclaw.ai/chat" },
+      location: { href: "https://propai.ai/chat" },
       open: openMock,
     } as unknown as Window & typeof globalThis);
 
@@ -106,3 +106,5 @@ describe("openExternalUrlSafe", () => {
     expect(openedLikeProxy.opener).toBeNull();
   });
 });
+
+

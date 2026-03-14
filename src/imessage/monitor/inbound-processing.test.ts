@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { sanitizeTerminalText } from "../../terminal/safe-text.js";
 import {
   describeIMessageEchoDropLog,
@@ -8,7 +8,7 @@ import {
 import { createSelfChatCache } from "./self-chat-cache.js";
 
 describe("resolveIMessageInboundDecision echo detection", () => {
-  const cfg = {} as OpenClawConfig;
+  const cfg = {} as PropAiSyncConfig;
 
   it("drops inbound messages when outbound message id matches echo cache", () => {
     const echoHas = vi.fn((_scope: string, lookup: { text?: string; messageId?: string }) => {
@@ -179,7 +179,7 @@ describe("resolveIMessageInboundDecision echo detection", () => {
           },
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
     const createdAt = "2026-03-02T20:58:10.649Z";
 
     expect(
@@ -380,7 +380,7 @@ describe("describeIMessageEchoDropLog", () => {
 });
 
 describe("resolveIMessageInboundDecision command auth", () => {
-  const cfg = {} as OpenClawConfig;
+  const cfg = {} as PropAiSyncConfig;
   const resolveDmCommandDecision = (params: { messageId: number; storeAllowFrom: string[] }) =>
     resolveIMessageInboundDecision({
       cfg,
@@ -432,3 +432,5 @@ describe("resolveIMessageInboundDecision command auth", () => {
     expect(decision.commandAuthorized).toBe(true);
   });
 });
+
+

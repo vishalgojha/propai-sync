@@ -156,7 +156,7 @@ export function exportLogs(lines: string[], label: string) {
   const anchor = document.createElement("a");
   const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
   anchor.href = url;
-  anchor.download = `openclaw-logs-${label}-${stamp}.log`;
+  anchor.download = `propai-logs-${label}-${stamp}.log`;
   anchor.click();
   URL.revokeObjectURL(url);
 }
@@ -177,3 +177,5 @@ export function observeTopbar(host: ScrollHost) {
   host.topbarObserver = new ResizeObserver(() => update());
   host.topbarObserver.observe(topbar);
 }
+
+

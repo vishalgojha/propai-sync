@@ -1,5 +1,5 @@
 import Foundation
-import OpenClawKit
+import PropAiSyncKit
 
 struct TalkModeGatewayConfigState {
     let activeProvider: String
@@ -67,3 +67,5 @@ enum TalkModeGatewayConfigParser {
             silenceTimeoutMs: silenceTimeoutMs)
     }
 }
+
+

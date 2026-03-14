@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "openclaw/plugin-sdk/feishu";
+import type { ClawdbotConfig } from "propai/plugin-sdk/feishu";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("./accounts.js", () => ({
@@ -38,3 +38,5 @@ describe("feishu directory (config-backed)", () => {
     ]);
   });
 });
+
+

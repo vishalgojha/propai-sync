@@ -3,7 +3,7 @@ import {
   hasConfiguredSecretInput,
   normalizeResolvedSecretInputString,
   normalizeSecretInputString,
-} from "openclaw/plugin-sdk/feishu";
+} from "propai/plugin-sdk/feishu";
 
 export {
   buildSecretInputSchema,
@@ -11,3 +11,5 @@ export {
   normalizeResolvedSecretInputString,
   normalizeSecretInputString,
 };
+
+

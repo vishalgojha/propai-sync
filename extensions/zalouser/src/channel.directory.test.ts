@@ -1,4 +1,4 @@
-import type { RuntimeEnv } from "openclaw/plugin-sdk/zalouser";
+import type { RuntimeEnv } from "propai/plugin-sdk/zalouser";
 import { describe, expect, it, vi } from "vitest";
 
 const listZaloGroupMembersMock = vi.hoisted(() => vi.fn(async () => []));
@@ -70,3 +70,5 @@ describe("zalouser directory group members", () => {
     expect(listZaloGroupMembersMock).toHaveBeenCalledWith("default", "g-1471383327500481391");
   });
 });
+
+

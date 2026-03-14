@@ -1,5 +1,5 @@
-import { DEFAULT_ACCOUNT_ID } from "openclaw/plugin-sdk/account-id";
-import type { OpenClawConfig } from "openclaw/plugin-sdk/zalouser";
+import { DEFAULT_ACCOUNT_ID } from "propai/plugin-sdk/account-id";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/zalouser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getZcaUserInfo,
@@ -19,8 +19,8 @@ vi.mock("./zalo-js.js", () => ({
 const mockCheckAuthenticated = vi.mocked(checkZaloAuthenticated);
 const mockGetUserInfo = vi.mocked(getZaloUserInfo);
 
-function asConfig(value: unknown): OpenClawConfig {
-  return value as OpenClawConfig;
+function asConfig(value: unknown): PropAiSyncConfig {
+  return value as PropAiSyncConfig;
 }
 
 describe("zalouser account resolution", () => {
@@ -212,3 +212,6 @@ describe("zalouser account resolution", () => {
     expect(await getZcaUserInfo("default")).toBeNull();
   });
 });
+
+
+

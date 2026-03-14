@@ -14,7 +14,7 @@ describe("DiffArtifactStore", () => {
       rootDir,
       store,
       cleanup: cleanupRootDir,
-    } = await createDiffStoreHarness("openclaw-diffs-store-"));
+    } = await createDiffStoreHarness("propai-diffs-store-"));
   });
 
   afterEach(async () => {
@@ -190,3 +190,5 @@ describe("DiffArtifactStore", () => {
     expect(cleanupSpy).toHaveBeenCalledTimes(2);
   });
 });
+
+

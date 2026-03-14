@@ -353,7 +353,7 @@ export function resolveTelegramFetch(
       : undiciSourceFetch;
 
   // Preserve fully caller-owned custom fetch implementations.
-  // OpenClaw proxy fetches are metadata-tagged and continue into resolver-scoped policy.
+  // PropAi Sync proxy fetches are metadata-tagged and continue into resolver-scoped policy.
   if (proxyFetch && !explicitProxyUrl) {
     return sourceFetch;
   }
@@ -422,3 +422,4 @@ export function resolveTelegramFetch(
     }
   }) as typeof fetch;
 }
+

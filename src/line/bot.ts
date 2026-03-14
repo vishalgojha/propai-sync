@@ -1,7 +1,7 @@
 import type { WebhookRequestBody } from "@line/bot-sdk";
 import type { Request, Response, NextFunction } from "express";
 import { DEFAULT_GROUP_HISTORY_LIMIT, type HistoryEntry } from "../auto-reply/reply/history.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { loadConfig } from "../config/config.js";
 import { logVerbose } from "../globals.js";
 import { createNonExitingRuntime, type RuntimeEnv } from "../runtime.js";
@@ -16,7 +16,7 @@ export interface LineBotOptions {
   channelSecret: string;
   accountId?: string;
   runtime?: RuntimeEnv;
-  config?: OpenClawConfig;
+  config?: PropAiSyncConfig;
   mediaMaxMb?: number;
   onMessage?: (ctx: LineInboundContext) => Promise<void>;
 }
@@ -81,3 +81,5 @@ export function createLineWebhookCallback(
 
   return { path, handler };
 }
+
+

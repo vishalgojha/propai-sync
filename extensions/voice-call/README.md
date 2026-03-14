@@ -1,6 +1,6 @@
-# @openclaw/voice-call
+# @propai/voice-call
 
-Official Voice Call plugin for **OpenClaw**.
+Official Voice Call plugin for **PropAi Sync**.
 
 Providers:
 
@@ -9,15 +9,15 @@ Providers:
 - **Plivo** (Voice API + XML transfer + GetInput speech)
 - **Mock** (dev/no network)
 
-Docs: `https://docs.openclaw.ai/plugins/voice-call`
-Plugin system: `https://docs.openclaw.ai/plugin`
+Docs: `https://docs.propai.ai/plugins/voice-call`
+Plugin system: `https://docs.propai.ai/plugin`
 
 ## Install (local dev)
 
-### Option A: install via OpenClaw (recommended)
+### Option A: install via PropAi Sync (recommended)
 
 ```bash
-openclaw plugins install @openclaw/voice-call
+PropAi Sync plugins install @propai/voice-call
 ```
 
 Restart the Gateway afterwards.
@@ -25,9 +25,9 @@ Restart the Gateway afterwards.
 ### Option B: copy into your global extensions folder (dev)
 
 ```bash
-mkdir -p ~/.openclaw/extensions
-cp -R extensions/voice-call ~/.openclaw/extensions/voice-call
-cd ~/.openclaw/extensions/voice-call && pnpm install
+mkdir -p ~/.propai/extensions
+cp -R extensions/voice-call ~/.propai/extensions/voice-call
+cd ~/.propai/extensions/voice-call && pnpm install
 ```
 
 ## Config
@@ -143,13 +143,13 @@ Notes:
 ## CLI
 
 ```bash
-openclaw voicecall call --to "+15555550123" --message "Hello from OpenClaw"
-openclaw voicecall continue --call-id <id> --message "Any questions?"
-openclaw voicecall speak --call-id <id> --message "One moment"
-openclaw voicecall end --call-id <id>
-openclaw voicecall status --call-id <id>
-openclaw voicecall tail
-openclaw voicecall expose --mode funnel
+PropAi Sync voicecall call --to "+15555550123" --message "Hello from PropAi Sync"
+PropAi Sync voicecall continue --call-id <id> --message "Any questions?"
+PropAi Sync voicecall speak --call-id <id> --message "One moment"
+PropAi Sync voicecall end --call-id <id>
+PropAi Sync voicecall status --call-id <id>
+PropAi Sync voicecall tail
+PropAi Sync voicecall expose --mode funnel
 ```
 
 ## Tool
@@ -179,3 +179,5 @@ Actions:
 - Twilio speech turns include a per-turn token so stale/replayed callbacks cannot complete a newer turn.
 - `responseModel` / `responseSystemPrompt` control AI auto-responses.
 - Media streaming requires `ws` and OpenAI Realtime API key.
+
+

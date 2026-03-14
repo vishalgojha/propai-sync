@@ -1,7 +1,7 @@
 import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
 import type { TSchema } from "@sinclair/typebox";
 import type { MsgContext } from "../../auto-reply/templating.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import type { PollInput } from "../../polls.js";
 import type { GatewayClientMode, GatewayClientName } from "../../utils/message-channel.js";
 import type { ChatType } from "../chat-type.js";
@@ -16,7 +16,7 @@ export type ChannelAgentTool = AgentTool<TSchema, unknown> & {
   ownerOnly?: boolean;
 };
 
-export type ChannelAgentToolFactory = (params: { cfg?: OpenClawConfig }) => ChannelAgentTool[];
+export type ChannelAgentToolFactory = (params: { cfg?: PropAiSyncConfig }) => ChannelAgentTool[];
 
 export type ChannelSetupInput = {
   name?: string;
@@ -166,7 +166,7 @@ export type ChannelLogSink = {
 };
 
 export type ChannelGroupContext = {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   groupId?: string | null;
   /** Human label for channel-like group conversations (e.g. #general). */
   groupChannel?: string | null;
@@ -203,7 +203,7 @@ export type ChannelSecurityDmPolicy = {
 };
 
 export type ChannelSecurityContext<ResolvedAccount = unknown> = {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   account: ResolvedAccount;
 };
@@ -211,13 +211,13 @@ export type ChannelSecurityContext<ResolvedAccount = unknown> = {
 export type ChannelMentionAdapter = {
   stripPatterns?: (params: {
     ctx: MsgContext;
-    cfg: OpenClawConfig | undefined;
+    cfg: PropAiSyncConfig | undefined;
     agentId?: string;
   }) => string[];
   stripMentions?: (params: {
     text: string;
     ctx: MsgContext;
-    cfg: OpenClawConfig | undefined;
+    cfg: PropAiSyncConfig | undefined;
     agentId?: string;
   }) => string;
 };
@@ -231,7 +231,7 @@ export type ChannelStreamingAdapter = {
 
 export type ChannelThreadingAdapter = {
   resolveReplyToMode?: (params: {
-    cfg: OpenClawConfig;
+    cfg: PropAiSyncConfig;
     accountId?: string | null;
     chatType?: string | null;
   }) => "off" | "first" | "all";
@@ -247,7 +247,7 @@ export type ChannelThreadingAdapter = {
    */
   allowTagsWhenOff?: boolean;
   buildToolContext?: (params: {
-    cfg: OpenClawConfig;
+    cfg: PropAiSyncConfig;
     accountId?: string | null;
     context: ChannelThreadingContext;
     hasRepliedRef?: { value: boolean };
@@ -289,7 +289,7 @@ export type ChannelMessagingAdapter = {
     looksLikeId?: (raw: string, normalized?: string) => boolean;
     hint?: string;
     resolveTarget?: (params: {
-      cfg: OpenClawConfig;
+      cfg: PropAiSyncConfig;
       accountId?: string | null;
       input: string;
       normalized: string;
@@ -309,7 +309,7 @@ export type ChannelMessagingAdapter = {
 };
 
 export type ChannelAgentPromptAdapter = {
-  messageToolHints?: (params: { cfg: OpenClawConfig; accountId?: string | null }) => string[];
+  messageToolHints?: (params: { cfg: PropAiSyncConfig; accountId?: string | null }) => string[];
 };
 
 export type ChannelDirectoryEntryKind = "user" | "group" | "channel";
@@ -329,7 +329,7 @@ export type ChannelMessageActionName = ChannelMessageActionNameFromList;
 export type ChannelMessageActionContext = {
   channel: ChannelId;
   action: ChannelMessageActionName;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   params: Record<string, unknown>;
   mediaLocalRoots?: readonly string[];
   accountId?: string | null;
@@ -363,10 +363,10 @@ export type ChannelMessageActionAdapter = {
    * not inferred from `outbound.sendPoll`, so channels that want agents to
    * create polls should include `"poll"` here when enabled.
    */
-  listActions?: (params: { cfg: OpenClawConfig }) => ChannelMessageActionName[];
+  listActions?: (params: { cfg: PropAiSyncConfig }) => ChannelMessageActionName[];
   supportsAction?: (params: { action: ChannelMessageActionName }) => boolean;
-  supportsButtons?: (params: { cfg: OpenClawConfig }) => boolean;
-  supportsCards?: (params: { cfg: OpenClawConfig }) => boolean;
+  supportsButtons?: (params: { cfg: PropAiSyncConfig }) => boolean;
+  supportsCards?: (params: { cfg: PropAiSyncConfig }) => boolean;
   extractToolSend?: (params: { args: Record<string, unknown> }) => ChannelToolSend | null;
   handleAction?: (ctx: ChannelMessageActionContext) => Promise<AgentToolResult<unknown>>;
 };
@@ -380,7 +380,7 @@ export type ChannelPollResult = {
 };
 
 export type ChannelPollContext = {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   to: string;
   poll: PollInput;
   accountId?: string | null;
@@ -400,3 +400,5 @@ export type BaseTokenResolution = {
   token: string;
   source: string;
 };
+
+

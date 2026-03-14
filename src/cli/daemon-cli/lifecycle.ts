@@ -126,8 +126,8 @@ async function assertUnmanagedGatewayRestartEnabled(port: number): Promise<void>
   const probe = await probeGateway({
     url: `ws://127.0.0.1:${port}`,
     auth: {
-      token: process.env.OPENCLAW_GATEWAY_TOKEN?.trim() || undefined,
-      password: process.env.OPENCLAW_GATEWAY_PASSWORD?.trim() || undefined,
+      token: process.env.propai_GATEWAY_TOKEN?.trim() || undefined,
+      password: process.env.propai_GATEWAY_PASSWORD?.trim() || undefined,
     },
     timeoutMs: 1_000,
   }).catch(() => null);
@@ -170,7 +170,7 @@ async function restartGatewayWithoutServiceManager(port: number) {
   }
   if (pids.length > 1) {
     throw new Error(
-      `multiple gateway processes are listening on port ${port}: ${formatGatewayPidList(pids)}; use "openclaw gateway status --deep" before retrying restart`,
+      `multiple gateway processes are listening on port ${port}: ${formatGatewayPidList(pids)}; use "propai gateway status --deep" before retrying restart`,
     );
   }
   signalGatewayPid(pids[0], "SIGUSR1");
@@ -264,8 +264,8 @@ export async function runDaemonRestart(opts: DaemonLifecycleOptions = {}): Promi
         }
 
         fail(`Gateway restart timed out after ${restartWaitSeconds}s waiting for health checks.`, [
-          formatCliCommand("openclaw gateway status --deep"),
-          formatCliCommand("openclaw doctor"),
+          formatCliCommand("propai gateway status --deep"),
+          formatCliCommand("propai doctor"),
         ]);
       }
 
@@ -326,9 +326,12 @@ export async function runDaemonRestart(opts: DaemonLifecycleOptions = {}): Promi
       }
 
       fail(`Gateway restart timed out after ${restartWaitSeconds}s waiting for health checks.`, [
-        formatCliCommand("openclaw gateway status --deep"),
-        formatCliCommand("openclaw doctor"),
+        formatCliCommand("propai gateway status --deep"),
+        formatCliCommand("propai doctor"),
       ]);
     },
   });
 }
+
+
+

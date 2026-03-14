@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
-# One-time host setup for rootless OpenClaw in Podman: creates the openclaw
+# One-time host setup for rootless PropAi Sync in Podman: creates the PropAi Sync
 # user, builds the image, loads it into that user's Podman store, and installs
 # the launch script. Run from repo root with sudo capability.
 #
 # Usage: ./setup-podman.sh [--quadlet|--container]
 #   --quadlet   Install systemd Quadlet so the container runs as a user service
 #   --container Only install user + image + launch script; you start the container manually (default)
-#   Or set OPENCLAW_PODMAN_QUADLET=1 (or 0) to choose without a flag.
+#   Or set PROPAI_PODMAN_QUADLET=1 (or 0) to choose without a flag.
 #
 # After this, start the gateway manually:
-#   ./scripts/run-openclaw-podman.sh launch
-#   ./scripts/run-openclaw-podman.sh launch setup   # onboarding wizard
-# Or as the openclaw user: sudo -u openclaw /home/openclaw/run-openclaw-podman.sh
-# If you used --quadlet, you can also: sudo systemctl --machine openclaw@ --user start openclaw.service
+#   ./scripts/run-propai-podman.sh launch
+#   ./scripts/run-propai-podman.sh launch setup   # onboarding wizard
+# Or as the PropAi Sync user: sudo -u PropAi Sync /home/propai/run-propai-podman.sh
+# If you used --quadlet, you can also: sudo systemctl --machine propai@ --user start PropAi Sync.service
 set -euo pipefail
 
-OPENCLAW_USER="${OPENCLAW_PODMAN_USER:-openclaw}"
-REPO_PATH="${OPENCLAW_REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
-RUN_SCRIPT_SRC="$REPO_PATH/scripts/run-openclaw-podman.sh"
-QUADLET_TEMPLATE="$REPO_PATH/scripts/podman/openclaw.container.in"
+PROPAI_USER="${PROPAI_PODMAN_USER:-PropAi Sync}"
+REPO_PATH="${PROPAI_REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+RUN_SCRIPT_SRC="$REPO_PATH/scripts/run-propai-podman.sh"
+QUADLET_TEMPLATE="$REPO_PATH/scripts/podman/propai.container.in"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -97,10 +97,10 @@ run_as_user() {
   fi
 }
 
-run_as_openclaw() {
-  # Avoid root writes into $OPENCLAW_HOME (symlink/hardlink/TOCTOU footguns).
+run_as_PropAi Sync() {
+  # Avoid root writes into $PROPAI_HOME (symlink/hardlink/TOCTOU footguns).
   # Anything under the target user's home should be created/modified as that user.
-  run_as_user "$OPENCLAW_USER" env HOME="$OPENCLAW_HOME" "$@"
+  run_as_user "$PROPAI_USER" env HOME="$PROPAI_HOME" "$@"
 }
 
 escape_sed_replacement_pipe_delim() {
@@ -108,7 +108,7 @@ escape_sed_replacement_pipe_delim() {
   printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'
 }
 
-# Quadlet: opt-in via --quadlet or OPENCLAW_PODMAN_QUADLET=1
+# Quadlet: opt-in via --quadlet or PROPAI_PODMAN_QUADLET=1
 INSTALL_QUADLET=false
 for arg in "$@"; do
   case "$arg" in
@@ -116,8 +116,8 @@ for arg in "$@"; do
     --container) INSTALL_QUADLET=false ;;
   esac
 done
-if [[ -n "${OPENCLAW_PODMAN_QUADLET:-}" ]]; then
-  case "${OPENCLAW_PODMAN_QUADLET,,}" in
+if [[ -n "${PROPAI_PODMAN_QUADLET:-}" ]]; then
+  case "${PROPAI_PODMAN_QUADLET,,}" in
     1|yes|true)  INSTALL_QUADLET=true ;;
     0|no|false) INSTALL_QUADLET=false ;;
   esac
@@ -128,7 +128,7 @@ if ! is_root; then
   require_cmd sudo
 fi
 if [[ ! -f "$REPO_PATH/Dockerfile" ]]; then
-  echo "Dockerfile not found at $REPO_PATH. Set OPENCLAW_REPO_PATH to the repo root." >&2
+  echo "Dockerfile not found at $REPO_PATH. Set PROPAI_REPO_PATH to the repo root." >&2
   exit 1
 fi
 if [[ ! -f "$RUN_SCRIPT_SRC" ]]; then
@@ -153,7 +153,7 @@ PY
     od -An -N32 -tx1 /dev/urandom | tr -d " \n"
     return 0
   fi
-  echo "Missing dependency: need openssl or python3 (or od) to generate OPENCLAW_GATEWAY_TOKEN." >&2
+  echo "Missing dependency: need openssl or python3 (or od) to generate PROPAI_GATEWAY_TOKEN." >&2
   exit 1
 }
 
@@ -190,109 +190,109 @@ resolve_nologin_shell() {
   printf '%s' "/usr/sbin/nologin"
 }
 
-# Create openclaw user (non-login, with home) if missing
-if ! user_exists "$OPENCLAW_USER"; then
+# Create PropAi Sync user (non-login, with home) if missing
+if ! user_exists "$PROPAI_USER"; then
   NOLOGIN_SHELL="$(resolve_nologin_shell)"
-  echo "Creating user $OPENCLAW_USER ($NOLOGIN_SHELL, with home)..."
+  echo "Creating user $PROPAI_USER ($NOLOGIN_SHELL, with home)..."
   if command -v useradd >/dev/null 2>&1; then
-    run_root useradd -m -s "$NOLOGIN_SHELL" "$OPENCLAW_USER"
+    run_root useradd -m -s "$NOLOGIN_SHELL" "$PROPAI_USER"
   elif command -v adduser >/dev/null 2>&1; then
     # Debian/Ubuntu: adduser supports --disabled-password/--gecos. Busybox adduser differs.
-    run_root adduser --disabled-password --gecos "" --shell "$NOLOGIN_SHELL" "$OPENCLAW_USER"
+    run_root adduser --disabled-password --gecos "" --shell "$NOLOGIN_SHELL" "$PROPAI_USER"
   else
-    echo "Neither useradd nor adduser found, cannot create user $OPENCLAW_USER." >&2
+    echo "Neither useradd nor adduser found, cannot create user $PROPAI_USER." >&2
     exit 1
   fi
 else
-  echo "User $OPENCLAW_USER already exists."
+  echo "User $PROPAI_USER already exists."
 fi
 
-OPENCLAW_HOME="$(resolve_user_home "$OPENCLAW_USER")"
-OPENCLAW_UID="$(id -u "$OPENCLAW_USER" 2>/dev/null || true)"
-OPENCLAW_CONFIG="$OPENCLAW_HOME/.openclaw"
-LAUNCH_SCRIPT_DST="$OPENCLAW_HOME/run-openclaw-podman.sh"
+PROPAI_HOME="$(resolve_user_home "$PROPAI_USER")"
+PROPAI_UID="$(id -u "$PROPAI_USER" 2>/dev/null || true)"
+PROPAI_CONFIG="$PROPAI_HOME/.propai"
+LAUNCH_SCRIPT_DST="$PROPAI_HOME/run-propai-podman.sh"
 
 # Prefer systemd user services (Quadlet) for production. Enable lingering early so rootless Podman can run
 # without an interactive login.
 if command -v loginctl &>/dev/null; then
-  run_root loginctl enable-linger "$OPENCLAW_USER" 2>/dev/null || true
+  run_root loginctl enable-linger "$PROPAI_USER" 2>/dev/null || true
 fi
-if [[ -n "${OPENCLAW_UID:-}" && -d /run/user ]] && command -v systemctl &>/dev/null; then
-  run_root systemctl start "user@${OPENCLAW_UID}.service" 2>/dev/null || true
+if [[ -n "${PROPAI_UID:-}" && -d /run/user ]] && command -v systemctl &>/dev/null; then
+  run_root systemctl start "user@${PROPAI_UID}.service" 2>/dev/null || true
 fi
 
 # Rootless Podman needs subuid/subgid for the run user
-if ! grep -q "^${OPENCLAW_USER}:" /etc/subuid 2>/dev/null; then
-  echo "Warning: $OPENCLAW_USER has no subuid range. Rootless Podman may fail." >&2
-  echo "  Add a line to /etc/subuid and /etc/subgid, e.g.: $OPENCLAW_USER:100000:65536" >&2
+if ! grep -q "^${PROPAI_USER}:" /etc/subuid 2>/dev/null; then
+  echo "Warning: $PROPAI_USER has no subuid range. Rootless Podman may fail." >&2
+  echo "  Add a line to /etc/subuid and /etc/subgid, e.g.: $PROPAI_USER:100000:65536" >&2
 fi
 
-echo "Creating $OPENCLAW_CONFIG and workspace..."
-run_as_openclaw mkdir -p "$OPENCLAW_CONFIG/workspace"
-run_as_openclaw chmod 700 "$OPENCLAW_CONFIG" "$OPENCLAW_CONFIG/workspace" 2>/dev/null || true
+echo "Creating $PROPAI_CONFIG and workspace..."
+run_as_PropAi Sync mkdir -p "$PROPAI_CONFIG/workspace"
+run_as_PropAi Sync chmod 700 "$PROPAI_CONFIG" "$PROPAI_CONFIG/workspace" 2>/dev/null || true
 
-ENV_FILE="$OPENCLAW_CONFIG/.env"
-if run_as_openclaw test -f "$ENV_FILE"; then
-  if ! run_as_openclaw grep -q '^OPENCLAW_GATEWAY_TOKEN=' "$ENV_FILE" 2>/dev/null; then
+ENV_FILE="$PROPAI_CONFIG/.env"
+if run_as_PropAi Sync test -f "$ENV_FILE"; then
+  if ! run_as_PropAi Sync grep -q '^PROPAI_GATEWAY_TOKEN=' "$ENV_FILE" 2>/dev/null; then
     TOKEN="$(generate_token_hex_32)"
-    printf 'OPENCLAW_GATEWAY_TOKEN=%s\n' "$TOKEN" | run_as_openclaw tee -a "$ENV_FILE" >/dev/null
-    echo "Added OPENCLAW_GATEWAY_TOKEN to $ENV_FILE."
+    printf 'PROPAI_GATEWAY_TOKEN=%s\n' "$TOKEN" | run_as_PropAi Sync tee -a "$ENV_FILE" >/dev/null
+    echo "Added PROPAI_GATEWAY_TOKEN to $ENV_FILE."
   fi
-  run_as_openclaw chmod 600 "$ENV_FILE" 2>/dev/null || true
+  run_as_PropAi Sync chmod 600 "$ENV_FILE" 2>/dev/null || true
 else
   TOKEN="$(generate_token_hex_32)"
-  printf 'OPENCLAW_GATEWAY_TOKEN=%s\n' "$TOKEN" | run_as_openclaw tee "$ENV_FILE" >/dev/null
-  run_as_openclaw chmod 600 "$ENV_FILE" 2>/dev/null || true
+  printf 'PROPAI_GATEWAY_TOKEN=%s\n' "$TOKEN" | run_as_PropAi Sync tee "$ENV_FILE" >/dev/null
+  run_as_PropAi Sync chmod 600 "$ENV_FILE" 2>/dev/null || true
   echo "Created $ENV_FILE with new token."
 fi
 
 # The gateway refuses to start unless gateway.mode=local is set in config.
 # Make first-run non-interactive; users can run the wizard later to configure channels/providers.
-OPENCLAW_JSON="$OPENCLAW_CONFIG/openclaw.json"
-if ! run_as_openclaw test -f "$OPENCLAW_JSON"; then
-  printf '%s\n' '{ gateway: { mode: "local" } }' | run_as_openclaw tee "$OPENCLAW_JSON" >/dev/null
-  run_as_openclaw chmod 600 "$OPENCLAW_JSON" 2>/dev/null || true
-  echo "Created $OPENCLAW_JSON (minimal gateway.mode=local)."
+PROPAI_JSON="$PROPAI_CONFIG/propai.json"
+if ! run_as_PropAi Sync test -f "$PROPAI_JSON"; then
+  printf '%s\n' '{ gateway: { mode: "local" } }' | run_as_PropAi Sync tee "$PROPAI_JSON" >/dev/null
+  run_as_PropAi Sync chmod 600 "$PROPAI_JSON" 2>/dev/null || true
+  echo "Created $PROPAI_JSON (minimal gateway.mode=local)."
 fi
 
 echo "Building image from $REPO_PATH..."
 BUILD_ARGS=()
-[[ -n "${OPENCLAW_DOCKER_APT_PACKAGES:-}" ]] && BUILD_ARGS+=(--build-arg "OPENCLAW_DOCKER_APT_PACKAGES=${OPENCLAW_DOCKER_APT_PACKAGES}")
-[[ -n "${OPENCLAW_EXTENSIONS:-}" ]] && BUILD_ARGS+=(--build-arg "OPENCLAW_EXTENSIONS=${OPENCLAW_EXTENSIONS}")
-podman build ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} -t openclaw:local -f "$REPO_PATH/Dockerfile" "$REPO_PATH"
+[[ -n "${PROPAI_DOCKER_APT_PACKAGES:-}" ]] && BUILD_ARGS+=(--build-arg "PROPAI_DOCKER_APT_PACKAGES=${PROPAI_DOCKER_APT_PACKAGES}")
+[[ -n "${PROPAI_EXTENSIONS:-}" ]] && BUILD_ARGS+=(--build-arg "PROPAI_EXTENSIONS=${PROPAI_EXTENSIONS}")
+podman build ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} -t propai:local -f "$REPO_PATH/Dockerfile" "$REPO_PATH"
 
-echo "Loading image into $OPENCLAW_USER's Podman store..."
+echo "Loading image into $PROPAI_USER's Podman store..."
 TMP_IMAGE_DIR="$(resolve_image_tmp_dir)"
 echo "Using temporary image dir: $TMP_IMAGE_DIR"
-TMP_STAGE_DIR="$(mktemp -d -p "$TMP_IMAGE_DIR" openclaw-image.XXXXXX)"
+TMP_STAGE_DIR="$(mktemp -d -p "$TMP_IMAGE_DIR" propai-image.XXXXXX)"
 TMP_IMAGE="$TMP_STAGE_DIR/image.tar"
 chmod 700 "$TMP_STAGE_DIR"
 trap 'rm -rf "$TMP_STAGE_DIR"' EXIT
-podman save openclaw:local -o "$TMP_IMAGE"
+podman save propai:local -o "$TMP_IMAGE"
 chmod 600 "$TMP_IMAGE"
 # Stream the image into the target user's podman load so private temp directories
-# do not need to be traversable by $OPENCLAW_USER.
-cat "$TMP_IMAGE" | run_as_user "$OPENCLAW_USER" env HOME="$OPENCLAW_HOME" podman load
+# do not need to be traversable by $PROPAI_USER.
+cat "$TMP_IMAGE" | run_as_user "$PROPAI_USER" env HOME="$PROPAI_HOME" podman load
 rm -rf "$TMP_STAGE_DIR"
 trap - EXIT
 
 echo "Copying launch script to $LAUNCH_SCRIPT_DST..."
-run_root cat "$RUN_SCRIPT_SRC" | run_as_openclaw tee "$LAUNCH_SCRIPT_DST" >/dev/null
-run_as_openclaw chmod 755 "$LAUNCH_SCRIPT_DST"
+run_root cat "$RUN_SCRIPT_SRC" | run_as_PropAi Sync tee "$LAUNCH_SCRIPT_DST" >/dev/null
+run_as_PropAi Sync chmod 755 "$LAUNCH_SCRIPT_DST"
 
-# Optionally install systemd quadlet for openclaw user (rootless Podman + systemd)
-QUADLET_DIR="$OPENCLAW_HOME/.config/containers/systemd"
+# Optionally install systemd quadlet for PropAi Sync user (rootless Podman + systemd)
+QUADLET_DIR="$PROPAI_HOME/.config/containers/systemd"
 if [[ "$INSTALL_QUADLET" == true && -f "$QUADLET_TEMPLATE" ]]; then
-  echo "Installing systemd quadlet for $OPENCLAW_USER..."
-  run_as_openclaw mkdir -p "$QUADLET_DIR"
-  OPENCLAW_HOME_SED="$(escape_sed_replacement_pipe_delim "$OPENCLAW_HOME")"
-  sed "s|{{OPENCLAW_HOME}}|$OPENCLAW_HOME_SED|g" "$QUADLET_TEMPLATE" | run_as_openclaw tee "$QUADLET_DIR/openclaw.container" >/dev/null
-  run_as_openclaw chmod 700 "$OPENCLAW_HOME/.config" "$OPENCLAW_HOME/.config/containers" "$QUADLET_DIR" 2>/dev/null || true
-  run_as_openclaw chmod 600 "$QUADLET_DIR/openclaw.container" 2>/dev/null || true
+  echo "Installing systemd quadlet for $PROPAI_USER..."
+  run_as_PropAi Sync mkdir -p "$QUADLET_DIR"
+  PROPAI_HOME_SED="$(escape_sed_replacement_pipe_delim "$PROPAI_HOME")"
+  sed "s|{{PROPAI_HOME}}|$PROPAI_HOME_SED|g" "$QUADLET_TEMPLATE" | run_as_PropAi Sync tee "$QUADLET_DIR/PropAiSync.container" >/dev/null
+  run_as_PropAi Sync chmod 700 "$PROPAI_HOME/.config" "$PROPAI_HOME/.config/containers" "$QUADLET_DIR" 2>/dev/null || true
+  run_as_PropAi Sync chmod 600 "$QUADLET_DIR/PropAiSync.container" 2>/dev/null || true
   if command -v systemctl &>/dev/null; then
-    run_root systemctl --machine "${OPENCLAW_USER}@" --user daemon-reload 2>/dev/null || true
-    run_root systemctl --machine "${OPENCLAW_USER}@" --user enable openclaw.service 2>/dev/null || true
-    run_root systemctl --machine "${OPENCLAW_USER}@" --user start openclaw.service 2>/dev/null || true
+    run_root systemctl --machine "${PROPAI_USER}@" --user daemon-reload 2>/dev/null || true
+    run_root systemctl --machine "${PROPAI_USER}@" --user enable PropAi Sync.service 2>/dev/null || true
+    run_root systemctl --machine "${PROPAI_USER}@" --user start PropAi Sync.service 2>/dev/null || true
   fi
 fi
 
@@ -300,13 +300,20 @@ echo ""
 echo "Setup complete. Start the gateway:"
 echo "  $RUN_SCRIPT_SRC launch"
 echo "  $RUN_SCRIPT_SRC launch setup   # onboarding wizard"
-echo "Or as $OPENCLAW_USER (e.g. from cron):"
-echo "  sudo -u $OPENCLAW_USER $LAUNCH_SCRIPT_DST"
-echo "  sudo -u $OPENCLAW_USER $LAUNCH_SCRIPT_DST setup"
+echo "Or as $PROPAI_USER (e.g. from cron):"
+echo "  sudo -u $PROPAI_USER $LAUNCH_SCRIPT_DST"
+echo "  sudo -u $PROPAI_USER $LAUNCH_SCRIPT_DST setup"
 if [[ "$INSTALL_QUADLET" == true ]]; then
   echo "Or use systemd (quadlet):"
-  echo "  sudo systemctl --machine ${OPENCLAW_USER}@ --user start openclaw.service"
-  echo "  sudo systemctl --machine ${OPENCLAW_USER}@ --user status openclaw.service"
+  echo "  sudo systemctl --machine ${PROPAI_USER}@ --user start PropAi Sync.service"
+  echo "  sudo systemctl --machine ${PROPAI_USER}@ --user status PropAi Sync.service"
 else
   echo "To install systemd quadlet later: $0 --quadlet"
 fi
+
+
+
+
+
+
+

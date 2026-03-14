@@ -1,12 +1,14 @@
 {
-  "name": "@openclaw/google-gemini-cli-auth",
+  "name": "@propai/google-gemini-cli-auth",
   "version": "2026.3.11",
   "private": true,
-  "description": "OpenClaw Gemini CLI OAuth provider plugin",
+  "description": "PropAi Sync Gemini CLI OAuth provider plugin",
   "type": "module",
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

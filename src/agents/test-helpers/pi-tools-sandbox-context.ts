@@ -22,12 +22,12 @@ export function createPiToolsSandboxContext(params: PiToolsSandboxContextParams)
     workspaceDir,
     agentWorkspaceDir: params.agentWorkspaceDir ?? workspaceDir,
     workspaceAccess: params.workspaceAccess ?? "rw",
-    containerName: params.containerName ?? "openclaw-sbx-test",
+    containerName: params.containerName ?? "propai-sbx-test",
     containerWorkdir: params.containerWorkdir ?? "/workspace",
     fsBridge: params.fsBridge,
     docker: {
-      image: "openclaw-sandbox:bookworm-slim",
-      containerPrefix: "openclaw-sbx-",
+      image: "propai-sandbox:bookworm-slim",
+      containerPrefix: "propai-sbx-",
       workdir: "/workspace",
       readOnlyRoot: true,
       tmpfs: [],
@@ -41,3 +41,5 @@ export function createPiToolsSandboxContext(params: PiToolsSandboxContextParams)
     browserAllowHostControl: params.browserAllowHostControl ?? false,
   };
 }
+
+

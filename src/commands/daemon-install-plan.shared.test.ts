@@ -6,11 +6,11 @@ import {
 
 describe("resolveGatewayDevMode", () => {
   it("detects src ts entrypoints", () => {
-    expect(resolveGatewayDevMode(["node", "/Users/me/openclaw/src/cli/index.ts"])).toBe(true);
-    expect(resolveGatewayDevMode(["node", "C:\\Users\\me\\openclaw\\src\\cli\\index.ts"])).toBe(
+    expect(resolveGatewayDevMode(["node", "/Users/me/propai/src/cli/index.ts"])).toBe(true);
+    expect(resolveGatewayDevMode(["node", "C:\\Users\\me\\\PropAiSync\\src\\cli\\index.ts"])).toBe(
       true,
     );
-    expect(resolveGatewayDevMode(["node", "/Users/me/openclaw/dist/cli/index.js"])).toBe(false);
+    expect(resolveGatewayDevMode(["node", "/Users/me/propai/dist/cli/index.js"])).toBe(false);
   });
 });
 
@@ -29,3 +29,6 @@ describe("resolveDaemonInstallRuntimeInputs", () => {
     });
   });
 });
+
+
+

@@ -6,7 +6,7 @@ import {
   type StreamOptions,
 } from "@mariozechner/pi-ai";
 
-const CUSTOM_API_SOURCE_PREFIX = "openclaw-custom-api:";
+const CUSTOM_API_SOURCE_PREFIX = "propai-custom-api:";
 
 export function getCustomApiRegistrySourceId(api: Api): string {
   return `${CUSTOM_API_SOURCE_PREFIX}${api}`;
@@ -33,3 +33,5 @@ export function ensureCustomApiRegistered(api: Api, streamFn: StreamFn): boolean
   );
   return true;
 }
+
+

@@ -5,10 +5,10 @@ function mockContextModuleDeps(loadConfigImpl: () => unknown) {
     loadConfig: loadConfigImpl,
   }));
   vi.doMock("./models-config.js", () => ({
-    ensureOpenClawModelsJson: vi.fn(async () => {}),
+    ensurePropAiSyncModelsJson: vi.fn(async () => {}),
   }));
   vi.doMock("./agent-paths.js", () => ({
-    resolveOpenClawAgentDir: () => "/tmp/openclaw-agent",
+    resolvePropAiSyncAgentDir: () => "/tmp/propai-agent",
   }));
   vi.doMock("./pi-model-discovery.js", () => ({
     discoverAuthStorage: vi.fn(() => ({})),
@@ -43,7 +43,7 @@ describe("lookupContextTokens", () => {
     mockContextModuleDeps(loadConfigMock);
 
     const argvSnapshot = process.argv;
-    process.argv = ["node", "openclaw", "--profile", "--", "config", "validate"];
+    process.argv = ["node", "PropAi Sync", "--profile", "--", "config", "validate"];
     try {
       await import("./context.js");
       expect(loadConfigMock).toHaveBeenCalledTimes(1);
@@ -72,7 +72,7 @@ describe("lookupContextTokens", () => {
     mockContextModuleDeps(loadConfigMock);
 
     const argvSnapshot = process.argv;
-    process.argv = ["node", "openclaw", "config", "validate"];
+    process.argv = ["node", "PropAi Sync", "config", "validate"];
     try {
       const { lookupContextTokens } = await import("./context.js");
       expect(lookupContextTokens("openrouter/claude-sonnet")).toBeUndefined();
@@ -88,3 +88,6 @@ describe("lookupContextTokens", () => {
     }
   });
 });
+
+
+

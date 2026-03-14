@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   KILOCODE_BASE_URL,
   KILOCODE_DEFAULT_CONTEXT_WINDOW,
@@ -31,7 +31,7 @@ import {
   buildTogetherModelDefinition,
 } from "./together-models.js";
 
-type ModelsConfig = NonNullable<OpenClawConfig["models"]>;
+type ModelsConfig = NonNullable<PropAiSyncConfig["models"]>;
 type ProviderConfig = NonNullable<ModelsConfig["providers"]>[string];
 type ProviderModelConfig = NonNullable<ProviderConfig["models"]>[number];
 
@@ -545,3 +545,5 @@ export function buildKilocodeProvider(): ProviderConfig {
     })),
   };
 }
+
+

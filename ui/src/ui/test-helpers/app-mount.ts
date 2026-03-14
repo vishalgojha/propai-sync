@@ -1,10 +1,10 @@
 import { afterEach, beforeEach } from "vitest";
 import "../app.ts";
-import type { OpenClawApp } from "../app.ts";
+import type { PropAiSyncApp } from "../app.ts";
 
 export function mountApp(pathname: string) {
   window.history.replaceState({}, "", pathname);
-  const app = document.createElement("openclaw-app") as OpenClawApp;
+  const app = document.createElement("propai-app") as PropAiSyncApp;
   app.connect = () => {
     // no-op: avoid real gateway WS connections in browser tests
   };
@@ -14,16 +14,19 @@ export function mountApp(pathname: string) {
 
 export function registerAppMountHooks() {
   beforeEach(() => {
-    window.__OPENCLAW_CONTROL_UI_BASE_PATH__ = undefined;
+    window.__PROPAI_CONTROL_UI_BASE_PATH__ = undefined;
     localStorage.clear();
     sessionStorage.clear();
     document.body.innerHTML = "";
   });
 
   afterEach(() => {
-    window.__OPENCLAW_CONTROL_UI_BASE_PATH__ = undefined;
+    window.__PROPAI_CONTROL_UI_BASE_PATH__ = undefined;
     localStorage.clear();
     sessionStorage.clear();
     document.body.innerHTML = "";
   });
 }
+
+
+

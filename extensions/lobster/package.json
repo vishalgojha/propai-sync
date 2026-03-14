@@ -1,14 +1,16 @@
 {
-  "name": "@openclaw/lobster",
+  "name": "@propai/lobster",
   "version": "2026.3.11",
   "description": "Lobster workflow tool plugin (typed pipelines + resumable approvals)",
   "type": "module",
   "dependencies": {
     "@sinclair/typebox": "0.34.48"
   },
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

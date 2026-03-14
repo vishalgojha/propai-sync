@@ -3,7 +3,7 @@ export type ExtensionPackageJson = {
   version?: string;
   dependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
-  openclaw?: {
+  PropAi Sync?: {
     install?: {
       npmSpec?: string;
     };
@@ -25,11 +25,11 @@ export function normalizeBundledExtensionMetadata(
   return extensions.map((extension) => ({
     ...extension,
     npmSpec:
-      typeof extension.packageJson.openclaw?.install?.npmSpec === "string"
-        ? extension.packageJson.openclaw.install.npmSpec.trim()
+      typeof extension.packageJson.propai?.install?.npmSpec === "string"
+        ? extension.packageJson.propai.install.npmSpec.trim()
         : undefined,
     rootDependencyMirrorAllowlist:
-      extension.packageJson.openclaw?.releaseChecks?.rootDependencyMirrorAllowlist?.filter(
+      extension.packageJson.propai?.releaseChecks?.rootDependencyMirrorAllowlist?.filter(
         (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
       ) ?? [],
   }));
@@ -39,33 +39,36 @@ export function collectBundledExtensionManifestErrors(extensions: BundledExtensi
   const errors: string[] = [];
 
   for (const extension of extensions) {
-    const install = extension.packageJson.openclaw?.install;
+    const install = extension.packageJson.propai?.install;
     if (
       install &&
       (!install.npmSpec || typeof install.npmSpec !== "string" || !install.npmSpec.trim())
     ) {
       errors.push(
-        `bundled extension '${extension.id}' manifest invalid | openclaw.install.npmSpec must be a non-empty string`,
+        `bundled extension '${extension.id}' manifest invalid | PropAiSync.install.npmSpec must be a non-empty string`,
       );
     }
 
-    const allowlist = extension.packageJson.openclaw?.releaseChecks?.rootDependencyMirrorAllowlist;
+    const allowlist = extension.packageJson.propai?.releaseChecks?.rootDependencyMirrorAllowlist;
     if (allowlist === undefined) {
       continue;
     }
     if (!Array.isArray(allowlist)) {
       errors.push(
-        `bundled extension '${extension.id}' manifest invalid | openclaw.releaseChecks.rootDependencyMirrorAllowlist must be an array of non-empty strings`,
+        `bundled extension '${extension.id}' manifest invalid | PropAiSync.releaseChecks.rootDependencyMirrorAllowlist must be an array of non-empty strings`,
       );
       continue;
     }
     const invalidEntries = allowlist.filter((entry) => typeof entry !== "string" || !entry.trim());
     if (invalidEntries.length > 0) {
       errors.push(
-        `bundled extension '${extension.id}' manifest invalid | openclaw.releaseChecks.rootDependencyMirrorAllowlist must contain only non-empty strings`,
+        `bundled extension '${extension.id}' manifest invalid | PropAiSync.releaseChecks.rootDependencyMirrorAllowlist must contain only non-empty strings`,
       );
     }
   }
 
   return errors;
 }
+
+
+

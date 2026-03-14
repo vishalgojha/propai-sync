@@ -1,6 +1,6 @@
-# OpenClaw iOS (Super Alpha)
+# PropAi Sync iOS (Super Alpha)
 
-This iPhone app is super-alpha and internal-use only. It connects to an OpenClaw Gateway as a `role: node`.
+This iPhone app is super-alpha and internal-use only. It connects to an PropAi Sync Gateway as a `role: node`.
 
 ## Distribution Status
 
@@ -29,11 +29,11 @@ pnpm install
 ./scripts/ios-configure-signing.sh
 cd apps/ios
 xcodegen generate
-open OpenClaw.xcodeproj
+open PropAi Sync.xcodeproj
 ```
 
 3. In Xcode:
-   - Scheme: `OpenClaw`
+   - Scheme: `propai`
    - Destination: connected iPhone (recommended for real behavior)
    - Build configuration: `Debug`
    - Run (`Product` -> `Run`)
@@ -61,7 +61,7 @@ Prereqs:
 Release behavior:
 
 - Local development keeps using unique per-developer bundle IDs from `scripts/ios-configure-signing.sh`.
-- Beta release uses canonical `ai.openclaw.client*` bundle IDs through a temporary generated xcconfig in `apps/ios/build/BetaRelease.xcconfig`.
+- Beta release uses canonical `ai.propai.client*` bundle IDs through a temporary generated xcconfig in `apps/ios/build/BetaRelease.xcconfig`.
 - The beta flow does not modify `apps/ios/.local-signing.xcconfig` or `apps/ios/LocalSigning.xcconfig`.
 - Root `package.json.version` is the only version source for iOS.
 - A root version like `2026.3.11-beta.1` becomes:
@@ -89,7 +89,7 @@ pnpm ios:beta -- --build-number 7
 ## APNs Expectations For Local/Manual Builds
 
 - The app calls `registerForRemoteNotifications()` at launch.
-- `apps/ios/Sources/OpenClaw.entitlements` sets `aps-environment` to `development`.
+- `apps/ios/Sources/PropAiSync.entitlements` sets `aps-environment` to `development`.
 - APNs token registration to gateway happens only after gateway connection (`push.apns.register`).
 - Your selected team/profile must support Push Notifications for the app bundle ID you are signing.
 - If push capability or provisioning is wrong, APNs registration fails at runtime (check Xcode logs for `APNs registration failed`).
@@ -169,9 +169,13 @@ Automatic wake/reconnect hardening:
 5. If network path is unclear:
    - switch to manual host/port + TLS in Gateway Advanced settings
 6. In Xcode console, filter for subsystem/category signals:
-   - `ai.openclaw.ios`
+   - `ai.propai.ios`
    - `GatewayDiag`
    - `APNs registration failed`
 7. Validate background expectations:
    - repro in foreground first
    - then test background transitions and confirm reconnect on return
+
+
+
+

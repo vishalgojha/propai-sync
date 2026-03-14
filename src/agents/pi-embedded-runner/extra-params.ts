@@ -2,7 +2,7 @@ import type { StreamFn } from "@mariozechner/pi-agent-core";
 import type { SimpleStreamOptions } from "@mariozechner/pi-ai";
 import { streamSimple } from "@mariozechner/pi-ai";
 import type { ThinkLevel } from "../../auto-reply/thinking.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import {
   createAnthropicBetaHeadersWrapper,
   createAnthropicToolPayloadCompatibilityWrapper,
@@ -39,7 +39,7 @@ import {
  * @internal Exported for testing only
  */
 export function resolveExtraParams(params: {
-  cfg: OpenClawConfig | undefined;
+  cfg: PropAiSyncConfig | undefined;
   provider: string;
   modelId: string;
   agentId?: string;
@@ -324,7 +324,7 @@ function createParallelToolCallsWrapper(
  */
 export function applyExtraParamsToAgent(
   agent: { streamFn?: StreamFn },
-  cfg: OpenClawConfig | undefined,
+  cfg: PropAiSyncConfig | undefined,
   provider: string,
   modelId: string,
   extraParamsOverride?: Record<string, unknown>,
@@ -395,12 +395,12 @@ export function applyExtraParamsToAgent(
     // Omit the thinkingLevel so we never inject `reasoning.effort: "none"`,
     // which would cause a 400 on models where reasoning is mandatory.
     // Users who need reasoning control should target a specific model ID.
-    // See: openclaw/openclaw#24851
+    // See: propai/propai#24851
     //
     // x-ai/grok models do not support OpenRouter's reasoning.effort parameter
     // and reject payloads containing it with "Invalid arguments passed to the
     // model." Skip reasoning injection for these models.
-    // See: openclaw/openclaw#32039
+    // See: propai/propai#32039
     const skipReasoningInjection = modelId === "auto" || isProxyReasoningUnsupported(modelId);
     const openRouterThinkingLevel = skipReasoningInjection ? undefined : thinkingLevel;
     agent.streamFn = createOpenRouterWrapper(agent.streamFn, openRouterThinkingLevel);
@@ -410,7 +410,7 @@ export function applyExtraParamsToAgent(
   if (provider === "kilocode") {
     log.debug(`applying Kilocode feature header for ${provider}/${modelId}`);
     // kilo/auto is a dynamic routing model — skip reasoning injection
-    // (same rationale as OpenRouter "auto"). See: openclaw/openclaw#24851
+    // (same rationale as OpenRouter "auto"). See: propai/propai#24851
     // Also skip for models known to reject reasoning.effort (e.g. x-ai/*).
     const kilocodeThinkingLevel =
       modelId === "kilo/auto" || isProxyReasoningUnsupported(modelId) ? undefined : thinkingLevel;
@@ -466,3 +466,7 @@ export function applyExtraParamsToAgent(
     }
   }
 }
+
+
+
+

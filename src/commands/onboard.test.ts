@@ -22,7 +22,7 @@ vi.mock("../config/config.js", () => ({
 }));
 
 vi.mock("./onboard-helpers.js", () => ({
-  DEFAULT_WORKSPACE: "~/.openclaw/workspace",
+  DEFAULT_WORKSPACE: "~/.propai/workspace",
   handleReset: mocks.handleReset,
 }));
 
@@ -85,7 +85,7 @@ describe("onboardCommand", () => {
       config: {
         agents: {
           defaults: {
-            workspace: "/tmp/openclaw-custom-workspace",
+            workspace: "/tmp/propai-custom-workspace",
           },
         },
       },
@@ -100,7 +100,7 @@ describe("onboardCommand", () => {
 
     expect(mocks.handleReset).toHaveBeenCalledWith(
       "config+creds+sessions",
-      path.resolve("/tmp/openclaw-custom-workspace"),
+      path.resolve("/tmp/propai-custom-workspace"),
       runtime,
     );
   });
@@ -139,3 +139,5 @@ describe("onboardCommand", () => {
     expect(mocks.runNonInteractiveOnboarding).not.toHaveBeenCalled();
   });
 });
+
+

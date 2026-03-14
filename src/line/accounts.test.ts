@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   resolveLineAccount,
   resolveDefaultLineAccountId,
@@ -25,7 +25,7 @@ describe("LINE accounts", () => {
 
   describe("resolveLineAccount", () => {
     it("resolves account from config", () => {
-      const cfg: OpenClawConfig = {
+      const cfg: PropAiSyncConfig = {
         channels: {
           line: {
             enabled: true,
@@ -50,7 +50,7 @@ describe("LINE accounts", () => {
       process.env.LINE_CHANNEL_ACCESS_TOKEN = "env-token";
       process.env.LINE_CHANNEL_SECRET = "env-secret";
 
-      const cfg: OpenClawConfig = {
+      const cfg: PropAiSyncConfig = {
         channels: {
           line: {
             enabled: true,
@@ -66,7 +66,7 @@ describe("LINE accounts", () => {
     });
 
     it("resolves named account", () => {
-      const cfg: OpenClawConfig = {
+      const cfg: PropAiSyncConfig = {
         channels: {
           line: {
             enabled: true,
@@ -92,7 +92,7 @@ describe("LINE accounts", () => {
     });
 
     it("returns empty token when not configured", () => {
-      const cfg: OpenClawConfig = {};
+      const cfg: PropAiSyncConfig = {};
 
       const account = resolveLineAccount({ cfg });
 
@@ -102,7 +102,7 @@ describe("LINE accounts", () => {
     });
 
     it.runIf(process.platform !== "win32")("rejects symlinked token and secret files", () => {
-      const dir = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-line-account-"));
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), "propai-line-account-"));
       const tokenFile = path.join(dir, "token.txt");
       const tokenLink = path.join(dir, "token-link.txt");
       const secretFile = path.join(dir, "secret.txt");
@@ -112,7 +112,7 @@ describe("LINE accounts", () => {
       fs.symlinkSync(tokenFile, tokenLink);
       fs.symlinkSync(secretFile, secretLink);
 
-      const cfg: OpenClawConfig = {
+      const cfg: PropAiSyncConfig = {
         channels: {
           line: {
             tokenFile: tokenLink,
@@ -131,7 +131,7 @@ describe("LINE accounts", () => {
 
   describe("resolveDefaultLineAccountId", () => {
     it("prefers channels.line.defaultAccount when configured", () => {
-      const cfg: OpenClawConfig = {
+      const cfg: PropAiSyncConfig = {
         channels: {
           line: {
             defaultAccount: "business",
@@ -148,7 +148,7 @@ describe("LINE accounts", () => {
     });
 
     it("normalizes channels.line.defaultAccount before lookup", () => {
-      const cfg: OpenClawConfig = {
+      const cfg: PropAiSyncConfig = {
         channels: {
           line: {
             defaultAccount: "Business Ops",
@@ -164,7 +164,7 @@ describe("LINE accounts", () => {
     });
 
     it("returns first named account when default not configured", () => {
-      const cfg: OpenClawConfig = {
+      const cfg: PropAiSyncConfig = {
         channels: {
           line: {
             accounts: {
@@ -180,7 +180,7 @@ describe("LINE accounts", () => {
     });
 
     it("falls back when channels.line.defaultAccount is missing", () => {
-      const cfg: OpenClawConfig = {
+      const cfg: PropAiSyncConfig = {
         channels: {
           line: {
             defaultAccount: "missing",
@@ -202,3 +202,6 @@ describe("LINE accounts", () => {
     });
   });
 });
+
+
+

@@ -4,7 +4,7 @@ import {
   GroupPolicySchema,
   MarkdownConfigSchema,
   requireOpenAllowFrom,
-} from "openclaw/plugin-sdk/mattermost";
+} from "propai/plugin-sdk/mattermost";
 import { z } from "zod";
 import { buildSecretInputSchema } from "./secret-input.js";
 
@@ -84,3 +84,5 @@ export const MattermostConfigSchema = MattermostAccountSchemaBase.extend({
       'channels.mattermost.dmPolicy="open" requires channels.mattermost.allowFrom to include "*"',
   });
 });
+
+

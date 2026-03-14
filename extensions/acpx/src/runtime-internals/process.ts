@@ -4,14 +4,14 @@ import type {
   WindowsSpawnProgram,
   WindowsSpawnProgramCandidate,
   WindowsSpawnResolution,
-} from "openclaw/plugin-sdk/acpx";
+} from "propai/plugin-sdk/acpx";
 import {
   applyWindowsSpawnProgramPolicy,
   listKnownProviderAuthEnvVarNames,
   materializeWindowsSpawnProgram,
   omitEnvKeysCaseInsensitive,
   resolveWindowsSpawnProgramCandidate,
-} from "openclaw/plugin-sdk/acpx";
+} from "propai/plugin-sdk/acpx";
 
 export type SpawnExit = {
   code: number | null;
@@ -143,7 +143,7 @@ export function spawnWithResolvedCommand(
     process.env,
     params.stripProviderAuthEnvVars ? listKnownProviderAuthEnvVarNames() : [],
   );
-  childEnv.OPENCLAW_SHELL = "acp";
+  childEnv.propai_SHELL = "acp";
 
   return spawn(resolved.command, resolved.args, {
     cwd: params.cwd,
@@ -284,3 +284,5 @@ function directoryExists(cwd: string): boolean {
     return false;
   }
 }
+
+

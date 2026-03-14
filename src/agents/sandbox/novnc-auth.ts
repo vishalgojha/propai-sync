@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-export const NOVNC_PASSWORD_ENV_KEY = "OPENCLAW_BROWSER_NOVNC_PASSWORD"; // pragma: allowlist secret
+export const NOVNC_PASSWORD_ENV_KEY = "PROPAI_BROWSER_NOVNC_PASSWORD"; // pragma: allowlist secret
 const NOVNC_TOKEN_TTL_MS = 60 * 1000;
 const NOVNC_PASSWORD_LENGTH = 8;
 const NOVNC_PASSWORD_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -100,3 +100,5 @@ export function buildNoVncObserverTokenUrl(baseUrl: string, token: string) {
 export function resetNoVncObserverTokensForTests() {
   NO_VNC_OBSERVER_TOKENS.clear();
 }
+
+

@@ -1,12 +1,12 @@
 import { formatCliCommand } from "../../cli/command-format.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { normalizeProviderId } from "../model-selection.js";
 import { listProfilesForProvider } from "./profiles.js";
 import { suggestOAuthProfileIdForLegacyDefault } from "./repair.js";
 import type { AuthProfileStore } from "./types.js";
 
 export function formatAuthDoctorHint(params: {
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
   store: AuthProfileStore;
   provider: string;
   profileId?: string;
@@ -42,6 +42,8 @@ export function formatAuthDoctorHint(params: {
     }`,
     `- auth store oauth profiles: ${storeOauthProfiles || "(none)"}`,
     `- suggested profile: ${suggested}`,
-    `Fix: run "${formatCliCommand("openclaw doctor --yes")}"`,
+    `Fix: run "${formatCliCommand("PropAi Sync doctor --yes")}"`,
   ].join("\n");
 }
+
+

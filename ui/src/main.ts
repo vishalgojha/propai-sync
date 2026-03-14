@@ -1,6 +1,6 @@
 import "./styles.css";
 
-const DESKTOP_ONBOARDING_DONE_KEY = "openclaw.desktop.onboarding.done";
+const DESKTOP_ONBOARDING_DONE_KEY = "PropAiSync.desktop.onboarding.done";
 
 function readDesktopOnboardingDoneFlag(): boolean {
   try {
@@ -22,7 +22,7 @@ function enableDesktopOnboardingIfFirstRun() {
 
   try {
     // Match `ui/src/ui/storage.ts` key.
-    const hasPersistedSettings = Boolean(localStorage.getItem("openclaw.control.settings.v1"));
+    const hasPersistedSettings = Boolean(localStorage.getItem("PropAiSync.control.settings.v1"));
     if (hasPersistedSettings || readDesktopOnboardingDoneFlag()) {
       return;
     }
@@ -42,3 +42,5 @@ function enableDesktopOnboardingIfFirstRun() {
 
 enableDesktopOnboardingIfFirstRun();
 await import("./ui/app.ts");
+
+

@@ -9,7 +9,7 @@ title: "Web Tools"
 
 # Web tools
 
-OpenClaw ships two lightweight web tools:
+propai ships two lightweight web tools:
 
 - `web_search` — Search the web using Brave Search API, Gemini with Google Search grounding, Grok, Kimi, or Perplexity Search API.
 - `web_fetch` — HTTP fetch + readable extraction (HTML → markdown/text).
@@ -52,18 +52,18 @@ If no keys are found, it falls back to Brave (you'll get a missing-key error pro
 Runtime SecretRef behavior:
 
 - Web tool SecretRefs are resolved atomically at gateway startup/reload.
-- In auto-detect mode, OpenClaw resolves only the selected provider key. Non-selected provider SecretRefs stay inactive until selected.
+- In auto-detect mode, propai resolves only the selected provider key. Non-selected provider SecretRefs stay inactive until selected.
 - If the selected provider SecretRef is unresolved and no provider env fallback exists, startup/reload fails fast.
 
 ## Setting up web search
 
-Use `openclaw configure --section web` to set up your API key and choose a provider.
+Use `propai configure --section web` to set up your API key and choose a provider.
 
 ### Brave Search
 
 1. Create a Brave Search API account at [brave.com/search/api](https://brave.com/search/api/)
 2. In the dashboard, choose the **Search** plan and generate an API key.
-3. Run `openclaw configure --section web` to store the key in config, or set `BRAVE_API_KEY` in your environment.
+3. Run `propai configure --section web` to store the key in config, or set `BRAVE_API_KEY` in your environment.
 
 Each Brave plan includes **$5/month in free credit** (renewing). The Search
 plan costs $5 per 1,000 requests, so the credit covers 1,000 queries/month. Set
@@ -75,7 +75,7 @@ pricing.
 
 1. Create a Perplexity account at [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
 2. Generate an API key in the dashboard
-3. Run `openclaw configure --section web` to store the key in config, or set `PERPLEXITY_API_KEY` in your environment.
+3. Run `propai configure --section web` to store the key in config, or set `PERPLEXITY_API_KEY` in your environment.
 
 For legacy Sonar/OpenRouter compatibility, set `OPENROUTER_API_KEY` instead, or configure `tools.web.search.perplexity.apiKey` with an `sk-or-...` key. Setting `tools.web.search.perplexity.baseUrl` or `model` also opts Perplexity back into the chat-completions compatibility path.
 
@@ -83,7 +83,7 @@ See [Perplexity Search API Docs](https://docs.perplexity.ai/guides/search-quicks
 
 ### Where to store the key
 
-**Via config:** run `openclaw configure --section web`. It stores the key under the provider-specific config path:
+**Via config:** run `propai configure --section web`. It stores the key under the provider-specific config path:
 
 - Brave: `tools.web.search.apiKey`
 - Gemini: `tools.web.search.gemini.apiKey`
@@ -101,7 +101,7 @@ All of these fields also support SecretRef objects.
 - Kimi: `KIMI_API_KEY` or `MOONSHOT_API_KEY`
 - Perplexity: `PERPLEXITY_API_KEY` or `OPENROUTER_API_KEY`
 
-For a gateway install, put these in `~/.openclaw/.env` (or your service environment). See [Env vars](/help/faq#how-does-openclaw-load-environment-variables).
+For a gateway install, put these in `~/.propai/.env` (or your service environment). See [Env vars](/help/faq#how-does-propai-load-environment-variables).
 
 ### Config examples
 
@@ -214,7 +214,7 @@ which returns AI-synthesized answers backed by live Google Search results with c
 ```
 
 **Environment alternative:** set `GEMINI_API_KEY` in the Gateway environment.
-For a gateway install, put it in `~/.openclaw/.env`.
+For a gateway install, put it in `~/.propai/.env`.
 
 ### Notes
 
@@ -386,3 +386,6 @@ Notes:
 - Responses are cached (default 15 minutes) to reduce repeated fetches.
 - If you use tool profiles/allowlists, add `web_search`/`web_fetch` or `group:web`.
 - If the API key is missing, `web_search` returns a short setup hint with a docs link.
+
+
+

@@ -9,12 +9,12 @@ const REPO_ROOT = path.resolve(TAURI_DIR, "../..");
 const SRC_TAURI_DIR = path.resolve(TAURI_DIR, "src-tauri");
 
 function fail(message) {
-  process.stderr.write(`[openclaw-desktop] ${message}\n`);
+  process.stderr.write(`[propai-desktop] ${message}\n`);
   process.exit(1);
 }
 
 function run(cmd, args, opts = {}) {
-  process.stdout.write(`[openclaw-desktop] $ ${cmd} ${args.map((a) => JSON.stringify(a)).join(" ")}\n`);
+  process.stdout.write(`[propai-desktop] $ ${cmd} ${args.map((a) => JSON.stringify(a)).join(" ")}\n`);
   const res = spawnSync(cmd, args, {
     cwd: opts.cwd ?? REPO_ROOT,
     stdio: "inherit",
@@ -229,3 +229,5 @@ function main() {
 }
 
 main();
+
+

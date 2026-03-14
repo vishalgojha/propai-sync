@@ -10,8 +10,8 @@ import {
   resolveMentionGatingWithBypass,
   resolveSenderScopedGroupPolicy,
   warnMissingProviderGroupPolicyFallbackOnce,
-} from "openclaw/plugin-sdk/googlechat";
-import type { OpenClawConfig } from "openclaw/plugin-sdk/googlechat";
+} from "propai/plugin-sdk/googlechat";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/googlechat";
 import type { ResolvedGoogleChatAccount } from "./accounts.js";
 import { sendGoogleChatMessage } from "./api.js";
 import type { GoogleChatCoreRuntime } from "./monitor-types.js";
@@ -130,7 +130,7 @@ function warnDeprecatedUsersEmailEntries(logVerbose: (message: string) => void, 
 
 export async function applyGoogleChatInboundAccessPolicy(params: {
   account: ResolvedGoogleChatAccount;
-  config: OpenClawConfig;
+  config: PropAiSyncConfig;
   core: GoogleChatCoreRuntime;
   space: GoogleChatSpace;
   message: GoogleChatMessage;
@@ -355,3 +355,6 @@ export async function applyGoogleChatInboundAccessPolicy(params: {
     groupSystemPrompt: groupEntry?.systemPrompt?.trim() || undefined,
   };
 }
+
+
+

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import type { RuntimeEnv } from "../../runtime.js";
 
 const mocks = vi.hoisted(() => ({
@@ -112,8 +112,8 @@ function withInteractiveStdin() {
 
 describe("modelsAuthLoginCommand", () => {
   let restoreStdin: (() => void) | null = null;
-  let currentConfig: OpenClawConfig;
-  let lastUpdatedConfig: OpenClawConfig | null;
+  let currentConfig: PropAiSyncConfig;
+  let lastUpdatedConfig: PropAiSyncConfig | null;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -130,12 +130,12 @@ describe("modelsAuthLoginCommand", () => {
     mocks.upsertAuthProfile.mockReset();
 
     mocks.resolveDefaultAgentId.mockReturnValue("main");
-    mocks.resolveAgentDir.mockReturnValue("/tmp/openclaw/agents/main");
-    mocks.resolveAgentWorkspaceDir.mockReturnValue("/tmp/openclaw/workspace");
-    mocks.resolveDefaultAgentWorkspaceDir.mockReturnValue("/tmp/openclaw/workspace");
+    mocks.resolveAgentDir.mockReturnValue("/tmp/propai/agents/main");
+    mocks.resolveAgentWorkspaceDir.mockReturnValue("/tmp/propai/workspace");
+    mocks.resolveDefaultAgentWorkspaceDir.mockReturnValue("/tmp/propai/workspace");
     mocks.loadValidConfigOrThrow.mockImplementation(async () => currentConfig);
     mocks.updateConfig.mockImplementation(
-      async (mutator: (cfg: OpenClawConfig) => OpenClawConfig) => {
+      async (mutator: (cfg: PropAiSyncConfig) => PropAiSyncConfig) => {
         lastUpdatedConfig = mutator(currentConfig);
         currentConfig = lastUpdatedConfig;
         return lastUpdatedConfig;
@@ -171,7 +171,7 @@ describe("modelsAuthLoginCommand", () => {
     expect(mocks.writeOAuthCredentials).toHaveBeenCalledWith(
       "openai-codex",
       expect.any(Object),
-      "/tmp/openclaw/agents/main",
+      "/tmp/propai/agents/main",
       { syncSiblingAgents: true },
     );
     expect(mocks.resolvePluginProviders).not.toHaveBeenCalled();
@@ -230,3 +230,7 @@ describe("modelsAuthLoginCommand", () => {
     }
   });
 });
+
+
+
+

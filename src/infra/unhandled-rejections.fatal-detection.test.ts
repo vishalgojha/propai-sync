@@ -60,7 +60,7 @@ describe("installUnhandledRejectionHandler - fatal detection", () => {
       }
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[openclaw] FATAL unhandled rejection:",
+        "[PropAi Sync] FATAL unhandled rejection:",
         expect.stringContaining("Out of memory"),
       );
     });
@@ -78,7 +78,7 @@ describe("installUnhandledRejectionHandler - fatal detection", () => {
       }
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[openclaw] CONFIGURATION ERROR - requires fix:",
+        "[PropAi Sync] CONFIGURATION ERROR - requires fix:",
         expect.stringContaining("Invalid config"),
       );
     });
@@ -121,7 +121,7 @@ describe("installUnhandledRejectionHandler - fatal detection", () => {
       }
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "[openclaw] Non-fatal unhandled rejection (continuing):",
+        "[PropAi Sync] Non-fatal unhandled rejection (continuing):",
         expect.stringContaining("fetch failed"),
       );
     });
@@ -131,7 +131,7 @@ describe("installUnhandledRejectionHandler - fatal detection", () => {
 
       expectExitCodeFromUnhandled(genericErr, [1]);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[openclaw] Unhandled promise rejection:",
+        "[PropAi Sync] Unhandled promise rejection:",
         expect.stringContaining("Something went wrong"),
       );
     });
@@ -153,9 +153,10 @@ describe("installUnhandledRejectionHandler - fatal detection", () => {
 
       expectExitCodeFromUnhandled(abortErr, []);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "[openclaw] Suppressed AbortError:",
+        "[PropAi Sync] Suppressed AbortError:",
         expect.stringContaining("This operation was aborted"),
       );
     });
   });
 });
+

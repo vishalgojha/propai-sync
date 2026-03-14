@@ -133,9 +133,9 @@ describe("registerQrCli", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv("OPENCLAW_GATEWAY_TOKEN", "");
+    vi.stubEnv("PROPAI_GATEWAY_TOKEN", "");
     vi.stubEnv("CLAWDBOT_GATEWAY_TOKEN", "");
-    vi.stubEnv("OPENCLAW_GATEWAY_PASSWORD", "");
+    vi.stubEnv("PROPAI_GATEWAY_PASSWORD", "");
     vi.stubEnv("CLAWDBOT_GATEWAY_PASSWORD", "");
   });
 
@@ -179,7 +179,7 @@ describe("registerQrCli", () => {
     expect(output).toContain("Pairing QR");
     expect(output).toContain("ASCII-QR");
     expect(output).toContain("Gateway:");
-    expect(output).toContain("openclaw devices approve <requestId>");
+    expect(output).toContain("propai devices approve <requestId>");
   });
 
   it("accepts --token override when config has no auth", async () => {
@@ -233,8 +233,8 @@ describe("registerQrCli", () => {
     expect(resolveCommandSecretRefsViaGateway).not.toHaveBeenCalled();
   });
 
-  it("uses OPENCLAW_GATEWAY_PASSWORD without resolving local password SecretRef", async () => {
-    vi.stubEnv("OPENCLAW_GATEWAY_PASSWORD", "password-from-env");
+  it("uses PROPAI_GATEWAY_PASSWORD without resolving local password SecretRef", async () => {
+    vi.stubEnv("PROPAI_GATEWAY_PASSWORD", "password-from-env");
     loadConfig.mockReturnValue(
       createLocalGatewayConfigWithAuth(
         createLocalGatewayPasswordRefAuth("MISSING_LOCAL_GATEWAY_PASSWORD"),
@@ -462,3 +462,6 @@ describe("registerQrCli", () => {
     expect(payload.urlSource).toBe("gateway.tailscale.mode=serve");
   });
 });
+
+
+

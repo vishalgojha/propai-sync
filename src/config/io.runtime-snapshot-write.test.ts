@@ -12,9 +12,9 @@ import {
   setRuntimeConfigSnapshot,
   writeConfigFile,
 } from "./io.js";
-import type { OpenClawConfig } from "./types.js";
+import type { PropAiSyncConfig } from "./types.js";
 
-function createSourceConfig(): OpenClawConfig {
+function createSourceConfig(): PropAiSyncConfig {
   return {
     models: {
       providers: {
@@ -28,7 +28,7 @@ function createSourceConfig(): OpenClawConfig {
   };
 }
 
-function createRuntimeConfig(): OpenClawConfig {
+function createRuntimeConfig(): PropAiSyncConfig {
   return {
     models: {
       providers: {
@@ -50,7 +50,7 @@ function resetRuntimeConfigState(): void {
 
 describe("runtime config snapshot writes", () => {
   it("returns the source snapshot when runtime snapshot is active", async () => {
-    await withTempHome("openclaw-config-runtime-source-", async () => {
+    await withTempHome("propai-config-runtime-source-", async () => {
       const sourceConfig = createSourceConfig();
       const runtimeConfig = createRuntimeConfig();
       try {
@@ -63,8 +63,8 @@ describe("runtime config snapshot writes", () => {
   });
 
   it("skips source projection for non-runtime-derived configs", async () => {
-    await withTempHome("openclaw-config-runtime-projection-shape-", async () => {
-      const sourceConfig: OpenClawConfig = {
+    await withTempHome("propai-config-runtime-projection-shape-", async () => {
+      const sourceConfig: PropAiSyncConfig = {
         ...createSourceConfig(),
         gateway: {
           auth: {
@@ -72,7 +72,7 @@ describe("runtime config snapshot writes", () => {
           },
         },
       };
-      const runtimeConfig: OpenClawConfig = {
+      const runtimeConfig: PropAiSyncConfig = {
         ...createRuntimeConfig(),
         gateway: {
           auth: {
@@ -80,7 +80,7 @@ describe("runtime config snapshot writes", () => {
           },
         },
       };
-      const independentConfig: OpenClawConfig = {
+      const independentConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -112,8 +112,8 @@ describe("runtime config snapshot writes", () => {
   });
 
   it("preserves source secret refs when writeConfigFile receives runtime-resolved config", async () => {
-    await withTempHome("openclaw-config-runtime-write-", async (home) => {
-      const configPath = path.join(home, ".openclaw", "openclaw.json");
+    await withTempHome("propai-config-runtime-write-", async (home) => {
+      const configPath = path.join(home, ".propai", "propai.json");
       const sourceConfig = createSourceConfig();
       const runtimeConfig = createRuntimeConfig();
 
@@ -141,9 +141,9 @@ describe("runtime config snapshot writes", () => {
   });
 
   it("refreshes the runtime snapshot after writes so follow-up reads see persisted changes", async () => {
-    await withTempHome("openclaw-config-runtime-write-refresh-", async (home) => {
-      const configPath = path.join(home, ".openclaw", "openclaw.json");
-      const sourceConfig: OpenClawConfig = {
+    await withTempHome("propai-config-runtime-write-refresh-", async (home) => {
+      const configPath = path.join(home, ".propai", "propai.json");
+      const sourceConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -154,7 +154,7 @@ describe("runtime config snapshot writes", () => {
           },
         },
       };
-      const runtimeConfig: OpenClawConfig = {
+      const runtimeConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -165,7 +165,7 @@ describe("runtime config snapshot writes", () => {
           },
         },
       };
-      const nextRuntimeConfig: OpenClawConfig = {
+      const nextRuntimeConfig: PropAiSyncConfig = {
         ...runtimeConfig,
         gateway: { auth: { mode: "token" as const } },
       };
@@ -214,11 +214,11 @@ describe("runtime config snapshot writes", () => {
   });
 
   it("keeps the last-known-good runtime snapshot active while a specialized refresh is pending", async () => {
-    await withTempHome("openclaw-config-runtime-refresh-pending-", async (home) => {
-      const configPath = path.join(home, ".openclaw", "openclaw.json");
+    await withTempHome("propai-config-runtime-refresh-pending-", async (home) => {
+      const configPath = path.join(home, ".propai", "propai.json");
       const sourceConfig = createSourceConfig();
       const runtimeConfig = createRuntimeConfig();
-      const nextRuntimeConfig: OpenClawConfig = {
+      const nextRuntimeConfig: PropAiSyncConfig = {
         ...runtimeConfig,
         gateway: { auth: { mode: "token" as const } },
       };
@@ -253,3 +253,6 @@ describe("runtime config snapshot writes", () => {
     });
   });
 });
+
+
+

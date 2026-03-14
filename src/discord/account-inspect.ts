@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import type { DiscordAccountConfig } from "../config/types.discord.js";
 import { hasConfiguredSecretInput, normalizeSecretInputString } from "../config/types.secrets.js";
 import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "../routing/session-key.js";
@@ -45,7 +45,7 @@ function inspectDiscordTokenValue(value: unknown): {
 }
 
 export function inspectDiscordAccount(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   envToken?: string | null;
 }): InspectedDiscordAccount {
@@ -127,3 +127,5 @@ export function inspectDiscordAccount(params: {
     config: merged,
   };
 }
+
+

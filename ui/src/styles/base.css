@@ -274,7 +274,7 @@ html.theme-transition::view-transition-new(theme) {
   }
 }
 
-openclaw-app {
+propai-app {
   display: block;
   position: relative;
   z-index: 1;
@@ -419,3 +419,5 @@ select {
   outline: none;
   box-shadow: var(--focus-ring);
 }
+
+

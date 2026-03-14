@@ -52,7 +52,7 @@ export function renderDebug(props: DebugProps) {
               securitySummary
                 ? html`<div class="callout ${securityTone}" style="margin-top: 8px;">
                   Security audit: ${securityLabel}${info > 0 ? ` · ${info} info` : ""}. Run
-                  <span class="mono">openclaw security audit --deep</span> for details.
+                  <span class="mono">PropAi Sync security audit --deep</span> for details.
                 </div>`
                 : nothing
             }
@@ -158,3 +158,4 @@ export function renderDebug(props: DebugProps) {
     </section>
   `;
 }
+

@@ -10,7 +10,7 @@ describe("createDiffsHttpHandler", () => {
   let cleanupRootDir: () => Promise<void>;
 
   beforeEach(async () => {
-    ({ store, cleanup: cleanupRootDir } = await createDiffStoreHarness("openclaw-diffs-http-"));
+    ({ store, cleanup: cleanupRootDir } = await createDiffStoreHarness("propai-diffs-http-"));
   });
 
   afterEach(async () => {
@@ -97,7 +97,7 @@ describe("createDiffsHttpHandler", () => {
 
     expect(handled).toBe(true);
     expect(res.statusCode).toBe(200);
-    expect(String(res.body)).toContain("openclawDiffsReady");
+    expect(String(res.body)).toContain("PropAiSyncDiffsReady");
   });
 
   it.each([
@@ -207,3 +207,8 @@ function remoteReq(input: {
     socket: { remoteAddress: "203.0.113.10" },
   } as unknown as IncomingMessage;
 }
+
+
+
+
+

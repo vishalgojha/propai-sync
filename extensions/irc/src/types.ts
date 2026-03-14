@@ -1,4 +1,4 @@
-import type { BaseProbeResult } from "openclaw/plugin-sdk/irc";
+import type { BaseProbeResult } from "propai/plugin-sdk/irc";
 import type {
   BlockStreamingCoalesceConfig,
   DmConfig,
@@ -7,8 +7,8 @@ import type {
   GroupToolPolicyBySenderConfig,
   GroupToolPolicyConfig,
   MarkdownConfig,
-  OpenClawConfig,
-} from "openclaw/plugin-sdk/irc";
+  PropAiSyncConfig,
+} from "propai/plugin-sdk/irc";
 
 export type IrcChannelConfig = {
   requireMention?: boolean;
@@ -71,8 +71,8 @@ export type IrcConfig = IrcAccountConfig & {
   defaultAccount?: string;
 };
 
-export type CoreConfig = OpenClawConfig & {
-  channels?: OpenClawConfig["channels"] & {
+export type CoreConfig = PropAiSyncConfig & {
+  channels?: PropAiSyncConfig["channels"] & {
     irc?: IrcConfig;
   };
 };
@@ -98,3 +98,6 @@ export type IrcProbe = BaseProbeResult<string> & {
   nick: string;
   latencyMs?: number;
 };
+
+
+

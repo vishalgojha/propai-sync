@@ -1,6 +1,6 @@
 import type { OAuthCredentials, OAuthProvider } from "@mariozechner/pi-ai";
 import { getOAuthApiKey, getOAuthProviders } from "@mariozechner/pi-ai/oauth";
-import { loadConfig, type OpenClawConfig } from "../../config/config.js";
+import { loadConfig, type PropAiSyncConfig } from "../../config/config.js";
 import { coerceSecretRef } from "../../config/types.secrets.js";
 import { withFileLock } from "../../infra/file-lock.js";
 import { refreshQwenPortalCredentials } from "../../providers/qwen-portal-oauth.js";
@@ -38,7 +38,7 @@ const isCompatibleModeType = (mode: string | undefined, type: string | undefined
 };
 
 function isProfileConfigCompatible(params: {
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
   profileId: string;
   provider: string;
   mode: "api_key" | "token" | "oauth";
@@ -106,13 +106,13 @@ function shouldUseOpenaiCodexRefreshFallback(params: {
 }
 
 type ResolveApiKeyForProfileParams = {
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
   store: AuthProfileStore;
   profileId: string;
   agentDir?: string;
 };
 
-type SecretDefaults = NonNullable<OpenClawConfig["secrets"]>["defaults"];
+type SecretDefaults = NonNullable<PropAiSyncConfig["secrets"]>["defaults"];
 
 function adoptNewerMainOAuthCredential(params: {
   store: AuthProfileStore;
@@ -257,7 +257,7 @@ async function resolveProfileSecretString(params: {
   value: string | undefined;
   valueRef: unknown;
   refDefaults: SecretDefaults | undefined;
-  configForRefResolution: OpenClawConfig;
+  configForRefResolution: PropAiSyncConfig;
   cache: SecretRefResolveCache;
   inlineFailureMessage: string;
   refFailureMessage: string;
@@ -485,3 +485,5 @@ export async function resolveApiKeyForProfile(
     );
   }
 }
+
+

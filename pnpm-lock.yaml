@@ -351,7 +351,7 @@ importers:
       google-auth-library:
         specifier: ^10.6.1
         version: 10.6.1
-      openclaw:
+      PropAi Sync:
         specifier: '>=2026.3.7'
         version: 2026.3.8(@discordjs/opus@0.10.0)(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(audio-decode@2.2.3)(hono@4.12.7)(node-llama-cpp@3.16.2(typescript@5.9.3))
 
@@ -412,7 +412,7 @@ importers:
 
   extensions/memory-core:
     dependencies:
-      openclaw:
+      PropAi Sync:
         specifier: '>=2026.3.7'
         version: 2026.3.8(@discordjs/opus@0.10.0)(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(audio-decode@2.2.3)(hono@4.12.7)(node-llama-cpp@3.16.2(typescript@5.9.3))
 
@@ -538,13 +538,13 @@ importers:
 
   packages/clawdbot:
     dependencies:
-      openclaw:
+      PropAi Sync:
         specifier: workspace:*
         version: link:../..
 
   packages/moltbot:
     dependencies:
-      openclaw:
+      PropAi Sync:
         specifier: workspace:*
         version: link:../..
 
@@ -5612,7 +5612,7 @@ packages:
       zod:
         optional: true
 
-  openclaw@2026.3.8:
+  propai@2026.3.8:
     resolution: {integrity: sha512-e5Rk2Aj55sD/5LyX94mdYCQj7zpHXo0xIZsl+k140+nRopePfPAxC7nsu0V/NyypPRtaotP1riFfzK7IhaYkuQ==}
     engines: {node: '>=22.12.0'}
     hasBin: true
@@ -12974,7 +12974,7 @@ snapshots:
       ws: 8.19.0
       zod: 4.3.6
 
-  openclaw@2026.3.8(@discordjs/opus@0.10.0)(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(audio-decode@2.2.3)(hono@4.12.7)(node-llama-cpp@3.16.2(typescript@5.9.3)):
+  propai@2026.3.8(@discordjs/opus@0.10.0)(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(audio-decode@2.2.3)(hono@4.12.7)(node-llama-cpp@3.16.2(typescript@5.9.3)):
     dependencies:
       '@agentclientprotocol/sdk': 0.15.0(zod@4.3.6)
       '@aws-sdk/client-bedrock': 3.1007.0
@@ -14464,3 +14464,5 @@ snapshots:
   zod@4.3.6: {}
 
   zwitch@2.0.4: {}
+
+

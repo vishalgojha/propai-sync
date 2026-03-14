@@ -96,10 +96,10 @@ export { ACP_ERROR_CODES, AcpRuntimeError } from "../acp/runtime/errors.js";
 export type { AcpRuntimeErrorCode } from "../acp/runtime/errors.js";
 export type {
   AnyAgentTool,
-  OpenClawPluginConfigSchema,
-  OpenClawPluginApi,
-  OpenClawPluginService,
-  OpenClawPluginServiceContext,
+  PropAiSyncPluginConfigSchema,
+  PropAiSyncPluginApi,
+  PropAiSyncPluginService,
+  PropAiSyncPluginServiceContext,
   PluginLogger,
   ProviderAuthContext,
   ProviderAuthResult,
@@ -125,9 +125,9 @@ export type {
 export { normalizePluginHttpPath } from "../plugins/http-path.js";
 export { registerPluginHttpRoute } from "../plugins/http-registry.js";
 export { emptyPluginConfigSchema } from "../plugins/config-schema.js";
-export type { OpenClawConfig } from "../config/config.js";
-/** @deprecated Use OpenClawConfig instead */
-export type { OpenClawConfig as ClawdbotConfig } from "../config/config.js";
+export type { PropAiSyncConfig } from "../config/config.js";
+/** @deprecated Use PropAiSyncConfig instead */
+export type { PropAiSyncConfig as ClawdbotConfig } from "../config/config.js";
 export { isDangerousNameMatchingEnabled } from "../config/dangerous-name-matching.js";
 
 export type { FileLockHandle, FileLockOptions } from "./file-lock.js";
@@ -375,7 +375,7 @@ export type {
   WindowsSpawnProgram,
   WindowsSpawnResolution,
 } from "./windows-spawn.js";
-export { resolvePreferredOpenClawTmpDir } from "../infra/tmp-openclaw-dir.js";
+export { resolvePreferredPropAiSyncTmpDir } from "../infra/tmp-propai-dir.js";
 export {
   runPluginCommandWithTimeout,
   type PluginCommandRunOptions,
@@ -823,3 +823,6 @@ export type { ResolvedProviderAuth } from "../agents/model-auth.js";
 
 // Security utilities
 export { redactSensitiveText } from "../logging/redact.js";
+
+
+

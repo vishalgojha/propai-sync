@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/mattermost";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/mattermost";
 import { resolveMattermostAccount } from "./accounts.js";
 import {
   createMattermostClient,
@@ -50,7 +50,7 @@ export function parseMattermostApiStatus(err: unknown): number | undefined {
 
 export async function resolveMattermostOpaqueTarget(params: {
   input: string;
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
   accountId?: string | null;
   token?: string;
   baseUrl?: string;
@@ -95,3 +95,6 @@ export async function resolveMattermostOpaqueTarget(params: {
 export function resetMattermostOpaqueTargetCacheForTests(): void {
   mattermostOpaqueTargetCache.clear();
 }
+
+
+

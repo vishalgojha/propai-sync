@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/zalo";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/zalo";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createEmptyPluginRegistry } from "../../../src/plugins/registry.js";
 import { setActivePluginRegistry } from "../../../src/plugins/runtime.js";
@@ -49,7 +49,7 @@ describe("monitorZaloProvider lifecycle", () => {
       accountId: "default",
       config: {},
     } as unknown as ResolvedZaloAccount;
-    const config = {} as OpenClawConfig;
+    const config = {} as PropAiSyncConfig;
 
     let settled = false;
     const run = monitorZaloProvider({
@@ -94,7 +94,7 @@ describe("monitorZaloProvider lifecycle", () => {
       accountId: "default",
       config: {},
     } as unknown as ResolvedZaloAccount;
-    const config = {} as OpenClawConfig;
+    const config = {} as PropAiSyncConfig;
 
     const run = monitorZaloProvider({
       token: "test-token",
@@ -130,7 +130,7 @@ describe("monitorZaloProvider lifecycle", () => {
       accountId: "default",
       config: {},
     } as unknown as ResolvedZaloAccount;
-    const config = {} as OpenClawConfig;
+    const config = {} as PropAiSyncConfig;
 
     const run = monitorZaloProvider({
       token: "test-token",
@@ -175,7 +175,7 @@ describe("monitorZaloProvider lifecycle", () => {
       accountId: "default",
       config: {},
     } as unknown as ResolvedZaloAccount;
-    const config = {} as OpenClawConfig;
+    const config = {} as PropAiSyncConfig;
 
     let settled = false;
     const run = monitorZaloProvider({
@@ -211,3 +211,6 @@ describe("monitorZaloProvider lifecycle", () => {
     );
   });
 });
+
+
+

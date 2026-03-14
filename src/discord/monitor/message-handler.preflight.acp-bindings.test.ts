@@ -83,10 +83,10 @@ function createBasePreflightParams(overrides?: Record<string, unknown>) {
         mainKey: "main",
         scope: "per-sender",
       },
-    } as import("../../config/config.js").OpenClawConfig,
+    } as import("../../config/config.js").propaiConfig,
     discordConfig: {
       allowBots: true,
-    } as NonNullable<import("../../config/config.js").OpenClawConfig["channels"]>["discord"],
+    } as NonNullable<import("../../config/config.js").propaiConfig["channels"]>["discord"],
     accountId: "default",
     token: "token",
     runtime: {} as import("../../runtime.js").RuntimeEnv,
@@ -174,3 +174,5 @@ describe("preflightDiscordMessage configured ACP bindings", () => {
     expect(result?.boundSessionKey).toBe("agent:codex:acp:binding:discord:default:abc123");
   });
 });
+
+

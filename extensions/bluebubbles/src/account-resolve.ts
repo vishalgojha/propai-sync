@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/bluebubbles";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/bluebubbles";
 import { resolveBlueBubblesAccount } from "./accounts.js";
 import { normalizeResolvedSecretInputString } from "./secret-input.js";
 
@@ -6,7 +6,7 @@ export type BlueBubblesAccountResolveOpts = {
   serverUrl?: string;
   password?: string;
   accountId?: string;
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
 };
 
 export function resolveBlueBubblesServerAccount(params: BlueBubblesAccountResolveOpts): {
@@ -50,3 +50,6 @@ export function resolveBlueBubblesServerAccount(params: BlueBubblesAccountResolv
     allowPrivateNetwork: account.config.allowPrivateNetwork === true,
   };
 }
+
+
+

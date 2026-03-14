@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "./config.js";
+import type { PropAiSyncConfig } from "./config.js";
 
 export type DangerousNameMatchingConfig = {
   dangerouslyAllowNameMatching?: boolean;
@@ -29,7 +29,7 @@ export function isDangerousNameMatchingEnabled(
 }
 
 export function collectProviderDangerousNameMatchingScopes(
-  cfg: OpenClawConfig,
+  cfg: PropAiSyncConfig,
   provider: string,
 ): ProviderDangerousNameMatchingScope[] {
   const scopes: ProviderDangerousNameMatchingScope[] = [];
@@ -82,3 +82,5 @@ export function collectProviderDangerousNameMatchingScopes(
 
   return scopes;
 }
+
+

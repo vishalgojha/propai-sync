@@ -176,7 +176,7 @@ export async function acquireGatewayLock(
   const env = opts.env ?? process.env;
   const allowInTests = opts.allowInTests === true;
   if (
-    env.OPENCLAW_ALLOW_MULTI_GATEWAY === "1" ||
+    env.propai_ALLOW_MULTI_GATEWAY === "1" ||
     (!allowInTests && (env.VITEST || env.NODE_ENV === "test"))
   ) {
     return null;
@@ -260,3 +260,5 @@ export async function acquireGatewayLock(
   const owner = lastPayload?.pid ? ` (pid ${lastPayload.pid})` : "";
   throw new GatewayLockError(`gateway already running${owner}; lock timeout after ${timeoutMs}ms`);
 }
+
+

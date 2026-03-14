@@ -1,4 +1,4 @@
-import type { PluginRuntime, SsrFPolicy } from "openclaw/plugin-sdk/msteams";
+import type { PluginRuntime, SsrFPolicy } from "propai/plugin-sdk/msteams";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createPluginRuntimeMock } from "../../test-utils/plugin-runtime-mock.js";
 import {
@@ -948,3 +948,5 @@ describe("msteams attachments", () => {
     });
   });
 });
+
+

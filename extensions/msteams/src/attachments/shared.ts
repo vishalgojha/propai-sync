@@ -4,8 +4,8 @@ import {
   isHttpsUrlAllowedByHostnameSuffixAllowlist,
   isPrivateIpAddress,
   normalizeHostnameSuffixAllowlist,
-} from "openclaw/plugin-sdk/msteams";
-import type { SsrFPolicy } from "openclaw/plugin-sdk/msteams";
+} from "propai/plugin-sdk/msteams";
+import type { SsrFPolicy } from "propai/plugin-sdk/msteams";
 import type { MSTeamsAttachmentLike } from "./types.js";
 
 type InlineImageCandidate =
@@ -457,3 +457,5 @@ export async function safeFetchWithPolicy(params: {
     resolveFn: params.resolveFn,
   });
 }
+
+

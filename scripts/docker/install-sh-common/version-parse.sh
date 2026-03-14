@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-extract_openclaw_semver() {
+extract_PROPAI_semver() {
   local raw="${1:-}"
   local parsed=""
   parsed="$(
@@ -12,3 +12,5 @@ extract_openclaw_semver() {
   )"
   printf '%s' "${parsed#v}"
 }
+
+

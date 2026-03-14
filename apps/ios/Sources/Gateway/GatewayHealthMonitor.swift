@@ -1,5 +1,5 @@
 import Foundation
-import OpenClawKit
+import PropAiSyncKit
 
 @MainActor
 final class GatewayHealthMonitor {
@@ -83,3 +83,5 @@ final class GatewayHealthMonitor {
         }
     }
 }
+
+

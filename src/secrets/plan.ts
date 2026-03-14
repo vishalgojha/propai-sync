@@ -49,7 +49,7 @@ export type SecretsApplyPlan = {
   version: 1;
   protocolVersion: 1;
   generatedAt: string;
-  generatedBy: "openclaw secrets configure" | "manual";
+  generatedBy: "PropAi Sync secrets configure" | "manual";
   providerUpserts?: Record<string, SecretProviderConfig>;
   providerDeletes?: string[];
   targets: SecretsPlanTarget[];
@@ -194,3 +194,4 @@ export function normalizeSecretsPlanOptions(
     scrubLegacyAuthJson: options?.scrubLegacyAuthJson ?? true,
   };
 }
+

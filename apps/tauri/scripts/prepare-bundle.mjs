@@ -10,17 +10,17 @@ const TAURI_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const REPO_ROOT = path.resolve(TAURI_DIR, "../..");
 const SRC_TAURI_DIR = path.resolve(TAURI_DIR, "src-tauri");
 const RESOURCES_DIR = path.resolve(SRC_TAURI_DIR, "resources");
-const OPENCLAW_RES_DIR = path.resolve(RESOURCES_DIR, "openclaw");
+const PROPAI_RES_DIR = path.resolve(RESOURCES_DIR, "propai");
 const NODE_RES_DIR = path.resolve(RESOURCES_DIR, "node");
 const BUNDLE_CACHE_DIR = path.resolve(SRC_TAURI_DIR, "target", "desktop-bundle-cache");
 
 function fail(message) {
-  process.stderr.write(`[openclaw-desktop] ${message}\n`);
+  process.stderr.write(`[propai-desktop] ${message}\n`);
   process.exit(1);
 }
 
 function log(message) {
-  process.stdout.write(`[openclaw-desktop] ${message}\n`);
+  process.stdout.write(`[propai-desktop] ${message}\n`);
 }
 
 function assertExists(targetPath, label) {
@@ -36,7 +36,7 @@ function assertDistEntryExists(dirPath, label) {
   if (fs.existsSync(entryJs) || fs.existsSync(entryMjs)) {
     return;
   }
-  fail(`${label} is missing dist/entry.(m)js (required by openclaw.mjs): ${dirPath}`);
+  fail(`${label} is missing dist/entry.(m)js (required by propai.mjs): ${dirPath}`);
 }
 
 function statFingerprint(targetPath) {
@@ -314,8 +314,8 @@ function downloadNode(version) {
   return outPath;
 }
 
-function ensureOpenClawDist() {
-  // Always rebuild for desktop bundling so `resources/openclaw/dist` matches the current source.
+function ensurePropAiSyncDist() {
+  // Always rebuild for desktop bundling so `resources/propai/dist` matches the current source.
   // This avoids subtle version skew where the desktop gateway runs stale JS.
   ensureRepoBuildTooling();
   runPnpm(["build"], { cwd: REPO_ROOT });
@@ -335,20 +335,20 @@ function stageNodeModules() {
     if (!fs.existsSync(repoNodeModules)) {
       fail('Missing root "node_modules/". Run "pnpm install" at repo root first.');
     }
-    copyTree(repoNodeModules, path.resolve(OPENCLAW_RES_DIR, "node_modules"));
+    copyTree(repoNodeModules, path.resolve(PROPAI_RES_DIR, "node_modules"));
     return;
   }
 
   // Windows: avoid copying pnpm's symlinked + deep `.pnpm/` tree (path length + junction issues).
   // Instead, install deps into the staged bundle using a hoisted node linker.
   //
-  // Note: `OPENCLAW_RES_DIR` lives under the monorepo. Running `pnpm install` directly in that
+  // Note: `PROPAI_RES_DIR` lives under the monorepo. Running `pnpm install` directly in that
   // folder can be interpreted as a workspace operation and may not create a local `node_modules/`
   // there. To keep this reproducible, install in a temp dir outside the workspace, then copy the
   // resulting `node_modules/` into the staged bundle.
-  const stagedLock = path.resolve(OPENCLAW_RES_DIR, "pnpm-lock.yaml");
-  const stagedNpmrc = path.resolve(OPENCLAW_RES_DIR, ".npmrc");
-  const stagedPatches = path.resolve(OPENCLAW_RES_DIR, "patches");
+  const stagedLock = path.resolve(PROPAI_RES_DIR, "pnpm-lock.yaml");
+  const stagedNpmrc = path.resolve(PROPAI_RES_DIR, ".npmrc");
+  const stagedPatches = path.resolve(PROPAI_RES_DIR, "patches");
 
   const lock = path.resolve(REPO_ROOT, "pnpm-lock.yaml");
   if (!fs.existsSync(lock)) {
@@ -368,7 +368,7 @@ function stageNodeModules() {
     const cached = readJson(cacheMeta);
     if (cached && JSON.stringify(cached) === cacheKeyRaw) {
       mkdirp(BUNDLE_CACHE_DIR);
-      const nodeModulesZip = path.resolve(OPENCLAW_RES_DIR, "node_modules.zip");
+      const nodeModulesZip = path.resolve(PROPAI_RES_DIR, "node_modules.zip");
       if (tryCopy(cacheZip, nodeModulesZip)) {
         assertExists(nodeModulesZip, "Staged node_modules archive");
         log("Using cached node_modules.zip");
@@ -388,11 +388,11 @@ function stageNodeModules() {
     copyTree(patches, stagedPatches);
   }
 
-  const tempBase = path.resolve(os.tmpdir(), "openclaw-desktop-pnpm");
+  const tempBase = path.resolve(os.tmpdir(), "propai-desktop-pnpm");
   mkdirp(tempBase);
   const tempInstallDir = fs.mkdtempSync(path.join(tempBase, "install-"));
 
-  copyTree(path.resolve(OPENCLAW_RES_DIR, "package.json"), path.resolve(tempInstallDir, "package.json"));
+  copyTree(path.resolve(PROPAI_RES_DIR, "package.json"), path.resolve(tempInstallDir, "package.json"));
   copyTree(stagedLock, path.resolve(tempInstallDir, "pnpm-lock.yaml"));
   if (fs.existsSync(stagedNpmrc)) {
     copyTree(stagedNpmrc, path.resolve(tempInstallDir, ".npmrc"));
@@ -402,7 +402,7 @@ function stageNodeModules() {
   }
 
   runPnpm(
-    // Note: the OpenClaw runtime currently imports some packages that are classified as
+    // Note: the PropAi Sync runtime currently imports some packages that are classified as
     // devDependencies in the monorepo. For a fully redistributable desktop bundle, install the
     // full dependency graph (not `--prod`) to avoid ERR_MODULE_NOT_FOUND at runtime.
     ["install", "--frozen-lockfile", "--config.node-linker=hoisted", "--ignore-scripts"],
@@ -456,7 +456,7 @@ function stageNodeModules() {
   } else {
     log("Cache zip write failed (locked); continuing without cache update.");
   }
-  const nodeModulesZip = path.resolve(OPENCLAW_RES_DIR, "node_modules.zip");
+  const nodeModulesZip = path.resolve(PROPAI_RES_DIR, "node_modules.zip");
   fs.copyFileSync(tempZip, nodeModulesZip);
   assertExists(nodeModulesZip, "Staged node_modules archive");
 }
@@ -466,7 +466,7 @@ function writeDesktopManifest() {
     format: 1,
     createdAt: new Date().toISOString(),
     node: {
-      // Keep aligned with `openclaw.mjs` minimum (>= 22.12).
+      // Keep aligned with `propai.mjs` minimum (>= 22.12).
       version: "22.12.0",
     },
   };
@@ -474,45 +474,45 @@ function writeDesktopManifest() {
   return manifest;
 }
 
-function stageOpenClaw() {
-  rmRF(OPENCLAW_RES_DIR);
-  mkdirp(OPENCLAW_RES_DIR);
+function stagePropAiSync() {
+  rmRF(PROPAI_RES_DIR);
+  mkdirp(PROPAI_RES_DIR);
 
   // Runtime entrypoints + assets.
-  copyTree(path.resolve(REPO_ROOT, "openclaw.mjs"), path.resolve(OPENCLAW_RES_DIR, "openclaw.mjs"));
-  copyTree(path.resolve(REPO_ROOT, "package.json"), path.resolve(OPENCLAW_RES_DIR, "package.json"));
+  copyTree(path.resolve(REPO_ROOT, "propai.mjs"), path.resolve(PROPAI_RES_DIR, "propai.mjs"));
+  copyTree(path.resolve(REPO_ROOT, "package.json"), path.resolve(PROPAI_RES_DIR, "package.json"));
   const repoDist = path.resolve(REPO_ROOT, "dist");
   assertExists(repoDist, "Repo dist directory");
-  copyTree(repoDist, path.resolve(OPENCLAW_RES_DIR, "dist"));
-  copyTree(path.resolve(REPO_ROOT, "assets"), path.resolve(OPENCLAW_RES_DIR, "assets"));
-  copyTree(path.resolve(REPO_ROOT, "skills"), path.resolve(OPENCLAW_RES_DIR, "skills"));
+  copyTree(repoDist, path.resolve(PROPAI_RES_DIR, "dist"));
+  copyTree(path.resolve(REPO_ROOT, "assets"), path.resolve(PROPAI_RES_DIR, "assets"));
+  copyTree(path.resolve(REPO_ROOT, "skills"), path.resolve(PROPAI_RES_DIR, "skills"));
   const templates = path.resolve(REPO_ROOT, "docs", "reference", "templates");
   if (fs.existsSync(templates)) {
-    copyTree(templates, path.resolve(OPENCLAW_RES_DIR, "docs", "reference", "templates"));
+    copyTree(templates, path.resolve(PROPAI_RES_DIR, "docs", "reference", "templates"));
   }
 
   stageNodeModules();
 
-  assertDistEntryExists(path.resolve(OPENCLAW_RES_DIR, "dist"), "Staged OpenClaw runtime");
+  assertDistEntryExists(path.resolve(PROPAI_RES_DIR, "dist"), "Staged PropAi Sync runtime");
 }
 
 function main() {
   log(`Preparing bundle (platform=${process.platform}, arch=${process.arch})`);
   mkdirp(RESOURCES_DIR);
   const manifest = writeDesktopManifest();
-  ensureOpenClawDist();
+  ensurePropAiSyncDist();
   ensureControlUiDist();
-  stageOpenClaw();
+  stagePropAiSync();
   downloadNode(manifest.node.version);
   // IMPORTANT: tauri `bundle.resources=["resources/**/*"]` does not include dotfiles at the root
-  // of `resources/`, so write the stamp under `resources/openclaw/` (which is included) to allow
+  // of `resources/`, so write the stamp under `resources/propai/` (which is included) to allow
   // the desktop runtime to detect updates and re-extract.
   const stamp = `${new Date().toISOString()}\n`;
-  writeFile(path.resolve(OPENCLAW_RES_DIR, ".prepared"), stamp);
+  writeFile(path.resolve(PROPAI_RES_DIR, ".prepared"), stamp);
   // Back-compat / convenience.
   writeFile(path.resolve(RESOURCES_DIR, "desktop.prepared.txt"), stamp);
   process.stdout.write(
-    `[openclaw-desktop] Bundle prepared at ${path.relative(REPO_ROOT, RESOURCES_DIR)}\n`,
+    `[propai-desktop] Bundle prepared at ${path.relative(REPO_ROOT, RESOURCES_DIR)}\n`,
   );
 }
 
@@ -521,3 +521,9 @@ try {
 } catch (err) {
   fail(err && typeof err === "object" && "message" in err ? String(err.message) : String(err));
 }
+
+
+
+
+
+

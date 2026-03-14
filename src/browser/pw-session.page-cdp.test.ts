@@ -28,7 +28,7 @@ describe("pw-session page-scoped CDP client", () => {
   });
 
   it("uses raw relay /cdp commands for extension endpoints when targetId is known", async () => {
-    cdpHelperMocks.fetchJson.mockResolvedValue({ Browser: "OpenClaw/extension-relay" });
+    cdpHelperMocks.fetchJson.mockResolvedValue({ Browser: "propai/extension-relay" });
     const send = vi.fn(async () => ({ ok: true }));
     cdpHelperMocks.withCdpSocket.mockImplementation(async (_wsUrl, fn) => await fn(send));
     const newCDPSession = vi.fn();
@@ -84,7 +84,7 @@ describe("pw-session page-scoped CDP client", () => {
   });
 
   it("caches extension-relay endpoint detection by cdpUrl", async () => {
-    cdpHelperMocks.fetchJson.mockResolvedValue({ Browser: "OpenClaw/extension-relay" });
+    cdpHelperMocks.fetchJson.mockResolvedValue({ Browser: "propai/extension-relay" });
 
     await expect(isExtensionRelayCdpEndpoint("http://127.0.0.1:19992")).resolves.toBe(true);
     await expect(isExtensionRelayCdpEndpoint("http://127.0.0.1:19992/")).resolves.toBe(true);
@@ -92,3 +92,5 @@ describe("pw-session page-scoped CDP client", () => {
     expect(cdpHelperMocks.fetchJson).toHaveBeenCalledTimes(1);
   });
 });
+
+

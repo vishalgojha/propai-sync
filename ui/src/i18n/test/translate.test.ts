@@ -83,7 +83,7 @@ describe("i18n", () => {
     vi.resetModules();
     vi.stubGlobal("localStorage", createStorageMock());
     vi.stubGlobal("navigator", { language: "en-US" } as Navigator);
-    localStorage.setItem("openclaw.i18n.locale", "zh-CN");
+    localStorage.setItem("PropAiSync.i18n.locale", "zh-CN");
     const fresh = await import("../lib/translate.ts");
     await vi.waitFor(() => {
       expect(fresh.i18n.getLocale()).toBe("zh-CN");
@@ -98,3 +98,5 @@ describe("i18n", () => {
     expect((zh_TW.common as { version?: string }).version).toBeTruthy();
   });
 });
+
+

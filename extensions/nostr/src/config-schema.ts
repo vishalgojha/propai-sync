@@ -1,5 +1,5 @@
-import { AllowFromListSchema, DmPolicySchema } from "openclaw/plugin-sdk/compat";
-import { MarkdownConfigSchema, buildChannelConfigSchema } from "openclaw/plugin-sdk/nostr";
+import { AllowFromListSchema, DmPolicySchema } from "propai/plugin-sdk/compat";
+import { MarkdownConfigSchema, buildChannelConfigSchema } from "propai/plugin-sdk/nostr";
 import { z } from "zod";
 
 /**
@@ -90,3 +90,5 @@ export type NostrConfig = z.infer<typeof NostrConfigSchema>;
  * JSON Schema for Control UI (converted from Zod)
  */
 export const nostrChannelConfigSchema = buildChannelConfigSchema(NostrConfigSchema);
+
+

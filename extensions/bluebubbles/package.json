@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/bluebubbles",
+  "name": "@propai/bluebubbles",
   "version": "2026.3.11",
-  "description": "OpenClaw BlueBubbles channel plugin",
+  "description": "PropAi Sync BlueBubbles channel plugin",
   "type": "module",
   "dependencies": {
     "zod": "^4.3.6"
   },
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ],
@@ -28,9 +28,11 @@
       "order": 75
     },
     "install": {
-      "npmSpec": "@openclaw/bluebubbles",
+      "npmSpec": "@propai/bluebubbles",
       "localPath": "extensions/bluebubbles",
       "defaultChoice": "npm"
     }
   }
 }
+
+

@@ -1,6 +1,6 @@
 import type { Api, Model } from "@mariozechner/pi-ai";
 import type { ModelRegistry } from "@mariozechner/pi-coding-agent";
-import { resolveOpenClawAgentDir } from "../../agents/agent-paths.js";
+import { resolvePropAiSyncAgentDir } from "../../agents/agent-paths.js";
 import type { AuthProfileStore } from "../../agents/auth-profiles.js";
 import { listProfilesForProvider } from "../../agents/auth-profiles.js";
 import {
@@ -9,7 +9,7 @@ import {
   resolveEnvApiKey,
 } from "../../agents/model-auth.js";
 import { discoverAuthStorage, discoverModels } from "../../agents/pi-model-discovery.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import {
   formatErrorWithStack,
   MODEL_AVAILABILITY_UNAVAILABLE_CODE,
@@ -20,7 +20,7 @@ import { isLocalBaseUrl, modelKey } from "./shared.js";
 
 const hasAuthForProvider = (
   provider: string,
-  cfg?: OpenClawConfig,
+  cfg?: PropAiSyncConfig,
   authStore?: AuthProfileStore,
 ) => {
   if (!cfg || !authStore) {
@@ -94,10 +94,10 @@ function loadAvailableModels(registry: ModelRegistry): Model<Api>[] {
 }
 
 export async function loadModelRegistry(
-  _cfg: OpenClawConfig,
-  _opts?: { sourceConfig?: OpenClawConfig },
+  _cfg: PropAiSyncConfig,
+  _opts?: { sourceConfig?: PropAiSyncConfig },
 ) {
-  const agentDir = resolveOpenClawAgentDir();
+  const agentDir = resolvePropAiSyncAgentDir();
   const authStorage = discoverAuthStorage(agentDir);
   const registry = discoverModels(authStorage, agentDir);
   const models = registry.getAll();
@@ -128,7 +128,7 @@ export function toModelRow(params: {
   tags: string[];
   aliases?: string[];
   availableKeys?: Set<string>;
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
   authStore?: AuthProfileStore;
   allowProviderAvailabilityFallback?: boolean;
 }): ModelRow {
@@ -190,3 +190,5 @@ export function toModelRow(params: {
     missing: false,
   };
 }
+
+

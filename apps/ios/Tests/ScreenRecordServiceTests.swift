@@ -1,5 +1,5 @@
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 @Suite(.serialized) struct ScreenRecordServiceTests {
     @Test func clampDefaultsAndBounds() {
@@ -30,3 +30,5 @@ import Testing
         }
     }
 }
+
+

@@ -1,5 +1,5 @@
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 @MainActor
 @Suite struct TalkModeIncrementalSpeechBufferTests {
@@ -26,3 +26,5 @@ import Testing
         #expect(segments.isEmpty)
     }
 }
+
+

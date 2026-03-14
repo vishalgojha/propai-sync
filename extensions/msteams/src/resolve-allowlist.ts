@@ -1,4 +1,4 @@
-import { mapAllowlistResolutionInputs } from "openclaw/plugin-sdk/compat";
+import { mapAllowlistResolutionInputs } from "propai/plugin-sdk/compat";
 import { searchGraphUsers } from "./graph-users.js";
 import {
   listChannelsForTeam,
@@ -202,3 +202,5 @@ export async function resolveMSTeamsUserAllowlist(params: {
     },
   });
 }
+
+

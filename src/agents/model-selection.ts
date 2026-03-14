@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { resolveAgentModelPrimaryValue, toAgentModelListLike } from "../config/model-input.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { sanitizeForLog } from "../terminal/ansi.js";
@@ -104,7 +104,7 @@ export function findNormalizedProviderKey(
   return Object.keys(entries).find((key) => normalizeProviderId(key) === providerKey);
 }
 
-export function isCliProvider(provider: string, cfg?: OpenClawConfig): boolean {
+export function isCliProvider(provider: string, cfg?: PropAiSyncConfig): boolean {
   const normalized = normalizeProviderId(provider);
   if (normalized === "claude-cli") {
     return true;
@@ -173,7 +173,7 @@ export function parseModelRef(raw: string, defaultProvider: string): ModelRef | 
 }
 
 export function inferUniqueProviderFromConfiguredModels(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   model: string;
 }): string | undefined {
   const model = params.model.trim();
@@ -217,7 +217,7 @@ export function resolveAllowlistModelKey(raw: string, defaultProvider: string): 
 }
 
 export function buildConfiguredAllowlistKeys(params: {
-  cfg: OpenClawConfig | undefined;
+  cfg: PropAiSyncConfig | undefined;
   defaultProvider: string;
 }): Set<string> | null {
   const rawAllowlist = Object.keys(params.cfg?.agents?.defaults?.models ?? {});
@@ -236,7 +236,7 @@ export function buildConfiguredAllowlistKeys(params: {
 }
 
 export function buildModelAliasIndex(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   defaultProvider: string;
 }): ModelAliasIndex {
   const byAlias = new Map<string, { alias: string; ref: ModelRef }>();
@@ -287,7 +287,7 @@ export function resolveModelRefFromString(params: {
 }
 
 export function resolveConfiguredModelRef(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   defaultProvider: string;
   defaultModel: string;
 }): ModelRef {
@@ -353,7 +353,7 @@ export function resolveConfiguredModelRef(params: {
 }
 
 export function resolveDefaultModelForAgent(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   agentId?: string;
 }): ModelRef {
   const agentModelOverride = params.agentId
@@ -383,7 +383,7 @@ export function resolveDefaultModelForAgent(params: {
 }
 
 export function resolveSubagentConfiguredModelSelection(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   agentId: string;
 }): string | undefined {
   const agentConfig = resolveAgentConfig(params.cfg, params.agentId);
@@ -395,7 +395,7 @@ export function resolveSubagentConfiguredModelSelection(params: {
 }
 
 export function resolveSubagentSpawnModelSelection(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   agentId: string;
   modelOverride?: unknown;
 }): string {
@@ -415,7 +415,7 @@ export function resolveSubagentSpawnModelSelection(params: {
 }
 
 export function buildAllowedModelSet(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   catalog: ModelCatalogEntry[];
   defaultProvider: string;
   defaultModel?: string;
@@ -500,7 +500,7 @@ export type ModelRefStatus = {
 };
 
 export function getModelRefStatus(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   catalog: ModelCatalogEntry[];
   ref: ModelRef;
   defaultProvider: string;
@@ -522,7 +522,7 @@ export function getModelRefStatus(params: {
 }
 
 export function resolveAllowedModelRef(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   catalog: ModelCatalogEntry[];
   raw: string;
   defaultProvider: string;
@@ -565,7 +565,7 @@ export function resolveAllowedModelRef(params: {
 }
 
 export function resolveThinkingDefault(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   provider: string;
   model: string;
   catalog?: ModelCatalogEntry[];
@@ -627,7 +627,7 @@ export function resolveReasoningDefault(params: {
  * Returns null if hooks.gmail.model is not set.
  */
 export function resolveHooksGmailModel(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   defaultProvider: string;
 }): ModelRef | null {
   const hooksModel = params.cfg.hooks?.gmail?.model;
@@ -668,3 +668,5 @@ export function normalizeModelSelection(value: unknown): string | undefined {
   }
   return undefined;
 }
+
+

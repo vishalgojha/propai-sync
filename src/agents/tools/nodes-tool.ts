@@ -16,7 +16,7 @@ import {
   writeScreenRecordToFile,
 } from "../../cli/nodes-screen.js";
 import { parseDurationMs } from "../../cli/parse-duration.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { parsePreparedSystemRunPayload } from "../../infra/system-run-approval-context.js";
 import { imageMimeFromFormat } from "../../media/mime.js";
 import type { GatewayMessageChannel } from "../../utils/message-channel.js";
@@ -158,7 +158,7 @@ export function createNodesTool(options?: {
   agentAccountId?: string;
   currentChannelId?: string;
   currentThreadTs?: string | number;
-  config?: OpenClawConfig;
+  config?: PropAiSyncConfig;
   modelHasVision?: boolean;
   allowMediaInvokeCommands?: boolean;
 }): AnyAgentTool {
@@ -811,3 +811,5 @@ const DEFAULT_PHOTOS_LIMIT = 1;
 const MAX_PHOTOS_LIMIT = 20;
 const DEFAULT_PHOTOS_MAX_WIDTH = 1600;
 const DEFAULT_PHOTOS_QUALITY = 0.85;
+
+

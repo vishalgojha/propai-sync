@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SubagentRunRecord } from "../../agents/subagent-registry.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { formatDurationCompact } from "../../infra/format-time/format-duration.js";
 import type { TemplateContext } from "../templating.js";
 import { buildThreadingToolContext } from "./agent-runner-utils.js";
@@ -13,7 +13,7 @@ import {
 } from "./subagents-utils.js";
 
 describe("buildThreadingToolContext", () => {
-  const cfg = {} as OpenClawConfig;
+  const cfg = {} as PropAiSyncConfig;
 
   it("uses conversation id for WhatsApp", () => {
     const sessionCtx = {
@@ -138,7 +138,7 @@ describe("buildThreadingToolContext", () => {
 
     const result = buildThreadingToolContext({
       sessionCtx,
-      config: { channels: { slack: { replyToMode: "all" } } } as OpenClawConfig,
+      config: { channels: { slack: { replyToMode: "all" } } } as PropAiSyncConfig,
       hasRepliedRef: undefined,
     });
 
@@ -323,3 +323,5 @@ describe("subagents utils", () => {
     expect(formatDurationCompact(65_000)).toBe("1m5s");
   });
 });
+
+

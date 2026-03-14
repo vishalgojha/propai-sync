@@ -19,18 +19,18 @@ function createService(overrides: Partial<GatewayService>): GatewayService {
 }
 
 describe("readServiceStatusSummary", () => {
-  it("marks OpenClaw-managed services as installed", async () => {
+  it("marks propai-managed services as installed", async () => {
     const summary = await readServiceStatusSummary(
       createService({
         isLoaded: vi.fn(async () => true),
-        readCommand: vi.fn(async () => ({ programArguments: ["openclaw", "gateway", "run"] })),
+        readCommand: vi.fn(async () => ({ programArguments: ["PropAi Sync", "gateway", "run"] })),
         readRuntime: vi.fn(async () => ({ status: "running" })),
       }),
       "Daemon",
     );
 
     expect(summary.installed).toBe(true);
-    expect(summary.managedByOpenClaw).toBe(true);
+    expect(summary.managedByPropAiSync).toBe(true);
     expect(summary.externallyManaged).toBe(false);
     expect(summary.loadedText).toBe("enabled");
   });
@@ -44,7 +44,7 @@ describe("readServiceStatusSummary", () => {
     );
 
     expect(summary.installed).toBe(true);
-    expect(summary.managedByOpenClaw).toBe(false);
+    expect(summary.managedByPropAiSync).toBe(false);
     expect(summary.externallyManaged).toBe(true);
     expect(summary.loadedText).toBe("running (externally managed)");
   });
@@ -53,8 +53,11 @@ describe("readServiceStatusSummary", () => {
     const summary = await readServiceStatusSummary(createService({}), "Daemon");
 
     expect(summary.installed).toBe(false);
-    expect(summary.managedByOpenClaw).toBe(false);
+    expect(summary.managedByPropAiSync).toBe(false);
     expect(summary.externallyManaged).toBe(false);
     expect(summary.loadedText).toBe("disabled");
   });
 });
+
+
+

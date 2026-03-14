@@ -4,7 +4,7 @@ import {
   collectAllowlistProviderGroupPolicyWarnings,
   createScopedAccountConfigAccessors,
   formatNormalizedAllowFromEntries,
-} from "openclaw/plugin-sdk/compat";
+} from "propai/plugin-sdk/compat";
 import {
   buildBaseAccountStatusSnapshot,
   buildBaseChannelStatusSummary,
@@ -17,7 +17,7 @@ import {
   runPassiveAccountLifecycle,
   setAccountEnabledInConfigSection,
   type ChannelPlugin,
-} from "openclaw/plugin-sdk/irc";
+} from "propai/plugin-sdk/irc";
 import {
   listIrcAccountIds,
   resolveDefaultIrcAccountId,
@@ -384,3 +384,5 @@ export const ircPlugin: ChannelPlugin<ResolvedIrcAccount, IrcProbe> = {
     },
   },
 };
+
+

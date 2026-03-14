@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: openclaw-config
+  name: propai-config
   labels:
-    app: openclaw
+    app: PropAi Sync
 data:
-  openclaw.json: |
+  propai.json: |
     {
       "gateway": {
         "mode": "local",
@@ -20,19 +20,21 @@ data:
       },
       "agents": {
         "defaults": {
-          "workspace": "~/.openclaw/workspace"
+          "workspace": "~/.propai/workspace"
         },
         "list": [
           {
             "id": "default",
-            "name": "OpenClaw Assistant",
-            "workspace": "~/.openclaw/workspace"
+            "name": "PropAi Sync Assistant",
+            "workspace": "~/.propai/workspace"
           }
         ]
       },
       "cron": { "enabled": false }
     }
   AGENTS.md: |
-    # OpenClaw Assistant
+    # PropAi Sync Assistant
 
     You are a helpful AI assistant running in Kubernetes.
+
+

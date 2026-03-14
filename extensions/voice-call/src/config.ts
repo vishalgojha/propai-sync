@@ -3,7 +3,7 @@ import {
   TtsConfigSchema,
   TtsModeSchema,
   TtsProviderSchema,
-} from "openclaw/plugin-sdk/voice-call";
+} from "propai/plugin-sdk/voice-call";
 import { z } from "zod";
 import { deepMergeDefined } from "./deep-merge.js";
 
@@ -523,3 +523,5 @@ export function validateProviderConfig(config: VoiceCallConfig): {
 
   return { valid: errors.length === 0, errors };
 }
+
+

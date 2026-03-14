@@ -1,1 +1,2 @@
-console.warn("clawdbot renamed -> openclaw");
+console.warn("clawdbot renamed -> PropAi Sync");
+

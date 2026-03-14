@@ -1,5 +1,5 @@
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 @Suite(.serialized) struct GatewayDiscoveryModelTests {
     @Test @MainActor func debugLoggingCapturesLifecycleAndResets() {
@@ -20,3 +20,5 @@ import Testing
         #expect(model.debugLog.isEmpty)
     }
 }
+
+

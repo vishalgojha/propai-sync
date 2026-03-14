@@ -3,7 +3,7 @@ import {
   collectAllowlistProviderRestrictSendersWarnings,
   createScopedAccountConfigAccessors,
   formatNormalizedAllowFromEntries,
-} from "openclaw/plugin-sdk/compat";
+} from "propai/plugin-sdk/compat";
 import {
   applyAccountNameToChannelSection,
   applySetupAccountConfigPatch,
@@ -18,7 +18,7 @@ import {
   type ChannelMessageActionAdapter,
   type ChannelMessageActionName,
   type ChannelPlugin,
-} from "openclaw/plugin-sdk/mattermost";
+} from "propai/plugin-sdk/mattermost";
 import { MattermostConfigSchema } from "./config-schema.js";
 import { resolveMattermostGroupRequireMention } from "./group-mentions.js";
 import {
@@ -532,3 +532,5 @@ export const mattermostPlugin: ChannelPlugin<ResolvedMattermostAccount> = {
     },
   },
 };
+
+

@@ -235,13 +235,13 @@ describe("registerAgentCommands", () => {
       "/tmp/ws/IDENTITY.md",
       "--from-identity",
       "--name",
-      "OpenClaw",
+      "PropAi Sync",
       "--theme",
       "ops",
       "--emoji",
       ":lobster:",
       "--avatar",
-      "https://example.com/openclaw.png",
+      "https://example.com/PropAiSync.png",
       "--json",
     ]);
     expect(agentsSetIdentityCommandMock).toHaveBeenCalledWith(
@@ -250,10 +250,10 @@ describe("registerAgentCommands", () => {
         workspace: "/tmp/ws",
         identityFile: "/tmp/ws/IDENTITY.md",
         fromIdentity: true,
-        name: "OpenClaw",
+        name: "PropAi Sync",
         theme: "ops",
         emoji: ":lobster:",
-        avatar: "https://example.com/openclaw.png",
+        avatar: "https://example.com/PropAiSync.png",
         json: true,
       },
       runtime,
@@ -278,3 +278,5 @@ describe("registerAgentCommands", () => {
     expect(runtime.exit).toHaveBeenCalledWith(1);
   });
 });
+
+

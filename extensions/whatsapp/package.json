@@ -1,12 +1,14 @@
 {
-  "name": "@openclaw/whatsapp",
+  "name": "@propai/whatsapp",
   "version": "2026.3.11",
   "private": true,
-  "description": "OpenClaw WhatsApp channel plugin",
+  "description": "PropAi Sync WhatsApp channel plugin",
   "type": "module",
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

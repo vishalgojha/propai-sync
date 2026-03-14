@@ -1,4 +1,4 @@
-import OpenClawKit
+import PropAiSyncKit
 import SwiftUI
 
 struct ScreenTab: View {
@@ -25,3 +25,5 @@ struct ScreenTab: View {
 
     // Navigation is agent-driven; no local URL bar here.
 }
+
+

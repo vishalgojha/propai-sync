@@ -1,15 +1,15 @@
 ---
 name: bootstrap-extra-files
 description: "Inject additional workspace bootstrap files via glob/path patterns"
-homepage: https://docs.openclaw.ai/automation/hooks#bootstrap-extra-files
+homepage: https://docs.propai.ai/automation/hooks#bootstrap-extra-files
 metadata:
   {
-    "openclaw":
+    "PropAi Sync":
       {
         "emoji": "📎",
         "events": ["agent:bootstrap"],
         "requires": { "config": ["workspace.dir"] },
-        "install": [{ "id": "bundled", "kind": "bundled", "label": "Bundled with OpenClaw" }],
+        "install": [{ "id": "bundled", "kind": "bundled", "label": "Bundled with PropAi Sync" }],
       },
   }
 ---
@@ -51,3 +51,5 @@ workspace root.
 All paths are resolved from the workspace and must stay inside it (including realpath checks).
 Only recognized bootstrap basenames are loaded (`AGENTS.md`, `SOUL.md`, `TOOLS.md`,
 `IDENTITY.md`, `USER.md`, `HEARTBEAT.md`, `BOOTSTRAP.md`, `MEMORY.md`, `memory.md`).
+
+

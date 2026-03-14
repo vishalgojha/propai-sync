@@ -1,9 +1,9 @@
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
-import { tryReadSecretFileSync } from "openclaw/plugin-sdk/core";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "propai/plugin-sdk/account-id";
+import { tryReadSecretFileSync } from "propai/plugin-sdk/core";
 import {
   createAccountListHelpers,
   normalizeResolvedSecretInputString,
-} from "openclaw/plugin-sdk/irc";
+} from "propai/plugin-sdk/irc";
 import type { CoreConfig, IrcAccountConfig, IrcNickServConfig } from "./types.js";
 
 const TRUTHY_ENV = new Set(["true", "1", "yes", "on"]);
@@ -190,12 +190,12 @@ export function resolveIrcAccount(params: {
       merged.username?.trim() ||
       (accountId === DEFAULT_ACCOUNT_ID ? process.env.IRC_USERNAME?.trim() : "") ||
       nick ||
-      "openclaw"
+      "PropAi Sync"
     ).trim();
     const realname = (
       merged.realname?.trim() ||
       (accountId === DEFAULT_ACCOUNT_ID ? process.env.IRC_REALNAME?.trim() : "") ||
-      "OpenClaw"
+      "PropAi Sync"
     ).trim();
 
     const passwordResolution = resolvePassword(accountId, merged);
@@ -255,3 +255,5 @@ export function listEnabledIrcAccounts(cfg: CoreConfig): ResolvedIrcAccount[] {
     .map((accountId) => resolveIrcAccount({ cfg, accountId }))
     .filter((account) => account.enabled);
 }
+
+

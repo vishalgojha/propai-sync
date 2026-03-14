@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import {
   DEFAULT_MEMORY_FLUSH_PROMPT,
   resolveMemoryFlushPromptForRun,
@@ -14,7 +14,7 @@ describe("resolveMemoryFlushPromptForRun", () => {
         timeFormat: "12",
       },
     },
-  } as OpenClawConfig;
+  } as PropAiSyncConfig;
 
   it("replaces YYYY-MM-DD using user timezone and appends current time", () => {
     const prompt = resolveMemoryFlushPromptForRun({
@@ -62,3 +62,5 @@ describe("DEFAULT_MEMORY_FLUSH_PROMPT", () => {
     expect(DEFAULT_MEMORY_FLUSH_PROMPT).toContain("YYYY-MM-DD.md");
   });
 });
+
+

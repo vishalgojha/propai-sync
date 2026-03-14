@@ -2,7 +2,7 @@ import type { MsgContext } from "../../auto-reply/templating.js";
 import type { ChatType } from "../../channels/chat-type.js";
 import { getChannelPlugin } from "../../channels/plugins/index.js";
 import type { ChannelId } from "../../channels/plugins/types.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { recordSessionMetaFromInbound, resolveStorePath } from "../../config/sessions.js";
 import { parseDiscordTarget, type DiscordTargetKind } from "../../discord/targets.js";
 import { parseIMessageTarget, normalizeIMessageHandle } from "../../imessage/targets.js";
@@ -36,7 +36,7 @@ export type OutboundSessionRoute = {
 };
 
 export type ResolveOutboundSessionRouteParams = {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   channel: ChannelId;
   agentId: string;
   accountId?: string | null;
@@ -102,7 +102,7 @@ function inferPeerKind(params: {
 }
 
 function buildBaseSessionKey(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   agentId: string;
   channel: ChannelId;
   accountId?: string | null;
@@ -120,7 +120,7 @@ function buildBaseSessionKey(params: {
 
 // Best-effort mpim detection: allowlist/config, then Slack API (if token available).
 async function resolveSlackChannelType(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   channelId: string;
 }): Promise<"channel" | "group" | "dm" | "unknown"> {
@@ -960,7 +960,7 @@ export async function resolveOutboundSessionRoute(
 }
 
 export async function ensureOutboundSessionEntry(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   agentId: string;
   channel: ChannelId;
   accountId?: string | null;
@@ -991,3 +991,5 @@ export async function ensureOutboundSessionEntry(params: {
     // Do not block outbound sends on session meta writes.
   }
 }
+
+

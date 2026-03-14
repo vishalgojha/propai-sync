@@ -3,7 +3,7 @@ import path from "node:path";
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../../agents/agent-scope.js";
 import type { ChannelPluginCatalogEntry } from "../../channels/plugins/catalog.js";
 import { resolveBundledInstallPlanForCatalogEntry } from "../../cli/plugin-install-plan.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import {
   findBundledPluginSourceInMap,
@@ -13,7 +13,7 @@ import { clearPluginDiscoveryCache } from "../../plugins/discovery.js";
 import { enablePluginInConfig } from "../../plugins/enable.js";
 import { installPluginFromNpmSpec } from "../../plugins/install.js";
 import { buildNpmResolutionInstallFields, recordPluginInstall } from "../../plugins/installs.js";
-import { loadOpenClawPlugins } from "../../plugins/loader.js";
+import { loadPropAiSyncPlugins } from "../../plugins/loader.js";
 import { createPluginLoaderLogger } from "../../plugins/logger.js";
 import type { RuntimeEnv } from "../../runtime.js";
 import type { WizardPrompter } from "../../wizard/prompts.js";
@@ -21,7 +21,7 @@ import type { WizardPrompter } from "../../wizard/prompts.js";
 type InstallChoice = "npm" | "local" | "skip";
 
 type InstallResult = {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   installed: boolean;
 };
 
@@ -64,7 +64,7 @@ function resolveLocalPath(
   return null;
 }
 
-function addPluginLoadPath(cfg: OpenClawConfig, pluginPath: string): OpenClawConfig {
+function addPluginLoadPath(cfg: PropAiSyncConfig, pluginPath: string): PropAiSyncConfig {
   const existing = cfg.plugins?.load?.paths ?? [];
   const merged = Array.from(new Set([...existing, pluginPath]));
   return {
@@ -110,7 +110,7 @@ async function promptInstallChoice(params: {
 }
 
 function resolveInstallDefaultChoice(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   entry: ChannelPluginCatalogEntry;
   localPath?: string | null;
   bundledLocalPath?: string | null;
@@ -137,7 +137,7 @@ function resolveInstallDefaultChoice(params: {
 }
 
 export async function ensureOnboardingPluginInstalled(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   entry: ChannelPluginCatalogEntry;
   prompter: WizardPrompter;
   runtime: RuntimeEnv;
@@ -221,7 +221,7 @@ export async function ensureOnboardingPluginInstalled(params: {
 }
 
 export function reloadOnboardingPluginRegistry(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   runtime: RuntimeEnv;
   workspaceDir?: string;
 }): void {
@@ -229,10 +229,12 @@ export function reloadOnboardingPluginRegistry(params: {
   const workspaceDir =
     params.workspaceDir ?? resolveAgentWorkspaceDir(params.cfg, resolveDefaultAgentId(params.cfg));
   const log = createSubsystemLogger("plugins");
-  loadOpenClawPlugins({
+  loadPropAiSyncPlugins({
     config: params.cfg,
     workspaceDir,
     cache: false,
     logger: createPluginLoaderLogger(log),
   });
 }
+
+

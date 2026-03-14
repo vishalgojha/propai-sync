@@ -1,5 +1,5 @@
 import type { AgentToolResult } from "@mariozechner/pi-agent-core";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { createDiscordActionGate } from "../../discord/accounts.js";
 import { readStringParam } from "./common.js";
 import { handleDiscordGuildAction } from "./discord-actions-guild.js";
@@ -57,7 +57,7 @@ const presenceActions = new Set(["setPresence"]);
 
 export async function handleDiscordAction(
   params: Record<string, unknown>,
-  cfg: OpenClawConfig,
+  cfg: PropAiSyncConfig,
   options?: {
     mediaLocalRoots?: readonly string[];
   },
@@ -80,3 +80,5 @@ export async function handleDiscordAction(
   }
   throw new Error(`Unknown action: ${action}`);
 }
+
+

@@ -1,4 +1,4 @@
-name: openclaw-codeql-javascript-typescript
+name: PropAiSync-codeql-javascript-typescript
 
 paths:
   - src
@@ -16,3 +16,4 @@ paths-ignore:
   - "**/*.test.tsx"
   - "**/*.e2e.test.ts"
   - "**/*.e2e.test.tsx"
+

@@ -1,9 +1,9 @@
 import EventKit
 import Foundation
-import OpenClawKit
+import PropAiSyncKit
 
 final class CalendarService: CalendarServicing {
-    func events(params: OpenClawCalendarEventsParams) async throws -> OpenClawCalendarEventsPayload {
+    func events(params: PropAiSyncCalendarEventsParams) async throws -> PropAiSyncCalendarEventsPayload {
         let store = EKEventStore()
         let status = EKEventStore.authorizationStatus(for: .event)
         let authorized = EventKitAuthorization.allowsRead(status: status)
@@ -23,7 +23,7 @@ final class CalendarService: CalendarServicing {
 
         let formatter = ISO8601DateFormatter()
         let payload = selected.map { event in
-            OpenClawCalendarEventPayload(
+            PropAiSyncCalendarEventPayload(
                 identifier: event.eventIdentifier ?? UUID().uuidString,
                 title: event.title ?? "(untitled)",
                 startISO: formatter.string(from: event.startDate),
@@ -33,10 +33,10 @@ final class CalendarService: CalendarServicing {
                 calendarTitle: event.calendar.title)
         }
 
-        return OpenClawCalendarEventsPayload(events: payload)
+        return PropAiSyncCalendarEventsPayload(events: payload)
     }
 
-    func add(params: OpenClawCalendarAddParams) async throws -> OpenClawCalendarAddPayload {
+    func add(params: PropAiSyncCalendarAddParams) async throws -> PropAiSyncCalendarAddPayload {
         let store = EKEventStore()
         let status = EKEventStore.authorizationStatus(for: .event)
         let authorized = EventKitAuthorization.allowsWrite(status: status)
@@ -83,7 +83,7 @@ final class CalendarService: CalendarServicing {
 
         try store.save(event, span: .thisEvent)
 
-        let payload = OpenClawCalendarEventPayload(
+        let payload = PropAiSyncCalendarEventPayload(
             identifier: event.eventIdentifier ?? UUID().uuidString,
             title: event.title ?? title,
             startISO: formatter.string(from: event.startDate),
@@ -92,7 +92,7 @@ final class CalendarService: CalendarServicing {
             location: event.location,
             calendarTitle: event.calendar.title)
 
-        return OpenClawCalendarAddPayload(event: payload)
+        return PropAiSyncCalendarAddPayload(event: payload)
     }
 
     private static func resolveCalendar(
@@ -133,3 +133,5 @@ final class CalendarService: CalendarServicing {
         return (start, end)
     }
 }
+
+

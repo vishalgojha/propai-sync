@@ -7,7 +7,7 @@ export type HookInstallSpec = {
   bins?: string[];
 };
 
-export type OpenClawHookMetadata = {
+export type PropAiSyncHookMetadata = {
   always?: boolean;
   hookKey?: string;
   emoji?: string;
@@ -35,7 +35,7 @@ export type ParsedHookFrontmatter = Record<string, string>;
 export type Hook = {
   name: string;
   description: string;
-  source: "openclaw-bundled" | "openclaw-managed" | "openclaw-workspace" | "openclaw-plugin";
+  source: "propai-bundled" | "propai-managed" | "propai-workspace" | "propai-plugin";
   pluginId?: string;
   filePath: string; // Path to HOOK.md
   baseDir: string; // Directory containing hook
@@ -47,7 +47,7 @@ export type HookSource = Hook["source"];
 export type HookEntry = {
   hook: Hook;
   frontmatter: ParsedHookFrontmatter;
-  metadata?: OpenClawHookMetadata;
+  metadata?: PropAiSyncHookMetadata;
   invocation?: HookInvocationPolicy;
 };
 
@@ -65,3 +65,6 @@ export type HookSnapshot = {
   resolvedHooks?: Hook[];
   version?: number;
 };
+
+
+

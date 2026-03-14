@@ -7,7 +7,7 @@ import {
   ReplyRuntimeConfigSchemaShape,
   ToolPolicySchema,
   requireOpenAllowFrom,
-} from "openclaw/plugin-sdk/nextcloud-talk";
+} from "propai/plugin-sdk/nextcloud-talk";
 import { z } from "zod";
 import { buildSecretInputSchema } from "./secret-input.js";
 
@@ -72,3 +72,5 @@ export const NextcloudTalkConfigSchema = NextcloudTalkAccountSchemaBase.extend({
       'channels.nextcloud-talk.dmPolicy="open" requires channels.nextcloud-talk.allowFrom to include "*"',
   });
 });
+
+

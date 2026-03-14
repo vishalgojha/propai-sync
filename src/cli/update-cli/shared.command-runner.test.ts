@@ -34,14 +34,14 @@ describe("createGlobalCommandRunner", () => {
 
     const result = await runCommand(["npm", "root", "-g"], {
       timeoutMs: 1200,
-      cwd: "/tmp/openclaw",
-      env: { OPENCLAW_TEST: "1" },
+      cwd: "/tmp/PropAiSync",
+      env: { PROPAI_TEST: "1" },
     });
 
     expect(runCommandWithTimeout).toHaveBeenCalledWith(["npm", "root", "-g"], {
       timeoutMs: 1200,
-      cwd: "/tmp/openclaw",
-      env: { OPENCLAW_TEST: "1" },
+      cwd: "/tmp/PropAiSync",
+      env: { PROPAI_TEST: "1" },
     });
     expect(result).toEqual({
       stdout: "out",
@@ -50,3 +50,6 @@ describe("createGlobalCommandRunner", () => {
     });
   });
 });
+
+
+

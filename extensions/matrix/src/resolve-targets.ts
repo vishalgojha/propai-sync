@@ -1,10 +1,10 @@
-import { mapAllowlistResolutionInputs } from "openclaw/plugin-sdk/compat";
+import { mapAllowlistResolutionInputs } from "propai/plugin-sdk/compat";
 import type {
   ChannelDirectoryEntry,
   ChannelResolveKind,
   ChannelResolveResult,
   RuntimeEnv,
-} from "openclaw/plugin-sdk/matrix";
+} from "propai/plugin-sdk/matrix";
 import { listMatrixDirectoryGroupsLive, listMatrixDirectoryPeersLive } from "./directory-live.js";
 
 function findExactDirectoryMatches(
@@ -123,3 +123,5 @@ export async function resolveMatrixTargets(params: {
     },
   });
 }
+
+

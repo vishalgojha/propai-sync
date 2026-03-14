@@ -22,7 +22,7 @@ const { handleControlUiHttpRequest } = await import("./control-ui.js");
 const { makeMockHttpResponse } = await import("./test-http-response.js");
 
 async function withControlUiRoot<T>(fn: (tmp: string) => Promise<T>) {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-ui-auto-root-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "propai-ui-auto-root-"));
   try {
     await fs.writeFile(path.join(tmp, "index.html"), "<html>fallback</html>\n");
     return await fn(tmp);
@@ -99,3 +99,5 @@ describe("handleControlUiHttpRequest auto-detected root", () => {
     });
   });
 });
+
+

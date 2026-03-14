@@ -74,7 +74,7 @@ describe("auditGatewayServiceConfig", () => {
         programArguments: ["/usr/bin/node", "gateway"],
         environment: {
           PATH: "/usr/local/bin:/usr/bin:/bin",
-          OPENCLAW_GATEWAY_TOKEN: "old-token",
+          PROPAI_GATEWAY_TOKEN: "old-token",
         },
       },
     });
@@ -95,7 +95,7 @@ describe("auditGatewayServiceConfig", () => {
         programArguments: ["/usr/bin/node", "gateway"],
         environment: {
           PATH: "/usr/local/bin:/usr/bin:/bin",
-          OPENCLAW_GATEWAY_TOKEN: "new-token",
+          PROPAI_GATEWAY_TOKEN: "new-token",
         },
       },
     });
@@ -136,10 +136,10 @@ describe("auditGatewayServiceConfig", () => {
         programArguments: ["/usr/bin/node", "gateway"],
         environment: {
           PATH: "/usr/local/bin:/usr/bin:/bin",
-          OPENCLAW_GATEWAY_TOKEN: "old-token",
+          PROPAI_GATEWAY_TOKEN: "old-token",
         },
         environmentValueSources: {
-          OPENCLAW_GATEWAY_TOKEN: "file",
+          PROPAI_GATEWAY_TOKEN: "file",
         },
       },
     });
@@ -204,3 +204,5 @@ describe("checkTokenDrift", () => {
     expect(result).toBeNull();
   });
 });
+
+

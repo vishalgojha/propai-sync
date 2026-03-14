@@ -1,5 +1,5 @@
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 @Suite struct RootCanvasPresentationTests {
     @Test func quickSetupDoesNotPresentWhenGatewayAlreadyConfigured() {
@@ -38,3 +38,5 @@ import Testing
         #expect(!shouldPresent)
     }
 }
+
+

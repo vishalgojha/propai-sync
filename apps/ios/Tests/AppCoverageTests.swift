@@ -1,6 +1,6 @@
 import SwiftUI
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 @Suite struct AppCoverageTests {
     @Test @MainActor func nodeAppModelUpdatesBackgroundedState() {
@@ -29,3 +29,5 @@ import Testing
         #expect(voiceWake.statusText == "Off")
     }
 }
+
+

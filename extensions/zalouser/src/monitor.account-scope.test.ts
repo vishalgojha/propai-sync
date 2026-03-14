@@ -1,4 +1,4 @@
-import type { OpenClawConfig, PluginRuntime, RuntimeEnv } from "openclaw/plugin-sdk/zalouser";
+import type { PropAiSyncConfig, PluginRuntime, RuntimeEnv } from "propai/plugin-sdk/zalouser";
 import { describe, expect, it, vi } from "vitest";
 import "./monitor.send-mocks.js";
 import { __testing } from "./monitor.js";
@@ -57,7 +57,7 @@ describe("zalouser monitor pairing account scoping", () => {
       },
     };
 
-    const config: OpenClawConfig = {
+    const config: PropAiSyncConfig = {
       channels: {
         zalouser: {
           accounts: {
@@ -111,3 +111,6 @@ describe("zalouser monitor pairing account scoping", () => {
     expect(sendMessageZalouserMock).toHaveBeenCalled();
   });
 });
+
+
+

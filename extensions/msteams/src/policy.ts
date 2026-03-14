@@ -7,7 +7,7 @@ import type {
   MSTeamsConfig,
   MSTeamsReplyStyle,
   MSTeamsTeamConfig,
-} from "openclaw/plugin-sdk/msteams";
+} from "propai/plugin-sdk/msteams";
 import {
   buildChannelKeyCandidates,
   evaluateSenderGroupAccessForPolicy,
@@ -16,7 +16,7 @@ import {
   resolveToolsBySender,
   resolveChannelEntryMatchWithFallback,
   resolveNestedAllowlistDecision,
-} from "openclaw/plugin-sdk/msteams";
+} from "propai/plugin-sdk/msteams";
 
 export type MSTeamsResolvedRouteConfig = {
   teamConfig?: MSTeamsTeamConfig;
@@ -256,3 +256,5 @@ export function isMSTeamsGroupAllowed(params: {
     isSenderAllowed: () => resolveMSTeamsAllowlistMatch(params).allowed,
   }).allowed;
 }
+
+

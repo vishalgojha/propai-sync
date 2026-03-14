@@ -1,4 +1,4 @@
-import type { BaseProbeResult } from "openclaw/plugin-sdk/zalouser";
+import type { BaseProbeResult } from "propai/plugin-sdk/zalouser";
 import type { ZcaUserInfo } from "./types.js";
 import { getZaloUserInfo } from "./zalo-js.js";
 
@@ -32,3 +32,5 @@ export async function probeZalouser(
     };
   }
 }
+
+

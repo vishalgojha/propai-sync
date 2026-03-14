@@ -102,7 +102,7 @@ vi.mock("../skills-runtime.js", () => ({
 }));
 
 vi.mock("../../docs-path.js", () => ({
-  resolveOpenClawDocsPath: async () => undefined,
+  resolvePropAiSyncDocsPath: async () => undefined,
 }));
 
 vi.mock("../../pi-project-settings.js", () => ({
@@ -273,11 +273,11 @@ describe("runEmbeddedAttempt sessions_spawn workspace inheritance", () => {
   });
 
   it("passes the real workspace to sessions_spawn when workspaceAccess is ro", async () => {
-    const realWorkspace = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-real-workspace-"));
+    const realWorkspace = await fs.mkdtemp(path.join(os.tmpdir(), "propai-real-workspace-"));
     const sandboxWorkspace = await fs.mkdtemp(
-      path.join(os.tmpdir(), "openclaw-sandbox-workspace-"),
+      path.join(os.tmpdir(), "propai-sandbox-workspace-"),
     );
-    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-agent-dir-"));
+    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-agent-dir-"));
     tempPaths.push(realWorkspace, sandboxWorkspace, agentDir);
 
     hoisted.resolveSandboxContextMock.mockResolvedValue(
@@ -372,3 +372,6 @@ describe("runEmbeddedAttempt sessions_spawn workspace inheritance", () => {
     );
   });
 });
+
+
+

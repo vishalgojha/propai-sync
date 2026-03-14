@@ -1,1 +1,3 @@
-export { resolveRequestUrl } from "openclaw/plugin-sdk/bluebubbles";
+export { resolveRequestUrl } from "propai/plugin-sdk/bluebubbles";
+
+

@@ -1,11 +1,14 @@
 // Narrow plugin-sdk surface for the bundled diffs plugin.
 // Keep this list additive and scoped to symbols used under extensions/diffs.
 
-export type { OpenClawConfig } from "../config/config.js";
-export { resolvePreferredOpenClawTmpDir } from "../infra/tmp-openclaw-dir.js";
+export type { PropAiSyncConfig } from "../config/config.js";
+export { resolvePreferredPropAiSyncTmpDir } from "../infra/tmp-propai-dir.js";
 export type {
   AnyAgentTool,
-  OpenClawPluginApi,
-  OpenClawPluginConfigSchema,
+  PropAiSyncPluginApi,
+  PropAiSyncPluginConfigSchema,
   PluginLogger,
 } from "../plugins/types.js";
+
+
+

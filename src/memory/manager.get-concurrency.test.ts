@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { getMemorySearchManager, type MemoryIndexManager } from "./index.js";
 import {
   closeAllMemoryIndexManagers,
@@ -38,7 +38,7 @@ describe("memory manager cache hydration", () => {
   let workspaceDir = "";
 
   beforeEach(async () => {
-    workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-mem-concurrent-"));
+    workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-mem-concurrent-"));
     await fs.mkdir(path.join(workspaceDir, "memory"), { recursive: true });
     await fs.writeFile(path.join(workspaceDir, "MEMORY.md"), "Hello memory.");
     hoisted.providerCreateCalls = 0;
@@ -64,7 +64,7 @@ describe("memory manager cache hydration", () => {
         },
         list: [{ id: "main", default: true }],
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     const results = await Promise.all(
       Array.from(
@@ -98,7 +98,7 @@ describe("memory manager cache hydration", () => {
         },
         list: [{ id: "main", default: true }],
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     hoisted.providerDelayMs = 100;
 
@@ -116,3 +116,6 @@ describe("memory manager cache hydration", () => {
     await secondManager?.close?.();
   });
 });
+
+
+

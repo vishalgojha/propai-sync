@@ -3,7 +3,7 @@ import { complete } from "@mariozechner/pi-ai";
 import { isMinimaxVlmModel, minimaxUnderstandImage } from "../../agents/minimax-vlm.js";
 import { getApiKeyForModel, requireApiKey } from "../../agents/model-auth.js";
 import { normalizeModelRef } from "../../agents/model-selection.js";
-import { ensureOpenClawModelsJson } from "../../agents/models-config.js";
+import { ensurePropAiSyncModelsJson } from "../../agents/models-config.js";
 import { coerceImageAssistantText } from "../../agents/tools/image-tool.helpers.js";
 import type { ImageDescriptionRequest, ImageDescriptionResult } from "../types.js";
 
@@ -19,7 +19,7 @@ function loadPiModelDiscoveryRuntime() {
 export async function describeImageWithModel(
   params: ImageDescriptionRequest,
 ): Promise<ImageDescriptionResult> {
-  await ensureOpenClawModelsJson(params.cfg, params.agentDir);
+  await ensurePropAiSyncModelsJson(params.cfg, params.agentDir);
   const { discoverAuthStorage, discoverModels } = await loadPiModelDiscoveryRuntime();
   const authStorage = discoverAuthStorage(params.agentDir);
   const modelRegistry = discoverModels(authStorage, params.agentDir);
@@ -76,3 +76,5 @@ export async function describeImageWithModel(
   });
   return { text, model: model.id };
 }
+
+

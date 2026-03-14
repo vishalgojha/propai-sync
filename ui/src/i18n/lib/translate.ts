@@ -22,7 +22,7 @@ class I18nManager {
   }
 
   private resolveInitialLocale(): Locale {
-    const saved = localStorage.getItem("openclaw.i18n.locale");
+    const saved = localStorage.getItem("PropAiSync.i18n.locale");
     if (isSupportedLocale(saved)) {
       return saved;
     }
@@ -64,7 +64,7 @@ class I18nManager {
     }
 
     this.locale = locale;
-    localStorage.setItem("openclaw.i18n.locale", locale);
+    localStorage.setItem("PropAiSync.i18n.locale", locale);
     this.notify();
   }
 
@@ -121,3 +121,5 @@ class I18nManager {
 
 export const i18n = new I18nManager();
 export const t = (key: string, params?: Record<string, string>) => i18n.t(key, params);
+
+

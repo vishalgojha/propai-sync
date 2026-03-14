@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { resolveSecretInputRef } from "../config/types.secrets.js";
 import { normalizeSecretInput } from "../utils/normalize-secret-input.js";
 import { secretRefKey } from "./ref-contract.js";
@@ -58,7 +58,7 @@ export type RuntimeWebToolsMetadata = {
   diagnostics: RuntimeWebDiagnostic[];
 };
 
-type FetchConfig = NonNullable<OpenClawConfig["tools"]>["web"] extends infer Web
+type FetchConfig = NonNullable<PropAiSyncConfig["tools"]>["web"] extends infer Web
   ? Web extends { fetch?: infer Fetch }
     ? Fetch
     : undefined
@@ -122,7 +122,7 @@ function buildUnresolvedReason(params: {
 }
 
 async function resolveSecretInputWithEnvFallback(params: {
-  sourceConfig: OpenClawConfig;
+  sourceConfig: PropAiSyncConfig;
   context: ResolverContext;
   defaults: SecretDefaults | undefined;
   value: unknown;
@@ -290,7 +290,7 @@ function ensureObject(target: Record<string, unknown>, key: string): Record<stri
 }
 
 function setResolvedWebSearchApiKey(params: {
-  resolvedConfig: OpenClawConfig;
+  resolvedConfig: PropAiSyncConfig;
   provider: WebSearchProvider;
   value: string;
 }): void {
@@ -306,7 +306,7 @@ function setResolvedWebSearchApiKey(params: {
 }
 
 function setResolvedFirecrawlApiKey(params: {
-  resolvedConfig: OpenClawConfig;
+  resolvedConfig: PropAiSyncConfig;
   value: string;
 }): void {
   const tools = ensureObject(params.resolvedConfig as Record<string, unknown>, "tools");
@@ -356,8 +356,8 @@ function hasConfiguredSecretRef(value: unknown, defaults: SecretDefaults | undef
 }
 
 export async function resolveRuntimeWebTools(params: {
-  sourceConfig: OpenClawConfig;
-  resolvedConfig: OpenClawConfig;
+  sourceConfig: PropAiSyncConfig;
+  resolvedConfig: PropAiSyncConfig;
   context: ResolverContext;
 }): Promise<RuntimeWebToolsMetadata> {
   const defaults = params.sourceConfig.secrets?.defaults;
@@ -703,3 +703,5 @@ export async function resolveRuntimeWebTools(params: {
     diagnostics,
   };
 }
+
+

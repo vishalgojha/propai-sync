@@ -1,14 +1,16 @@
 {
-  "name": "@openclaw/acpx",
+  "name": "@propai/acpx",
   "version": "2026.3.11",
-  "description": "OpenClaw ACP runtime backend via acpx",
+  "description": "PropAi Sync ACP runtime backend via acpx",
   "type": "module",
   "dependencies": {
     "acpx": "0.2.0"
   },
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

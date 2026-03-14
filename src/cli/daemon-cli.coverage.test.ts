@@ -27,8 +27,8 @@ const buildGatewayInstallPlan = vi.fn(
     programArguments: ["/bin/node", "cli", "gateway", "--port", String(params.port)],
     workingDirectory: process.cwd(),
     environment: {
-      OPENCLAW_GATEWAY_PORT: String(params.port),
-      ...(params.token ? { OPENCLAW_GATEWAY_TOKEN: params.token } : {}),
+      PROPAI_GATEWAY_PORT: String(params.port),
+      ...(params.token ? { PROPAI_GATEWAY_TOKEN: params.token } : {}),
     },
   }),
 );
@@ -123,15 +123,15 @@ describe("daemon-cli coverage", () => {
   beforeEach(() => {
     daemonProgram = createDaemonProgram();
     envSnapshot = captureEnv([
-      "OPENCLAW_STATE_DIR",
-      "OPENCLAW_CONFIG_PATH",
-      "OPENCLAW_GATEWAY_PORT",
-      "OPENCLAW_PROFILE",
+      "PROPAI_STATE_DIR",
+      "PROPAI_CONFIG_PATH",
+      "PROPAI_GATEWAY_PORT",
+      "PROPAI_PROFILE",
     ]);
-    process.env.OPENCLAW_STATE_DIR = "/tmp/openclaw-cli-state";
-    process.env.OPENCLAW_CONFIG_PATH = "/tmp/openclaw-cli-state/openclaw.json";
-    delete process.env.OPENCLAW_GATEWAY_PORT;
-    delete process.env.OPENCLAW_PROFILE;
+    process.env.propai_STATE_DIR = "/tmp/propai-cli-state";
+    process.env.propai_CONFIG_PATH = "/tmp/propai-cli-state/propai.json";
+    delete process.env.propai_GATEWAY_PORT;
+    delete process.env.propai_PROFILE;
     serviceReadCommand.mockResolvedValue(null);
     resolveGatewayProbeAuthWithSecretInputs.mockClear();
     buildGatewayInstallPlan.mockClear();
@@ -161,12 +161,12 @@ describe("daemon-cli coverage", () => {
     serviceReadCommand.mockResolvedValueOnce({
       programArguments: ["/bin/node", "cli", "gateway", "--port", "19001"],
       environment: {
-        OPENCLAW_PROFILE: "dev",
-        OPENCLAW_STATE_DIR: "/tmp/openclaw-daemon-state",
-        OPENCLAW_CONFIG_PATH: "/tmp/openclaw-daemon-state/openclaw.json",
-        OPENCLAW_GATEWAY_PORT: "19001",
+        PROPAI_PROFILE: "dev",
+        PROPAI_STATE_DIR: "/tmp/propai-daemon-state",
+        PROPAI_CONFIG_PATH: "/tmp/propai-daemon-state/propai.json",
+        PROPAI_GATEWAY_PORT: "19001",
       },
-      sourcePath: "/tmp/ai.openclaw.gateway.plist",
+      sourcePath: "/tmp/ai.propai.gateway.plist",
     });
 
     await runDaemonCommand(["daemon", "status", "--json"]);
@@ -246,3 +246,5 @@ describe("daemon-cli coverage", () => {
     expect(parsed.some((entry) => entry.action === "stop" && entry.ok === true)).toBe(true);
   });
 });
+
+

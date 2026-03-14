@@ -24,7 +24,7 @@ describe("watch-node script", () => {
 
     const runPromise = runWatchMain({
       args: ["gateway", "--force"],
-      cwd: "/tmp/openclaw",
+      cwd: "/tmp/PropAiSync",
       env: { PATH: "/usr/bin" },
       now: () => 1700000000000,
       process: fakeProcess,
@@ -46,13 +46,13 @@ describe("watch-node script", () => {
         "--force",
       ],
       expect.objectContaining({
-        cwd: "/tmp/openclaw",
+        cwd: "/tmp/PropAiSync",
         stdio: "inherit",
         env: expect.objectContaining({
           PATH: "/usr/bin",
-          OPENCLAW_WATCH_MODE: "1",
-          OPENCLAW_WATCH_SESSION: "1700000000000-4242",
-          OPENCLAW_WATCH_COMMAND: "gateway --force",
+          PROPAI_WATCH_MODE: "1",
+          PROPAI_WATCH_SESSION: "1700000000000-4242",
+          PROPAI_WATCH_COMMAND: "gateway --force",
         }),
       }),
     );
@@ -94,3 +94,6 @@ describe("watch-node script", () => {
     expect(fakeProcess.listenerCount("SIGTERM")).toBe(0);
   });
 });
+
+
+

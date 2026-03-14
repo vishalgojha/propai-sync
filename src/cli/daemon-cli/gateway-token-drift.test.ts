@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { resolveGatewayTokenForDriftCheck } from "./gateway-token-drift.js";
 
 describe("resolveGatewayTokenForDriftCheck", () => {
@@ -12,9 +12,9 @@ describe("resolveGatewayTokenForDriftCheck", () => {
             token: "config-token",
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       env: {
-        OPENCLAW_GATEWAY_TOKEN: "env-token",
+        PROPAI_GATEWAY_TOKEN: "env-token",
       } as NodeJS.ProcessEnv,
     });
 
@@ -33,12 +33,12 @@ describe("resolveGatewayTokenForDriftCheck", () => {
           gateway: {
             mode: "local",
             auth: {
-              token: { source: "env", provider: "default", id: "OPENCLAW_GATEWAY_TOKEN" },
+              token: { source: "env", provider: "default", id: "PROPAI_GATEWAY_TOKEN" },
             },
           },
-        } as OpenClawConfig,
+        } as PropAiSyncConfig,
         env: {
-          OPENCLAW_GATEWAY_TOKEN: "env-token",
+          PROPAI_GATEWAY_TOKEN: "env-token",
         } as NodeJS.ProcessEnv,
       }),
     ).toThrow(/gateway\.auth\.token/i);
@@ -63,9 +63,12 @@ describe("resolveGatewayTokenForDriftCheck", () => {
               token: "remote-token",
             },
           },
-        } as OpenClawConfig,
+        } as PropAiSyncConfig,
         env: {} as NodeJS.ProcessEnv,
       }),
     ).toThrow(/gateway\.auth\.token/i);
   });
 });
+
+
+

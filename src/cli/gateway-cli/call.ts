@@ -1,11 +1,11 @@
 import type { Command } from "commander";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { callGateway } from "../../gateway/call.js";
 import { GATEWAY_CLIENT_MODES, GATEWAY_CLIENT_NAMES } from "../../utils/message-channel.js";
 import { withProgress } from "../progress.js";
 
 export type GatewayRpcOpts = {
-  config?: OpenClawConfig;
+  config?: PropAiSyncConfig;
   url?: string;
   token?: string;
   password?: string;
@@ -44,3 +44,5 @@ export const callGatewayCli = async (method: string, opts: GatewayRpcOpts, param
         mode: GATEWAY_CLIENT_MODES.CLI,
       }),
   );
+
+

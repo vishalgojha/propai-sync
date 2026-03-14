@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { isWithinActiveHours } from "./heartbeat-active-hours.js";
 
-function cfgWithUserTimezone(userTimezone = "UTC"): OpenClawConfig {
+function cfgWithUserTimezone(userTimezone = "UTC"): PropAiSyncConfig {
   return {
     agents: {
       defaults: {
@@ -84,3 +84,5 @@ describe("isWithinActiveHours", () => {
     expect(isWithinActiveHours(cfg, heartbeat, Date.UTC(2025, 0, 1, 11, 0, 0))).toBe(false);
   });
 });
+
+

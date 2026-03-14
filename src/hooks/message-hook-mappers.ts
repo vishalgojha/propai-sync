@@ -1,5 +1,5 @@
 import type { FinalizedMsgContext } from "../auto-reply/templating.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import type {
   PluginHookMessageContext,
   PluginHookMessageReceivedEvent,
@@ -211,8 +211,8 @@ export function toInternalMessageReceivedContext(
 
 export function toInternalMessageTranscribedContext(
   canonical: CanonicalInboundMessageHookContext,
-  cfg: OpenClawConfig,
-): MessageTranscribedHookContext & { cfg: OpenClawConfig } {
+  cfg: PropAiSyncConfig,
+): MessageTranscribedHookContext & { cfg: PropAiSyncConfig } {
   const shared = toInternalInboundMessageHookContextBase(canonical);
   return {
     ...shared,
@@ -223,8 +223,8 @@ export function toInternalMessageTranscribedContext(
 
 export function toInternalMessagePreprocessedContext(
   canonical: CanonicalInboundMessageHookContext,
-  cfg: OpenClawConfig,
-): MessagePreprocessedHookContext & { cfg: OpenClawConfig } {
+  cfg: PropAiSyncConfig,
+): MessagePreprocessedHookContext & { cfg: PropAiSyncConfig } {
   const shared = toInternalInboundMessageHookContextBase(canonical);
   return {
     ...shared,
@@ -271,3 +271,5 @@ export function toInternalMessageSentContext(
     ...(canonical.groupId ? { groupId: canonical.groupId } : {}),
   };
 }
+
+

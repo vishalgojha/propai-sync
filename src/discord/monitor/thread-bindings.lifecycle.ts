@@ -1,5 +1,5 @@
 import { readAcpSessionEntry, type AcpSessionStoreEntry } from "../../acp/runtime/session-meta.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { normalizeAccountId } from "../../routing/session-key.js";
 import { parseDiscordTarget } from "../targets.js";
 import { resolveChannelIdForBinding } from "./thread-bindings.discord-api.js";
@@ -32,7 +32,7 @@ export type AcpThreadBindingReconciliationResult = {
 export type AcpThreadBindingHealthStatus = "healthy" | "stale" | "uncertain";
 
 export type AcpThreadBindingHealthProbe = (params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId: string;
   sessionKey: string;
   binding: ThreadBindingRecord;
@@ -118,7 +118,7 @@ export function listThreadBindingsBySessionKey(params: {
 }
 
 export async function autoBindSpawnedDiscordSubagent(params: {
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
   accountId?: string;
   channel?: string;
   to?: string;
@@ -316,7 +316,7 @@ function resolveStoredAcpBindingHealth(params: {
 }
 
 export async function reconcileAcpThreadBindingsOnStartup(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string;
   sendFarewell?: boolean;
   healthProbe?: AcpThreadBindingHealthProbe;
@@ -430,3 +430,5 @@ export async function reconcileAcpThreadBindingsOnStartup(params: {
     staleSessionKeys: [...new Set(staleSessionKeys)],
   };
 }
+
+

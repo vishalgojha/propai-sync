@@ -68,12 +68,12 @@ Unify routing and persistent ACP binding configuration in top-level `bindings[]`
       {
         "id": "main",
         "default": true,
-        "workspace": "~/.openclaw/workspace-main",
+        "workspace": "~/.propai/workspace-main",
         "runtime": { "type": "embedded" },
       },
       {
         "id": "codex",
-        "workspace": "~/.openclaw/workspace-codex",
+        "workspace": "~/.propai/workspace-codex",
         "runtime": {
           "type": "acp",
           "acp": {
@@ -86,7 +86,7 @@ Unify routing and persistent ACP binding configuration in top-level `bindings[]`
       },
       {
         "id": "claude",
-        "workspace": "~/.openclaw/workspace-claude",
+        "workspace": "~/.propai/workspace-claude",
         "runtime": {
           "type": "acp",
           "acp": {
@@ -373,3 +373,5 @@ Notes:
   - “one channel/topic per agent”
   - “multiple channels/topics per same agent with different `cwd`”
   - “team naming patterns (`codex-1`, `claude-repo-x`)".
+
+

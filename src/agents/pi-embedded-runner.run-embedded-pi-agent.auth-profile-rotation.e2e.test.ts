@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import type { AssistantMessage } from "@mariozechner/pi-ai";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { registerLogTransport, resetLogger, setLoggerOverride } from "../logging/logger.js";
 import { redactIdentifier } from "../logging/redact-identifier.js";
 import type { AuthProfileFailureReason } from "./auth-profiles.js";
@@ -48,7 +48,7 @@ vi.mock("./models-config.js", async (importOriginal) => {
   const mod = await importOriginal<typeof import("./models-config.js")>();
   return {
     ...mod,
-    ensureOpenClawModelsJson: vi.fn(async () => ({ wrote: false })),
+    ensurePropAiSyncModelsJson: vi.fn(async () => ({ wrote: false })),
   };
 });
 
@@ -114,7 +114,7 @@ const makeAttempt = (overrides: Partial<EmbeddedRunAttemptResult>): EmbeddedRunA
   ...overrides,
 });
 
-const makeConfig = (opts?: { fallbacks?: string[]; apiKey?: string }): OpenClawConfig =>
+const makeConfig = (opts?: { fallbacks?: string[]; apiKey?: string }): PropAiSyncConfig =>
   ({
     agents: {
       defaults: {
@@ -143,9 +143,9 @@ const makeConfig = (opts?: { fallbacks?: string[]; apiKey?: string }): OpenClawC
         },
       },
     },
-  }) satisfies OpenClawConfig;
+  }) satisfies PropAiSyncConfig;
 
-const makeAgentOverrideOnlyFallbackConfig = (agentId: string): OpenClawConfig =>
+const makeAgentOverrideOnlyFallbackConfig = (agentId: string): PropAiSyncConfig =>
   ({
     agents: {
       defaults: {
@@ -182,11 +182,11 @@ const makeAgentOverrideOnlyFallbackConfig = (agentId: string): OpenClawConfig =>
         },
       },
     },
-  }) satisfies OpenClawConfig;
+  }) satisfies PropAiSyncConfig;
 
 const copilotModelId = "gpt-4o";
 
-const makeCopilotConfig = (): OpenClawConfig =>
+const makeCopilotConfig = (): PropAiSyncConfig =>
   ({
     models: {
       providers: {
@@ -207,7 +207,7 @@ const makeCopilotConfig = (): OpenClawConfig =>
         },
       },
     },
-  }) satisfies OpenClawConfig;
+  }) satisfies PropAiSyncConfig;
 
 const writeAuthStore = async (
   agentDir: string,
@@ -424,8 +424,8 @@ async function withTimedAgentWorkspace<T>(
 ) {
   vi.useFakeTimers();
   try {
-    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-agent-"));
-    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-workspace-"));
+    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-agent-"));
+    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-workspace-"));
     const now = Date.now();
     vi.setSystemTime(now);
 
@@ -443,8 +443,8 @@ async function withTimedAgentWorkspace<T>(
 async function withAgentWorkspace<T>(
   run: (ctx: { agentDir: string; workspaceDir: string }) => Promise<T>,
 ) {
-  const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-agent-"));
-  const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-workspace-"));
+  const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-agent-"));
+  const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-workspace-"));
   try {
     return await run({ agentDir, workspaceDir });
   } finally {
@@ -491,8 +491,8 @@ async function runTurnWithCooldownSeed(params: {
 
 describe("runEmbeddedPiAgent auth profile rotation", () => {
   it("refreshes copilot token after auth error and retries once", async () => {
-    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-agent-"));
-    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-workspace-"));
+    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-agent-"));
+    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-workspace-"));
     vi.useFakeTimers();
     try {
       await writeCopilotAuthStore(agentDir);
@@ -558,8 +558,8 @@ describe("runEmbeddedPiAgent auth profile rotation", () => {
   });
 
   it("allows another auth refresh after a successful retry", async () => {
-    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-agent-"));
-    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-workspace-"));
+    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-agent-"));
+    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-workspace-"));
     vi.useFakeTimers();
     try {
       await writeCopilotAuthStore(agentDir);
@@ -645,8 +645,8 @@ describe("runEmbeddedPiAgent auth profile rotation", () => {
   });
 
   it("does not reschedule copilot refresh after shutdown", async () => {
-    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-agent-"));
-    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-workspace-"));
+    const agentDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-agent-"));
+    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-workspace-"));
     vi.useFakeTimers();
     try {
       await writeCopilotAuthStore(agentDir);
@@ -735,7 +735,7 @@ describe("runEmbeddedPiAgent auth profile rotation", () => {
     setLoggerOverride({
       level: "trace",
       consoleLevel: "silent",
-      file: path.join(os.tmpdir(), `openclaw-auth-rotation-${Date.now()}.log`),
+      file: path.join(os.tmpdir(), `propai-auth-rotation-${Date.now()}.log`),
     });
     unregisterLogTransport = registerLogTransport((record) => {
       records.push(record);
@@ -1318,3 +1318,6 @@ describe("runEmbeddedPiAgent auth profile rotation", () => {
     });
   });
 });
+
+
+

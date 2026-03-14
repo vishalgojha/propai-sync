@@ -4,7 +4,7 @@ import type {
   DmPolicy,
   GroupPolicy,
   SecretInput,
-} from "openclaw/plugin-sdk/nextcloud-talk";
+} from "propai/plugin-sdk/nextcloud-talk";
 
 export type { DmPolicy, GroupPolicy };
 
@@ -188,3 +188,5 @@ export type NextcloudTalkSendOptions = {
   message: string;
   replyTo?: string;
 };
+
+

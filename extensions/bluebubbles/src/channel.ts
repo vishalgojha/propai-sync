@@ -1,8 +1,8 @@
 import type {
   ChannelAccountSnapshot,
   ChannelPlugin,
-  OpenClawConfig,
-} from "openclaw/plugin-sdk/bluebubbles";
+  PropAiSyncConfig,
+} from "propai/plugin-sdk/bluebubbles";
 import {
   applyAccountNameToChannelSection,
   buildChannelConfigSchema,
@@ -17,14 +17,14 @@ import {
   resolveBlueBubblesGroupRequireMention,
   resolveBlueBubblesGroupToolPolicy,
   setAccountEnabledInConfigSection,
-} from "openclaw/plugin-sdk/bluebubbles";
+} from "propai/plugin-sdk/bluebubbles";
 import {
   buildAccountScopedDmSecurityPolicy,
   collectOpenGroupPolicyRestrictSendersWarnings,
   createAccountStatusSink,
   formatNormalizedAllowFromEntries,
   mapAllowFromEntries,
-} from "openclaw/plugin-sdk/compat";
+} from "propai/plugin-sdk/compat";
 import {
   listBlueBubblesAccountIds,
   type ResolvedBlueBubblesAccount,
@@ -389,3 +389,6 @@ export const bluebubblesPlugin: ChannelPlugin<ResolvedBlueBubblesAccount> = {
     },
   },
 };
+
+
+

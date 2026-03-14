@@ -37,9 +37,9 @@ describe("probeLineBot", () => {
 
   it("returns bot info when available", async () => {
     getBotInfoMock.mockResolvedValue({
-      displayName: "OpenClaw",
+      displayName: "PropAi Sync",
       userId: "U123",
-      basicId: "@openclaw",
+      basicId: "@PropAi Sync",
       pictureUrl: "https://example.com/bot.png",
     });
 
@@ -49,3 +49,4 @@ describe("probeLineBot", () => {
     expect(result.bot?.userId).toBe("U123");
   });
 });
+

@@ -1,7 +1,7 @@
 import { upsertAuthProfile } from "../../../agents/auth-profiles.js";
 import { normalizeProviderId } from "../../../agents/model-selection.js";
 import { parseDurationMs } from "../../../cli/parse-duration.js";
-import type { OpenClawConfig } from "../../../config/config.js";
+import type { PropAiSyncConfig } from "../../../config/config.js";
 import type { SecretInput } from "../../../config/types.secrets.js";
 import type { RuntimeEnv } from "../../../runtime.js";
 import { resolveDefaultSecretProviderAlias } from "../../../secrets/ref-contract.js";
@@ -79,12 +79,12 @@ type ResolvedNonInteractiveApiKey = NonNullable<
 >;
 
 export async function applyNonInteractiveAuthChoice(params: {
-  nextConfig: OpenClawConfig;
+  nextConfig: PropAiSyncConfig;
   authChoice: AuthChoice;
   opts: OnboardOptions;
   runtime: RuntimeEnv;
-  baseConfig: OpenClawConfig;
-}): Promise<OpenClawConfig | null> {
+  baseConfig: PropAiSyncConfig;
+}): Promise<PropAiSyncConfig | null> {
   const { authChoice, opts, runtime, baseConfig } = params;
   let nextConfig = params.nextConfig;
   const requestedSecretInputMode = normalizeSecretInputModeInput(opts.secretInputMode);
@@ -746,8 +746,8 @@ export async function applyNonInteractiveAuthChoice(params: {
   }
 
   const applyMoonshotApiKeyChoice = async (
-    applyConfig: (cfg: OpenClawConfig) => OpenClawConfig,
-  ): Promise<OpenClawConfig | null> => {
+    applyConfig: (cfg: PropAiSyncConfig) => PropAiSyncConfig,
+  ): Promise<PropAiSyncConfig | null> => {
     const resolved = await resolveApiKey({
       provider: "moonshot",
       cfg: baseConfig,
@@ -1100,3 +1100,5 @@ export async function applyNonInteractiveAuthChoice(params: {
 
   return nextConfig;
 }
+
+

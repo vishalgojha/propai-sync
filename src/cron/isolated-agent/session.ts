@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { clearBootstrapSnapshotOnSessionRollover } from "../../agents/bootstrap-cache.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import {
   evaluateSessionFreshness,
   loadSessionStore,
@@ -10,7 +10,7 @@ import {
 } from "../../config/sessions.js";
 
 export function resolveCronSession(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   sessionKey: string;
   nowMs: number;
   agentId: string;
@@ -87,3 +87,5 @@ export function resolveCronSession(params: {
   };
   return { storePath, store, sessionEntry, systemSent, isNewSession };
 }
+
+

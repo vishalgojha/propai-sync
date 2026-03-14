@@ -1,5 +1,5 @@
 import type * as Lark from "@larksuiteoapi/node-sdk";
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/feishu";
+import type { PropAiSyncPluginApi } from "propai/plugin-sdk/feishu";
 import { listEnabledFeishuAccounts } from "./accounts.js";
 import { FeishuPermSchema, type FeishuPermParams } from "./perm-schema.js";
 import { createFeishuToolClient, resolveAnyEnabledFeishuToolsConfig } from "./tool-account.js";
@@ -112,7 +112,7 @@ async function removeMember(
 
 // ============ Tool Registration ============
 
-export function registerFeishuPermTools(api: OpenClawPluginApi) {
+export function registerFeishuPermTools(api: PropAiSyncPluginApi) {
   if (!api.config) {
     api.logger.debug?.("feishu_perm: No config available, skipping perm tools");
     return;
@@ -174,3 +174,6 @@ export function registerFeishuPermTools(api: OpenClawPluginApi) {
 
   api.logger.info?.(`feishu_perm: Registered feishu_perm tool`);
 }
+
+
+

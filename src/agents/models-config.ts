@@ -3,12 +3,12 @@ import path from "node:path";
 import {
   getRuntimeConfigSourceSnapshot,
   projectConfigOntoRuntimeSourceSnapshot,
-  type OpenClawConfig,
+  type PropAiSyncConfig,
   loadConfig,
 } from "../config/config.js";
 import { createConfigRuntimeEnv } from "../config/env-vars.js";
-import { resolveOpenClawAgentDir } from "./agent-paths.js";
-import { planOpenClawModelsJson } from "./models-config.plan.js";
+import { resolvePropAiSyncAgentDir } from "./agent-paths.js";
+import { planPropAiSyncModelsJson } from "./models-config.plan.js";
 
 const MODELS_JSON_WRITE_LOCKS = new Map<string, Promise<void>>();
 
@@ -42,9 +42,9 @@ async function writeModelsFileAtomic(targetPath: string, contents: string): Prom
   await fs.rename(tempPath, targetPath);
 }
 
-function resolveModelsConfigInput(config?: OpenClawConfig): {
-  config: OpenClawConfig;
-  sourceConfigForSecrets: OpenClawConfig;
+function resolveModelsConfigInput(config?: PropAiSyncConfig): {
+  config: PropAiSyncConfig;
+  sourceConfigForSecrets: PropAiSyncConfig;
 } {
   const runtimeSource = getRuntimeConfigSourceSnapshot();
   if (!config) {
@@ -88,13 +88,13 @@ async function withModelsJsonWriteLock<T>(targetPath: string, run: () => Promise
   }
 }
 
-export async function ensureOpenClawModelsJson(
-  config?: OpenClawConfig,
+export async function ensurePropAiSyncModelsJson(
+  config?: PropAiSyncConfig,
   agentDirOverride?: string,
 ): Promise<{ agentDir: string; wrote: boolean }> {
   const resolved = resolveModelsConfigInput(config);
   const cfg = resolved.config;
-  const agentDir = agentDirOverride?.trim() ? agentDirOverride.trim() : resolveOpenClawAgentDir();
+  const agentDir = agentDirOverride?.trim() ? agentDirOverride.trim() : resolvePropAiSyncAgentDir();
   const targetPath = path.join(agentDir, "models.json");
 
   return await withModelsJsonWriteLock(targetPath, async () => {
@@ -102,7 +102,7 @@ export async function ensureOpenClawModelsJson(
     // are available to provider discovery without mutating process.env.
     const env = createConfigRuntimeEnv(cfg);
     const existingModelsFile = await readExistingModelsFile(targetPath);
-    const plan = await planOpenClawModelsJson({
+    const plan = await planPropAiSyncModelsJson({
       cfg,
       sourceConfigForSecrets: resolved.sourceConfigForSecrets,
       agentDir,
@@ -126,3 +126,5 @@ export async function ensureOpenClawModelsJson(
     return { agentDir, wrote: true };
   });
 }
+
+

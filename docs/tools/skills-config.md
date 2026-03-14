@@ -8,12 +8,12 @@ title: "Skills Config"
 
 # Skills Config
 
-All skills-related configuration lives under `skills` in `~/.openclaw/openclaw.json`.
+All skills-related configuration lives under `skills` in `~/.propai/propai.json`.
 
 ```json5
 {
   skills: {
-    allowBundled: ["gemini", "peekaboo"],
+    allowBundled: ["gemini", "summarize"],
     load: {
       extraDirs: ["~/Projects/agent-scripts/skills", "~/Projects/oss/some-skill-pack/skills"],
       watch: true,
@@ -31,7 +31,7 @@ All skills-related configuration lives under `skills` in `~/.openclaw/openclaw.j
           GEMINI_API_KEY: "GEMINI_KEY_HERE",
         },
       },
-      peekaboo: { enabled: true },
+      summarize: { enabled: true },
       sag: { enabled: false },
     },
   },
@@ -61,7 +61,7 @@ Per-skill fields:
 ## Notes
 
 - Keys under `entries` map to the skill name by default. If a skill defines
-  `metadata.openclaw.skillKey`, use that key instead.
+  `metadata.propai.skillKey`, use that key instead.
 - Changes to skills are picked up on the next agent turn when the watcher is enabled.
 
 ### Sandboxed skills + env vars
@@ -75,3 +75,5 @@ Use one of:
 - bake the env into your custom sandbox image
 
 Global `env` and `skills.entries.<skill>.env/apiKey` apply to **host** runs only.
+
+

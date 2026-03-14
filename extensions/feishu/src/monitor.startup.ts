@@ -1,4 +1,4 @@
-import type { RuntimeEnv } from "openclaw/plugin-sdk/feishu";
+import type { RuntimeEnv } from "propai/plugin-sdk/feishu";
 import { probeFeishu } from "./probe.js";
 import type { ResolvedFeishuAccount } from "./types.js";
 
@@ -62,3 +62,5 @@ export async function fetchBotOpenIdForMonitor(
   const identity = await fetchBotIdentityForMonitor(account, options);
   return identity.botOpenId;
 }
+
+

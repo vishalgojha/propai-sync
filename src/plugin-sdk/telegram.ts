@@ -4,9 +4,9 @@ export type {
   ChannelMessageActionAdapter,
 } from "../channels/plugins/types.js";
 export type { ChannelPlugin } from "../channels/plugins/types.plugin.js";
-export type { OpenClawConfig } from "../config/config.js";
+export type { PropAiSyncConfig } from "../config/config.js";
 export type { PluginRuntime } from "../plugins/runtime/types.js";
-export type { OpenClawPluginApi } from "../plugins/types.js";
+export type { PropAiSyncPluginApi } from "../plugins/types.js";
 export type { InspectedTelegramAccount } from "../telegram/account-inspect.js";
 export type { ResolvedTelegramAccount } from "../telegram/accounts.js";
 export type { TelegramProbe } from "../telegram/probe.js";
@@ -67,3 +67,5 @@ export { telegramOnboardingAdapter } from "../channels/plugins/onboarding/telegr
 export { TelegramConfigSchema } from "../config/zod-schema.providers-core.js";
 
 export { buildTokenChannelStatusSummary } from "./status-helpers.js";
+
+

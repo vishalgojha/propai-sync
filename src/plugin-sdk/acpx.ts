@@ -16,10 +16,10 @@ export type {
   AcpSessionUpdateTag,
 } from "../acp/runtime/types.js";
 export type {
-  OpenClawPluginApi,
-  OpenClawPluginConfigSchema,
-  OpenClawPluginService,
-  OpenClawPluginServiceContext,
+  PropAiSyncPluginApi,
+  PropAiSyncPluginConfigSchema,
+  PropAiSyncPluginService,
+  PropAiSyncPluginServiceContext,
   PluginLogger,
 } from "../plugins/types.js";
 export type {
@@ -36,3 +36,5 @@ export {
   listKnownProviderAuthEnvVarNames,
   omitEnvKeysCaseInsensitive,
 } from "../secrets/provider-env-vars.js";
+
+

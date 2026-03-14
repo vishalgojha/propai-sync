@@ -1,5 +1,5 @@
 import Foundation
-import OpenClawKit
+import PropAiSyncKit
 
 @MainActor
 final class NodeCapabilityRouter {
@@ -23,3 +23,5 @@ final class NodeCapabilityRouter {
         return try await handler(request)
     }
 }
+
+

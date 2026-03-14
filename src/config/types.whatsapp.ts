@@ -40,6 +40,8 @@ type WhatsAppSharedConfig = {
   enabled?: boolean;
   /** Direct message access policy (default: pairing). */
   dmPolicy?: DmPolicy;
+  /** Enable WhatsApp auto-replies (default: false = read-only ingest). */
+  autoReply?: boolean;
   /** Same-phone setup (bot uses your personal WhatsApp number). */
   selfChatMode?: boolean;
   /** Optional allowlist for WhatsApp direct chats (E.164). */

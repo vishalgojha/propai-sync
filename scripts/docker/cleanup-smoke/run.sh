@@ -3,33 +3,35 @@ set -euo pipefail
 
 cd /repo
 
-export OPENCLAW_STATE_DIR="/tmp/openclaw-test"
-export OPENCLAW_CONFIG_PATH="${OPENCLAW_STATE_DIR}/openclaw.json"
+export PROPAI_STATE_DIR="/tmp/propai-test"
+export PROPAI_CONFIG_PATH="${PROPAI_STATE_DIR}/propai.json"
 
 echo "==> Build"
 pnpm build
 
 echo "==> Seed state"
-mkdir -p "${OPENCLAW_STATE_DIR}/credentials"
-mkdir -p "${OPENCLAW_STATE_DIR}/agents/main/sessions"
-echo '{}' >"${OPENCLAW_CONFIG_PATH}"
-echo 'creds' >"${OPENCLAW_STATE_DIR}/credentials/marker.txt"
-echo 'session' >"${OPENCLAW_STATE_DIR}/agents/main/sessions/sessions.json"
+mkdir -p "${PROPAI_STATE_DIR}/credentials"
+mkdir -p "${PROPAI_STATE_DIR}/agents/main/sessions"
+echo '{}' >"${PROPAI_CONFIG_PATH}"
+echo 'creds' >"${PROPAI_STATE_DIR}/credentials/marker.txt"
+echo 'session' >"${PROPAI_STATE_DIR}/agents/main/sessions/sessions.json"
 
 echo "==> Reset (config+creds+sessions)"
-pnpm openclaw reset --scope config+creds+sessions --yes --non-interactive
+pnpm PropAi Sync reset --scope config+creds+sessions --yes --non-interactive
 
-test ! -f "${OPENCLAW_CONFIG_PATH}"
-test ! -d "${OPENCLAW_STATE_DIR}/credentials"
-test ! -d "${OPENCLAW_STATE_DIR}/agents/main/sessions"
+test ! -f "${PROPAI_CONFIG_PATH}"
+test ! -d "${PROPAI_STATE_DIR}/credentials"
+test ! -d "${PROPAI_STATE_DIR}/agents/main/sessions"
 
 echo "==> Recreate minimal config"
-mkdir -p "${OPENCLAW_STATE_DIR}/credentials"
-echo '{}' >"${OPENCLAW_CONFIG_PATH}"
+mkdir -p "${PROPAI_STATE_DIR}/credentials"
+echo '{}' >"${PROPAI_CONFIG_PATH}"
 
 echo "==> Uninstall (state only)"
-pnpm openclaw uninstall --state --yes --non-interactive
+pnpm PropAi Sync uninstall --state --yes --non-interactive
 
-test ! -d "${OPENCLAW_STATE_DIR}"
+test ! -d "${PROPAI_STATE_DIR}"
 
 echo "OK"
+
+

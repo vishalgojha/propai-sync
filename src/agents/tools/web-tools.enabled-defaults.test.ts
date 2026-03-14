@@ -719,7 +719,7 @@ describe("web_search kimi provider", () => {
                       type: "function",
                       function: {
                         name: "$web_search",
-                        arguments: JSON.stringify({ q: "openclaw" }),
+                        arguments: JSON.stringify({ q: "PropAi Sync" }),
                       },
                     },
                   ],
@@ -727,7 +727,7 @@ describe("web_search kimi provider", () => {
               },
             ],
             search_results: [
-              { title: "OpenClaw", url: "https://openclaw.ai/docs", content: "docs" },
+              { title: "PropAi Sync", url: "https://propai.ai/docs", content: "docs" },
             ],
           }),
           { status: 200, headers: { "content-type": "application/json" } },
@@ -749,7 +749,7 @@ describe("web_search kimi provider", () => {
       baseUrl: "https://api.moonshot.ai/v1",
       model: "moonshot-v1-128k",
     });
-    const result = await tool?.execute?.("call-1", { query: "latest openclaw release" });
+    const result = await tool?.execute?.("call-1", { query: "latest PropAi Sync release" });
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
     const secondRequest = mockFetch.mock.calls[1]?.[1];
@@ -763,7 +763,7 @@ describe("web_search kimi provider", () => {
       | undefined;
     expect(toolMessage?.tool_call_id).toBe("call_1");
     expect(JSON.parse(toolMessage?.content ?? "{}")).toMatchObject({
-      search_results: [{ url: "https://openclaw.ai/docs" }],
+      search_results: [{ url: "https://propai.ai/docs" }],
     });
 
     const details = result?.details as {
@@ -772,7 +772,7 @@ describe("web_search kimi provider", () => {
       provider?: string;
     };
     expect(details.provider).toBe("kimi");
-    expect(details.citations).toEqual(["https://openclaw.ai/docs"]);
+    expect(details.citations).toEqual(["https://propai.ai/docs"]);
     expect(details.content).toContain("final answer");
   });
 });
@@ -1026,3 +1026,5 @@ describe("web_search external content wrapping", () => {
     expect(details.results?.[0]?.published).not.toContain("<<<EXTERNAL_UNTRUSTED_CONTENT>>>");
   });
 });
+
+

@@ -1,4 +1,4 @@
-const PREFIX = "openclaw:pinned:";
+const PREFIX = "PropAi Sync:pinned:";
 
 export class PinnedMessages {
   private key: string;
@@ -59,3 +59,4 @@ export class PinnedMessages {
     localStorage.setItem(this.key, JSON.stringify([...this._indices]));
   }
 }
+

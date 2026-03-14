@@ -10,7 +10,7 @@ import {
   shouldEnforceGatewayAuthForPluginPath,
 } from "./plugins-http.js";
 
-const loadOpenClawPlugins = vi.hoisted(() => vi.fn());
+const loadPropAiSyncPlugins = vi.hoisted(() => vi.fn());
 type HandleGatewayRequestOptions = GatewayRequestOptions & {
   extraHandlers?: Record<string, unknown>;
 };
@@ -19,7 +19,7 @@ const handleGatewayRequest = vi.hoisted(() =>
 );
 
 vi.mock("../../plugins/loader.js", () => ({
-  loadOpenClawPlugins,
+  loadPropAiSyncPlugins,
 }));
 
 vi.mock("../server-methods.js", () => ({
@@ -63,7 +63,7 @@ function createSubagentRuntimeRegistry() {
 
 async function createSubagentRuntime(): Promise<PluginRuntime["subagent"]> {
   const serverPlugins = await import("../server-plugins.js");
-  loadOpenClawPlugins.mockReturnValue(createSubagentRuntimeRegistry());
+  loadPropAiSyncPlugins.mockReturnValue(createSubagentRuntimeRegistry());
   serverPlugins.loadGatewayPlugins({
     cfg: {},
     workspaceDir: "/tmp",
@@ -77,7 +77,7 @@ async function createSubagentRuntime(): Promise<PluginRuntime["subagent"]> {
     baseMethods: [],
   });
   serverPlugins.setFallbackGatewayContext({} as GatewayRequestContext);
-  const call = loadOpenClawPlugins.mock.calls.at(-1)?.[0] as
+  const call = loadPropAiSyncPlugins.mock.calls.at(-1)?.[0] as
     | { runtimeOptions?: { subagent?: PluginRuntime["subagent"] } }
     | undefined;
   if (!call?.runtimeOptions?.subagent) {
@@ -88,7 +88,7 @@ async function createSubagentRuntime(): Promise<PluginRuntime["subagent"]> {
 
 describe("createGatewayPluginRequestHandler", () => {
   it("caps unauthenticated plugin routes to non-admin subagent scopes", async () => {
-    loadOpenClawPlugins.mockReset();
+    loadPropAiSyncPlugins.mockReset();
     handleGatewayRequest.mockReset();
     handleGatewayRequest.mockImplementation(async (opts: HandleGatewayRequestOptions) => {
       const scopes = opts.client?.connect.scopes ?? [];
@@ -370,3 +370,5 @@ describe("plugin HTTP route auth checks", () => {
     expect(shouldEnforceGatewayAuthForPluginPath(registry, "/plugin/secure/report")).toBe(true);
   });
 });
+
+

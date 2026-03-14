@@ -22,7 +22,7 @@ const mockState = vi.hoisted(() => ({
   uploadMattermostFile: vi.fn(),
 }));
 
-vi.mock("openclaw/plugin-sdk/mattermost", () => ({
+vi.mock("propai/plugin-sdk/mattermost", () => ({
   loadOutboundMediaFromUrl: mockState.loadOutboundMediaFromUrl,
 }));
 
@@ -433,3 +433,5 @@ describe("sendMessageMattermost user-first resolution", () => {
     expect(res.channelId).toBe(chanId);
   });
 });
+
+

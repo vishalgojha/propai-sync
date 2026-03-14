@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../../../config/config.js";
+import type { PropAiSyncConfig } from "../../../config/config.js";
 
 const buildGatewayInstallPlan = vi.hoisted(() => vi.fn());
 const gatewayInstallErrorHint = vi.hoisted(() => vi.fn(() => "hint"));
@@ -46,7 +46,7 @@ describe("installGatewayDaemonNonInteractive", () => {
       warnings: [],
     });
     buildGatewayInstallPlan.mockResolvedValue({
-      programArguments: ["openclaw", "gateway", "run"],
+      programArguments: ["PropAi Sync", "gateway", "run"],
       workingDirectory: "/tmp",
       environment: {},
     });
@@ -63,11 +63,11 @@ describe("installGatewayDaemonNonInteractive", () => {
             token: {
               source: "env",
               provider: "default",
-              id: "OPENCLAW_GATEWAY_TOKEN",
+              id: "PROPAI_GATEWAY_TOKEN",
             },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       opts: { installDaemon: true },
       runtime,
       port: 18789,
@@ -89,7 +89,7 @@ describe("installGatewayDaemonNonInteractive", () => {
     const runtime = { log: vi.fn(), error: vi.fn(), exit: vi.fn() };
 
     await installGatewayDaemonNonInteractive({
-      nextConfig: {} as OpenClawConfig,
+      nextConfig: {} as PropAiSyncConfig,
       opts: { installDaemon: true },
       runtime,
       port: 18789,
@@ -101,3 +101,6 @@ describe("installGatewayDaemonNonInteractive", () => {
     expect(serviceInstall).not.toHaveBeenCalled();
   });
 });
+
+
+

@@ -1,7 +1,7 @@
 import AVFAudio
 import Foundation
 import Observation
-import OpenClawKit
+import PropAiSyncKit
 import Speech
 import SwabbleKit
 
@@ -474,3 +474,5 @@ extension VoiceWakeManager {
     }
 }
 #endif
+
+

@@ -1,12 +1,12 @@
 import Foundation
 import Network
-import OpenClawKit
+import PropAiSyncKit
 
 final class NetworkStatusService: @unchecked Sendable {
-    func currentStatus(timeoutMs: Int = 1500) async -> OpenClawNetworkStatusPayload {
+    func currentStatus(timeoutMs: Int = 1500) async -> PropAiSyncNetworkStatusPayload {
         await withCheckedContinuation { cont in
             let monitor = NWPathMonitor()
-            let queue = DispatchQueue(label: "ai.openclaw.ios.network-status")
+            let queue = DispatchQueue(label: "ai.propai.ios.network-status")
             let state = NetworkStatusState()
 
             monitor.pathUpdateHandler = { path in
@@ -25,29 +25,29 @@ final class NetworkStatusService: @unchecked Sendable {
         }
     }
 
-    private static func payload(from path: NWPath) -> OpenClawNetworkStatusPayload {
-        let status: OpenClawNetworkPathStatus = switch path.status {
+    private static func payload(from path: NWPath) -> PropAiSyncNetworkStatusPayload {
+        let status: PropAiSyncNetworkPathStatus = switch path.status {
         case .satisfied: .satisfied
         case .requiresConnection: .requiresConnection
         case .unsatisfied: .unsatisfied
         @unknown default: .unsatisfied
         }
 
-        var interfaces: [OpenClawNetworkInterfaceType] = []
+        var interfaces: [PropAiSyncNetworkInterfaceType] = []
         if path.usesInterfaceType(.wifi) { interfaces.append(.wifi) }
         if path.usesInterfaceType(.cellular) { interfaces.append(.cellular) }
         if path.usesInterfaceType(.wiredEthernet) { interfaces.append(.wired) }
         if interfaces.isEmpty { interfaces.append(.other) }
 
-        return OpenClawNetworkStatusPayload(
+        return PropAiSyncNetworkStatusPayload(
             status: status,
             isExpensive: path.isExpensive,
             isConstrained: path.isConstrained,
             interfaces: interfaces)
     }
 
-    private static func fallbackPayload() -> OpenClawNetworkStatusPayload {
-        OpenClawNetworkStatusPayload(
+    private static func fallbackPayload() -> PropAiSyncNetworkStatusPayload {
+        PropAiSyncNetworkStatusPayload(
             status: .unsatisfied,
             isExpensive: false,
             isConstrained: false,
@@ -67,3 +67,6 @@ private final class NetworkStatusState: @unchecked Sendable {
         return true
     }
 }
+
+
+

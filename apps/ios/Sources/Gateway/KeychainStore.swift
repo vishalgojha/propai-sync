@@ -1,5 +1,5 @@
 import Foundation
-import OpenClawKit
+import PropAiSyncKit
 
 enum KeychainStore {
     static func loadString(service: String, account: String) -> String? {
@@ -14,3 +14,5 @@ enum KeychainStore {
         GenericPasswordKeychainStore.delete(service: service, account: account)
     }
 }
+
+

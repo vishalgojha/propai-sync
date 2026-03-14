@@ -3,8 +3,8 @@ import {
   buildNestedDmConfigSchema,
   DmPolicySchema,
   GroupPolicySchema,
-} from "openclaw/plugin-sdk/compat";
-import { MarkdownConfigSchema, ToolPolicySchema } from "openclaw/plugin-sdk/matrix";
+} from "propai/plugin-sdk/compat";
+import { MarkdownConfigSchema, ToolPolicySchema } from "propai/plugin-sdk/matrix";
 import { z } from "zod";
 import { buildSecretInputSchema } from "./secret-input.js";
 
@@ -60,3 +60,5 @@ export const MatrixConfigSchema = z.object({
   rooms: z.object({}).catchall(matrixRoomSchema).optional(),
   actions: matrixActionSchema,
 });
+
+

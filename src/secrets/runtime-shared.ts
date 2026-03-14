@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { coerceSecretRef, type SecretRef } from "../config/types.secrets.js";
 import { secretRefKey } from "./ref-contract.js";
 import type { SecretRefResolveCache } from "./resolve.js";
@@ -28,7 +28,7 @@ export type SecretAssignment = {
 };
 
 export type ResolverContext = {
-  sourceConfig: OpenClawConfig;
+  sourceConfig: PropAiSyncConfig;
   env: NodeJS.ProcessEnv;
   cache: SecretRefResolveCache;
   warnings: SecretResolverWarning[];
@@ -36,10 +36,10 @@ export type ResolverContext = {
   assignments: SecretAssignment[];
 };
 
-export type SecretDefaults = NonNullable<OpenClawConfig["secrets"]>["defaults"];
+export type SecretDefaults = NonNullable<PropAiSyncConfig["secrets"]>["defaults"];
 
 export function createResolverContext(params: {
-  sourceConfig: OpenClawConfig;
+  sourceConfig: PropAiSyncConfig;
   env: NodeJS.ProcessEnv;
 }): ResolverContext {
   return {
@@ -149,3 +149,5 @@ export function isChannelAccountEffectivelyEnabled(
 ): boolean {
   return isEnabledFlag(channel) && isEnabledFlag(account);
 }
+
+

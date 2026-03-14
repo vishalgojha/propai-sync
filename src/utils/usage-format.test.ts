@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   estimateUsageCost,
   formatTokenCount,
@@ -37,7 +37,7 @@ describe("usage-format", () => {
           },
         },
       },
-    } as unknown as OpenClawConfig;
+    } as unknown as PropAiSyncConfig;
 
     const cost = resolveModelCostConfig({
       provider: "test",
@@ -60,3 +60,5 @@ describe("usage-format", () => {
     expect(total).toBeCloseTo(0.003);
   });
 });
+
+

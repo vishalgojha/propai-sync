@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { updateSessionStore, type SessionEntry } from "../../config/sessions.js";
 import {
   ensureAuthProfileStore,
@@ -39,7 +39,7 @@ export async function clearSessionAuthProfileOverride(params: {
 }
 
 export async function resolveSessionAuthProfileOverride(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   provider: string;
   agentDir: string;
   sessionEntry?: SessionEntry;
@@ -149,3 +149,5 @@ export async function resolveSessionAuthProfileOverride(params: {
 
   return next;
 }
+
+

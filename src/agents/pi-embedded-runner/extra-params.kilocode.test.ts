@@ -55,7 +55,7 @@ describe("extra-params: Kilocode wrapper", () => {
       modelId: "anthropic/claude-sonnet-4",
     });
 
-    expect(headers?.["X-KILOCODE-FEATURE"]).toBe("openclaw");
+    expect(headers?.["X-KILOCODE-FEATURE"]).toBe("PropAi Sync");
   });
 
   it("reads X-KILOCODE-FEATURE from KILOCODE_FEATURE env var", () => {
@@ -78,7 +78,7 @@ describe("extra-params: Kilocode wrapper", () => {
       callerHeaders: { "X-KILOCODE-FEATURE": "should-be-overwritten" },
     });
 
-    expect(headers?.["X-KILOCODE-FEATURE"]).toBe("openclaw");
+    expect(headers?.["X-KILOCODE-FEATURE"]).toBe("PropAi Sync");
   });
 
   it("does not inject header for non-kilocode providers", () => {
@@ -180,3 +180,4 @@ describe("extra-params: Kilocode kilo/auto reasoning", () => {
     expect(capturedPayload).not.toHaveProperty("reasoning_effort");
   });
 });
+

@@ -1,1 +1,3 @@
-export { promptAccountId, resolveAccountIdForConfigure } from "openclaw/plugin-sdk/mattermost";
+export { promptAccountId, resolveAccountIdForConfigure } from "propai/plugin-sdk/mattermost";
+
+

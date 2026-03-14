@@ -1,5 +1,5 @@
 import type { BaseTokenResolution } from "../channels/plugins/types.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { normalizeResolvedSecretInputString } from "../config/types.secrets.js";
 import type { TelegramAccountConfig } from "../config/types.telegram.js";
 import { tryReadSecretFileSync } from "../infra/secret-file.js";
@@ -18,7 +18,7 @@ type ResolveTelegramTokenOpts = {
 };
 
 export function resolveTelegramToken(
-  cfg?: OpenClawConfig,
+  cfg?: PropAiSyncConfig,
   opts: ResolveTelegramTokenOpts = {},
 ): TelegramTokenResolution {
   const accountId = normalizeAccountId(opts.accountId);
@@ -96,3 +96,5 @@ export function resolveTelegramToken(
 
   return { token: "", source: "none" };
 }
+
+

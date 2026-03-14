@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { loadConfig } from "../config/config.js";
-import { loadOpenClawPlugins } from "../plugins/loader.js";
+import { loadPropAiSyncPlugins } from "../plugins/loader.js";
 import { getPluginRuntimeGatewayRequestScope } from "../plugins/runtime/gateway-request-scope.js";
 import type { PluginRuntime } from "../plugins/runtime/types.js";
 import { GATEWAY_CLIENT_IDS, GATEWAY_CLIENT_MODES } from "./protocol/client-info.js";
@@ -20,7 +20,7 @@ import type {
 // dispatchGatewayMethod can use it as a fallback.
 
 const FALLBACK_GATEWAY_CONTEXT_STATE_KEY: unique symbol = Symbol.for(
-  "openclaw.fallbackGatewayContextState",
+  "PropAiSync.fallbackGatewayContextState",
 );
 
 type FallbackGatewayContextState = {
@@ -173,7 +173,7 @@ export function loadGatewayPlugins(params: {
   coreGatewayHandlers: Record<string, GatewayRequestHandler>;
   baseMethods: string[];
 }) {
-  const pluginRegistry = loadOpenClawPlugins({
+  const pluginRegistry = loadPropAiSyncPlugins({
     config: params.cfg,
     workspaceDir: params.workspaceDir,
     logger: {
@@ -209,3 +209,6 @@ export function loadGatewayPlugins(params: {
   }
   return { pluginRegistry, gatewayMethods };
 }
+
+
+

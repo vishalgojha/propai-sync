@@ -1,5 +1,5 @@
 import Foundation
-import OpenClawKit
+import PropAiSyncKit
 import Testing
 
 private let iOSSilenceTimeoutMs = 900
@@ -73,3 +73,5 @@ private let iOSSilenceTimeoutMs = 900
                 fallback: iOSSilenceTimeoutMs) == iOSSilenceTimeoutMs)
     }
 }
+
+

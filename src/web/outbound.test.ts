@@ -3,7 +3,7 @@ import fsSync from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { resetLogger, setLoggerOverride } from "../logging.js";
 import { redactIdentifier } from "../logging/redact-identifier.js";
 import { setActiveWebListener } from "./active-listener.js";
@@ -194,7 +194,7 @@ describe("web outbound", () => {
           },
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     await sendMessageWhatsApp("+1555", "pic", {
       verbose: false,
@@ -230,7 +230,7 @@ describe("web outbound", () => {
   });
 
   it("redacts recipients and poll text in outbound logs", async () => {
-    const logPath = path.join(os.tmpdir(), `openclaw-outbound-${crypto.randomUUID()}.log`);
+    const logPath = path.join(os.tmpdir(), `propai-outbound-${crypto.randomUUID()}.log`);
     setLoggerOverride({ level: "trace", file: logPath });
 
     await sendPollWhatsApp(
@@ -268,3 +268,6 @@ describe("web outbound", () => {
     );
   });
 });
+
+
+

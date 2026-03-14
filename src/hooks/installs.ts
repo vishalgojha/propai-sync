@@ -1,9 +1,9 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import type { HookInstallRecord } from "../config/types.hooks.js";
 
 export type HookInstallUpdate = HookInstallRecord & { hookId: string };
 
-export function recordHookInstall(cfg: OpenClawConfig, update: HookInstallUpdate): OpenClawConfig {
+export function recordHookInstall(cfg: PropAiSyncConfig, update: HookInstallUpdate): PropAiSyncConfig {
   const { hookId, ...record } = update;
   const installs = {
     ...cfg.hooks?.internal?.installs,
@@ -28,3 +28,5 @@ export function recordHookInstall(cfg: OpenClawConfig, update: HookInstallUpdate
     },
   };
 }
+
+

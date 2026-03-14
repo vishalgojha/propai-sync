@@ -4,7 +4,7 @@ import {
   getCallGatewayMock,
   getSessionsSpawnTool,
   setSessionsSpawnConfigOverride,
-} from "./openclaw-tools.subagents.sessions-spawn.test-harness.js";
+} from "./propai-tools.subagents.sessions-spawn.test-harness.js";
 import {
   listSubagentRunsForRequester,
   resetSubagentRegistryForTests,
@@ -67,3 +67,5 @@ describe("sessions_spawn requesterOrigin threading", () => {
     expect(run?.requesterOrigin?.threadId).toBeUndefined();
   });
 });
+
+

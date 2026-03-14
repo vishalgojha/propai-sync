@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { defaultSlotIdForKey } from "../plugins/slots.js";
 import type { ContextEngine } from "./types.js";
 
@@ -12,7 +12,7 @@ export type ContextEngineFactory = () => ContextEngine | Promise<ContextEngine>;
 // Registry (module-level singleton)
 // ---------------------------------------------------------------------------
 
-const CONTEXT_ENGINE_REGISTRY_STATE = Symbol.for("openclaw.contextEngineRegistryState");
+const CONTEXT_ENGINE_REGISTRY_STATE = Symbol.for("PropAiSync.contextEngineRegistryState");
 
 type ContextEngineRegistryState = {
   engines: Map<string, ContextEngineFactory>;
@@ -66,7 +66,7 @@ export function listContextEngineIds(): string[] {
  *
  * Throws if the resolved engine id has no registered factory.
  */
-export async function resolveContextEngine(config?: OpenClawConfig): Promise<ContextEngine> {
+export async function resolveContextEngine(config?: PropAiSyncConfig): Promise<ContextEngine> {
   const slotValue = config?.plugins?.slots?.contextEngine;
   const engineId =
     typeof slotValue === "string" && slotValue.trim()
@@ -83,3 +83,6 @@ export async function resolveContextEngine(config?: OpenClawConfig): Promise<Con
 
   return factory();
 }
+
+
+

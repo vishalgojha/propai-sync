@@ -1,1 +1,2 @@
-openclaw,ai assistant,local ai,voice assistant,automation,gateway,chat,agent,node
+PropAi Sync,ai assistant,local ai,voice assistant,automation,gateway,chat,agent,node
+

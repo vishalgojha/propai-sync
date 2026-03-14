@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 @MainActor
 @Suite struct TalkModeManagerTests {
@@ -22,3 +22,5 @@ import Testing
         #expect(TalkModeManager._test_isPCMFormatRejectedByAPI(error) == false)
     }
 }
+
+

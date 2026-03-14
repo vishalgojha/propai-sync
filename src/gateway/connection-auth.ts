@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import type { ExplicitGatewayAuth } from "./call.js";
 import { resolveGatewayCredentialsWithSecretInputs } from "./call.js";
 import type {
@@ -10,7 +10,7 @@ import type {
 import { resolveGatewayCredentialsFromConfig } from "./credentials.js";
 
 export type GatewayConnectionAuthOptions = {
-  config: OpenClawConfig;
+  config: PropAiSyncConfig;
   env?: NodeJS.ProcessEnv;
   explicitAuth?: ExplicitGatewayAuth;
   urlOverride?: string;
@@ -46,7 +46,7 @@ export async function resolveGatewayConnectionAuth(
 }
 
 export function resolveGatewayConnectionAuthFromConfig(
-  params: Omit<GatewayConnectionAuthOptions, "config"> & { cfg: OpenClawConfig },
+  params: Omit<GatewayConnectionAuthOptions, "config"> & { cfg: PropAiSyncConfig },
 ): { token?: string; password?: string } {
   return resolveGatewayCredentialsFromConfig({
     cfg: params.cfg,
@@ -64,3 +64,5 @@ export function resolveGatewayConnectionAuthFromConfig(
     remotePasswordFallback: params.remotePasswordFallback,
   });
 }
+
+

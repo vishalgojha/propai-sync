@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { DEFAULT_ACCOUNT_ID } from "../../routing/session-key.js";
 import { handleWhatsAppAction } from "./whatsapp-actions.js";
 
@@ -15,7 +15,7 @@ vi.mock("../../web/outbound.js", () => ({
 
 const enabledConfig = {
   channels: { whatsapp: { actions: { reactions: true } } },
-} as OpenClawConfig;
+} as PropAiSyncConfig;
 
 describe("handleWhatsAppAction", () => {
   beforeEach(() => {
@@ -101,7 +101,7 @@ describe("handleWhatsAppAction", () => {
   it("respects reaction gating", async () => {
     const cfg = {
       channels: { whatsapp: { actions: { reactions: false } } },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
     await expect(
       handleWhatsAppAction(
         {
@@ -128,7 +128,7 @@ describe("handleWhatsAppAction", () => {
           },
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     await expect(
       handleWhatsAppAction(
@@ -158,7 +158,7 @@ describe("handleWhatsAppAction", () => {
           },
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     await handleWhatsAppAction(
       {
@@ -178,3 +178,5 @@ describe("handleWhatsAppAction", () => {
     });
   });
 });
+
+

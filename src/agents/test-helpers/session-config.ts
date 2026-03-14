@@ -1,11 +1,13 @@
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 
 export function createPerSenderSessionConfig(
-  overrides: Partial<NonNullable<OpenClawConfig["session"]>> = {},
-): NonNullable<OpenClawConfig["session"]> {
+  overrides: Partial<NonNullable<PropAiSyncConfig["session"]>> = {},
+): NonNullable<PropAiSyncConfig["session"]> {
   return {
     mainKey: "main",
     scope: "per-sender",
     ...overrides,
   };
 }
+
+

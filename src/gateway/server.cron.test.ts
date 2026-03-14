@@ -43,7 +43,7 @@ let cronSuiteCaseId = 0;
 
 async function getCronSuiteTempRoot(): Promise<string> {
   if (!cronSuiteTempRootPromise) {
-    cronSuiteTempRootPromise = fs.mkdtemp(path.join(os.tmpdir(), "openclaw-gw-cron-suite-"));
+    cronSuiteTempRootPromise = fs.mkdtemp(path.join(os.tmpdir(), "propai-gw-cron-suite-"));
   }
   return await cronSuiteTempRootPromise;
 }
@@ -110,10 +110,10 @@ async function cleanupCronTestRun(params: {
   }
   testState.cronEnabled = undefined;
   if (params.prevSkipCron === undefined) {
-    delete process.env.OPENCLAW_SKIP_CRON;
+    delete process.env.propai_SKIP_CRON;
     return;
   }
-  process.env.OPENCLAW_SKIP_CRON = params.prevSkipCron;
+  process.env.propai_SKIP_CRON = params.prevSkipCron;
 }
 
 async function setupCronTestRun(params: {
@@ -122,8 +122,8 @@ async function setupCronTestRun(params: {
   sessionConfig?: { mainKey: string };
   jobs?: unknown[];
 }): Promise<{ prevSkipCron: string | undefined; dir: string }> {
-  const prevSkipCron = process.env.OPENCLAW_SKIP_CRON;
-  process.env.OPENCLAW_SKIP_CRON = "0";
+  const prevSkipCron = process.env.propai_SKIP_CRON;
+  process.env.propai_SKIP_CRON = "0";
   const { dir, storePath } = await createCronCasePaths(params.tempPrefix);
   testState.cronStorePath = storePath;
   testState.sessionConfig = params.sessionConfig;
@@ -220,7 +220,7 @@ describe("gateway server cron", () => {
 
   test("handles cron CRUD, normalization, and patch semantics", { timeout: 20_000 }, async () => {
     const { prevSkipCron } = await setupCronTestRun({
-      tempPrefix: "openclaw-gw-cron-",
+      tempPrefix: "propai-gw-cron-",
       sessionConfig: { mainKey: "primary" },
       cronEnabled: false,
     });
@@ -449,7 +449,7 @@ describe("gateway server cron", () => {
 
   test("writes cron run history and auto-runs due jobs", async () => {
     const { prevSkipCron } = await setupCronTestRun({
-      tempPrefix: "openclaw-gw-cron-log-",
+      tempPrefix: "propai-gw-cron-log-",
     });
 
     const { server, ws } = await startServerWithClient();
@@ -546,7 +546,7 @@ describe("gateway server cron", () => {
 
   test("returns from cron.run immediately while isolated work continues in background", async () => {
     const { prevSkipCron } = await setupCronTestRun({
-      tempPrefix: "openclaw-gw-cron-run-detached-",
+      tempPrefix: "propai-gw-cron-run-detached-",
     });
 
     const { server, ws } = await startServerWithClient();
@@ -613,7 +613,7 @@ describe("gateway server cron", () => {
     );
 
     const { prevSkipCron } = await setupCronTestRun({
-      tempPrefix: "openclaw-gw-cron-run-busy-",
+      tempPrefix: "propai-gw-cron-run-busy-",
       jobs: [
         {
           id: "busy-job",
@@ -666,7 +666,7 @@ describe("gateway server cron", () => {
   test("returns not-due without starting background work", async () => {
     const now = Date.now();
     const { prevSkipCron } = await setupCronTestRun({
-      tempPrefix: "openclaw-gw-cron-run-not-due-",
+      tempPrefix: "propai-gw-cron-run-not-due-",
       jobs: [
         {
           id: "future-job",
@@ -715,12 +715,12 @@ describe("gateway server cron", () => {
       state: {},
     };
     const { prevSkipCron } = await setupCronTestRun({
-      tempPrefix: "openclaw-gw-cron-webhook-",
+      tempPrefix: "propai-gw-cron-webhook-",
       cronEnabled: false,
       jobs: [legacyNotifyJob],
     });
 
-    const configPath = process.env.OPENCLAW_CONFIG_PATH;
+    const configPath = process.env.propai_CONFIG_PATH;
     expect(typeof configPath).toBe("string");
     await fs.mkdir(path.dirname(configPath as string), { recursive: true });
     await fs.writeFile(
@@ -895,11 +895,11 @@ describe("gateway server cron", () => {
 
   test("ignores non-string cron.webhookToken values without crashing webhook delivery", async () => {
     const { prevSkipCron } = await setupCronTestRun({
-      tempPrefix: "openclaw-gw-cron-webhook-secretinput-",
+      tempPrefix: "propai-gw-cron-webhook-secretinput-",
       cronEnabled: false,
     });
 
-    const configPath = process.env.OPENCLAW_CONFIG_PATH;
+    const configPath = process.env.propai_CONFIG_PATH;
     expect(typeof configPath).toBe("string");
     await fs.mkdir(path.dirname(configPath as string), { recursive: true });
     await fs.writeFile(
@@ -953,3 +953,5 @@ describe("gateway server cron", () => {
     }
   }, 45_000);
 });
+
+

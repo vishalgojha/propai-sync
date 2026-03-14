@@ -9,7 +9,7 @@ vi.mock("../channels/session.js", () => ({
 
 describe("buildTelegramMessageContext named-account DM fallback", () => {
   const baseCfg = {
-    agents: { defaults: { model: "anthropic/claude-opus-4-5", workspace: "/tmp/openclaw" } },
+    agents: { defaults: { model: "anthropic/claude-opus-4-5", workspace: "/tmp/PropAiSync" } },
     channels: { telegram: {} },
     messages: { groupChat: { mentionPatterns: [] } },
   };
@@ -177,3 +177,5 @@ describe("buildTelegramMessageContext named-account DM fallback", () => {
     expect(ctx?.ctxPayload?.SessionKey).toBe("agent:main:main");
   });
 });
+
+

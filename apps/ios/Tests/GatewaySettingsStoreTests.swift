@@ -1,15 +1,15 @@
 import Foundation
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 private struct KeychainEntry: Hashable {
     let service: String
     let account: String
 }
 
-private let gatewayService = "ai.openclaw.gateway"
-private let nodeService = "ai.openclaw.node"
-private let talkService = "ai.openclaw.talk"
+private let gatewayService = "ai.propai.gateway"
+private let nodeService = "ai.propai.node"
+private let talkService = "ai.propai.talk"
 private let instanceIdEntry = KeychainEntry(service: nodeService, account: "instanceId")
 private let preferredGatewayEntry = KeychainEntry(service: gatewayService, account: "preferredStableID")
 private let lastGatewayEntry = KeychainEntry(service: gatewayService, account: "lastDiscoveredStableID")
@@ -201,3 +201,6 @@ private func withLastGatewaySnapshot(_ body: () -> Void) {
         #expect(GatewaySettingsStore.loadTalkProviderApiKey(provider: "acme") == nil)
     }
 }
+
+
+

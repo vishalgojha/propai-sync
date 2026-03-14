@@ -581,16 +581,16 @@ export function registerMemoryCli(program: Command) {
       "after",
       () =>
         `\n${theme.heading("Examples:")}\n${formatHelpExamples([
-          ["openclaw memory status", "Show index and provider status."],
-          ["openclaw memory status --deep", "Probe embedding provider readiness."],
-          ["openclaw memory index --force", "Force a full reindex."],
-          ['openclaw memory search "meeting notes"', "Quick search using positional query."],
+          ["propai memory status", "Show index and provider status."],
+          ["propai memory status --deep", "Probe embedding provider readiness."],
+          ["propai memory index --force", "Force a full reindex."],
+          ['propai memory search "meeting notes"', "Quick search using positional query."],
           [
-            'openclaw memory search --query "deployment" --max-results 20',
+            'propai memory search --query "deployment" --max-results 20',
             "Limit results for focused troubleshooting.",
           ],
-          ["openclaw memory status --json", "Output machine-readable JSON (good for scripts)."],
-        ])}\n\n${theme.muted("Docs:")} ${formatDocsLink("/cli/memory", "docs.openclaw.ai/cli/memory")}\n`,
+          ["propai memory status --json", "Output machine-readable JSON (good for scripts)."],
+        ])}\n\n${theme.muted("Docs:")} ${formatDocsLink("/cli/memory", "docs.propai.ai/cli/memory")}\n`,
     );
 
   memory
@@ -815,3 +815,6 @@ export function registerMemoryCli(program: Command) {
       },
     );
 }
+
+
+

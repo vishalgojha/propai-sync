@@ -1,5 +1,5 @@
 import type { MatrixClient } from "@vector-im/matrix-bot-sdk";
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "propai/plugin-sdk/account-id";
 import { getMatrixRuntime } from "../../runtime.js";
 import type { CoreConfig } from "../../types.js";
 import { getActiveMatrixClient, getAnyActiveMatrixClient } from "../active-client.js";
@@ -80,7 +80,7 @@ export async function resolveMatrixClient(opts: {
       return { client: anyActive, stopOnDone: false };
     }
   }
-  const shouldShareClient = Boolean(process.env.OPENCLAW_GATEWAY_PORT);
+  const shouldShareClient = Boolean(process.env.propai_GATEWAY_PORT);
   if (shouldShareClient) {
     const client = await resolveSharedMatrixClient({
       timeoutMs: opts.timeoutMs,
@@ -97,3 +97,5 @@ export async function resolveMatrixClient(opts: {
   });
   return { client, stopOnDone: true };
 }
+
+

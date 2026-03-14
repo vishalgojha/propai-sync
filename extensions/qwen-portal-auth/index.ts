@@ -1,9 +1,9 @@
 import {
   buildOauthProviderAuthResult,
   emptyPluginConfigSchema,
-  type OpenClawPluginApi,
+  type PropAiSyncPluginApi,
   type ProviderAuthContext,
-} from "openclaw/plugin-sdk/qwen-portal-auth";
+} from "propai/plugin-sdk/qwen-portal-auth";
 import { loginQwenPortalOAuth } from "./oauth.js";
 
 const PROVIDER_ID = "qwen-portal";
@@ -41,7 +41,7 @@ const qwenPortalPlugin = {
   name: "Qwen OAuth",
   description: "OAuth flow for Qwen (free-tier) models",
   configSchema: emptyPluginConfigSchema(),
-  register(api: OpenClawPluginApi) {
+  register(api: PropAiSyncPluginApi) {
     api.registerProvider({
       id: PROVIDER_ID,
       label: PROVIDER_LABEL,
@@ -124,3 +124,6 @@ const qwenPortalPlugin = {
 };
 
 export default qwenPortalPlugin;
+
+
+

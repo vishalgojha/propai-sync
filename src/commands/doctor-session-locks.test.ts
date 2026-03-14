@@ -18,9 +18,9 @@ describe("noteSessionLockHealth", () => {
 
   beforeEach(async () => {
     note.mockClear();
-    envSnapshot = captureEnv(["OPENCLAW_STATE_DIR"]);
-    root = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-doctor-locks-"));
-    process.env.OPENCLAW_STATE_DIR = root;
+    envSnapshot = captureEnv(["PROPAI_STATE_DIR"]);
+    root = await fs.mkdtemp(path.join(os.tmpdir(), "propai-doctor-locks-"));
+    process.env.propai_STATE_DIR = root;
   });
 
   afterEach(async () => {
@@ -78,3 +78,5 @@ describe("noteSessionLockHealth", () => {
     await expect(fs.access(freshLock)).resolves.toBeUndefined();
   });
 });
+
+

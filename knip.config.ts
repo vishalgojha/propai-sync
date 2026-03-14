@@ -1,5 +1,5 @@
 const rootEntries = [
-  "openclaw.mjs!",
+  "propai.mjs!",
   "src/index.ts!",
   "src/entry.ts!",
   "src/cli/daemon-cli.ts!",
@@ -97,9 +97,12 @@ const config = {
     "extensions/*": {
       entry: ["index.ts!"],
       project: ["index.ts!", "src/**/*.ts!"],
-      ignoreDependencies: ["openclaw"],
+      ignoreDependencies: ["PropAi Sync"],
     },
   },
 } as const;
 
 export default config;
+
+
+

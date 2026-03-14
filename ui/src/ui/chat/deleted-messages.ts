@@ -1,4 +1,4 @@
-const PREFIX = "openclaw:deleted:";
+const PREFIX = "PropAi Sync:deleted:";
 
 export class DeletedMessages {
   private key: string;
@@ -47,3 +47,4 @@ export class DeletedMessages {
     localStorage.setItem(this.key, JSON.stringify([...this._keys]));
   }
 }
+

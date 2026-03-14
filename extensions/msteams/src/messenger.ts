@@ -7,7 +7,7 @@ import {
   type ReplyPayload,
   SILENT_REPLY_TOKEN,
   sleep,
-} from "openclaw/plugin-sdk/msteams";
+} from "propai/plugin-sdk/msteams";
 import type { MSTeamsAccessTokenProvider } from "./attachments/types.js";
 import type { StoredConversationReference } from "./conversation-store.js";
 import { classifyMSTeamsSendError } from "./errors.js";
@@ -522,3 +522,5 @@ export async function sendMSTeamsMessages(params: {
 
   return await sendProactively(messages, 0);
 }
+
+

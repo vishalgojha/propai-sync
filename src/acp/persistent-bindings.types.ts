@@ -10,7 +10,7 @@ export type ConfiguredAcpBindingSpec = {
   accountId: string;
   conversationId: string;
   parentConversationId?: string;
-  /** Owning OpenClaw agent id (used for session identity/storage). */
+  /** Owning PropAi Sync agent id (used for session identity/storage). */
   agentId: string;
   /** ACP harness agent id override (falls back to agentId when omitted). */
   acpAgentId?: string;
@@ -103,3 +103,4 @@ export function toConfiguredAcpBindingRecord(spec: ConfiguredAcpBindingSpec): Se
     },
   };
 }
+

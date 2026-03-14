@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   buildConfigureCandidates,
   buildConfigureCandidatesForScope,
@@ -19,7 +19,7 @@ describe("secrets configure plan helpers", () => {
           botToken: "token", // pragma: allowlist secret
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     const candidates = buildConfigureCandidates(config);
     const paths = candidates.map((entry) => entry.path);
@@ -35,7 +35,7 @@ describe("secrets configure plan helpers", () => {
           legacy: { source: "env" },
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
     const next = {
       secrets: {
         providers: {
@@ -43,7 +43,7 @@ describe("secrets configure plan helpers", () => {
           modern: { source: "env" },
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     const changes = collectConfigureProviderChanges({ original, next });
     expect(Object.keys(changes.upserts).toSorted()).toEqual(["default", "modern"]);
@@ -52,7 +52,7 @@ describe("secrets configure plan helpers", () => {
 
   it("discovers auth-profiles candidates for the selected agent scope", () => {
     const candidates = buildConfigureCandidatesForScope({
-      config: {} as OpenClawConfig,
+      config: {} as PropAiSyncConfig,
       authProfiles: {
         agentId: "main",
         store: {
@@ -90,7 +90,7 @@ describe("secrets configure plan helpers", () => {
             id: "TALK_API_KEY",
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       authProfiles: {
         agentId: "main",
         store: {
@@ -144,12 +144,12 @@ describe("secrets configure plan helpers", () => {
           },
           apiKey: "demo-talk-key", // pragma: allowlist secret
         },
-      } as OpenClawConfig,
-      authoredOpenClawConfig: {
+      } as PropAiSyncConfig,
+      authoredPropAiSyncConfig: {
         talk: {
           apiKey: "demo-talk-key", // pragma: allowlist secret
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
     });
 
     const legacy = candidates.find((entry) => entry.path === "talk.apiKey");
@@ -169,7 +169,7 @@ describe("secrets configure plan helpers", () => {
           path: "talk.apiKey",
           pathSegments: ["talk", "apiKey"],
           label: "talk.apiKey",
-          configFile: "openclaw.json" as const,
+          configFile: "propai.json" as const,
           expectedResolvedValue: "string" as const,
           ref: {
             source: "env" as const,
@@ -207,3 +207,6 @@ describe("secrets configure plan helpers", () => {
     });
   });
 });
+
+
+

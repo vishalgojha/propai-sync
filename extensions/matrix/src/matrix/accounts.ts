@@ -1,5 +1,5 @@
-import { normalizeAccountId } from "openclaw/plugin-sdk/account-id";
-import { createAccountListHelpers } from "openclaw/plugin-sdk/matrix";
+import { normalizeAccountId } from "propai/plugin-sdk/account-id";
+import { createAccountListHelpers } from "propai/plugin-sdk/matrix";
 import { hasConfiguredSecretInput } from "../secret-input.js";
 import type { CoreConfig, MatrixConfig } from "../types.js";
 import { resolveMatrixConfigForAccount } from "./client.js";
@@ -112,3 +112,5 @@ export function listEnabledMatrixAccounts(cfg: CoreConfig): ResolvedMatrixAccoun
     .map((accountId) => resolveMatrixAccount({ cfg, accountId }))
     .filter((account) => account.enabled);
 }
+
+

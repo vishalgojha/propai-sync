@@ -1,7 +1,7 @@
 {
-  "name": "@openclaw/diagnostics-otel",
+  "name": "@propai/diagnostics-otel",
   "version": "2026.3.11",
-  "description": "OpenClaw diagnostics OpenTelemetry exporter",
+  "description": "PropAi Sync diagnostics OpenTelemetry exporter",
   "type": "module",
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
@@ -16,9 +16,11 @@
     "@opentelemetry/sdk-trace-base": "^2.6.0",
     "@opentelemetry/semantic-conventions": "^1.40.0"
   },
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

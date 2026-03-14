@@ -1,4 +1,4 @@
-import type { DmPolicy } from "openclaw/plugin-sdk/matrix";
+import type { DmPolicy } from "propai/plugin-sdk/matrix";
 import {
   addWildcardAllowFrom,
   buildSingleChannelSecretPromptState,
@@ -13,7 +13,7 @@ import {
   type ChannelOnboardingAdapter,
   type ChannelOnboardingDmPolicy,
   type WizardPrompter,
-} from "openclaw/plugin-sdk/matrix";
+} from "propai/plugin-sdk/matrix";
 import { listMatrixDirectoryGroupsLive } from "./directory-live.js";
 import { resolveMatrixAccount } from "./matrix/accounts.js";
 import { ensureMatrixSdkInstalled, isMatrixSdkAvailable } from "./matrix/deps.js";
@@ -355,7 +355,7 @@ export const matrixOnboardingAdapter: ChannelOnboardingAdapter = {
     const deviceName = String(
       await prompter.text({
         message: "Matrix device name (optional)",
-        initialValue: existing.deviceName ?? "OpenClaw Gateway",
+        initialValue: existing.deviceName ?? "PropAi Sync Gateway",
       }),
     ).trim();
 
@@ -460,3 +460,5 @@ export const matrixOnboardingAdapter: ChannelOnboardingAdapter = {
     },
   }),
 };
+
+

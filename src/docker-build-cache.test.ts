@@ -30,7 +30,7 @@ describe("docker build cache layout", () => {
     ]) {
       const dockerfile = await readRepoFile(path);
       expect(dockerfile, `${path} should use a shared pnpm store cache`).toContain(
-        "--mount=type=cache,id=openclaw-pnpm-store,target=/root/.local/share/pnpm/store,sharing=locked",
+        "--mount=type=cache,id=propai-pnpm-store,target=/root/.local/share/pnpm/store,sharing=locked",
       );
     }
   });
@@ -97,7 +97,7 @@ describe("docker build cache layout", () => {
     ).toBeLessThan(installIndex);
     expect(
       dockerfile.indexOf(
-        "COPY tsconfig.json tsconfig.plugin-sdk.dts.json tsdown.config.ts vitest.config.ts vitest.e2e.config.ts openclaw.mjs ./",
+        "COPY tsconfig.json tsconfig.plugin-sdk.dts.json tsdown.config.ts vitest.config.ts vitest.e2e.config.ts propai.mjs ./",
       ),
     ).toBeGreaterThan(installIndex);
     expect(dockerfile.indexOf("COPY src ./src")).toBeGreaterThan(installIndex);
@@ -125,3 +125,7 @@ describe("docker build cache layout", () => {
     expect(dockerfile.indexOf("COPY . .")).toBeGreaterThan(installIndex);
   });
 });
+
+
+
+

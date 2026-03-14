@@ -1,4 +1,4 @@
-import type { BaseProbeResult } from "openclaw/plugin-sdk/bluebubbles";
+import type { BaseProbeResult } from "propai/plugin-sdk/bluebubbles";
 import { normalizeSecretInputString } from "./secret-input.js";
 import { buildBlueBubblesApiUrl, blueBubblesFetchWithTimeout } from "./types.js";
 
@@ -162,3 +162,5 @@ export async function probeBlueBubbles(params: {
     };
   }
 }
+
+

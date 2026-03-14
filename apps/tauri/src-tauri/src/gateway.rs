@@ -17,7 +17,7 @@ const FIXED_GATEWAY_PORT: u16 = 18789;
 
 #[derive(Debug, thiserror::Error)]
 pub enum DesktopGatewayError {
-  #[error("cannot locate OpenClaw repo root (set OPENCLAW_DESKTOP_REPO_ROOT)")]
+  #[error("cannot locate PropAi Sync repo root (set PROPAI_DESKTOP_REPO_ROOT)")]
   RepoRootNotFound,
   #[error("desktop resources are missing (run the Tauri bundle prepare step)")]
   MissingResources,
@@ -78,9 +78,9 @@ struct DesktopGatewayProcess {
 }
 
 fn resolve_repo_root() -> Result<PathBuf, DesktopGatewayError> {
-  if let Ok(raw) = std::env::var("OPENCLAW_DESKTOP_REPO_ROOT") {
+  if let Ok(raw) = std::env::var("PROPAI_DESKTOP_REPO_ROOT") {
     let candidate = PathBuf::from(raw);
-    if candidate.join("openclaw.mjs").is_file() {
+    if candidate.join("propai.mjs").is_file() {
       return Ok(candidate);
     }
   }
@@ -91,7 +91,7 @@ fn resolve_repo_root() -> Result<PathBuf, DesktopGatewayError> {
     .map(|p| p.to_path_buf())
     .ok_or(DesktopGatewayError::RepoRootNotFound)?;
 
-  if candidate.join("openclaw.mjs").is_file() {
+  if candidate.join("propai.mjs").is_file() {
     return Ok(candidate);
   }
 
@@ -229,15 +229,15 @@ fn ensure_parent_dir(path: &Path) {
 }
 
 fn resolve_bundled_resource_base(resource_root: &Path) -> Option<PathBuf> {
-  let direct_openclaw = resource_root.join("openclaw").join("openclaw.mjs");
-  if direct_openclaw.is_file() {
+  let direct_PropAiSync = resource_root.join("propai").join("propai.mjs");
+  if direct_PropAiSync.is_file() {
     return Some(resource_root.to_path_buf());
   }
-  let nested_openclaw = resource_root
+  let nested_PropAiSync = resource_root
     .join("resources")
-    .join("openclaw")
-    .join("openclaw.mjs");
-  if nested_openclaw.is_file() {
+    .join("propai")
+    .join("propai.mjs");
+  if nested_PropAiSync.is_file() {
     return Some(resource_root.join("resources"));
   }
   None
@@ -276,7 +276,7 @@ fn read_text(path: &Path) -> Option<String> {
 fn ensure_desktop_state_seed(state_dir: &Path) -> Result<(), DesktopGatewayError> {
   fs::create_dir_all(state_dir).map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
 
-  let config_path = state_dir.join("openclaw.json");
+  let config_path = state_dir.join("propai.json");
   if config_path.is_file() {
     return Ok(());
   }
@@ -419,13 +419,13 @@ fn unzip_node_modules(zip_path: &Path, runtime_root: &Path) -> Result<(), Deskto
 
 fn ensure_desktop_runtime(resource_base: &Path, app_data_dir: &Path) -> Result<PathBuf, DesktopGatewayError> {
   // resource_base contains:
-  // - openclaw/ (dist, openclaw.mjs, assets, skills, node_modules.zip, etc)
+  // - propai/ (dist, propai.mjs, assets, skills, node_modules.zip, etc)
   // - node/ (node.exe)
-  // - openclaw/.prepared (timestamp marker)
-  let stamp = read_text(&resource_base.join("openclaw").join(".prepared"))
+  // - propai/.prepared (timestamp marker)
+  let stamp = read_text(&resource_base.join("propai").join(".prepared"))
     .or_else(|| read_text(&resource_base.join("desktop.prepared.txt")))
     .unwrap_or_else(|| "unknown".into());
-  let runtime_root = app_data_dir.join("runtime").join("openclaw");
+  let runtime_root = app_data_dir.join("runtime").join("propai");
   let runtime_stamp_path = runtime_root.join(".prepared");
   let chalk_path = runtime_root.join("node_modules").join("chalk").join("package.json");
   let templates_path = runtime_root
@@ -445,11 +445,11 @@ fn ensure_desktop_runtime(resource_base: &Path, app_data_dir: &Path) -> Result<P
   let _ = fs::remove_dir_all(&runtime_root);
   fs::create_dir_all(&runtime_root).map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
 
-  let resource_openclaw = resource_base.join("openclaw");
-  if !resource_openclaw.join("openclaw.mjs").is_file() {
+  let resource_PropAiSync = resource_base.join("propai");
+  if !resource_PropAiSync.join("propai.mjs").is_file() {
     return Err(DesktopGatewayError::MissingResources);
   }
-  copy_dir_recursive(&resource_openclaw, &runtime_root)
+  copy_dir_recursive(&resource_PropAiSync, &runtime_root)
     .map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
 
   let node_modules_zip = runtime_root.join("node_modules.zip");
@@ -513,7 +513,7 @@ pub fn start_gateway(
   let token = generate_token();
   let ws_url = format!("ws://127.0.0.1:{port}");
 
-  let log_path = log_dir.map(|dir| dir.join("openclaw-desktop-gateway.log"));
+  let log_path = log_dir.map(|dir| dir.join("propai-desktop-gateway.log"));
   let mut cmd = if req.dev {
     let repo_root = resolve_repo_root()?;
     let mut cmd = Command::new("node");
@@ -530,7 +530,7 @@ pub fn start_gateway(
       .arg(port.to_string())
       .arg("--allow-unconfigured")
       .arg("--dev");
-    cmd.env("OPENCLAW_PROFILE", "dev");
+    cmd.env("PROPAI_PROFILE", "dev");
     cmd
   } else {
     let resource_root = resource_root.ok_or(DesktopGatewayError::MissingResources)?;
@@ -541,15 +541,15 @@ pub fn start_gateway(
       base.join("node").join("node")
     };
     let app_data_dir_path = app_data_dir.as_ref().ok_or(DesktopGatewayError::MissingResources)?;
-    let openclaw_root = ensure_desktop_runtime(&base, app_data_dir_path)?;
-    let openclaw_entry = openclaw_root.join("openclaw.mjs");
-    if !node_bin.is_file() || !openclaw_entry.is_file() {
+    let PROPAI_root = ensure_desktop_runtime(&base, app_data_dir_path)?;
+    let PROPAI_entry = PROPAI_root.join("propai.mjs");
+    if !node_bin.is_file() || !PROPAI_entry.is_file() {
       return Err(DesktopGatewayError::MissingResources);
     }
 
     let mut cmd = Command::new(node_bin);
-    cmd.current_dir(&openclaw_root);
-    cmd.arg(openclaw_entry)
+    cmd.current_dir(&PROPAI_root);
+    cmd.arg(PROPAI_entry)
       .arg("gateway")
       .arg("--bind")
       .arg("loopback")
@@ -570,10 +570,10 @@ pub fn start_gateway(
     // This makes the Windows desktop app redistributable and "no terminal required".
     let state_dir = app_data_dir.join("state");
     ensure_desktop_state_seed(&state_dir)?;
-    cmd.env("OPENCLAW_STATE_DIR", &state_dir);
-    cmd.env("OPENCLAW_DESKTOP", "1");
+    cmd.env("PROPAI_STATE_DIR", &state_dir);
+    cmd.env("PROPAI_DESKTOP", "1");
     // Used by onboarding/pickers to choose desktop-friendly defaults.
-    cmd.env("OPENCLAW_ONBOARD_DEFAULT_AUTH_PROVIDER", "openrouter");
+    cmd.env("PROPAI_ONBOARD_DEFAULT_AUTH_PROVIDER", "openrouter");
   }
 
   if let Some(path) = log_path.as_ref() {
@@ -677,4 +677,9 @@ pub fn gateway_status(state: &DesktopGatewayState) -> DesktopGatewayStatusRespon
     log_path: proc.log_path.as_ref().map(|p| p.to_string_lossy().to_string()),
   }
 }
+
+
+
+
+
 

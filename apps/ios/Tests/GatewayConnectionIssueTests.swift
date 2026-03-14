@@ -1,5 +1,5 @@
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 @Suite(.serialized) struct GatewayConnectionIssueTests {
     @Test func detectsTokenMissing() {
@@ -31,3 +31,5 @@ import Testing
         #expect(issue == .none)
     }
 }
+
+

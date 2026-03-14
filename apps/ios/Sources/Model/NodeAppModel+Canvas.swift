@@ -1,6 +1,6 @@
 import Foundation
 import Network
-import OpenClawKit
+import PropAiSyncKit
 
 enum A2UIReadyState {
     case ready(String)
@@ -16,7 +16,7 @@ extension NodeAppModel {
         if let host = base.host, LoopbackHost.isLoopback(host) {
             return nil
         }
-        return base.appendingPathComponent("__openclaw__/canvas/").absoluteString
+        return base.appendingPathComponent("__PROPAI__/canvas/").absoluteString
     }
 
     func _test_resolveA2UIHostURL() async -> String? {
@@ -30,7 +30,7 @@ extension NodeAppModel {
         if let host = base.host, LoopbackHost.isLoopback(host) {
             return nil
         }
-        return base.appendingPathComponent("__openclaw__/a2ui/").absoluteString + "?platform=ios"
+        return base.appendingPathComponent("__PROPAI__/a2ui/").absoluteString + "?platform=ios"
     }
 
     func showA2UIOnConnectIfNeeded() async {
@@ -92,3 +92,6 @@ extension NodeAppModel {
             queueLabel: "a2ui.preflight")
     }
 }
+
+
+

@@ -26,7 +26,7 @@ async function createCaseDir(prefix: string): Promise<string> {
 }
 
 beforeAll(async () => {
-  fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-skills-sync-suite-"));
+  fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "propai-skills-sync-suite-"));
   syncSourceTemplateDir = await createCaseDir("source-template");
   await writeSkill({
     dir: path.join(syncSourceTemplateDir, ".extra", "demo-skill"),
@@ -204,7 +204,7 @@ describe("buildWorkspaceSkillsPrompt", () => {
       name: "nano-banana-pro",
       description: "Generates images",
       metadata:
-        '{"openclaw":{"requires":{"env":["GEMINI_API_KEY"]},"primaryEnv":"GEMINI_API_KEY"}}',
+        '{"PropAi Sync":{"requires":{"env":["GEMINI_API_KEY"]},"primaryEnv":"GEMINI_API_KEY"}}',
       body: "# Nano Banana\n",
     });
 
@@ -251,3 +251,5 @@ describe("buildWorkspaceSkillsPrompt", () => {
     expect(emptyPrompt).toBe("");
   });
 });
+
+

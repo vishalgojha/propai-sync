@@ -11,7 +11,7 @@ type ResetDeps = {
   getProfileState: () => ProfileRuntimeState;
   stopRunningBrowser: () => Promise<{ stopped: boolean }>;
   isHttpReachable: (timeoutMs?: number) => Promise<boolean>;
-  resolveOpenClawUserDataDir: (profileName: string) => string;
+  resolvePropAiSyncUserDataDir: (profileName: string) => string;
 };
 
 type ResetOps = {
@@ -32,7 +32,7 @@ export function createProfileResetOps({
   getProfileState,
   stopRunningBrowser,
   isHttpReachable,
-  resolveOpenClawUserDataDir,
+  resolvePropAiSyncUserDataDir,
 }: ResetDeps): ResetOps {
   const capabilities = getBrowserProfileCapabilities(profile);
   const resetProfile = async () => {
@@ -46,7 +46,7 @@ export function createProfileResetOps({
       );
     }
 
-    const userDataDir = resolveOpenClawUserDataDir(profile.name);
+    const userDataDir = resolvePropAiSyncUserDataDir(profile.name);
     const profileState = getProfileState();
     const httpReachable = await isHttpReachable(300);
     if (httpReachable && !profileState.running) {
@@ -70,3 +70,5 @@ export function createProfileResetOps({
 
   return { resetProfile };
 }
+
+

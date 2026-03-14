@@ -23,7 +23,7 @@ describe("media store outside-workspace mapping", () => {
   let home = "";
 
   beforeAll(async () => {
-    tempHome = await createTempHomeEnv("openclaw-media-store-test-home-");
+    tempHome = await createTempHomeEnv("propai-media-store-test-home-");
     home = tempHome.home;
   });
 
@@ -44,3 +44,5 @@ describe("media store outside-workspace mapping", () => {
     });
   });
 });
+
+

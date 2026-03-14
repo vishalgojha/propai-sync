@@ -161,7 +161,7 @@ vi.mock("../model-auth.js", () => ({
 }));
 
 vi.mock("../models-config.js", () => ({
-  ensureOpenClawModelsJson: vi.fn(async () => {}),
+  ensurePropAiSyncModelsJson: vi.fn(async () => {}),
 }));
 
 vi.mock("../context-window-guard.js", () => ({
@@ -192,7 +192,7 @@ vi.mock(import("../../utils/message-channel.js"), async (importOriginal) => {
 });
 
 vi.mock("../agent-paths.js", () => ({
-  resolveOpenClawAgentDir: vi.fn(() => "/tmp/agent-dir"),
+  resolvePropAiSyncAgentDir: vi.fn(() => "/tmp/agent-dir"),
 }));
 
 vi.mock("../defaults.js", () => ({
@@ -242,3 +242,5 @@ vi.mock("./utils.js", () => ({
     return String(err);
   }),
 }));
+
+

@@ -1,7 +1,7 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "./agent-scope.js";
 
-export function listAgentWorkspaceDirs(cfg: OpenClawConfig): string[] {
+export function listAgentWorkspaceDirs(cfg: PropAiSyncConfig): string[] {
   const dirs = new Set<string>();
   const list = cfg.agents?.list;
   if (Array.isArray(list)) {
@@ -14,3 +14,5 @@ export function listAgentWorkspaceDirs(cfg: OpenClawConfig): string[] {
   dirs.add(resolveAgentWorkspaceDir(cfg, resolveDefaultAgentId(cfg)));
   return [...dirs];
 }
+
+

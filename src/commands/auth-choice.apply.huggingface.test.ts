@@ -44,15 +44,15 @@ async function runHuggingfaceApply(
 
 describe("applyAuthChoiceHuggingface", () => {
   const lifecycle = createAuthTestLifecycle([
-    "OPENCLAW_STATE_DIR",
-    "OPENCLAW_AGENT_DIR",
+    "PROPAI_STATE_DIR",
+    "PROPAI_AGENT_DIR",
     "PI_CODING_AGENT_DIR",
     "HF_TOKEN",
     "HUGGINGFACE_HUB_TOKEN",
   ]);
 
   async function setupTempState() {
-    const env = await setupAuthTestEnv("openclaw-hf-");
+    const env = await setupAuthTestEnv("propai-hf-");
     lifecycle.setStateDir(env.stateDir);
     return env.agentDir;
   }
@@ -192,3 +192,5 @@ describe("applyAuthChoiceHuggingface", () => {
     );
   });
 });
+
+

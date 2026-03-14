@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "openclaw/plugin-sdk/feishu";
+import type { ClawdbotConfig } from "propai/plugin-sdk/feishu";
 import { resolveFeishuAccount } from "./accounts.js";
 import { createFeishuClient } from "./client.js";
 import type { MentionTarget } from "./mention.js";
@@ -475,3 +475,5 @@ export async function editMessageFeishu(params: {
     throw new Error(`Feishu message edit failed: ${response.msg || `code ${response.code}`}`);
   }
 }
+
+

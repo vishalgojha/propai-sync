@@ -1,4 +1,4 @@
-import { resolveOpenClawAgentDir } from "../agents/agent-paths.js";
+import { resolvePropAiSyncAgentDir } from "../agents/agent-paths.js";
 import { listAgentIds, resolveAgentDir } from "../agents/agent-scope.js";
 import type { AuthProfileStore } from "../agents/auth-profiles.js";
 import {
@@ -10,7 +10,7 @@ import {
   clearRuntimeConfigSnapshot,
   setRuntimeConfigSnapshotRefreshHandler,
   setRuntimeConfigSnapshot,
-  type OpenClawConfig,
+  type PropAiSyncConfig,
 } from "../config/config.js";
 import { resolveUserPath } from "../utils.js";
 import {
@@ -30,8 +30,8 @@ import { resolveRuntimeWebTools, type RuntimeWebToolsMetadata } from "./runtime-
 export type { SecretResolverWarning } from "./runtime-shared.js";
 
 export type PreparedSecretsRuntimeSnapshot = {
-  sourceConfig: OpenClawConfig;
-  config: OpenClawConfig;
+  sourceConfig: PropAiSyncConfig;
+  config: PropAiSyncConfig;
   authStores: Array<{ agentDir: string; store: AuthProfileStore }>;
   warnings: SecretResolverWarning[];
   webTools: RuntimeWebToolsMetadata;
@@ -79,9 +79,9 @@ function clearActiveSecretsRuntimeState(): void {
   clearRuntimeAuthProfileStoreSnapshots();
 }
 
-function collectCandidateAgentDirs(config: OpenClawConfig): string[] {
+function collectCandidateAgentDirs(config: PropAiSyncConfig): string[] {
   const dirs = new Set<string>();
-  dirs.add(resolveUserPath(resolveOpenClawAgentDir()));
+  dirs.add(resolveUserPath(resolvePropAiSyncAgentDir()));
   for (const agentId of listAgentIds(config)) {
     dirs.add(resolveUserPath(resolveAgentDir(config, agentId)));
   }
@@ -89,7 +89,7 @@ function collectCandidateAgentDirs(config: OpenClawConfig): string[] {
 }
 
 function resolveRefreshAgentDirs(
-  config: OpenClawConfig,
+  config: PropAiSyncConfig,
   context: SecretsRuntimeRefreshContext,
 ): string[] {
   const configDerived = collectCandidateAgentDirs(config);
@@ -100,7 +100,7 @@ function resolveRefreshAgentDirs(
 }
 
 export async function prepareSecretsRuntimeSnapshot(params: {
-  config: OpenClawConfig;
+  config: PropAiSyncConfig;
   env?: NodeJS.ProcessEnv;
   agentDirs?: string[];
   loadAuthStore?: (agentDir?: string) => AuthProfileStore;
@@ -248,3 +248,5 @@ export function resolveCommandSecretsFromActiveRuntimeSnapshot(params: {
 export function clearSecretsRuntimeSnapshot(): void {
   clearActiveSecretsRuntimeState();
 }
+
+

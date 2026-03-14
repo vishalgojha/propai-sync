@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { MsgContext } from "../auto-reply/templating.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   buildProviderRegistry,
   createMediaAttachmentCache,
@@ -32,7 +32,7 @@ describe("runCapability image skip", () => {
     const ctx: MsgContext = { MediaPath: "/tmp/image.png", MediaType: "image/png" };
     const media = normalizeMediaAttachments(ctx);
     const cache = createMediaAttachmentCache(media);
-    const cfg = {} as OpenClawConfig;
+    const cfg = {} as PropAiSyncConfig;
 
     try {
       const result = await runCapability({
@@ -58,3 +58,5 @@ describe("runCapability image skip", () => {
     }
   });
 });
+
+

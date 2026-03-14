@@ -7,7 +7,7 @@ import { createCronServiceState } from "./service/state.js";
 import { runMissedJobs } from "./service/timer.js";
 
 const { logger: noopLogger, makeStorePath } = setupCronServiceSuite({
-  prefix: "openclaw-cron-",
+  prefix: "propai-cron-",
   baseTimeIso: "2025-12-13T17:00:00.000Z",
 });
 
@@ -413,3 +413,5 @@ describe("CronService restart catch-up", () => {
     await store.cleanup();
   });
 });
+
+

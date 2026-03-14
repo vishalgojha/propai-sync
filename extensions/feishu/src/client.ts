@@ -5,7 +5,7 @@ import type { FeishuConfig, FeishuDomain, ResolvedFeishuAccount } from "./types.
 /** Default HTTP timeout for Feishu API requests (30 seconds). */
 export const FEISHU_HTTP_TIMEOUT_MS = 30_000;
 export const FEISHU_HTTP_TIMEOUT_MAX_MS = 300_000;
-export const FEISHU_HTTP_TIMEOUT_ENV_VAR = "OPENCLAW_FEISHU_HTTP_TIMEOUT_MS";
+export const FEISHU_HTTP_TIMEOUT_ENV_VAR = "PROPAI_FEISHU_HTTP_TIMEOUT_MS";
 
 function getWsProxyAgent(): HttpsProxyAgent<string> | undefined {
   const proxyUrl =
@@ -194,3 +194,5 @@ export function clearClientCache(accountId?: string): void {
     clientCache.clear();
   }
 }
+
+

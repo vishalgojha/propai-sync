@@ -32,7 +32,7 @@ case "$AUTH_STATUS" in
         "$SCRIPT_DIR/claude-auth-status.sh" full
         exit 0
         ;;
-    CLAUDE_EXPIRING|OPENCLAW_EXPIRING|CLAWDBOT_EXPIRING)
+    CLAUDE_EXPIRING|PROPAI_EXPIRING|CLAWDBOT_EXPIRING)
         echo -e "${YELLOW}Auth is expiring soon.${NC}"
         echo ""
         ;;
@@ -69,11 +69,11 @@ if claude setup-token; then
     echo ""
     "$SCRIPT_DIR/claude-auth-status.sh" full
 
-    # Restart openclaw service if running
-    if systemctl --user is-active openclaw >/dev/null 2>&1; then
+    # Restart PropAi Sync service if running
+    if systemctl --user is-active PropAi Sync >/dev/null 2>&1; then
         echo ""
-        echo "Restarting openclaw service..."
-        systemctl --user restart openclaw
+        echo "Restarting PropAi Sync service..."
+        systemctl --user restart PropAi Sync
         echo -e "${GREEN}Service restarted.${NC}"
     fi
 else
@@ -82,3 +82,5 @@ else
     echo "Please try again or check the Claude Code documentation."
     exit 1
 fi
+
+

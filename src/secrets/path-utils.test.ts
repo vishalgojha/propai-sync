@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   deletePathStrict,
   getPath,
@@ -7,11 +7,11 @@ import {
   setPathExistingStrict,
 } from "./path-utils.js";
 
-function asConfig(value: unknown): OpenClawConfig {
-  return value as OpenClawConfig;
+function asConfig(value: unknown): PropAiSyncConfig {
+  return value as PropAiSyncConfig;
 }
 
-function createAgentListConfig(): OpenClawConfig {
+function createAgentListConfig(): PropAiSyncConfig {
   return asConfig({
     agents: {
       list: [{ id: "a" }],
@@ -77,3 +77,5 @@ describe("secrets path utils", () => {
     expect(getPath(config, ["talk", "apiKey"])).toBe("same");
   });
 });
+
+

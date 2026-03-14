@@ -135,7 +135,7 @@ describe("isSystemdServiceEnabled", () => {
       err.code = "EACCES";
       cb(err, "", "");
     });
-    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/openclaw-test-home" } });
+    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/propai-test-home" } });
     expect(result).toBe(false);
   });
 
@@ -145,7 +145,7 @@ describe("isSystemdServiceEnabled", () => {
     err.code = "ENOENT";
     vi.spyOn(fs, "access").mockRejectedValueOnce(err);
 
-    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/openclaw-test-home" } });
+    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/propai-test-home" } });
 
     expect(result).toBe(false);
     expect(execFileMock).not.toHaveBeenCalled();
@@ -155,10 +155,10 @@ describe("isSystemdServiceEnabled", () => {
     const { isSystemdServiceEnabled } = await import("./systemd.js");
     mockManagedUnitPresent();
     execFileMock.mockImplementationOnce((_cmd, args, _opts, cb) => {
-      expect(args).toEqual(["--user", "is-enabled", "openclaw-gateway.service"]);
+      expect(args).toEqual(["--user", "is-enabled", "propai-gateway.service"]);
       cb(null, "enabled", "");
     });
-    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/openclaw-test-home" } });
+    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/propai-test-home" } });
     expect(result).toBe(true);
   });
 
@@ -170,7 +170,7 @@ describe("isSystemdServiceEnabled", () => {
       err.code = 1;
       cb(err, "disabled", "");
     });
-    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/openclaw-test-home" } });
+    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/propai-test-home" } });
     expect(result).toBe(false);
   });
 
@@ -178,18 +178,18 @@ describe("isSystemdServiceEnabled", () => {
     const { isSystemdServiceEnabled } = await import("./systemd.js");
     mockManagedUnitPresent();
     execFileMock.mockImplementationOnce((_cmd, args, _opts, cb) => {
-      expect(args).toEqual(["--user", "is-enabled", "openclaw-gateway.service"]);
+      expect(args).toEqual(["--user", "is-enabled", "propai-gateway.service"]);
       const err = new Error(
-        "Command failed: systemctl --user is-enabled openclaw-gateway.service",
+        "Command failed: systemctl --user is-enabled propai-gateway.service",
       ) as Error & { code?: number };
       err.code = 1;
       cb(err, "", "");
     });
 
     await expect(
-      isSystemdServiceEnabled({ env: { HOME: "/tmp/openclaw-test-home" } }),
+      isSystemdServiceEnabled({ env: { HOME: "/tmp/propai-test-home" } }),
     ).rejects.toThrow(
-      "systemctl is-enabled unavailable: Command failed: systemctl --user is-enabled openclaw-gateway.service",
+      "systemctl is-enabled unavailable: Command failed: systemctl --user is-enabled propai-gateway.service",
     );
   });
 
@@ -200,7 +200,7 @@ describe("isSystemdServiceEnabled", () => {
       throw new Error("no user info");
     });
     execFileMock.mockImplementationOnce((_cmd, args, _opts, cb) => {
-      expect(args).toEqual(["--user", "is-enabled", "openclaw-gateway.service"]);
+      expect(args).toEqual(["--user", "is-enabled", "propai-gateway.service"]);
       cb(
         createExecFileError("Failed to connect to bus", { stderr: "Failed to connect to bus" }),
         "",
@@ -210,7 +210,7 @@ describe("isSystemdServiceEnabled", () => {
 
     await expect(
       isSystemdServiceEnabled({
-        env: { HOME: "/tmp/openclaw-test-home", USER: "", LOGNAME: "" },
+        env: { HOME: "/tmp/propai-test-home", USER: "", LOGNAME: "" },
       }),
     ).rejects.toThrow("systemctl is-enabled unavailable: Failed to connect to bus");
   });
@@ -220,7 +220,7 @@ describe("isSystemdServiceEnabled", () => {
     mockManagedUnitPresent();
     execFileMock
       .mockImplementationOnce((_cmd, args, _opts, cb) => {
-        expect(args).toEqual(["--user", "is-enabled", "openclaw-gateway.service"]);
+        expect(args).toEqual(["--user", "is-enabled", "propai-gateway.service"]);
         cb(
           createExecFileError("Failed to connect to bus", { stderr: "Failed to connect to bus" }),
           "",
@@ -233,7 +233,7 @@ describe("isSystemdServiceEnabled", () => {
           "debian@",
           "--user",
           "is-enabled",
-          "openclaw-gateway.service",
+          "propai-gateway.service",
         ]);
         cb(
           createExecFileError("Failed to connect to user scope bus via local transport", {
@@ -247,7 +247,7 @@ describe("isSystemdServiceEnabled", () => {
 
     await expect(
       isSystemdServiceEnabled({
-        env: { HOME: "/tmp/openclaw-test-home", USER: "debian" },
+        env: { HOME: "/tmp/propai-test-home", USER: "debian" },
       }),
     ).rejects.toThrow("systemctl is-enabled unavailable: Failed to connect to user scope bus");
   });
@@ -256,16 +256,16 @@ describe("isSystemdServiceEnabled", () => {
     const { isSystemdServiceEnabled } = await import("./systemd.js");
     mockManagedUnitPresent();
     execFileMock.mockImplementationOnce((_cmd, args, _opts, cb) => {
-      expect(args).toEqual(["--user", "is-enabled", "openclaw-gateway.service"]);
+      expect(args).toEqual(["--user", "is-enabled", "propai-gateway.service"]);
       const err = new Error(
-        "Command failed: systemctl --user is-enabled openclaw-gateway.service",
+        "Command failed: systemctl --user is-enabled propai-gateway.service",
       ) as Error & { code?: number };
       err.code = 1;
       cb(err, "", "read-only file system");
     });
 
     await expect(
-      isSystemdServiceEnabled({ env: { HOME: "/tmp/openclaw-test-home" } }),
+      isSystemdServiceEnabled({ env: { HOME: "/tmp/propai-test-home" } }),
     ).rejects.toThrow("systemctl is-enabled unavailable: read-only file system");
   });
 
@@ -274,7 +274,7 @@ describe("isSystemdServiceEnabled", () => {
     mockManagedUnitPresent();
     execFileMock
       .mockImplementationOnce((_cmd, args, _opts, cb) => {
-        expect(args).toEqual(["--user", "is-enabled", "openclaw-gateway.service"]);
+        expect(args).toEqual(["--user", "is-enabled", "propai-gateway.service"]);
         const err = new Error("Failed to connect to bus") as Error & { code?: number };
         err.code = 1;
         cb(err, "", "Failed to connect to bus");
@@ -282,13 +282,13 @@ describe("isSystemdServiceEnabled", () => {
       .mockImplementationOnce((_cmd, args, _opts, cb) => {
         expect(args[0]).toBe("--machine");
         expect(String(args[1])).toMatch(/^[^@]+@$/);
-        expect(args.slice(2)).toEqual(["--user", "is-enabled", "openclaw-gateway.service"]);
+        expect(args.slice(2)).toEqual(["--user", "is-enabled", "propai-gateway.service"]);
         const err = new Error("permission denied") as Error & { code?: number };
         err.code = 1;
         cb(err, "", "permission denied");
       });
     await expect(
-      isSystemdServiceEnabled({ env: { HOME: "/tmp/openclaw-test-home" } }),
+      isSystemdServiceEnabled({ env: { HOME: "/tmp/propai-test-home" } }),
     ).rejects.toThrow("systemctl is-enabled unavailable: permission denied");
   });
 
@@ -299,12 +299,12 @@ describe("isSystemdServiceEnabled", () => {
       // On Ubuntu 24.04, `systemctl --user is-enabled <unit>` exits with
       // code 4 and prints "not-found" to stdout when the unit doesn't exist.
       const err = new Error(
-        "Command failed: systemctl --user is-enabled openclaw-gateway.service",
+        "Command failed: systemctl --user is-enabled propai-gateway.service",
       ) as Error & { code?: number };
       err.code = 4;
       cb(err, "not-found\n", "");
     });
-    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/openclaw-test-home" } });
+    const result = await isSystemdServiceEnabled({ env: { HOME: "/tmp/propai-test-home" } });
     expect(result).toBe(false);
   });
 });
@@ -313,7 +313,7 @@ describe("isNonFatalSystemdInstallProbeError", () => {
   it("matches wrapper-only WSL install probe failures", () => {
     expect(
       isNonFatalSystemdInstallProbeError(
-        new Error("Command failed: systemctl --user is-enabled openclaw-gateway.service"),
+        new Error("Command failed: systemctl --user is-enabled propai-gateway.service"),
       ),
     ).toBe(true);
   });
@@ -371,37 +371,37 @@ describe("systemd runtime parsing", () => {
 describe("resolveSystemdUserUnitPath", () => {
   it.each([
     {
-      name: "uses default service name when OPENCLAW_PROFILE is unset",
+      name: "uses default service name when PROPAI_PROFILE is unset",
       env: { HOME: "/home/test" },
-      expected: "/home/test/.config/systemd/user/openclaw-gateway.service",
+      expected: "/home/test/.config/systemd/user/propai-gateway.service",
     },
     {
-      name: "uses profile-specific service name when OPENCLAW_PROFILE is set to a custom value",
-      env: { HOME: "/home/test", OPENCLAW_PROFILE: "jbphoenix" },
-      expected: "/home/test/.config/systemd/user/openclaw-gateway-jbphoenix.service",
+      name: "uses profile-specific service name when PROPAI_PROFILE is set to a custom value",
+      env: { HOME: "/home/test", PROPAI_PROFILE: "jbphoenix" },
+      expected: "/home/test/.config/systemd/user/propai-gateway-jbphoenix.service",
     },
     {
-      name: "prefers OPENCLAW_SYSTEMD_UNIT over OPENCLAW_PROFILE",
+      name: "prefers PROPAI_SYSTEMD_UNIT over PROPAI_PROFILE",
       env: {
         HOME: "/home/test",
-        OPENCLAW_PROFILE: "jbphoenix",
-        OPENCLAW_SYSTEMD_UNIT: "custom-unit",
+        PROPAI_PROFILE: "jbphoenix",
+        PROPAI_SYSTEMD_UNIT: "custom-unit",
       },
       expected: "/home/test/.config/systemd/user/custom-unit.service",
     },
     {
-      name: "handles OPENCLAW_SYSTEMD_UNIT with .service suffix",
+      name: "handles PROPAI_SYSTEMD_UNIT with .service suffix",
       env: {
         HOME: "/home/test",
-        OPENCLAW_SYSTEMD_UNIT: "custom-unit.service",
+        PROPAI_SYSTEMD_UNIT: "custom-unit.service",
       },
       expected: "/home/test/.config/systemd/user/custom-unit.service",
     },
     {
-      name: "trims whitespace from OPENCLAW_SYSTEMD_UNIT",
+      name: "trims whitespace from PROPAI_SYSTEMD_UNIT",
       env: {
         HOME: "/home/test",
-        OPENCLAW_SYSTEMD_UNIT: "  custom-unit  ",
+        PROPAI_SYSTEMD_UNIT: "  custom-unit  ",
       },
       expected: "/home/test/.config/systemd/user/custom-unit.service",
     },
@@ -412,8 +412,8 @@ describe("resolveSystemdUserUnitPath", () => {
 
 describe("splitArgsPreservingQuotes", () => {
   it("splits on whitespace outside quotes", () => {
-    expect(splitArgsPreservingQuotes('/usr/bin/openclaw gateway start --name "My Bot"')).toEqual([
-      "/usr/bin/openclaw",
+    expect(splitArgsPreservingQuotes('/usr/bin/PropAiSync gateway start --name "My Bot"')).toEqual([
+      "/usr/bin/PropAiSync",
       "gateway",
       "start",
       "--name",
@@ -423,32 +423,32 @@ describe("splitArgsPreservingQuotes", () => {
 
   it("supports systemd-style backslash escaping", () => {
     expect(
-      splitArgsPreservingQuotes('openclaw --name "My \\"Bot\\"" --foo bar', {
+      splitArgsPreservingQuotes('PropAi Sync --name "My \\"Bot\\"" --foo bar', {
         escapeMode: "backslash",
       }),
-    ).toEqual(["openclaw", "--name", 'My "Bot"', "--foo", "bar"]);
+    ).toEqual(["PropAi Sync", "--name", 'My "Bot"', "--foo", "bar"]);
   });
 
   it("supports schtasks-style escaped quotes while preserving other backslashes", () => {
     expect(
-      splitArgsPreservingQuotes('openclaw --path "C:\\\\Program Files\\\\OpenClaw"', {
+      splitArgsPreservingQuotes('PropAi Sync --path "C:\\\\Program Files\\\\\PropAiSync"', {
         escapeMode: "backslash-quote-only",
       }),
-    ).toEqual(["openclaw", "--path", "C:\\\\Program Files\\\\OpenClaw"]);
+    ).toEqual(["PropAi Sync", "--path", "C:\\\\Program Files\\\\\PropAiSync"]);
 
     expect(
-      splitArgsPreservingQuotes('openclaw --label "My \\"Quoted\\" Name"', {
+      splitArgsPreservingQuotes('PropAi Sync --label "My \\"Quoted\\" Name"', {
         escapeMode: "backslash-quote-only",
       }),
-    ).toEqual(["openclaw", "--label", 'My "Quoted" Name']);
+    ).toEqual(["PropAi Sync", "--label", 'My "Quoted" Name']);
   });
 });
 
 describe("parseSystemdExecStart", () => {
   it("preserves quoted arguments", () => {
-    const execStart = '/usr/bin/openclaw gateway start --name "My Bot"';
+    const execStart = '/usr/bin/PropAiSync gateway start --name "My Bot"';
     expect(parseSystemdExecStart(execStart)).toEqual([
-      "/usr/bin/openclaw",
+      "/usr/bin/PropAiSync",
       "gateway",
       "start",
       "--name",
@@ -462,156 +462,156 @@ describe("readSystemdServiceExecStart", () => {
     vi.restoreAllMocks();
   });
 
-  it("loads OPENCLAW_GATEWAY_TOKEN from EnvironmentFile", async () => {
+  it("loads PROPAI_GATEWAY_TOKEN from EnvironmentFile", async () => {
     const readFileSpy = vi.spyOn(fs, "readFile").mockImplementation(async (pathname) => {
       const pathValue = pathLikeToString(pathname);
-      if (pathValue.endsWith("/openclaw-gateway.service")) {
+      if (pathValue.endsWith("/propai-gateway.service")) {
         return [
           "[Service]",
-          "ExecStart=/usr/bin/openclaw gateway run",
-          "EnvironmentFile=%h/.openclaw/.env",
+          "ExecStart=/usr/bin/PropAiSync gateway run",
+          "EnvironmentFile=%h/.propai/.env",
         ].join("\n");
       }
-      if (pathValue === "/home/test/.openclaw/.env") {
-        return "OPENCLAW_GATEWAY_TOKEN=env-file-token\n";
+      if (pathValue === "/home/test/.propai/.env") {
+        return "PROPAI_GATEWAY_TOKEN=env-file-token\n";
       }
       throw new Error(`unexpected readFile path: ${pathValue}`);
     });
 
     const command = await readSystemdServiceExecStart({ HOME: "/home/test" });
-    expect(command?.environment?.OPENCLAW_GATEWAY_TOKEN).toBe("env-file-token");
+    expect(command?.environment?.propai_GATEWAY_TOKEN).toBe("env-file-token");
     expect(readFileSpy).toHaveBeenCalledTimes(2);
   });
 
   it("lets EnvironmentFile override inline Environment values", async () => {
     vi.spyOn(fs, "readFile").mockImplementation(async (pathname) => {
       const pathValue = pathLikeToString(pathname);
-      if (pathValue.endsWith("/openclaw-gateway.service")) {
+      if (pathValue.endsWith("/propai-gateway.service")) {
         return [
           "[Service]",
-          "ExecStart=/usr/bin/openclaw gateway run",
-          "EnvironmentFile=%h/.openclaw/.env",
-          'Environment="OPENCLAW_GATEWAY_TOKEN=inline-token"',
+          "ExecStart=/usr/bin/PropAiSync gateway run",
+          "EnvironmentFile=%h/.propai/.env",
+          'Environment="PROPAI_GATEWAY_TOKEN=inline-token"',
         ].join("\n");
       }
-      if (pathValue === "/home/test/.openclaw/.env") {
-        return "OPENCLAW_GATEWAY_TOKEN=env-file-token\n";
+      if (pathValue === "/home/test/.propai/.env") {
+        return "PROPAI_GATEWAY_TOKEN=env-file-token\n";
       }
       throw new Error(`unexpected readFile path: ${pathValue}`);
     });
 
     const command = await readSystemdServiceExecStart({ HOME: "/home/test" });
-    expect(command?.environment?.OPENCLAW_GATEWAY_TOKEN).toBe("env-file-token");
-    expect(command?.environmentValueSources?.OPENCLAW_GATEWAY_TOKEN).toBe("file");
+    expect(command?.environment?.propai_GATEWAY_TOKEN).toBe("env-file-token");
+    expect(command?.environmentValueSources?.propai_GATEWAY_TOKEN).toBe("file");
   });
 
   it("ignores missing optional EnvironmentFile entries", async () => {
     vi.spyOn(fs, "readFile").mockImplementation(async (pathname) => {
       const pathValue = pathLikeToString(pathname);
-      if (pathValue.endsWith("/openclaw-gateway.service")) {
+      if (pathValue.endsWith("/propai-gateway.service")) {
         return [
           "[Service]",
-          "ExecStart=/usr/bin/openclaw gateway run",
-          "EnvironmentFile=-%h/.openclaw/missing.env",
+          "ExecStart=/usr/bin/PropAiSync gateway run",
+          "EnvironmentFile=-%h/.propai/missing.env",
         ].join("\n");
       }
       throw new Error(`missing: ${pathValue}`);
     });
 
     const command = await readSystemdServiceExecStart({ HOME: "/home/test" });
-    expect(command?.programArguments).toEqual(["/usr/bin/openclaw", "gateway", "run"]);
+    expect(command?.programArguments).toEqual(["/usr/bin/PropAiSync", "gateway", "run"]);
     expect(command?.environment).toBeUndefined();
   });
 
   it("keeps parsing when non-optional EnvironmentFile entries are missing", async () => {
     vi.spyOn(fs, "readFile").mockImplementation(async (pathname) => {
       const pathValue = pathLikeToString(pathname);
-      if (pathValue.endsWith("/openclaw-gateway.service")) {
+      if (pathValue.endsWith("/propai-gateway.service")) {
         return [
           "[Service]",
-          "ExecStart=/usr/bin/openclaw gateway run",
-          "EnvironmentFile=%h/.openclaw/missing.env",
+          "ExecStart=/usr/bin/PropAiSync gateway run",
+          "EnvironmentFile=%h/.propai/missing.env",
         ].join("\n");
       }
       throw new Error(`missing: ${pathValue}`);
     });
 
     const command = await readSystemdServiceExecStart({ HOME: "/home/test" });
-    expect(command?.programArguments).toEqual(["/usr/bin/openclaw", "gateway", "run"]);
+    expect(command?.programArguments).toEqual(["/usr/bin/PropAiSync", "gateway", "run"]);
     expect(command?.environment).toBeUndefined();
   });
 
   it("supports multiple EnvironmentFile entries and quoted paths", async () => {
     vi.spyOn(fs, "readFile").mockImplementation(async (pathname) => {
       const pathValue = pathLikeToString(pathname);
-      if (pathValue.endsWith("/openclaw-gateway.service")) {
+      if (pathValue.endsWith("/propai-gateway.service")) {
         return [
           "[Service]",
-          "ExecStart=/usr/bin/openclaw gateway run",
-          'EnvironmentFile=%h/.openclaw/first.env "%h/.openclaw/second env.env"',
+          "ExecStart=/usr/bin/PropAiSync gateway run",
+          'EnvironmentFile=%h/.propai/first.env "%h/.propai/second env.env"',
         ].join("\n");
       }
-      if (pathValue === "/home/test/.openclaw/first.env") {
-        return "OPENCLAW_GATEWAY_TOKEN=first-token\n"; // pragma: allowlist secret
+      if (pathValue === "/home/test/.propai/first.env") {
+        return "PROPAI_GATEWAY_TOKEN=first-token\n"; // pragma: allowlist secret
       }
-      if (pathValue === "/home/test/.openclaw/second env.env") {
-        return 'OPENCLAW_GATEWAY_PASSWORD="second password"\n'; // pragma: allowlist secret
+      if (pathValue === "/home/test/.propai/second env.env") {
+        return 'PROPAI_GATEWAY_PASSWORD="second password"\n'; // pragma: allowlist secret
       }
       throw new Error(`unexpected readFile path: ${pathValue}`);
     });
 
     const command = await readSystemdServiceExecStart({ HOME: "/home/test" });
     expect(command?.environment).toEqual({
-      OPENCLAW_GATEWAY_TOKEN: "first-token",
-      OPENCLAW_GATEWAY_PASSWORD: "second password", // pragma: allowlist secret
+      PROPAI_GATEWAY_TOKEN: "first-token",
+      PROPAI_GATEWAY_PASSWORD: "second password", // pragma: allowlist secret
     });
   });
 
   it("resolves relative EnvironmentFile paths from the unit directory", async () => {
     vi.spyOn(fs, "readFile").mockImplementation(async (pathname) => {
       const pathValue = pathLikeToString(pathname);
-      if (pathValue.endsWith("/openclaw-gateway.service")) {
+      if (pathValue.endsWith("/propai-gateway.service")) {
         return [
           "[Service]",
-          "ExecStart=/usr/bin/openclaw gateway run",
+          "ExecStart=/usr/bin/PropAiSync gateway run",
           "EnvironmentFile=./gateway.env ./override.env",
         ].join("\n");
       }
       if (pathValue.endsWith("/.config/systemd/user/gateway.env")) {
         return [
-          "OPENCLAW_GATEWAY_TOKEN=relative-token", // pragma: allowlist secret
-          "OPENCLAW_GATEWAY_PASSWORD=relative-password", // pragma: allowlist secret
+          "PROPAI_GATEWAY_TOKEN=relative-token", // pragma: allowlist secret
+          "PROPAI_GATEWAY_PASSWORD=relative-password", // pragma: allowlist secret
         ].join("\n");
       }
       if (pathValue.endsWith("/.config/systemd/user/override.env")) {
-        return "OPENCLAW_GATEWAY_TOKEN=override-token\n"; // pragma: allowlist secret
+        return "PROPAI_GATEWAY_TOKEN=override-token\n"; // pragma: allowlist secret
       }
       throw new Error(`unexpected readFile path: ${pathValue}`);
     });
 
     const command = await readSystemdServiceExecStart({ HOME: "/home/test" });
     expect(command?.environment).toEqual({
-      OPENCLAW_GATEWAY_TOKEN: "override-token",
-      OPENCLAW_GATEWAY_PASSWORD: "relative-password", // pragma: allowlist secret
+      PROPAI_GATEWAY_TOKEN: "override-token",
+      PROPAI_GATEWAY_PASSWORD: "relative-password", // pragma: allowlist secret
     });
   });
 
   it("parses EnvironmentFile content with comments and quoted values", async () => {
     vi.spyOn(fs, "readFile").mockImplementation(async (pathname) => {
       const pathValue = pathLikeToString(pathname);
-      if (pathValue.endsWith("/openclaw-gateway.service")) {
+      if (pathValue.endsWith("/propai-gateway.service")) {
         return [
           "[Service]",
-          "ExecStart=/usr/bin/openclaw gateway run",
-          "EnvironmentFile=%h/.openclaw/gateway.env",
+          "ExecStart=/usr/bin/PropAiSync gateway run",
+          "EnvironmentFile=%h/.propai/gateway.env",
         ].join("\n");
       }
-      if (pathValue === "/home/test/.openclaw/gateway.env") {
+      if (pathValue === "/home/test/.propai/gateway.env") {
         return [
           "# comment",
           "; another comment",
-          'OPENCLAW_GATEWAY_TOKEN="quoted token"', // pragma: allowlist secret
-          "OPENCLAW_GATEWAY_PASSWORD=quoted-password", // pragma: allowlist secret
+          'PROPAI_GATEWAY_TOKEN="quoted token"', // pragma: allowlist secret
+          "PROPAI_GATEWAY_PASSWORD=quoted-password", // pragma: allowlist secret
         ].join("\n");
       }
       throw new Error(`unexpected readFile path: ${pathValue}`);
@@ -619,19 +619,19 @@ describe("readSystemdServiceExecStart", () => {
 
     const command = await readSystemdServiceExecStart({ HOME: "/home/test" });
     expect(command?.environment).toEqual({
-      OPENCLAW_GATEWAY_TOKEN: "quoted token",
-      OPENCLAW_GATEWAY_PASSWORD: "quoted-password", // pragma: allowlist secret
+      PROPAI_GATEWAY_TOKEN: "quoted token",
+      PROPAI_GATEWAY_PASSWORD: "quoted-password", // pragma: allowlist secret
     });
     expect(command?.environmentValueSources).toEqual({
-      OPENCLAW_GATEWAY_TOKEN: "file",
-      OPENCLAW_GATEWAY_PASSWORD: "file", // pragma: allowlist secret
+      PROPAI_GATEWAY_TOKEN: "file",
+      PROPAI_GATEWAY_PASSWORD: "file", // pragma: allowlist secret
     });
   });
 });
 
 describe("systemd service control", () => {
   const assertMachineRestartArgs = (args: string[]) => {
-    expect(args).toEqual(["--machine", "debian@", "--user", "restart", "openclaw-gateway.service"]);
+    expect(args).toEqual(["--machine", "debian@", "--user", "restart", "propai-gateway.service"]);
   };
 
   beforeEach(() => {
@@ -642,7 +642,7 @@ describe("systemd service control", () => {
     execFileMock
       .mockImplementationOnce((_cmd, _args, _opts, cb) => cb(null, "", ""))
       .mockImplementationOnce((_cmd, args, _opts, cb) => {
-        expect(args).toEqual(["--user", "stop", "openclaw-gateway.service"]);
+        expect(args).toEqual(["--user", "stop", "propai-gateway.service"]);
         cb(null, "", "");
       });
     const write = vi.fn();
@@ -664,7 +664,7 @@ describe("systemd service control", () => {
         ),
       )
       .mockImplementationOnce((_cmd, args, _opts, cb) => {
-        expect(args).toEqual(["--user", "stop", "openclaw-gateway.service"]);
+        expect(args).toEqual(["--user", "stop", "propai-gateway.service"]);
         cb(null, "", "");
       });
 
@@ -678,10 +678,10 @@ describe("systemd service control", () => {
     execFileMock
       .mockImplementationOnce((_cmd, _args, _opts, cb) => cb(null, "", ""))
       .mockImplementationOnce((_cmd, args, _opts, cb) => {
-        expect(args).toEqual(["--user", "restart", "openclaw-gateway-work.service"]);
+        expect(args).toEqual(["--user", "restart", "propai-gateway-work.service"]);
         cb(null, "", "");
       });
-    await assertRestartSuccess({ OPENCLAW_PROFILE: "work" });
+    await assertRestartSuccess({ PROPAI_PROFILE: "work" });
   });
 
   it("surfaces stop failures with systemctl detail", async () => {
@@ -741,7 +741,7 @@ describe("systemd service control", () => {
         cb(null, "", "");
       })
       .mockImplementationOnce((_cmd, args, _opts, cb) => {
-        expect(args).toEqual(["--user", "restart", "openclaw-gateway.service"]);
+        expect(args).toEqual(["--user", "restart", "propai-gateway.service"]);
         cb(null, "", "");
       });
     await assertRestartSuccess({ SUDO_USER: "root", USER: "root" });
@@ -762,7 +762,7 @@ describe("systemd service control", () => {
         cb(null, "", "");
       })
       .mockImplementationOnce((_cmd, args, _opts, cb) => {
-        expect(args).toEqual(["--user", "restart", "openclaw-gateway.service"]);
+        expect(args).toEqual(["--user", "restart", "propai-gateway.service"]);
         const err = createExecFileError("Failed to connect to user scope bus", {
           stderr: "Failed to connect to user scope bus",
         });
@@ -775,3 +775,6 @@ describe("systemd service control", () => {
     await assertRestartSuccess({ USER: "debian" });
   });
 });
+
+
+

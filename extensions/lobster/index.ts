@@ -1,18 +1,21 @@
 import type {
   AnyAgentTool,
-  OpenClawPluginApi,
-  OpenClawPluginToolFactory,
-} from "openclaw/plugin-sdk/lobster";
+  PropAiSyncPluginApi,
+  PropAiSyncPluginToolFactory,
+} from "propai/plugin-sdk/lobster";
 import { createLobsterTool } from "./src/lobster-tool.js";
 
-export default function register(api: OpenClawPluginApi) {
+export default function register(api: PropAiSyncPluginApi) {
   api.registerTool(
     ((ctx) => {
       if (ctx.sandboxed) {
         return null;
       }
       return createLobsterTool(api) as AnyAgentTool;
-    }) as OpenClawPluginToolFactory,
+    }) as PropAiSyncPluginToolFactory,
     { optional: true },
   );
 }
+
+
+

@@ -42,7 +42,7 @@ export function expectSingleNpmInstallIgnoreScriptsCall(params: {
   expect(canonicalizeComparableDir(path.dirname(cwd))).toBe(
     canonicalizeComparableDir(path.dirname(expectedTargetDir)),
   );
-  expect(path.basename(cwd)).toMatch(/^\.openclaw-install-stage-/);
+  expect(path.basename(cwd)).toMatch(/^\.propai-install-stage-/);
 }
 
 export function expectSingleNpmPackIgnoreScriptsCall(params: {
@@ -62,3 +62,5 @@ export function expectSingleNpmPackIgnoreScriptsCall(params: {
   const commandOptions = typeof options === "number" ? undefined : options;
   expect(commandOptions).toMatchObject({ env: { NPM_CONFIG_IGNORE_SCRIPTS: "true" } });
 }
+
+

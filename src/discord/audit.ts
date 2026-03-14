@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import type { DiscordGuildChannelConfig, DiscordGuildEntry } from "../config/types.js";
 import { isRecord } from "../utils.js";
 import { inspectDiscordAccount } from "./account-inspect.js";
@@ -71,7 +71,7 @@ function listConfiguredGuildChannelKeys(
 }
 
 export function collectDiscordAuditChannelIds(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
 }) {
   const account = inspectDiscordAccount({
@@ -139,3 +139,5 @@ export async function auditDiscordChannelPermissions(params: {
     elapsedMs: Date.now() - started,
   };
 }
+
+

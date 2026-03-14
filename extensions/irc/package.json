@@ -1,14 +1,16 @@
 {
-  "name": "@openclaw/irc",
+  "name": "@propai/irc",
   "version": "2026.3.11",
-  "description": "OpenClaw IRC channel plugin",
+  "description": "PropAi Sync IRC channel plugin",
   "type": "module",
   "dependencies": {
     "zod": "^4.3.6"
   },
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

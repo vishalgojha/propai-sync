@@ -1,5 +1,5 @@
 import { resolveEnvApiKey } from "../agents/model-auth.js";
-import type { OpenClawConfig } from "../config/types.js";
+import type { PropAiSyncConfig } from "../config/types.js";
 import {
   isValidEnvSecretRefId,
   type SecretInput,
@@ -65,7 +65,7 @@ function resolveDefaultFilePointerId(provider: string): string {
 }
 
 function resolveRefFallbackInput(params: {
-  config: OpenClawConfig;
+  config: PropAiSyncConfig;
   provider: string;
   preferredEnvVar?: string;
 }): { ref: SecretRef; resolvedValue: string } {
@@ -95,7 +95,7 @@ function resolveRefFallbackInput(params: {
 
 export async function promptSecretRefForOnboarding(params: {
   provider: string;
-  config: OpenClawConfig;
+  config: PropAiSyncConfig;
   prompter: WizardPrompter;
   preferredEnvVar?: string;
   copy?: SecretRefOnboardingPromptCopy;
@@ -168,7 +168,7 @@ export async function promptSecretRefForOnboarding(params: {
       });
       await params.prompter.note(
         params.copy?.envValidatedMessage?.(envVar) ??
-          `Validated environment variable ${envVar}. OpenClaw will store a reference, not the key value.`,
+          `Validated environment variable ${envVar}. PropAi Sync will store a reference, not the key value.`,
         "Reference validated",
       );
       return { ref, resolvedValue };
@@ -259,7 +259,7 @@ export async function promptSecretRefForOnboarding(params: {
       });
       await params.prompter.note(
         params.copy?.providerValidatedMessage?.(selectedProvider, id, providerEntry.source) ??
-          `Validated ${providerEntry.source} reference ${selectedProvider}:${id}. OpenClaw will store a reference, not the key value.`,
+          `Validated ${providerEntry.source} reference ${selectedProvider}:${id}. PropAi Sync will store a reference, not the key value.`,
         "Reference validated",
       );
       return { ref, resolvedValue };
@@ -400,7 +400,7 @@ export async function resolveSecretInputModeForEnvSelection(params: {
       {
         value: "plaintext",
         label: params.copy?.plaintextLabel ?? "Paste API key now",
-        hint: params.copy?.plaintextHint ?? "Stores the key directly in OpenClaw config",
+        hint: params.copy?.plaintextHint ?? "Stores the key directly in PropAi Sync config",
       },
       {
         value: "ref",
@@ -438,7 +438,7 @@ export async function ensureApiKeyFromOptionEnvOrPrompt(params: {
   token: string | undefined;
   tokenProvider: string | undefined;
   secretInputMode?: SecretInputMode;
-  config: OpenClawConfig;
+  config: PropAiSyncConfig;
   expectedProviders: string[];
   provider: string;
   envLabel: string;
@@ -480,7 +480,7 @@ export async function ensureApiKeyFromOptionEnvOrPrompt(params: {
 }
 
 export async function ensureApiKeyFromEnvOrPrompt(params: {
-  config: OpenClawConfig;
+  config: PropAiSyncConfig;
   provider: string;
   envLabel: string;
   promptMessage: string;
@@ -535,3 +535,5 @@ export async function ensureApiKeyFromEnvOrPrompt(params: {
   await params.setCredential(apiKey, selectedMode);
   return apiKey;
 }
+
+

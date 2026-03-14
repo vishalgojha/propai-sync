@@ -1,5 +1,5 @@
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 @Suite struct SettingsNetworkingHelpersTests {
     @Test func parseHostPortParsesIPv4() {
@@ -48,3 +48,5 @@ import Testing
         #expect(SettingsNetworkingHelpers.httpURLString(host: "example.com", port: nil, fallback: "y") == "http://y")
     }
 }
+
+

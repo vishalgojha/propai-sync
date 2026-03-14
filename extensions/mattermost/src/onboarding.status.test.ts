@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/mattermost";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/mattermost";
 import { describe, expect, it } from "vitest";
 import { mattermostOnboardingAdapter } from "./onboarding.js";
 
@@ -16,10 +16,13 @@ describe("mattermost onboarding status", () => {
             },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       accountOverrides: {},
     });
 
     expect(status.configured).toBe(true);
   });
 });
+
+
+

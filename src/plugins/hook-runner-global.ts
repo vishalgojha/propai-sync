@@ -17,7 +17,7 @@ type HookRunnerGlobalState = {
   registry: PluginRegistry | null;
 };
 
-const hookRunnerGlobalStateKey = Symbol.for("openclaw.plugins.hook-runner-global-state");
+const hookRunnerGlobalStateKey = Symbol.for("PropAiSync.plugins.hook-runner-global-state");
 
 function getHookRunnerGlobalState(): HookRunnerGlobalState {
   const globalStore = globalThis as typeof globalThis & {
@@ -102,3 +102,5 @@ export function resetGlobalHookRunner(): void {
   state.hookRunner = null;
   state.registry = null;
 }
+
+

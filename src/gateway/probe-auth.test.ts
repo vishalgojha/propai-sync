@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   resolveGatewayProbeAuthSafe,
   resolveGatewayProbeAuthWithSecretInputs,
@@ -14,7 +14,7 @@ describe("resolveGatewayProbeAuthSafe", () => {
             token: "token-value",
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       mode: "local",
       env: {} as NodeJS.ProcessEnv,
     });
@@ -41,7 +41,7 @@ describe("resolveGatewayProbeAuthSafe", () => {
             default: { source: "env" },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       mode: "local",
       env: {} as NodeJS.ProcessEnv,
     });
@@ -69,7 +69,7 @@ describe("resolveGatewayProbeAuthSafe", () => {
             default: { source: "env" },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       mode: "local",
       env: {} as NodeJS.ProcessEnv,
     });
@@ -97,7 +97,7 @@ describe("resolveGatewayProbeAuthSafe", () => {
             default: { source: "env" },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       mode: "remote",
       env: {} as NodeJS.ProcessEnv,
     });
@@ -126,7 +126,7 @@ describe("resolveGatewayProbeAuthWithSecretInputs", () => {
             default: { source: "env" },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       mode: "local",
       env: {
         DAEMON_GATEWAY_TOKEN: "resolved-daemon-token",
@@ -139,3 +139,5 @@ describe("resolveGatewayProbeAuthWithSecretInputs", () => {
     });
   });
 });
+
+

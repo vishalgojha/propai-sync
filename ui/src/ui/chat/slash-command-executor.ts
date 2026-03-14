@@ -11,7 +11,7 @@ import {
   normalizeVerboseLevel,
 } from "../../../../src/auto-reply/thinking.js";
 import type { HealthSummary } from "../../../../src/commands/health.js";
-import type { OpenClawConfig } from "../../../../src/config/config.js";
+import type { PropAiSyncConfig } from "../../../../src/config/config.js";
 import {
   DEFAULT_AGENT_ID,
   DEFAULT_MAIN_KEY,
@@ -527,7 +527,7 @@ function resolveCurrentThinkingLevel(
     return "off";
   }
   return resolveThinkingDefault({
-    cfg: {} as OpenClawConfig,
+    cfg: {} as PropAiSyncConfig,
     provider: session.modelProvider,
     model: session.model,
     catalog: models,
@@ -543,3 +543,5 @@ function fmtTokens(n: number): string {
   }
   return String(n);
 }
+
+

@@ -1,1 +1,2 @@
-OpenClaw - iOS Client
+PropAi Sync - iOS Client
+

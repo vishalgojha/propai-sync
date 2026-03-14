@@ -1,7 +1,7 @@
 {
-  "name": "@openclaw/voice-call",
+  "name": "@propai/voice-call",
   "version": "2026.3.11",
-  "description": "OpenClaw voice-call plugin",
+  "description": "PropAi Sync voice-call plugin",
   "type": "module",
   "dependencies": {
     "@sinclair/typebox": "0.34.48",
@@ -9,9 +9,11 @@
     "ws": "^8.19.0",
     "zod": "^4.3.6"
   },
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

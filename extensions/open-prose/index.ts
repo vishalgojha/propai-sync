@@ -1,5 +1,8 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/open-prose";
+import type { PropAiSyncPluginApi } from "propai/plugin-sdk/open-prose";
 
-export default function register(_api: OpenClawPluginApi) {
+export default function register(_api: PropAiSyncPluginApi) {
   // OpenProse is delivered via plugin-shipped skills.
 }
+
+
+

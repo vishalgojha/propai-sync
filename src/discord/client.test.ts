@@ -1,6 +1,6 @@
 import type { RequestClient } from "@buape/carbon";
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { createDiscordRestClient } from "./client.js";
 
 describe("createDiscordRestClient", () => {
@@ -17,7 +17,7 @@ describe("createDiscordRestClient", () => {
           },
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     const result = createDiscordRestClient(
       {
@@ -50,7 +50,7 @@ describe("createDiscordRestClient", () => {
           },
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     const result = createDiscordRestClient(
       {
@@ -77,7 +77,7 @@ describe("createDiscordRestClient", () => {
           },
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     expect(() =>
       createDiscordRestClient(
@@ -89,3 +89,5 @@ describe("createDiscordRestClient", () => {
     ).toThrow(/unresolved SecretRef/i);
   });
 });
+
+

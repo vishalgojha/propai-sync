@@ -102,13 +102,13 @@ export function extractMSTeamsPollVote(
     return null;
   }
   const pollId =
-    readNestedString(value, ["openclawPollId"]) ??
+    readNestedString(value, ["PropAiSyncPollId"]) ??
     readNestedString(value, ["pollId"]) ??
-    readNestedString(value, ["openclaw", "pollId"]) ??
-    readNestedString(value, ["openclaw", "poll", "id"]) ??
-    readNestedString(value, ["data", "openclawPollId"]) ??
+    readNestedString(value, ["PropAi Sync", "pollId"]) ??
+    readNestedString(value, ["PropAi Sync", "poll", "id"]) ??
+    readNestedString(value, ["data", "PropAiSyncPollId"]) ??
     readNestedString(value, ["data", "pollId"]) ??
-    readNestedString(value, ["data", "openclaw", "pollId"]);
+    readNestedString(value, ["data", "PropAi Sync", "pollId"]);
   if (!pollId) {
     return null;
   }
@@ -185,14 +185,14 @@ export function buildMSTeamsPollCard(params: {
         type: "Action.Submit",
         title: "Vote",
         data: {
-          openclawPollId: pollId,
+          PropAiSyncPollId: pollId,
           pollId,
         },
         msteams: {
           type: "messageBack",
-          text: "openclaw poll vote",
+          text: "PropAi Sync poll vote",
           displayText: "Vote recorded",
-          value: { openclawPollId: pollId, pollId },
+          value: { PropAiSyncPollId: pollId, pollId },
         },
       },
     ],
@@ -313,3 +313,7 @@ export function createMSTeamsPollStoreFs(params?: MSTeamsPollStoreFsOptions): MS
 
   return { createPoll, getPoll, recordVote };
 }
+
+
+
+

@@ -78,7 +78,7 @@ export async function minimaxUnderstandImage(params: {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "MM-API-Source": "OpenClaw",
+      "MM-API-Source": "PropAi Sync",
     },
     body: JSON.stringify({
       prompt,
@@ -119,3 +119,4 @@ export async function minimaxUnderstandImage(params: {
 
   return content;
 }
+

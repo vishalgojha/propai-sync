@@ -51,7 +51,7 @@ export async function ensureDesktopGateway(host: DesktopGatewayBootHost): Promis
   const dev = typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV);
   let res: DesktopGatewayStartResponse;
   try {
-    res = await tauriInvoke<DesktopGatewayStartResponse>("openclaw_start_gateway", {
+    res = await tauriInvoke<DesktopGatewayStartResponse>("PROPAI_start_gateway", {
       req: { dev },
     });
   } catch (err) {
@@ -95,7 +95,7 @@ export async function restartDesktopGateway(host: DesktopGatewayBootHost): Promi
   const dev = typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV);
   let res: DesktopGatewayStartResponse;
   try {
-    res = await tauriInvoke<DesktopGatewayStartResponse>("openclaw_restart_gateway", {
+    res = await tauriInvoke<DesktopGatewayStartResponse>("PROPAI_restart_gateway", {
       req: { dev },
     });
   } catch (err) {
@@ -124,3 +124,5 @@ export async function restartDesktopGateway(host: DesktopGatewayBootHost): Promi
     token: nextToken,
   });
 }
+
+

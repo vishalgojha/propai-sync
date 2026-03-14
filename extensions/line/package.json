@@ -1,10 +1,10 @@
 {
-  "name": "@openclaw/line",
+  "name": "@propai/line",
   "version": "2026.3.11",
   "private": true,
-  "description": "OpenClaw LINE channel plugin",
+  "description": "PropAi Sync LINE channel plugin",
   "type": "module",
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ],
@@ -19,9 +19,11 @@
       "quickstartAllowFrom": true
     },
     "install": {
-      "npmSpec": "@openclaw/line",
+      "npmSpec": "@propai/line",
       "localPath": "extensions/line",
       "defaultChoice": "npm"
     }
   }
 }
+
+

@@ -30,6 +30,7 @@ Status: production-ready via WhatsApp Web (Baileys). Gateway owns linked session
 {
   channels: {
     whatsapp: {
+      autoReply: true,
       dmPolicy: "pairing",
       allowFrom: ["+15551234567"],
       groupPolicy: "allowlist",
@@ -44,13 +45,13 @@ Status: production-ready via WhatsApp Web (Baileys). Gateway owns linked session
   <Step title="Link WhatsApp (QR)">
 
 ```bash
-openclaw channels login --channel whatsapp
+propai channels login --channel whatsapp
 ```
 
     For a specific account:
 
 ```bash
-openclaw channels login --channel whatsapp --account work
+propai channels login --channel whatsapp --account work
 ```
 
   </Step>
@@ -58,7 +59,7 @@ openclaw channels login --channel whatsapp --account work
   <Step title="Start the gateway">
 
 ```bash
-openclaw gateway
+propai gateway
 ```
 
   </Step>
@@ -66,8 +67,8 @@ openclaw gateway
   <Step title="Approve first pairing request (if using pairing mode)">
 
 ```bash
-openclaw pairing list whatsapp
-openclaw pairing approve whatsapp <CODE>
+propai pairing list whatsapp
+propai pairing approve whatsapp <CODE>
 ```
 
     Pairing requests expire after 1 hour. Pending requests are capped at 3 per channel.
@@ -75,8 +76,12 @@ openclaw pairing approve whatsapp <CODE>
   </Step>
 </Steps>
 
+<Warning>
+WhatsApp auto-replies can violate platform policies and risk account bans. `channels.whatsapp.autoReply` defaults to `false` (read-only ingest).
+</Warning>
+
 <Note>
-OpenClaw recommends running WhatsApp on a separate number when possible. (The channel metadata and onboarding flow are optimized for that setup, but personal-number setups are also supported.)
+propai recommends running WhatsApp on a separate number when possible. (The channel metadata and onboarding flow are optimized for that setup, but personal-number setups are also supported.)
 </Note>
 
 ## Deployment patterns
@@ -85,7 +90,7 @@ OpenClaw recommends running WhatsApp on a separate number when possible. (The ch
   <Accordion title="Dedicated number (recommended)">
     This is the cleanest operational mode:
 
-    - separate WhatsApp identity for OpenClaw
+    - separate WhatsApp identity for propai
     - clearer DM allowlists and routing boundaries
     - lower chance of self-chat confusion
 
@@ -116,7 +121,7 @@ OpenClaw recommends running WhatsApp on a separate number when possible. (The ch
   </Accordion>
 
   <Accordion title="WhatsApp Web-only channel scope">
-    The messaging platform channel is WhatsApp Web-based (`Baileys`) in current OpenClaw channel architecture.
+    The messaging platform channel is WhatsApp Web-based (`Baileys`) in current propai channel architecture.
 
     There is no separate Twilio WhatsApp messaging channel in the built-in chat-channel registry.
 
@@ -130,6 +135,20 @@ OpenClaw recommends running WhatsApp on a separate number when possible. (The ch
 - Status and broadcast chats are ignored (`@status`, `@broadcast`).
 - Direct chats use DM session rules (`session.dmScope`; default `main` collapses DMs to the agent main session).
 - Group sessions are isolated (`agent:<agentId>:whatsapp:group:<jid>`).
+
+## Read-only mode
+
+To ingest messages without sending any replies or reactions, keep auto-reply disabled:
+
+```json5
+{
+  channels: {
+    whatsapp: {
+      autoReply: false,
+    },
+  },
+}
+```
 
 ## Access control and activation
 
@@ -205,7 +224,7 @@ When the linked self number is also present in `allowFrom`, WhatsApp self-chat s
 
 - skip read receipts for self-chat turns
 - ignore mention-JID auto-trigger behavior that would otherwise ping yourself
-- if `messages.responsePrefix` is unset, self-chat replies default to `[{identity.name}]` or `[openclaw]`
+- if `messages.responsePrefix` is unset, self-chat replies default to `[{identity.name}]` or `[propai]`
 
 ## Message normalization and context
 
@@ -350,13 +369,13 @@ Behavior notes:
   </Accordion>
 
   <Accordion title="Credential paths and legacy compatibility">
-    - current auth path: `~/.openclaw/credentials/whatsapp/<accountId>/creds.json`
+    - current auth path: `~/.propai/credentials/whatsapp/<accountId>/creds.json`
     - backup file: `creds.json.bak`
-    - legacy default auth in `~/.openclaw/credentials/` is still recognized/migrated for default-account flows
+    - legacy default auth in `~/.propai/credentials/` is still recognized/migrated for default-account flows
   </Accordion>
 
   <Accordion title="Logout behavior">
-    `openclaw channels logout --channel whatsapp [--account <id>]` clears WhatsApp auth state for that account.
+    `propai channels logout --channel whatsapp [--account <id>]` clears WhatsApp auth state for that account.
 
     In legacy auth directories, `oauth.json` is preserved while Baileys auth files are removed.
 
@@ -380,8 +399,8 @@ Behavior notes:
     Fix:
 
     ```bash
-    openclaw channels login --channel whatsapp
-    openclaw channels status
+    propai channels login --channel whatsapp
+    propai channels status
     ```
 
   </Accordion>
@@ -392,8 +411,8 @@ Behavior notes:
     Fix:
 
     ```bash
-    openclaw doctor
-    openclaw logs --follow
+    propai doctor
+    propai logs --follow
     ```
 
     If needed, re-link with `channels login`.
@@ -414,7 +433,7 @@ Behavior notes:
     - `groupAllowFrom` / `allowFrom`
     - `groups` allowlist entries
     - mention gating (`requireMention` + mention patterns)
-    - duplicate keys in `openclaw.json` (JSON5): later entries override earlier ones, so keep a single `groupPolicy` per scope
+    - duplicate keys in `propai.json` (JSON5): later entries override earlier ones, so keep a single `groupPolicy` per scope
 
   </Accordion>
 
@@ -443,3 +462,6 @@ High-signal WhatsApp fields:
 - [Channel routing](/channels/channel-routing)
 - [Multi-agent routing](/concepts/multi-agent)
 - [Troubleshooting](/channels/troubleshooting)
+
+
+

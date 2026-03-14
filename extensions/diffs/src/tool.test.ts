@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/diffs";
+import type { PropAiSyncPluginApi } from "propai/plugin-sdk/diffs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DiffScreenshotter } from "./browser.js";
 import { DEFAULT_DIFFS_TOOL_DEFAULTS } from "./config.js";
@@ -14,7 +14,7 @@ describe("diffs tool", () => {
   let cleanupRootDir: () => Promise<void>;
 
   beforeEach(async () => {
-    ({ store, cleanup: cleanupRootDir } = await createDiffStoreHarness("openclaw-diffs-tool-"));
+    ({ store, cleanup: cleanupRootDir } = await createDiffStoreHarness("propai-diffs-tool-"));
   });
 
   afterEach(async () => {
@@ -386,7 +386,7 @@ describe("diffs tool", () => {
   });
 });
 
-function createApi(): OpenClawPluginApi {
+function createApi(): PropAiSyncPluginApi {
   return {
     id: "diffs",
     name: "Diffs",
@@ -398,7 +398,7 @@ function createApi(): OpenClawPluginApi {
         bind: "loopback",
       },
     },
-    runtime: {} as OpenClawPluginApi["runtime"],
+    runtime: {} as PropAiSyncPluginApi["runtime"],
     logger: {
       info() {},
       warn() {},
@@ -487,3 +487,6 @@ function readTextContent(result: unknown, index: number): string {
   const entry = content?.[index];
   return entry?.type === "text" ? (entry.text ?? "") : "";
 }
+
+
+

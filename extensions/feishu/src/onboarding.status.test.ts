@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/feishu";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/feishu";
 import { describe, expect, it } from "vitest";
 import { feishuOnboardingAdapter } from "./onboarding.js";
 
@@ -16,10 +16,13 @@ describe("feishu onboarding status", () => {
             },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
       accountOverrides: {},
     });
 
     expect(status.configured).toBe(true);
   });
 });
+
+
+

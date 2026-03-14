@@ -7,7 +7,7 @@ import {
 } from "./cdp.helpers.js";
 import { getChromeWebSocketUrl } from "./chrome.js";
 
-const OPENCLAW_EXTENSION_RELAY_BROWSER = "OpenClaw/extension-relay";
+const PROPAI_EXTENSION_RELAY_BROWSER = "propai/extension-relay";
 
 type PageCdpSend = (method: string, params?: Record<string, unknown>) => Promise<unknown>;
 
@@ -30,7 +30,7 @@ export async function isExtensionRelayCdpEndpoint(cdpUrl: string): Promise<boole
       appendCdpPath(cdpHttpBase, "/json/version"),
       2000,
     );
-    const isRelay = String(version?.Browser ?? "").trim() === OPENCLAW_EXTENSION_RELAY_BROWSER;
+    const isRelay = String(version?.Browser ?? "").trim() === PROPAI_EXTENSION_RELAY_BROWSER;
     extensionRelayByCdpUrl.set(normalized, isRelay);
     return isRelay;
   } catch {
@@ -79,3 +79,6 @@ export async function withPageScopedCdpClient<T>(opts: {
     );
   });
 }
+
+
+

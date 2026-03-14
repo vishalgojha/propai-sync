@@ -7,8 +7,8 @@ import os
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
 
-    private let logger = Logger(subsystem: "ai.openclaw.ios", category: "LiveActivity")
-    private var currentActivity: Activity<OpenClawActivityAttributes>?
+    private let logger = Logger(subsystem: "ai.propai.ios", category: "LiveActivity")
+    private var currentActivity: Activity<PropAiSyncActivityAttributes>?
     private var activityStartDate: Date = .now
 
     private init() {
@@ -39,7 +39,7 @@ final class LiveActivityManager {
         }
 
         self.activityStartDate = .now
-        let attributes = OpenClawActivityAttributes(agentName: agentName, sessionKey: sessionKey)
+        let attributes = PropAiSyncActivityAttributes(agentName: agentName, sessionKey: sessionKey)
 
         do {
             let activity = try Activity.request(
@@ -66,7 +66,7 @@ final class LiveActivityManager {
     }
 
     private func hydrateCurrentAndPruneDuplicates() {
-        let active = Activity<OpenClawActivityAttributes>.activities
+        let active = Activity<PropAiSyncActivityAttributes>.activities
         guard !active.isEmpty else {
             self.currentActivity = nil
             return
@@ -89,15 +89,15 @@ final class LiveActivityManager {
         }
     }
 
-    private func updateCurrent(state: OpenClawActivityAttributes.ContentState) {
+    private func updateCurrent(state: PropAiSyncActivityAttributes.ContentState) {
         guard let activity = self.currentActivity else { return }
         Task {
             await activity.update(ActivityContent(state: state, staleDate: nil))
         }
     }
 
-    private func connectingState() -> OpenClawActivityAttributes.ContentState {
-        OpenClawActivityAttributes.ContentState(
+    private func connectingState() -> PropAiSyncActivityAttributes.ContentState {
+        PropAiSyncActivityAttributes.ContentState(
             statusText: "Connecting...",
             isIdle: false,
             isDisconnected: false,
@@ -105,8 +105,8 @@ final class LiveActivityManager {
             startedAt: self.activityStartDate)
     }
 
-    private func idleState() -> OpenClawActivityAttributes.ContentState {
-        OpenClawActivityAttributes.ContentState(
+    private func idleState() -> PropAiSyncActivityAttributes.ContentState {
+        PropAiSyncActivityAttributes.ContentState(
             statusText: "Idle",
             isIdle: true,
             isDisconnected: false,
@@ -114,8 +114,8 @@ final class LiveActivityManager {
             startedAt: self.activityStartDate)
     }
 
-    private func disconnectedState() -> OpenClawActivityAttributes.ContentState {
-        OpenClawActivityAttributes.ContentState(
+    private func disconnectedState() -> PropAiSyncActivityAttributes.ContentState {
+        PropAiSyncActivityAttributes.ContentState(
             statusText: "Disconnected",
             isIdle: false,
             isDisconnected: true,
@@ -123,3 +123,6 @@ final class LiveActivityManager {
             startedAt: self.activityStartDate)
     }
 }
+
+
+

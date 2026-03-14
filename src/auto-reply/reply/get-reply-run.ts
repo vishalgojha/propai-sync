@@ -7,7 +7,7 @@ import {
   isEmbeddedPiRunStreaming,
   resolveEmbeddedSessionLane,
 } from "../../agents/pi-embedded.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import {
   resolveGroupSessionKey,
   resolveSessionFilePath,
@@ -50,7 +50,7 @@ import { resolveRunTypingPolicy } from "./typing-policy.js";
 import type { TypingController } from "./typing.js";
 import { appendUntrustedContext } from "./untrusted-context.js";
 
-type AgentDefaults = NonNullable<OpenClawConfig["agents"]>["defaults"];
+type AgentDefaults = NonNullable<PropAiSyncConfig["agents"]>["defaults"];
 type ExecOverrides = Pick<ExecToolDefaults, "host" | "security" | "ask" | "node">;
 
 function buildResetSessionNoticeText(params: {
@@ -90,7 +90,7 @@ async function sendResetSessionNotice(params: {
   ctx: MsgContext;
   command: ReturnType<typeof buildCommandContext>;
   sessionKey: string;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId: string | undefined;
   threadId: string | number | undefined;
   provider: string;
@@ -126,11 +126,11 @@ async function sendResetSessionNotice(params: {
 type RunPreparedReplyParams = {
   ctx: MsgContext;
   sessionCtx: TemplateContext;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   agentId: string;
   agentDir: string;
   agentCfg: AgentDefaults;
-  sessionCfg: OpenClawConfig["session"];
+  sessionCfg: PropAiSyncConfig["session"];
   commandAuthorized: boolean;
   command: ReturnType<typeof buildCommandContext>;
   commandSource: string;
@@ -554,3 +554,5 @@ export async function runPreparedReply(
     typingMode,
   });
 }
+
+

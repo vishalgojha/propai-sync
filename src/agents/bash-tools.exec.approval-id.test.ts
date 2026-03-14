@@ -56,7 +56,7 @@ describe("exec approvals", () => {
   beforeEach(async () => {
     previousHome = process.env.HOME;
     previousUserProfile = process.env.USERPROFILE;
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-test-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-test-"));
     process.env.HOME = tempDir;
     // Windows uses USERPROFILE for os.homedir()
     process.env.USERPROFILE = tempDir;
@@ -143,7 +143,7 @@ describe("exec approvals", () => {
   });
 
   it("skips approval when node allowlist is satisfied", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-test-bin-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-test-bin-"));
     const binDir = path.join(tempDir, "bin");
     await fs.mkdir(binDir, { recursive: true });
     const exeName = process.platform === "win32" ? "tool.cmd" : "tool";
@@ -214,7 +214,7 @@ describe("exec approvals", () => {
   });
 
   it("uses exec-approvals ask=off to suppress gateway prompts", async () => {
-    const approvalsPath = path.join(process.env.HOME ?? "", ".openclaw", "exec-approvals.json");
+    const approvalsPath = path.join(process.env.HOME ?? "", ".propai", "exec-approvals.json");
     await fs.mkdir(path.dirname(approvalsPath), { recursive: true });
     await fs.writeFile(
       approvalsPath,
@@ -251,7 +251,7 @@ describe("exec approvals", () => {
   });
 
   it("inherits ask=off from exec-approvals defaults when tool ask is unset", async () => {
-    const approvalsPath = path.join(process.env.HOME ?? "", ".openclaw", "exec-approvals.json");
+    const approvalsPath = path.join(process.env.HOME ?? "", ".propai", "exec-approvals.json");
     await fs.mkdir(path.dirname(approvalsPath), { recursive: true });
     await fs.writeFile(
       approvalsPath,
@@ -551,7 +551,7 @@ describe("exec approvals", () => {
   });
 
   it("returns an unavailable approval message instead of a local /approve prompt when discord exec approvals are disabled", async () => {
-    const configPath = path.join(process.env.HOME ?? "", ".openclaw", "openclaw.json");
+    const configPath = path.join(process.env.HOME ?? "", ".propai", "propai.json");
     await fs.mkdir(path.dirname(configPath), { recursive: true });
     await fs.writeFile(
       configPath,
@@ -600,7 +600,7 @@ describe("exec approvals", () => {
   });
 
   it("tells Telegram users that allowed approvers were DMed when Telegram approvals are disabled but Discord DM approvals are enabled", async () => {
-    const configPath = path.join(process.env.HOME ?? "", ".openclaw", "openclaw.json");
+    const configPath = path.join(process.env.HOME ?? "", ".propai", "propai.json");
     await fs.mkdir(path.dirname(configPath), { recursive: true });
     await fs.writeFile(
       configPath,
@@ -718,7 +718,7 @@ describe("exec approvals", () => {
       return { ok: true };
     });
 
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-test-obf-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-test-obf-"));
     const markerPath = path.join(tempDir, "ran.txt");
     const tool = createExecTool({
       host: "gateway",
@@ -743,3 +743,5 @@ describe("exec approvals", () => {
       .toBe(false);
   });
 });
+
+

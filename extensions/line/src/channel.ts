@@ -3,7 +3,7 @@ import {
   createScopedAccountConfigAccessors,
   createScopedChannelConfigBase,
   createScopedDmSecurityResolver,
-} from "openclaw/plugin-sdk/compat";
+} from "propai/plugin-sdk/compat";
 import {
   buildChannelConfigSchema,
   buildComputedAccountStatusSnapshot,
@@ -14,11 +14,11 @@ import {
   processLineMessage,
   type ChannelPlugin,
   type ChannelStatusIssue,
-  type OpenClawConfig,
+  type PropAiSyncConfig,
   type LineConfig,
   type LineChannelData,
   type ResolvedLineAccount,
-} from "openclaw/plugin-sdk/line";
+} from "propai/plugin-sdk/line";
 import { getLineRuntime } from "./runtime.js";
 
 // LINE channel metadata
@@ -44,7 +44,7 @@ const lineConfigAccessors = createScopedAccountConfigAccessors({
       .map((entry) => entry.replace(/^line:(?:user:)?/i, "")),
 });
 
-const lineConfigBase = createScopedChannelConfigBase<ResolvedLineAccount, OpenClawConfig>({
+const lineConfigBase = createScopedChannelConfigBase<ResolvedLineAccount, PropAiSyncConfig>({
   sectionKey: "line",
   listAccountIds: (cfg) => getLineRuntime().channel.line.listLineAccountIds(cfg),
   resolveAccount: (cfg, accountId) =>
@@ -58,16 +58,16 @@ const resolveLineDmPolicy = createScopedDmSecurityResolver<ResolvedLineAccount>(
   resolvePolicy: (account) => account.config.dmPolicy,
   resolveAllowFrom: (account) => account.config.allowFrom,
   policyPathSuffix: "dmPolicy",
-  approveHint: "openclaw pairing approve line <code>",
+  approveHint: "PropAi Sync pairing approve line <code>",
   normalizeEntry: (raw) => raw.replace(/^line:(?:user:)?/i, ""),
 });
 
 function patchLineAccountConfig(
-  cfg: OpenClawConfig,
+  cfg: PropAiSyncConfig,
   lineConfig: LineConfig,
   accountId: string,
   patch: Record<string, unknown>,
-): OpenClawConfig {
+): PropAiSyncConfig {
   if (accountId === DEFAULT_ACCOUNT_ID) {
     return {
       ...cfg,
@@ -116,7 +116,7 @@ export const linePlugin: ChannelPlugin<ResolvedLineAccount> = {
       if (!account.channelAccessToken) {
         throw new Error("LINE channel access token not configured");
       }
-      await line.pushMessageLine(id, "OpenClaw: your access has been approved.", {
+      await line.pushMessageLine(id, "PropAi Sync: your access has been approved.", {
         channelAccessToken: account.channelAccessToken,
       });
     },
@@ -629,7 +629,7 @@ export const linePlugin: ChannelPlugin<ResolvedLineAccount> = {
     },
     logoutAccount: async ({ accountId, cfg }) => {
       const envToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim() ?? "";
-      const nextCfg = { ...cfg } as OpenClawConfig;
+      const nextCfg = { ...cfg } as PropAiSyncConfig;
       const lineConfig = (cfg.channels?.line ?? {}) as LineConfig;
       const nextLine = { ...lineConfig };
       let cleared = false;
@@ -743,3 +743,6 @@ export const linePlugin: ChannelPlugin<ResolvedLineAccount> = {
     ],
   },
 };
+
+
+

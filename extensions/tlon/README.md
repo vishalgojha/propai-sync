@@ -1,5 +1,7 @@
-# Tlon (OpenClaw plugin)
+# Tlon (PropAi Sync plugin)
 
-Tlon/Urbit channel plugin for OpenClaw. Supports DMs, group mentions, and thread replies.
+Tlon/Urbit channel plugin for PropAi Sync. Supports DMs, group mentions, and thread replies.
 
-Docs: https://docs.openclaw.ai/channels/tlon
+Docs: https://docs.propai.ai/channels/tlon
+
+

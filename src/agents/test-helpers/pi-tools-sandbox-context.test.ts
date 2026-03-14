@@ -12,10 +12,10 @@ describe("createPiToolsSandboxContext", () => {
     expect(sandbox.workspaceDir).toBe("/tmp/sandbox");
     expect(sandbox.agentWorkspaceDir).toBe("/tmp/sandbox");
     expect(sandbox.workspaceAccess).toBe("rw");
-    expect(sandbox.containerName).toBe("openclaw-sbx-test");
+    expect(sandbox.containerName).toBe("propai-sbx-test");
     expect(sandbox.containerWorkdir).toBe("/workspace");
-    expect(sandbox.docker.image).toBe("openclaw-sandbox:bookworm-slim");
-    expect(sandbox.docker.containerPrefix).toBe("openclaw-sbx-");
+    expect(sandbox.docker.image).toBe("propai-sandbox:bookworm-slim");
+    expect(sandbox.docker.containerPrefix).toBe("propai-sbx-");
     expect(sandbox.tools).toEqual({ allow: [], deny: [] });
     expect(sandbox.browserAllowHostControl).toBe(false);
   });
@@ -41,3 +41,5 @@ describe("createPiToolsSandboxContext", () => {
     expect(sandbox.docker.tmpfs).toEqual(["/tmp"]);
   });
 });
+
+

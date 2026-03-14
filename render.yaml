@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: openclaw
+    name: PropAi Sync
     runtime: docker
     plan: starter
     healthCheckPath: /health
@@ -9,13 +9,15 @@ services:
         value: "8080"
       - key: SETUP_PASSWORD
         sync: false
-      - key: OPENCLAW_STATE_DIR
-        value: /data/.openclaw
-      - key: OPENCLAW_WORKSPACE_DIR
+      - key: PROPAI_STATE_DIR
+        value: /data/.propai
+      - key: PROPAI_WORKSPACE_DIR
         value: /data/workspace
-      - key: OPENCLAW_GATEWAY_TOKEN
+      - key: PROPAI_GATEWAY_TOKEN
         generateValue: true
     disk:
-      name: openclaw-data
+      name: propai-data
       mountPath: /data
       sizeGB: 1
+
+

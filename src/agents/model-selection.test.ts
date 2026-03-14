@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { resetLogger, setLoggerOverride } from "../logging/logger.js";
 import {
   buildAllowedModelSet,
@@ -25,7 +25,7 @@ const EXPLICIT_ALLOWLIST_CONFIG = {
       },
     },
   },
-} as OpenClawConfig;
+} as PropAiSyncConfig;
 
 const BUNDLED_ALLOWLIST_CATALOG = [
   { provider: "anthropic", id: "claude-sonnet-4-5", name: "Claude Sonnet 4.5" },
@@ -41,7 +41,7 @@ const ANTHROPIC_OPUS_CATALOG = [
   },
 ];
 
-function resolveAnthropicOpusThinking(cfg: OpenClawConfig) {
+function resolveAnthropicOpusThinking(cfg: PropAiSyncConfig) {
   return resolveThinkingDefault({
     cfg,
     provider: "anthropic",
@@ -212,7 +212,7 @@ describe("model-selection", () => {
             },
           },
         },
-      } as OpenClawConfig;
+      } as PropAiSyncConfig;
 
       expect(
         inferUniqueProviderFromConfiguredModels({
@@ -232,7 +232,7 @@ describe("model-selection", () => {
             },
           },
         },
-      } as OpenClawConfig;
+      } as PropAiSyncConfig;
 
       expect(
         inferUniqueProviderFromConfiguredModels({
@@ -251,7 +251,7 @@ describe("model-selection", () => {
             },
           },
         },
-      } as OpenClawConfig;
+      } as PropAiSyncConfig;
 
       expect(
         inferUniqueProviderFromConfiguredModels({
@@ -270,7 +270,7 @@ describe("model-selection", () => {
             },
           },
         },
-      } as OpenClawConfig;
+      } as PropAiSyncConfig;
 
       expect(
         inferUniqueProviderFromConfiguredModels({
@@ -283,7 +283,7 @@ describe("model-selection", () => {
 
   describe("buildModelAliasIndex", () => {
     it("should build alias index from config", () => {
-      const cfg: Partial<OpenClawConfig> = {
+      const cfg: Partial<PropAiSyncConfig> = {
         agents: {
           defaults: {
             models: {
@@ -295,7 +295,7 @@ describe("model-selection", () => {
       };
 
       const index = buildModelAliasIndex({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg as PropAiSyncConfig,
         defaultProvider: "anthropic",
       });
 
@@ -341,7 +341,7 @@ describe("model-selection", () => {
     });
 
     it("strips trailing auth profile suffix before allowlist matching", () => {
-      const cfg: OpenClawConfig = {
+      const cfg: PropAiSyncConfig = {
         agents: {
           defaults: {
             models: {
@@ -349,7 +349,7 @@ describe("model-selection", () => {
             },
           },
         },
-      } as OpenClawConfig;
+      } as PropAiSyncConfig;
 
       const result = resolveAllowedModelRef({
         cfg,
@@ -470,7 +470,7 @@ describe("model-selection", () => {
       setLoggerOverride({ level: "silent", consoleLevel: "warn" });
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       try {
-        const cfg: Partial<OpenClawConfig> = {
+        const cfg: Partial<PropAiSyncConfig> = {
           agents: {
             defaults: {
               model: { primary: "claude-3-5-sonnet" },
@@ -479,7 +479,7 @@ describe("model-selection", () => {
         };
 
         const result = resolveConfiguredModelRef({
-          cfg: cfg as OpenClawConfig,
+          cfg: cfg as PropAiSyncConfig,
           defaultProvider: "google",
           defaultModel: "gemini-pro",
         });
@@ -498,7 +498,7 @@ describe("model-selection", () => {
       setLoggerOverride({ level: "silent", consoleLevel: "warn" });
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       try {
-        const cfg: Partial<OpenClawConfig> = {
+        const cfg: Partial<PropAiSyncConfig> = {
           agents: {
             defaults: {
               model: { primary: "\u001B[31mclaude-3-5-sonnet\nspoof" },
@@ -507,7 +507,7 @@ describe("model-selection", () => {
         };
 
         const result = resolveConfiguredModelRef({
-          cfg: cfg as OpenClawConfig,
+          cfg: cfg as PropAiSyncConfig,
           defaultProvider: "google",
           defaultModel: "gemini-pro",
         });
@@ -528,9 +528,9 @@ describe("model-selection", () => {
     });
 
     it("should use default provider/model if config is empty", () => {
-      const cfg: Partial<OpenClawConfig> = {};
+      const cfg: Partial<PropAiSyncConfig> = {};
       const result = resolveConfiguredModelRef({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg as PropAiSyncConfig,
         defaultProvider: "openai",
         defaultModel: "gpt-4",
       });
@@ -538,7 +538,7 @@ describe("model-selection", () => {
     });
 
     it("should prefer configured custom provider when default provider is not in models.providers", () => {
-      const cfg: Partial<OpenClawConfig> = {
+      const cfg: Partial<PropAiSyncConfig> = {
         models: {
           providers: {
             n1n: {
@@ -559,7 +559,7 @@ describe("model-selection", () => {
         },
       };
       const result = resolveConfiguredModelRef({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg as PropAiSyncConfig,
         defaultProvider: "anthropic",
         defaultModel: "claude-opus-4-6",
       });
@@ -567,7 +567,7 @@ describe("model-selection", () => {
     });
 
     it("should keep default provider when it is in models.providers", () => {
-      const cfg: Partial<OpenClawConfig> = {
+      const cfg: Partial<PropAiSyncConfig> = {
         models: {
           providers: {
             anthropic: {
@@ -588,7 +588,7 @@ describe("model-selection", () => {
         },
       };
       const result = resolveConfiguredModelRef({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg as PropAiSyncConfig,
         defaultProvider: "anthropic",
         defaultModel: "claude-opus-4-6",
       });
@@ -596,7 +596,7 @@ describe("model-selection", () => {
     });
 
     it("should fall back to hardcoded default when no custom providers have models", () => {
-      const cfg: Partial<OpenClawConfig> = {
+      const cfg: Partial<PropAiSyncConfig> = {
         models: {
           providers: {
             "empty-provider": {
@@ -607,7 +607,7 @@ describe("model-selection", () => {
         },
       };
       const result = resolveConfiguredModelRef({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg as PropAiSyncConfig,
         defaultProvider: "anthropic",
         defaultModel: "claude-opus-4-6",
       });
@@ -618,7 +618,7 @@ describe("model-selection", () => {
       setLoggerOverride({ level: "silent", consoleLevel: "warn" });
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       try {
-        const cfg: Partial<OpenClawConfig> = {
+        const cfg: Partial<PropAiSyncConfig> = {
           agents: {
             defaults: {
               model: { primary: "openai/" },
@@ -627,7 +627,7 @@ describe("model-selection", () => {
         };
 
         const result = resolveConfiguredModelRef({
-          cfg: cfg as OpenClawConfig,
+          cfg: cfg as PropAiSyncConfig,
           defaultProvider: "anthropic",
           defaultModel: "claude-opus-4-6",
         });
@@ -657,7 +657,7 @@ describe("model-selection", () => {
             },
           },
         },
-      } as OpenClawConfig;
+      } as PropAiSyncConfig;
 
       expect(resolveAnthropicOpusThinking(cfg)).toBe("high");
     });
@@ -673,13 +673,13 @@ describe("model-selection", () => {
             },
           },
         },
-      } as OpenClawConfig;
+      } as PropAiSyncConfig;
 
       expect(resolveAnthropicOpusThinking(cfg)).toBe("adaptive");
     });
 
     it("defaults Anthropic Claude 4.6 models to adaptive", () => {
-      const cfg = {} as OpenClawConfig;
+      const cfg = {} as PropAiSyncConfig;
 
       expect(resolveAnthropicOpusThinking(cfg)).toBe("adaptive");
 
@@ -729,3 +729,5 @@ describe("normalizeModelSelection", () => {
     expect(normalizeModelSelection(42)).toBeUndefined();
   });
 });
+
+

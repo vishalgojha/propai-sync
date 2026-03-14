@@ -4,7 +4,7 @@ import {
   resolveWebhookTargetWithAuthOrReject,
   withResolvedWebhookRequestPipeline,
   type WebhookInFlightLimiter,
-} from "openclaw/plugin-sdk/googlechat";
+} from "propai/plugin-sdk/googlechat";
 import { verifyGoogleChatRequest } from "./auth.js";
 import type { WebhookTarget } from "./monitor-types.js";
 import type {
@@ -197,3 +197,5 @@ export function createGoogleChatWebhookRequestHandler(params: {
     });
   };
 }
+
+

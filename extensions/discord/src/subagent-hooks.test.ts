@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/discord";
+import type { PropAiSyncPluginApi } from "propai/plugin-sdk/discord";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { registerDiscordSubagentHooks } from "./subagent-hooks.js";
 
@@ -35,7 +35,7 @@ const hookMocks = vi.hoisted(() => ({
   unbindThreadBindingsBySessionKey: vi.fn(() => []),
 }));
 
-vi.mock("openclaw/plugin-sdk/discord", () => ({
+vi.mock("propai/plugin-sdk/discord", () => ({
   resolveDiscordAccount: hookMocks.resolveDiscordAccount,
   autoBindSpawnedDiscordSubagent: hookMocks.autoBindSpawnedDiscordSubagent,
   listThreadBindingsBySessionKey: hookMocks.listThreadBindingsBySessionKey,
@@ -59,7 +59,7 @@ function registerHandlersForTest(
     on: (hookName: string, handler: (event: unknown, ctx: unknown) => unknown) => {
       handlers.set(hookName, handler);
     },
-  } as unknown as OpenClawPluginApi;
+  } as unknown as PropAiSyncPluginApi;
   registerDiscordSubagentHooks(api);
   return handlers;
 }
@@ -386,3 +386,6 @@ describe("discord subagent hook handlers", () => {
     expect(result).toBeUndefined();
   });
 });
+
+
+

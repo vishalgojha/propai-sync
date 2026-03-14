@@ -1,5 +1,5 @@
 import Testing
-@testable import OpenClaw
+@testable import PropAiSync
 
 @Suite struct CameraControllerErrorTests {
     @Test func errorDescriptionsAreStable() {
@@ -12,3 +12,5 @@ import Testing
         #expect(CameraController.CameraError.exportFailed("export").errorDescription == "export")
     }
 }
+
+

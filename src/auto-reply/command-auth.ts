@@ -2,7 +2,7 @@ import type { ChannelDock } from "../channels/dock.js";
 import { getChannelDock, listChannelDocks } from "../channels/dock.js";
 import type { ChannelId } from "../channels/plugins/types.js";
 import { normalizeAnyChannelId } from "../channels/registry.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { normalizeStringEntries } from "../shared/string-normalization.js";
 import {
   INTERNAL_MESSAGE_CHANNEL,
@@ -21,7 +21,7 @@ export type CommandAuthorization = {
   to?: string;
 };
 
-function resolveProviderFromContext(ctx: MsgContext, cfg: OpenClawConfig): ChannelId | undefined {
+function resolveProviderFromContext(ctx: MsgContext, cfg: PropAiSyncConfig): ChannelId | undefined {
   const explicitMessageChannel =
     normalizeMessageChannel(ctx.Provider) ??
     normalizeMessageChannel(ctx.Surface) ??
@@ -75,7 +75,7 @@ function resolveProviderFromContext(ctx: MsgContext, cfg: OpenClawConfig): Chann
 
 function formatAllowFromList(params: {
   dock?: ChannelDock;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   allowFrom: Array<string | number>;
 }): string[] {
@@ -91,7 +91,7 @@ function formatAllowFromList(params: {
 
 function normalizeAllowFromEntry(params: {
   dock?: ChannelDock;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   value: string;
 }): string[] {
@@ -106,7 +106,7 @@ function normalizeAllowFromEntry(params: {
 
 function resolveOwnerAllowFromList(params: {
   dock?: ChannelDock;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   providerId?: ChannelId;
   allowFrom?: Array<string | number>;
@@ -153,7 +153,7 @@ function resolveOwnerAllowFromList(params: {
  */
 function resolveCommandsAllowFromList(params: {
   dock?: ChannelDock;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   providerId?: ChannelId;
 }): string[] | null {
@@ -213,7 +213,7 @@ function shouldUseFromAsSenderFallback(params: {
 function resolveSenderCandidates(params: {
   dock?: ChannelDock;
   providerId?: ChannelId;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   senderId?: string | null;
   senderE164?: string | null;
@@ -257,7 +257,7 @@ function resolveSenderCandidates(params: {
 
 export function resolveCommandAuthorization(params: {
   ctx: MsgContext;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   commandAuthorized: boolean;
 }): CommandAuthorization {
   const { ctx, cfg, commandAuthorized } = params;
@@ -387,3 +387,5 @@ export function resolveCommandAuthorization(params: {
     to: to || undefined,
   };
 }
+
+

@@ -1,4 +1,4 @@
-# OpenClaw Android UI Style Guide
+# PropAi Sync Android UI Style Guide
 
 Scope: all native Android UI in `apps/android` (Jetpack Compose).
 Goal: one coherent visual system across onboarding, settings, and future screens.
@@ -104,10 +104,13 @@ Hard rule: avoid ultra-thin weights on light backgrounds.
 
 ## 11. Source Of Truth
 
-- `app/src/main/java/ai/openclaw/android/ui/OpenClawTheme.kt`
-- `app/src/main/java/ai/openclaw/android/ui/OnboardingFlow.kt`
-- `app/src/main/java/ai/openclaw/android/ui/RootScreen.kt`
-- `app/src/main/java/ai/openclaw/android/ui/SettingsSheet.kt`
-- `app/src/main/java/ai/openclaw/android/MainViewModel.kt`
+- `app/src/main/java/ai/propai/android/ui/PropAiSyncTheme.kt`
+- `app/src/main/java/ai/propai/android/ui/OnboardingFlow.kt`
+- `app/src/main/java/ai/propai/android/ui/RootScreen.kt`
+- `app/src/main/java/ai/propai/android/ui/SettingsSheet.kt`
+- `app/src/main/java/ai/propai/android/MainViewModel.kt`
 
 If style and implementation diverge, update both in the same change.
+
+
+

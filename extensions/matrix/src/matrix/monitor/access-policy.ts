@@ -4,7 +4,7 @@ import {
   readStoreAllowFromForDmPolicy,
   resolveDmGroupAccessWithLists,
   resolveSenderScopedGroupPolicy,
-} from "openclaw/plugin-sdk/matrix";
+} from "propai/plugin-sdk/matrix";
 import {
   normalizeMatrixAllowList,
   resolveMatrixAllowListMatch,
@@ -98,12 +98,12 @@ export async function enforceMatrixDirectMessageAccess(params: {
       upsertPairingRequest: params.upsertPairingRequest,
       buildReplyText: ({ code }) =>
         [
-          "OpenClaw: access not configured.",
+          "PropAi Sync: access not configured.",
           "",
           `Pairing code: ${code}`,
           "",
           "Ask the bot owner to approve with:",
-          "openclaw pairing approve matrix <code>",
+          "PropAi Sync pairing approve matrix <code>",
         ].join("\n"),
       sendPairingReply: params.sendPairingReply,
       onCreated: () => {
@@ -124,3 +124,5 @@ export async function enforceMatrixDirectMessageAccess(params: {
   );
   return false;
 }
+
+

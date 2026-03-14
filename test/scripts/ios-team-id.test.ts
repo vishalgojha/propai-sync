@@ -124,7 +124,7 @@ function runScript(
 
 describe("scripts/ios-team-id.sh", () => {
   beforeAll(async () => {
-    fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "openclaw-ios-team-id-"));
+    fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "propai-ios-team-id-"));
     sharedBinDir = path.join(fixtureRoot, "shared-bin");
     await mkdir(sharedBinDir, { recursive: true });
     sharedHomeDir = path.join(fixtureRoot, "home");
@@ -229,3 +229,5 @@ printf 'BBBBB22222\\t0\\tBeta Team\\r\\n'`,
     ).toBe(true);
   });
 });
+
+

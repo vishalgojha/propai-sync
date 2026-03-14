@@ -1,10 +1,10 @@
-import type { OpenClawConfig } from "../../../config/config.js";
+import type { PropAiSyncConfig } from "../../../config/config.js";
 import { resolveUserPath } from "../../../utils.js";
 import type { OnboardOptions } from "../../onboard-types.js";
 
 export function resolveNonInteractiveWorkspaceDir(params: {
   opts: OnboardOptions;
-  baseConfig: OpenClawConfig;
+  baseConfig: PropAiSyncConfig;
   defaultWorkspaceDir: string;
 }) {
   const raw = (
@@ -14,3 +14,5 @@ export function resolveNonInteractiveWorkspaceDir(params: {
   ).trim();
   return resolveUserPath(raw);
 }
+
+

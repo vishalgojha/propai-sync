@@ -1,7 +1,7 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/mattermost";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/mattermost";
 import { expect, vi } from "vitest";
 
-export function createMattermostTestConfig(): OpenClawConfig {
+export function createMattermostTestConfig(): PropAiSyncConfig {
   return {
     channels: {
       mattermost: {
@@ -81,3 +81,6 @@ export async function withMockedGlobalFetch<T>(
     (globalThis as any).fetch = prevFetch;
   }
 }
+
+
+

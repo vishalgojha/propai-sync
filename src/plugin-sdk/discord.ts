@@ -1,5 +1,5 @@
 export type { ChannelMessageActionAdapter } from "../channels/plugins/types.js";
-export type { OpenClawConfig } from "../config/config.js";
+export type { PropAiSyncConfig } from "../config/config.js";
 export type { InspectedDiscordAccount } from "../discord/account-inspect.js";
 export type { ResolvedDiscordAccount } from "../discord/accounts.js";
 export * from "./channel-plugin-common.js";
@@ -47,3 +47,5 @@ export {
   buildComputedAccountStatusSnapshot,
   buildTokenChannelStatusSummary,
 } from "./status-helpers.js";
+
+

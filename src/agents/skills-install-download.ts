@@ -66,7 +66,7 @@ async function downloadFile(params: {
   timeoutMs: number;
 }): Promise<{ bytes: number }> {
   const destPath = path.resolve(params.rootDir, params.relativePath);
-  const stagingDir = path.join(params.rootDir, ".openclaw-download-staging");
+  const stagingDir = path.join(params.rootDir, ".propai-download-staging");
   await ensureDir(stagingDir);
   await assertCanonicalPathWithinBase({
     baseDir: params.rootDir,
@@ -236,3 +236,5 @@ export async function installDownloadSpec(params: {
     code: extractResult.code,
   };
 }
+
+

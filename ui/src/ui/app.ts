@@ -113,14 +113,14 @@ import {
 
 declare global {
   interface Window {
-    __OPENCLAW_CONTROL_UI_BASE_PATH__?: string;
+    __PROPAI_CONTROL_UI_BASE_PATH__?: string;
   }
 }
 
 const bootAssistantIdentity = normalizeAssistantIdentity({});
-const DESKTOP_ONBOARDING_DONE_KEY = "openclaw.desktop.onboarding.done";
-const TAURI_ONBOARDING_OPEN_EVENT = "openclaw:onboarding-open";
-const TAURI_GATEWAY_RESTART_EVENT = "openclaw:gateway-restart";
+const DESKTOP_ONBOARDING_DONE_KEY = "PropAiSync.desktop.onboarding.done";
+const TAURI_ONBOARDING_OPEN_EVENT = "PropAi Sync:onboarding-open";
+const TAURI_GATEWAY_RESTART_EVENT = "PropAi Sync:gateway-restart";
 const BRAND_NAME = "propai";
 
 function applyBrandTheme() {
@@ -197,8 +197,8 @@ function resolveOnboardingMode(): boolean {
   return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
-@customElement("openclaw-app")
-export class OpenClawApp extends LitElement {
+@customElement("propai-app")
+export class PropAiSyncApp extends LitElement {
   private i18nController = new I18nController(this);
   clientInstanceId = generateUUID();
   connectGeneration = 0;
@@ -1155,6 +1155,10 @@ export class OpenClawApp extends LitElement {
     return renderApp(this as unknown as AppViewState);
   }
 }
+
+
+
+
 
 
 

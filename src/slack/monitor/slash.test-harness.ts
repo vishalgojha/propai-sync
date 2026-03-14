@@ -72,5 +72,7 @@ export function resetSlackSlashMocks() {
   mocks.resolveConversationLabelMock.mockReset().mockReturnValue(undefined);
   mocks.createReplyPrefixOptionsMock.mockReset().mockReturnValue({ onModelSelected: () => {} });
   mocks.recordSessionMetaFromInboundMock.mockReset().mockResolvedValue(undefined);
-  mocks.resolveStorePathMock.mockReset().mockReturnValue("/tmp/openclaw-sessions.json");
+  mocks.resolveStorePathMock.mockReset().mockReturnValue("/tmp/propai-sessions.json");
 }
+
+

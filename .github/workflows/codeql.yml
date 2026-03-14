@@ -123,8 +123,8 @@ jobs:
           cd apps/ios
           xcodegen generate
           xcodebuild build \
-            -project OpenClaw.xcodeproj \
-            -scheme OpenClaw \
+            -project PropAiSync.xcodeproj \
+            -scheme PropAiSync \
             -destination "generic/platform=iOS Simulator" \
             CODE_SIGNING_ALLOWED=NO
 
@@ -132,3 +132,4 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
+

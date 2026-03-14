@@ -111,7 +111,7 @@ const requiredPathGroups = [
   "dist/plugin-sdk/keyed-async-queue.d.ts",
   "dist/build-info.json",
 ];
-const forbiddenPrefixes = ["dist/OpenClaw.app/"];
+const forbiddenPrefixes = ["dist/PropAiSync.app/"];
 const appcastPath = resolve("appcast.xml");
 const laneBuildMin = 1_000_000_000;
 const laneFloorAdoptionDateKey = 20260227;
@@ -141,7 +141,7 @@ export function collectBundledExtensionRootDependencyGapErrors(params: {
     }
 
     const missing = Object.keys(extension.packageJson.dependencies ?? {})
-      .filter((dep) => dep !== "openclaw" && !rootDeps[dep])
+      .filter((dep) => dep !== "PropAi Sync" && !rootDeps[dep])
       .toSorted();
     const allowlisted = extension.rootDependencyMirrorAllowlist.toSorted();
     if (missing.join("\n") !== allowlisted.join("\n")) {
@@ -343,7 +343,7 @@ function checkAppcastSparkleVersions() {
   }
 }
 
-// Critical functions that channel extension plugins import from openclaw/plugin-sdk.
+// Critical functions that channel extension plugins import from propai/plugin-sdk.
 // If any are missing from the compiled output, plugins crash at runtime (#27569).
 const requiredPluginSdkExports = [
   "isDangerousNameMatchingEnabled",
@@ -448,3 +448,6 @@ function main() {
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   main();
 }
+
+
+

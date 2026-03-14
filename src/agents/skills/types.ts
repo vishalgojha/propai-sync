@@ -16,7 +16,7 @@ export type SkillInstallSpec = {
   targetDir?: string;
 };
 
-export type OpenClawSkillMetadata = {
+export type PropAiSyncSkillMetadata = {
   always?: boolean;
   skillKey?: string;
   primaryEnv?: string;
@@ -66,7 +66,7 @@ export type ParsedSkillFrontmatter = Record<string, string>;
 export type SkillEntry = {
   skill: Skill;
   frontmatter: ParsedSkillFrontmatter;
-  metadata?: OpenClawSkillMetadata;
+  metadata?: PropAiSyncSkillMetadata;
   invocation?: SkillInvocationPolicy;
 };
 
@@ -87,3 +87,5 @@ export type SkillSnapshot = {
   resolvedSkills?: Skill[];
   version?: number;
 };
+
+

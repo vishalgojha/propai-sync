@@ -7,7 +7,7 @@ describe("createAnthropicPayloadLogger", () => {
   it("redacts image base64 payload data before writing logs", async () => {
     const lines: string[] = [];
     const logger = createAnthropicPayloadLogger({
-      env: { OPENCLAW_ANTHROPIC_PAYLOAD_LOG: "1" },
+      env: { PROPAI_ANTHROPIC_PAYLOAD_LOG: "1" },
       writer: {
         filePath: "memory",
         write: (line) => lines.push(line),
@@ -47,3 +47,5 @@ describe("createAnthropicPayloadLogger", () => {
     expect(event.payloadDigest).toBeDefined();
   });
 });
+
+

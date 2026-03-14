@@ -1,16 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import * as secretResolve from "./resolve.js";
 import { createResolverContext } from "./runtime-shared.js";
 import { resolveRuntimeWebTools } from "./runtime-web-tools.js";
 
 type ProviderUnderTest = "brave" | "gemini" | "grok" | "kimi" | "perplexity";
 
-function asConfig(value: unknown): OpenClawConfig {
-  return value as OpenClawConfig;
+function asConfig(value: unknown): PropAiSyncConfig {
+  return value as PropAiSyncConfig;
 }
 
-async function runRuntimeWebTools(params: { config: OpenClawConfig; env?: NodeJS.ProcessEnv }) {
+async function runRuntimeWebTools(params: { config: PropAiSyncConfig; env?: NodeJS.ProcessEnv }) {
   const sourceConfig = structuredClone(params.config);
   const resolvedConfig = structuredClone(params.config);
   const context = createResolverContext({
@@ -28,7 +28,7 @@ async function runRuntimeWebTools(params: { config: OpenClawConfig; env?: NodeJS
 function createProviderSecretRefConfig(
   provider: ProviderUnderTest,
   envRefId: string,
-): OpenClawConfig {
+): PropAiSyncConfig {
   const search: Record<string, unknown> = {
     enabled: true,
     provider,
@@ -49,7 +49,7 @@ function createProviderSecretRefConfig(
   });
 }
 
-function readProviderKey(config: OpenClawConfig, provider: ProviderUnderTest): unknown {
+function readProviderKey(config: PropAiSyncConfig, provider: ProviderUnderTest): unknown {
   if (provider === "brave") {
     return config.tools?.web?.search?.apiKey;
   }
@@ -449,3 +449,5 @@ describe("runtime web tools resolution", () => {
     );
   });
 });
+
+

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { resetLogger, setLoggerOverride } from "../logging/logger.js";
 import { __setModelCatalogImportForTest, loadModelCatalog } from "./model-catalog.js";
 import {
@@ -36,7 +36,7 @@ describe("loadModelCatalog", () => {
     try {
       const getCallCount = mockCatalogImportFailThenRecover();
 
-      const cfg = {} as OpenClawConfig;
+      const cfg = {} as PropAiSyncConfig;
       const first = await loadModelCatalog({ config: cfg });
       expect(first).toEqual([]);
 
@@ -76,7 +76,7 @@ describe("loadModelCatalog", () => {
           }) as unknown as PiSdkModule,
       );
 
-      const result = await loadModelCatalog({ config: {} as OpenClawConfig });
+      const result = await loadModelCatalog({ config: {} as PropAiSyncConfig });
       expect(result).toEqual([{ id: "gpt-4.1", name: "GPT-4.1", provider: "openai" }]);
       expect(warnSpy).toHaveBeenCalledTimes(1);
     } finally {
@@ -102,7 +102,7 @@ describe("loadModelCatalog", () => {
       },
     ]);
 
-    const result = await loadModelCatalog({ config: {} as OpenClawConfig });
+    const result = await loadModelCatalog({ config: {} as PropAiSyncConfig });
     expect(result).toContainEqual(
       expect.objectContaining({
         provider: "openai-codex",
@@ -142,7 +142,7 @@ describe("loadModelCatalog", () => {
       },
     ]);
 
-    const result = await loadModelCatalog({ config: {} as OpenClawConfig });
+    const result = await loadModelCatalog({ config: {} as PropAiSyncConfig });
 
     expect(result).toContainEqual(
       expect.objectContaining({
@@ -191,7 +191,7 @@ describe("loadModelCatalog", () => {
             },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
     });
 
     expect(result).toContainEqual(
@@ -227,7 +227,7 @@ describe("loadModelCatalog", () => {
             },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
     });
 
     expect(
@@ -265,7 +265,7 @@ describe("loadModelCatalog", () => {
             },
           },
         },
-      } as OpenClawConfig,
+      } as PropAiSyncConfig,
     });
 
     const matches = result.filter(
@@ -275,3 +275,5 @@ describe("loadModelCatalog", () => {
     expect(matches[0]?.name).toBe("Kilo Auto");
   });
 });
+
+

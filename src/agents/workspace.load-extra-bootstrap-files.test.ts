@@ -15,7 +15,7 @@ describe("loadExtraBootstrapFiles", () => {
   };
 
   beforeAll(async () => {
-    fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-extra-bootstrap-"));
+    fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "propai-extra-bootstrap-"));
   });
 
   afterAll(async () => {
@@ -109,3 +109,5 @@ describe("loadExtraBootstrapFiles", () => {
     expect(diagnostics.some((d) => d.reason === "security")).toBe(true);
   });
 });
+
+

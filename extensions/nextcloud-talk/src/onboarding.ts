@@ -11,9 +11,9 @@ import {
   setTopLevelChannelDmPolicyWithAllowFrom,
   type ChannelOnboardingAdapter,
   type ChannelOnboardingDmPolicy,
-  type OpenClawConfig,
+  type PropAiSyncConfig,
   type WizardPrompter,
-} from "openclaw/plugin-sdk/nextcloud-talk";
+} from "propai/plugin-sdk/nextcloud-talk";
 import {
   listNextcloudTalkAccountIds,
   resolveDefaultNextcloudTalkAccountId,
@@ -50,7 +50,7 @@ async function noteNextcloudTalkSecretHelp(prompter: WizardPrompter): Promise<vo
   await prompter.note(
     [
       "1) SSH into your Nextcloud server",
-      '2) Run: ./occ talk:bot:install "OpenClaw" "<shared-secret>" "<webhook-url>" --feature reaction',
+      '2) Run: ./occ talk:bot:install "PropAi Sync" "<shared-secret>" "<webhook-url>" --feature reaction',
       "3) Copy the shared secret you used in the command",
       "4) Enable the bot in your Nextcloud Talk room settings",
       "Tip: you can also set NEXTCLOUD_TALK_BOT_SECRET in your env.",
@@ -138,10 +138,10 @@ const dmPolicy: ChannelOnboardingDmPolicy = {
   getCurrent: (cfg) => cfg.channels?.["nextcloud-talk"]?.dmPolicy ?? "pairing",
   setPolicy: (cfg, policy) => setNextcloudTalkDmPolicy(cfg as CoreConfig, policy as DmPolicy),
   promptAllowFrom: promptNextcloudTalkAllowFromForAccount as (params: {
-    cfg: OpenClawConfig;
+    cfg: PropAiSyncConfig;
     prompter: WizardPrompter;
     accountId?: string | undefined;
-  }) => Promise<OpenClawConfig>,
+  }) => Promise<PropAiSyncConfig>,
 };
 
 export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
@@ -173,7 +173,7 @@ export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
       label: "Nextcloud Talk",
       accountOverride: accountOverrides["nextcloud-talk"],
       shouldPromptAccountIds,
-      listAccountIds: listNextcloudTalkAccountIds as (cfg: OpenClawConfig) => string[],
+      listAccountIds: listNextcloudTalkAccountIds as (cfg: PropAiSyncConfig) => string[],
       defaultAccountId,
     });
 
@@ -300,3 +300,6 @@ export const nextcloudTalkOnboardingAdapter: ChannelOnboardingAdapter = {
     },
   }),
 };
+
+
+

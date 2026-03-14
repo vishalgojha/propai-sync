@@ -13,10 +13,10 @@ async function withPresenceModule<T>(
 }
 
 describe("system-presence version fallback", () => {
-  it("uses runtime VERSION when OPENCLAW_VERSION is not set", async () => {
+  it("uses runtime VERSION when PROPAI_VERSION is not set", async () => {
     await withPresenceModule(
       {
-        OPENCLAW_SERVICE_VERSION: "2.4.6-service",
+        PROPAI_SERVICE_VERSION: "2.4.6-service",
         npm_package_version: "1.0.0-package",
       },
       async ({ listSystemPresence }) => {
@@ -27,11 +27,11 @@ describe("system-presence version fallback", () => {
     );
   });
 
-  it("prefers OPENCLAW_VERSION over runtime VERSION", async () => {
+  it("prefers PROPAI_VERSION over runtime VERSION", async () => {
     await withPresenceModule(
       {
-        OPENCLAW_VERSION: "9.9.9-cli",
-        OPENCLAW_SERVICE_VERSION: "2.4.6-service",
+        PROPAI_VERSION: "9.9.9-cli",
+        PROPAI_SERVICE_VERSION: "2.4.6-service",
         npm_package_version: "1.0.0-package",
       },
       ({ listSystemPresence }) => {
@@ -41,11 +41,11 @@ describe("system-presence version fallback", () => {
     );
   });
 
-  it("uses runtime VERSION when OPENCLAW_VERSION and OPENCLAW_SERVICE_VERSION are blank", async () => {
+  it("uses runtime VERSION when PROPAI_VERSION and PROPAI_SERVICE_VERSION are blank", async () => {
     await withPresenceModule(
       {
-        OPENCLAW_VERSION: " ",
-        OPENCLAW_SERVICE_VERSION: "\t",
+        PROPAI_VERSION: " ",
+        PROPAI_SERVICE_VERSION: "\t",
         npm_package_version: "1.0.0-package",
       },
       async ({ listSystemPresence }) => {
@@ -56,3 +56,5 @@ describe("system-presence version fallback", () => {
     );
   });
 });
+
+

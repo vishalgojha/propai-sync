@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/msteams";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/msteams";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -54,7 +54,7 @@ describe("msteamsOutbound cfg threading", () => {
           appId: "resolved-app-id",
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     await msteamsOutbound.sendText!({
       cfg,
@@ -76,7 +76,7 @@ describe("msteamsOutbound cfg threading", () => {
           appId: "resolved-app-id",
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     await msteamsOutbound.sendMedia!({
       cfg,
@@ -102,7 +102,7 @@ describe("msteamsOutbound cfg threading", () => {
           appId: "resolved-app-id",
         },
       },
-    } as OpenClawConfig;
+    } as PropAiSyncConfig;
 
     await msteamsOutbound.sendPoll!({
       cfg,
@@ -129,3 +129,6 @@ describe("msteamsOutbound cfg threading", () => {
     );
   });
 });
+
+
+

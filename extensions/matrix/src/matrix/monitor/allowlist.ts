@@ -3,7 +3,7 @@ import {
   normalizeStringEntries,
   resolveAllowlistCandidates,
   type AllowlistMatch,
-} from "openclaw/plugin-sdk/matrix";
+} from "propai/plugin-sdk/matrix";
 
 function normalizeAllowList(list?: Array<string | number>) {
   return normalizeStringEntries(list);
@@ -98,3 +98,5 @@ export function resolveMatrixAllowListMatch(params: {
 export function resolveMatrixAllowListMatches(params: { allowList: string[]; userId?: string }) {
   return resolveMatrixAllowListMatch(params).allowed;
 }
+
+

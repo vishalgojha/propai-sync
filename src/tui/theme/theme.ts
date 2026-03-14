@@ -46,7 +46,7 @@ function pickHigherContrastText(r: number, g: number, b: number): boolean {
 }
 
 function isLightBackground(): boolean {
-  const explicit = process.env.OPENCLAW_THEME?.toLowerCase();
+  const explicit = process.env.propai_THEME?.toLowerCase();
   if (explicit === "light") {
     return true;
   }
@@ -229,3 +229,5 @@ export const searchableSelectListTheme: SearchableSelectListTheme = {
   searchInput: (text) => fg(palette.text)(text),
   matchHighlight: (text) => chalk.bold(fg(palette.accent)(text)),
 };
+
+

@@ -45,7 +45,7 @@ async function seedSessionStore(params: {
 }
 
 async function createCompactionSessionFixture(entry: SessionEntry) {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-compact-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "propai-compact-"));
   tempDirs.push(tmp);
   const storePath = path.join(tmp, "sessions.json");
   const sessionKey = "main";
@@ -467,3 +467,5 @@ describe("incrementCompactionCount", () => {
     expect(stored[sessionKey].totalTokens).toBe(180_000);
   });
 });
+
+

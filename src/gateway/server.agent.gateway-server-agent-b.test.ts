@@ -141,7 +141,7 @@ async function sendAgentWsRequestAndWaitFinal(
 }
 
 async function useTempSessionStorePath() {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-gw-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-gw-"));
   testState.sessionStorePath = path.join(dir, "sessions.json");
 }
 
@@ -457,3 +457,5 @@ describe("gateway server agent", () => {
     webchatWs.close();
   });
 });
+
+

@@ -1,4 +1,4 @@
-import { createDedupeCache } from "openclaw/plugin-sdk/tlon";
+import { createDedupeCache } from "propai/plugin-sdk/tlon";
 
 export type ProcessedMessageTracker = {
   mark: (id?: string | null) => boolean;
@@ -31,3 +31,5 @@ export function createProcessedMessageTracker(limit = 2000): ProcessedMessageTra
     size: () => dedupe.size(),
   };
 }
+
+

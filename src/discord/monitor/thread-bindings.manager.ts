@@ -1,6 +1,6 @@
 import { Routes } from "discord-api-types/v10";
 import { resolveThreadBindingConversationIdFromBindingId } from "../../channels/thread-binding-id.js";
-import { getRuntimeConfigSnapshot, type OpenClawConfig } from "../../config/config.js";
+import { getRuntimeConfigSnapshot, type PropAiSyncConfig } from "../../config/config.js";
 import { logVerbose } from "../../globals.js";
 import {
   registerSessionBindingAdapter,
@@ -163,7 +163,7 @@ export function createThreadBindingManager(
   params: {
     accountId?: string;
     token?: string;
-    cfg?: OpenClawConfig;
+    cfg?: PropAiSyncConfig;
     persist?: boolean;
     enableSweeper?: boolean;
     idleTimeoutMs?: number;
@@ -671,3 +671,5 @@ export const __testing = {
   resolveThreadBindingThreadName,
   resetThreadBindingsForTests,
 };
+
+

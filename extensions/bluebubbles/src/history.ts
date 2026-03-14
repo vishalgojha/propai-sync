@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/bluebubbles";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/bluebubbles";
 import { resolveBlueBubblesServerAccount } from "./account-resolve.js";
 import { blueBubblesFetchWithTimeout, buildBlueBubblesApiUrl } from "./types.js";
 
@@ -37,7 +37,7 @@ export type BlueBubblesChatOpts = {
   password?: string;
   accountId?: string;
   timeoutMs?: number;
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
 };
 
 function resolveAccount(params: BlueBubblesChatOpts) {
@@ -175,3 +175,6 @@ export async function fetchBlueBubblesHistory(
   // If none of the API paths worked, return empty history
   return { entries: [], resolved: false };
 }
+
+
+

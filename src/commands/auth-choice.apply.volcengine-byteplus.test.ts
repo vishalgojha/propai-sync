@@ -11,15 +11,15 @@ import {
 
 describe("volcengine/byteplus auth choice", () => {
   const lifecycle = createAuthTestLifecycle([
-    "OPENCLAW_STATE_DIR",
-    "OPENCLAW_AGENT_DIR",
+    "PROPAI_STATE_DIR",
+    "PROPAI_AGENT_DIR",
     "PI_CODING_AGENT_DIR",
     "VOLCANO_ENGINE_API_KEY",
     "BYTEPLUS_API_KEY",
   ]);
 
   async function setupTempState() {
-    const env = await setupAuthTestEnv("openclaw-volc-byte-");
+    const env = await setupAuthTestEnv("propai-volc-byte-");
     lifecycle.setStateDir(env.stateDir);
     return env.agentDir;
   }
@@ -139,3 +139,5 @@ describe("volcengine/byteplus auth choice", () => {
     expect(parsed.profiles?.["volcengine:default"]?.keyRef).toBeUndefined();
   });
 });
+
+

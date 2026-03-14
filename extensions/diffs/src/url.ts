@@ -1,9 +1,9 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/diffs";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/diffs";
 
 const DEFAULT_GATEWAY_PORT = 18789;
 
 export function buildViewerUrl(params: {
-  config: OpenClawConfig;
+  config: PropAiSyncConfig;
   viewerPath: string;
   baseUrl?: string;
 }): string {
@@ -40,7 +40,7 @@ export function normalizeViewerBaseUrl(raw: string): string {
   return withoutTrailingSlash;
 }
 
-function resolveGatewayBaseUrl(config: OpenClawConfig): string {
+function resolveGatewayBaseUrl(config: PropAiSyncConfig): string {
   const scheme = config.gateway?.tls?.enabled ? "https" : "http";
   const port =
     typeof config.gateway?.port === "number" ? config.gateway.port : DEFAULT_GATEWAY_PORT;
@@ -54,3 +54,6 @@ function resolveGatewayBaseUrl(config: OpenClawConfig): string {
   // container/bridge interfaces that are often unreachable from the caller.
   return `${scheme}://127.0.0.1:${port}`;
 }
+
+
+

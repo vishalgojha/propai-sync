@@ -2,7 +2,7 @@
 
 import { spawnSync } from "node:child_process";
 
-const logLevel = process.env.OPENCLAW_BUILD_VERBOSE ? "info" : "warn";
+const logLevel = process.env.propai_BUILD_VERBOSE ? "info" : "warn";
 const result = spawnSync(
   "pnpm",
   ["exec", "tsdown", "--config-loader", "unrun", "--logLevel", logLevel],
@@ -17,3 +17,5 @@ if (typeof result.status === "number") {
 }
 
 process.exit(1);
+
+

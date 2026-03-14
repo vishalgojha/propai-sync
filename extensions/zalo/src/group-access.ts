@@ -1,9 +1,9 @@
-import type { GroupPolicy, SenderGroupAccessDecision } from "openclaw/plugin-sdk/zalo";
+import type { GroupPolicy, SenderGroupAccessDecision } from "propai/plugin-sdk/zalo";
 import {
   evaluateSenderGroupAccess,
   isNormalizedSenderAllowed,
   resolveOpenProviderRuntimeGroupPolicy,
-} from "openclaw/plugin-sdk/zalo";
+} from "propai/plugin-sdk/zalo";
 
 const ZALO_ALLOW_FROM_PREFIX_RE = /^(zalo|zl):/i;
 
@@ -46,3 +46,5 @@ export function evaluateZaloGroupAccess(params: {
     isSenderAllowed: isZaloSenderAllowed,
   });
 }
+
+

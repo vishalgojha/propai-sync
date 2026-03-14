@@ -6,7 +6,7 @@ import {
   formatAllowFromLowercase,
   mapAllowFromEntries,
   runPassiveAccountLifecycle,
-} from "openclaw/plugin-sdk/compat";
+} from "propai/plugin-sdk/compat";
 import {
   applyAccountNameToChannelSection,
   buildBaseChannelStatusSummary,
@@ -18,9 +18,9 @@ import {
   normalizeAccountId,
   setAccountEnabledInConfigSection,
   type ChannelPlugin,
-  type OpenClawConfig,
+  type PropAiSyncConfig,
   type ChannelSetupInput,
-} from "openclaw/plugin-sdk/nextcloud-talk";
+} from "propai/plugin-sdk/nextcloud-talk";
 import {
   listNextcloudTalkAccountIds,
   resolveDefaultNextcloudTalkAccountId,
@@ -238,7 +238,7 @@ export const nextcloudTalkPlugin: ChannelPlugin<ResolvedNextcloudTalkAccount> = 
                     : {}),
             },
           },
-        } as OpenClawConfig;
+        } as PropAiSyncConfig;
       }
       return {
         ...namedConfig,
@@ -262,7 +262,7 @@ export const nextcloudTalkPlugin: ChannelPlugin<ResolvedNextcloudTalkAccount> = 
             },
           },
         },
-      } as OpenClawConfig;
+      } as PropAiSyncConfig;
     },
   },
   outbound: {
@@ -360,7 +360,7 @@ export const nextcloudTalkPlugin: ChannelPlugin<ResolvedNextcloudTalkAccount> = 
       });
     },
     logoutAccount: async ({ accountId, cfg }) => {
-      const nextCfg = { ...cfg } as OpenClawConfig;
+      const nextCfg = { ...cfg } as PropAiSyncConfig;
       const nextSection = cfg.channels?.["nextcloud-talk"]
         ? { ...cfg.channels["nextcloud-talk"] }
         : undefined;
@@ -398,7 +398,7 @@ export const nextcloudTalkPlugin: ChannelPlugin<ResolvedNextcloudTalkAccount> = 
           const nextChannels = { ...nextCfg.channels } as Record<string, unknown>;
           delete nextChannels["nextcloud-talk"];
           if (Object.keys(nextChannels).length > 0) {
-            nextCfg.channels = nextChannels as OpenClawConfig["channels"];
+            nextCfg.channels = nextChannels as PropAiSyncConfig["channels"];
           } else {
             delete nextCfg.channels;
           }
@@ -423,3 +423,6 @@ export const nextcloudTalkPlugin: ChannelPlugin<ResolvedNextcloudTalkAccount> = 
     },
   },
 };
+
+
+

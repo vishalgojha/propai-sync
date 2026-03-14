@@ -9,8 +9,8 @@ describe("buildPlatformRuntimeLogHints", () => {
   it("strips windows drive prefixes from darwin display paths", async () => {
     vi.doMock("./launchd.js", () => ({
       resolveGatewayLogPaths: () => ({
-        stdoutPath: "C:\\tmp\\openclaw-state\\logs\\gateway.log",
-        stderrPath: "C:\\tmp\\openclaw-state\\logs\\gateway.err.log",
+        stdoutPath: "C:\\tmp\\propai-state\\logs\\gateway.log",
+        stderrPath: "C:\\tmp\\propai-state\\logs\\gateway.err.log",
       }),
     }));
 
@@ -19,12 +19,14 @@ describe("buildPlatformRuntimeLogHints", () => {
     expect(
       buildPlatformRuntimeLogHints({
         platform: "darwin",
-        systemdServiceName: "openclaw-gateway",
-        windowsTaskName: "OpenClaw Gateway",
+        systemdServiceName: "propai-gateway",
+        windowsTaskName: "PropAi Sync Gateway",
       }),
     ).toEqual([
-      "Launchd stdout (if installed): /tmp/openclaw-state/logs/gateway.log",
-      "Launchd stderr (if installed): /tmp/openclaw-state/logs/gateway.err.log",
+      "Launchd stdout (if installed): /tmp/propai-state/logs/gateway.log",
+      "Launchd stderr (if installed): /tmp/propai-state/logs/gateway.err.log",
     ]);
   });
 });
+
+

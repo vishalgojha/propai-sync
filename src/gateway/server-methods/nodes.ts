@@ -331,8 +331,8 @@ export async function maybeSendNodeWakeNudge(nodeId: string): Promise<NodeWakeNu
       auth: auth.value,
       registration,
       nodeId,
-      title: "OpenClaw needs a quick reopen",
-      body: "Tap to reopen OpenClaw and restore the node connection.",
+      title: "PropAi Sync needs a quick reopen",
+      body: "Tap to reopen PropAi Sync and restore the node connection.",
     });
     if (!result.ok) {
       return withDuration({
@@ -1068,3 +1068,4 @@ function buildNodeCommandRejectionHint(
   }
   return `node command not allowed: ${reason}`;
 }
+

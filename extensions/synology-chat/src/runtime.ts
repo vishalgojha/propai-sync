@@ -1,8 +1,10 @@
-import { createPluginRuntimeStore } from "openclaw/plugin-sdk/compat";
-import type { PluginRuntime } from "openclaw/plugin-sdk/synology-chat";
+import { createPluginRuntimeStore } from "propai/plugin-sdk/compat";
+import type { PluginRuntime } from "propai/plugin-sdk/synology-chat";
 
 const { setRuntime: setSynologyRuntime, getRuntime: getSynologyRuntime } =
   createPluginRuntimeStore<PluginRuntime>(
     "Synology Chat runtime not initialized - plugin not registered",
   );
 export { getSynologyRuntime, setSynologyRuntime };
+
+

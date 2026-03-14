@@ -1,5 +1,5 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/line";
-import { emptyPluginConfigSchema } from "openclaw/plugin-sdk/line";
+import type { PropAiSyncPluginApi } from "propai/plugin-sdk/line";
+import { emptyPluginConfigSchema } from "propai/plugin-sdk/line";
 import { registerLineCardCommand } from "./src/card-command.js";
 import { linePlugin } from "./src/channel.js";
 import { setLineRuntime } from "./src/runtime.js";
@@ -9,7 +9,7 @@ const plugin = {
   name: "LINE",
   description: "LINE Messaging API channel plugin",
   configSchema: emptyPluginConfigSchema(),
-  register(api: OpenClawPluginApi) {
+  register(api: PropAiSyncPluginApi) {
     setLineRuntime(api.runtime);
     api.registerChannel({ plugin: linePlugin });
     registerLineCardCommand(api);
@@ -17,3 +17,6 @@ const plugin = {
 };
 
 export default plugin;
+
+
+

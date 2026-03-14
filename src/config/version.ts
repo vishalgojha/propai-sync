@@ -1,4 +1,4 @@
-export type OpenClawVersion = {
+export type PropAiSyncVersion = {
   major: number;
   minor: number;
   patch: number;
@@ -7,7 +7,7 @@ export type OpenClawVersion = {
 
 const VERSION_RE = /^v?(\d+)\.(\d+)\.(\d+)(?:-(\d+))?/;
 
-export function parseOpenClawVersion(raw: string | null | undefined): OpenClawVersion | null {
+export function parsePropAiSyncVersion(raw: string | null | undefined): PropAiSyncVersion | null {
   if (!raw) {
     return null;
   }
@@ -24,12 +24,12 @@ export function parseOpenClawVersion(raw: string | null | undefined): OpenClawVe
   };
 }
 
-export function compareOpenClawVersions(
+export function comparePropAiSyncVersions(
   a: string | null | undefined,
   b: string | null | undefined,
 ): number | null {
-  const parsedA = parseOpenClawVersion(a);
-  const parsedB = parseOpenClawVersion(b);
+  const parsedA = parsePropAiSyncVersion(a);
+  const parsedB = parsePropAiSyncVersion(b);
   if (!parsedA || !parsedB) {
     return null;
   }
@@ -47,3 +47,5 @@ export function compareOpenClawVersions(
   }
   return 0;
 }
+
+

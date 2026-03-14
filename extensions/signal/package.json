@@ -1,12 +1,14 @@
 {
-  "name": "@openclaw/signal",
+  "name": "@propai/signal",
   "version": "2026.3.11",
   "private": true,
-  "description": "OpenClaw Signal channel plugin",
+  "description": "PropAi Sync Signal channel plugin",
   "type": "module",
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

@@ -42,7 +42,7 @@ export function buildSystemdUnit({
   environment,
 }: GatewayServiceRenderArgs): string {
   const execStart = programArguments.map(systemdEscapeArg).join(" ");
-  const descriptionValue = description?.trim() || "OpenClaw Gateway";
+  const descriptionValue = description?.trim() || "PropAi Sync Gateway";
   assertNoSystemdLineBreaks(descriptionValue, "Systemd Description");
   const descriptionLine = `Description=${descriptionValue}`;
   const workingDirLine = workingDirectory
@@ -118,3 +118,4 @@ export function parseSystemdEnvAssignment(raw: string): { key: string; value: st
   const value = unquoted.slice(eq + 1);
   return { key, value };
 }
+

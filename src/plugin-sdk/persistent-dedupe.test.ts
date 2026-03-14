@@ -7,7 +7,7 @@ import { createPersistentDedupe } from "./persistent-dedupe.js";
 const tmpRoots: string[] = [];
 
 async function makeTmpRoot(): Promise<string> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-dedupe-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "propai-dedupe-"));
   tmpRoots.push(root);
   return root;
 }
@@ -136,3 +136,5 @@ describe("createPersistentDedupe", () => {
     expect(await reader.checkAndRecord("new-msg", { namespace: "acct" })).toBe(false);
   });
 });
+
+

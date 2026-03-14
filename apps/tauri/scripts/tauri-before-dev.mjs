@@ -8,7 +8,7 @@ const TAURI_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const REPO_ROOT = path.resolve(TAURI_DIR, "../..");
 
 function log(message) {
-  process.stdout.write(`[openclaw-desktop] ${message}\n`);
+  process.stdout.write(`[propai-desktop] ${message}\n`);
 }
 
 function spawnPnpm(args, opts = {}) {
@@ -36,4 +36,6 @@ const child = spawnPnpm(["--dir", uiDir, "dev", "--", "--host", "127.0.0.1", "--
   cwd: REPO_ROOT,
 });
 child.on("exit", (code) => process.exit(code ?? 1));
+
+
 

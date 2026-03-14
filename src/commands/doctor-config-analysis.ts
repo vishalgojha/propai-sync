@@ -1,8 +1,8 @@
 import path from "node:path";
 import type { ZodIssue } from "zod";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { CONFIG_PATH } from "../config/config.js";
-import { OpenClawSchema } from "../config/zod-schema.js";
+import { PropAiSyncSchema } from "../config/zod-schema.js";
 import { note } from "../terminal/note.js";
 import { isRecord } from "../utils.js";
 
@@ -59,11 +59,11 @@ export function resolveConfigPathTarget(root: unknown, path: Array<string | numb
   return current;
 }
 
-export function stripUnknownConfigKeys(config: OpenClawConfig): {
-  config: OpenClawConfig;
+export function stripUnknownConfigKeys(config: PropAiSyncConfig): {
+  config: PropAiSyncConfig;
   removed: string[];
 } {
-  const parsed = OpenClawSchema.safeParse(config);
+  const parsed = PropAiSyncSchema.safeParse(config);
   if (parsed.success) {
     return { config, removed: [] };
   }
@@ -92,7 +92,7 @@ export function stripUnknownConfigKeys(config: OpenClawConfig): {
   return { config: next, removed };
 }
 
-export function noteOpencodeProviderOverrides(cfg: OpenClawConfig): void {
+export function noteOpencodeProviderOverrides(cfg: PropAiSyncConfig): void {
   const providers = cfg.models?.providers;
   if (!providers) {
     return;
@@ -154,3 +154,5 @@ export function noteIncludeConfinementWarning(snapshot: {
     "Doctor warnings",
   );
 }
+
+

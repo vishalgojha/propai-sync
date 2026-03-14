@@ -16,7 +16,7 @@ import {
   normalizeUsageDisplay,
   supportsXHighThinking,
 } from "../auto-reply/thinking.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import type { SessionEntry } from "../config/sessions.js";
 import {
   isAcpSessionKey,
@@ -84,7 +84,7 @@ function normalizeSubagentControlScope(raw: string): "children" | "none" | undef
 }
 
 export async function applySessionsPatchToStore(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   store: Record<string, SessionEntry>;
   storeKey: string;
   patch: SessionsPatchParams;
@@ -446,3 +446,5 @@ export async function applySessionsPatchToStore(params: {
   store[storeKey] = next;
   return { ok: true, entry: next };
 }
+
+

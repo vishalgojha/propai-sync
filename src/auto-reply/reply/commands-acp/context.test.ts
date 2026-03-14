@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../../../config/config.js";
+import type { PropAiSyncConfig } from "../../../config/config.js";
 import { buildCommandTestParams } from "../commands-spawn.test-harness.js";
 import {
   isAcpCommandDiscordChannel,
@@ -9,7 +9,7 @@ import {
 
 const baseCfg = {
   session: { mainKey: "main", scope: "per-sender" },
-} satisfies OpenClawConfig;
+} satisfies PropAiSyncConfig;
 
 describe("commands-acp context", () => {
   it("resolves channel/account/thread context from originating fields", () => {
@@ -127,3 +127,5 @@ describe("commands-acp context", () => {
     expect(resolveAcpCommandConversationId(params)).toBe("123456789");
   });
 });
+
+

@@ -7,7 +7,7 @@ import type { CoreConfig } from "./types.js";
 
 describe("resolveNextcloudTalkAccount", () => {
   it.runIf(process.platform !== "win32")("rejects symlinked botSecretFile paths", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-nextcloud-talk-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "propai-nextcloud-talk-"));
     const secretFile = path.join(dir, "secret.txt");
     const secretLink = path.join(dir, "secret-link.txt");
     fs.writeFileSync(secretFile, "bot-secret\n", "utf8");
@@ -28,3 +28,5 @@ describe("resolveNextcloudTalkAccount", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });
+
+

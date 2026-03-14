@@ -3,8 +3,8 @@ import {
   buildCatchallMultiAccountChannelSchema,
   DmPolicySchema,
   GroupPolicySchema,
-} from "openclaw/plugin-sdk/compat";
-import { MarkdownConfigSchema } from "openclaw/plugin-sdk/zalo";
+} from "propai/plugin-sdk/compat";
+import { MarkdownConfigSchema } from "propai/plugin-sdk/zalo";
 import { z } from "zod";
 import { buildSecretInputSchema } from "./secret-input.js";
 
@@ -27,3 +27,5 @@ const zaloAccountSchema = z.object({
 });
 
 export const ZaloConfigSchema = buildCatchallMultiAccountChannelSchema(zaloAccountSchema);
+
+

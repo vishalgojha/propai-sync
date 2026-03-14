@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { inspectDiscordAccount } from "./account-inspect.js";
 
-function asConfig(value: unknown): OpenClawConfig {
-  return value as OpenClawConfig;
+function asConfig(value: unknown): PropAiSyncConfig {
+  return value as PropAiSyncConfig;
 }
 
 describe("inspectDiscordAccount", () => {
@@ -124,3 +124,5 @@ describe("inspectDiscordAccount", () => {
     expect(namedInspected.configured).toBe(false);
   });
 });
+
+

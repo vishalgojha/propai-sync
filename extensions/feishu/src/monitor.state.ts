@@ -6,7 +6,7 @@ import {
   type RuntimeEnv,
   WEBHOOK_ANOMALY_COUNTER_DEFAULTS as WEBHOOK_ANOMALY_COUNTER_DEFAULTS_FROM_SDK,
   WEBHOOK_RATE_LIMIT_DEFAULTS as WEBHOOK_RATE_LIMIT_DEFAULTS_FROM_SDK,
-} from "openclaw/plugin-sdk/feishu";
+} from "propai/plugin-sdk/feishu";
 
 export const wsClients = new Map<string, Lark.WSClient>();
 export const httpServers = new Map<string, http.Server>();
@@ -153,3 +153,5 @@ export function stopFeishuMonitorState(accountId?: string): void {
   botOpenIds.clear();
   botNames.clear();
 }
+
+

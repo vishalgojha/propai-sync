@@ -1,4 +1,4 @@
-export type { OpenClawConfig } from "../config/config.js";
+export type { PropAiSyncConfig } from "../config/config.js";
 export type { InspectedSlackAccount } from "../slack/account-inspect.js";
 export type { ResolvedSlackAccount } from "../slack/accounts.js";
 export * from "./channel-plugin-common.js";
@@ -38,3 +38,5 @@ export { slackOnboardingAdapter } from "../channels/plugins/onboarding/slack.js"
 export { SlackConfigSchema } from "../config/zod-schema.providers-core.js";
 
 export { handleSlackMessageAction } from "./slack-message-actions.js";
+
+

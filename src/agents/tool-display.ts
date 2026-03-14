@@ -1,4 +1,4 @@
-import SHARED_TOOL_DISPLAY_JSON from "../../apps/shared/OpenClawKit/Sources/OpenClawKit/Resources/tool-display.json" with { type: "json" };
+import SHARED_TOOL_DISPLAY_JSON from "../../apps/shared/PropAiSyncKit/Sources/PropAiSyncKit/Resources/tool-display.json" with { type: "json" };
 import { redactToolDetail } from "../logging/redact.js";
 import { shortenHomeInString } from "../utils.js";
 import {
@@ -102,3 +102,5 @@ export function formatToolSummary(display: ToolDisplay): string {
     ? `${display.emoji} ${display.label}: ${detail}`
     : `${display.emoji} ${display.label}`;
 }
+
+

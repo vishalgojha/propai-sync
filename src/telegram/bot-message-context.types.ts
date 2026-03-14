@@ -1,6 +1,6 @@
 import type { Bot } from "grammy";
 import type { HistoryEntry } from "../auto-reply/reply/history.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import type {
   DmPolicy,
   TelegramDirectConfig,
@@ -48,7 +48,7 @@ export type BuildTelegramMessageContextParams = {
   storeAllowFrom: string[];
   options?: TelegramMessageContextOptions;
   bot: Bot;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   account: { accountId: string };
   historyLimit: number;
   groupHistories: Map<string, HistoryEntry[]>;
@@ -63,3 +63,5 @@ export type BuildTelegramMessageContextParams = {
   /** Global (per-account) handler for sendChatAction 401 backoff (#27092). */
   sendChatActionHandler: import("./sendchataction-401-backoff.js").TelegramSendChatActionHandler;
 };
+
+

@@ -20,9 +20,9 @@ const NONCE_REFUSAL_MARKERS = [
   "can't comply",
   "can’t comply",
   "cannot comply",
-  "isn't a real openclaw probe",
-  "is not a real openclaw probe",
-  "not a real openclaw probe",
+  "isn't a real PropAi Sync probe",
+  "is not a real PropAi Sync probe",
+  "not a real PropAi Sync probe",
   "no part of the system asks me",
 ];
 
@@ -104,3 +104,4 @@ export function shouldRetryExecReadProbe(params: {
   }
   return hasMalformedToolOutput(params.text);
 }
+

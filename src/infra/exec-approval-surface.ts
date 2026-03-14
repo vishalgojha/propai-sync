@@ -1,4 +1,4 @@
-import { loadConfig, type OpenClawConfig } from "../config/config.js";
+import { loadConfig, type PropAiSyncConfig } from "../config/config.js";
 import { listEnabledDiscordAccounts } from "../discord/accounts.js";
 import { isDiscordExecApprovalClientEnabled } from "../discord/exec-approvals.js";
 import { listEnabledTelegramAccounts } from "../telegram/accounts.js";
@@ -28,7 +28,7 @@ function labelForChannel(channel?: string): string {
 export function resolveExecApprovalInitiatingSurfaceState(params: {
   channel?: string | null;
   accountId?: string | null;
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
 }): ExecApprovalInitiatingSurfaceState {
   const channel = normalizeMessageChannel(params.channel);
   const channelLabel = labelForChannel(channel);
@@ -50,7 +50,7 @@ export function resolveExecApprovalInitiatingSurfaceState(params: {
   return { kind: "unsupported", channel, channelLabel };
 }
 
-export function hasConfiguredExecApprovalDmRoute(cfg: OpenClawConfig): boolean {
+export function hasConfiguredExecApprovalDmRoute(cfg: PropAiSyncConfig): boolean {
   for (const account of listEnabledDiscordAccounts(cfg)) {
     const execApprovals = account.config.execApprovals;
     if (!execApprovals?.enabled || (execApprovals.approvers?.length ?? 0) === 0) {
@@ -75,3 +75,5 @@ export function hasConfiguredExecApprovalDmRoute(cfg: OpenClawConfig): boolean {
 
   return false;
 }
+
+

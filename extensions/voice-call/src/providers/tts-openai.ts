@@ -1,4 +1,4 @@
-import { resolveOpenAITtsInstructions } from "openclaw/plugin-sdk/voice-call";
+import { resolveOpenAITtsInstructions } from "propai/plugin-sdk/voice-call";
 import { pcmToMulaw } from "../telephony-audio.js";
 
 /**
@@ -219,3 +219,5 @@ export function chunkAudio(audio: Buffer, chunkSize = 160): Generator<Buffer, vo
     }
   })();
 }
+
+

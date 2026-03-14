@@ -74,7 +74,7 @@ async function expectExtractedSizeBudgetExceeded(params: {
 }
 
 beforeAll(async () => {
-  fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-archive-"));
+  fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "propai-archive-"));
 });
 
 afterAll(async () => {
@@ -355,3 +355,5 @@ describe("archive utils", () => {
     });
   });
 });
+
+

@@ -6,7 +6,7 @@ import {
 } from "../../../src/shared/device-auth-store.js";
 import type { DeviceAuthStore } from "../../../src/shared/device-auth.js";
 
-const STORAGE_KEY = "openclaw.device.auth.v1";
+const STORAGE_KEY = "PropAiSync.device.auth.v1";
 
 function readStore(): DeviceAuthStore | null {
   try {
@@ -71,3 +71,5 @@ export function clearDeviceAuthToken(params: { deviceId: string; role: string })
     role: params.role,
   });
 }
+
+

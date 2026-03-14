@@ -3,11 +3,12 @@ import type { MockBaileysSocket } from "../../test/mocks/baileys.js";
 import { createMockBaileys } from "../../test/mocks/baileys.js";
 
 // Use globalThis to store the mock config so it survives vi.mock hoisting
-const CONFIG_KEY = Symbol.for("openclaw:testConfigMock");
+const CONFIG_KEY = Symbol.for("PropAi Sync:testConfigMock");
 const DEFAULT_CONFIG = {
   channels: {
     whatsapp: {
       // Tests can override; default remains open to avoid surprising fixtures
+      autoReply: true,
       allowFrom: ["*"],
     },
   },
@@ -20,6 +21,20 @@ const DEFAULT_CONFIG = {
 // Initialize default if not set
 if (!(globalThis as Record<symbol, unknown>)[CONFIG_KEY]) {
   (globalThis as Record<symbol, unknown>)[CONFIG_KEY] = () => DEFAULT_CONFIG;
+}
+
+function applyWhatsAppAutoReplyDefault(cfg: unknown) {
+  if (!cfg || typeof cfg !== "object") {
+    return DEFAULT_CONFIG;
+  }
+  const channels = (cfg as { channels?: Record<string, unknown> }).channels ?? {};
+  (cfg as { channels?: Record<string, unknown> }).channels = channels;
+  const whatsapp = (channels as { whatsapp?: Record<string, unknown> }).whatsapp ?? {};
+  (channels as { whatsapp?: Record<string, unknown> }).whatsapp = whatsapp;
+  if ((whatsapp as { autoReply?: unknown }).autoReply === undefined) {
+    (whatsapp as { autoReply?: boolean }).autoReply = true;
+  }
+  return cfg;
 }
 
 export function setLoadConfigMock(fn: unknown) {
@@ -37,7 +52,7 @@ vi.mock("../config/config.js", async (importOriginal) => {
     loadConfig: () => {
       const getter = (globalThis as Record<symbol, unknown>)[CONFIG_KEY];
       if (typeof getter === "function") {
-        return getter();
+        return applyWhatsAppAutoReplyDefault(getter());
       }
       return DEFAULT_CONFIG;
     },
@@ -57,7 +72,7 @@ vi.mock("../../config/config.js", async (importOriginal) => {
     loadConfig: () => {
       const getter = (globalThis as Record<symbol, unknown>)[CONFIG_KEY];
       if (typeof getter === "function") {
-        return getter();
+        return applyWhatsAppAutoReplyDefault(getter());
       }
       return DEFAULT_CONFIG;
     },
@@ -84,7 +99,7 @@ vi.mock("../media/store.js", async (importOriginal) => {
 
 vi.mock("@whiskeysockets/baileys", () => {
   const created = createMockBaileys();
-  (globalThis as Record<PropertyKey, unknown>)[Symbol.for("openclaw:lastSocket")] =
+  (globalThis as Record<PropertyKey, unknown>)[Symbol.for("PropAi Sync:lastSocket")] =
     created.lastSocket;
   return created.mod;
 });
@@ -98,7 +113,7 @@ export const baileys = await import("@whiskeysockets/baileys");
 
 export function resetBaileysMocks() {
   const recreated = createMockBaileys();
-  (globalThis as Record<PropertyKey, unknown>)[Symbol.for("openclaw:lastSocket")] =
+  (globalThis as Record<PropertyKey, unknown>)[Symbol.for("PropAi Sync:lastSocket")] =
     recreated.lastSocket;
 
   const makeWASocket = vi.mocked(baileys.makeWASocket);
@@ -134,7 +149,7 @@ export function resetBaileysMocks() {
 }
 
 export function getLastSocket(): MockBaileysSocket {
-  const getter = (globalThis as Record<PropertyKey, unknown>)[Symbol.for("openclaw:lastSocket")];
+  const getter = (globalThis as Record<PropertyKey, unknown>)[Symbol.for("PropAi Sync:lastSocket")];
   if (typeof getter === "function") {
     return (getter as () => MockBaileysSocket)();
   }
@@ -143,3 +158,4 @@ export function getLastSocket(): MockBaileysSocket {
   }
   throw new Error("Invalid Baileys socket getter");
 }
+

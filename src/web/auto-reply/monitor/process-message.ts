@@ -152,6 +152,8 @@ export async function processMessage(params: {
   suppressGroupHistoryClear?: boolean;
 }) {
   const conversationId = params.msg.conversationId ?? params.msg.from;
+  const accountConfig = resolveWhatsAppAccount({ cfg: params.cfg, accountId: params.msg.accountId });
+  const autoReplyEnabled = accountConfig.autoReply ?? false;
   const { storePath, envelopeOptions, previousTimestamp } = resolveInboundSessionEnvelopeContext({
     cfg: params.cfg,
     agentId: params.route.agentId,
@@ -206,17 +208,19 @@ export async function processMessage(params: {
   }
 
   // Send ack reaction immediately upon message receipt (post-gating)
-  maybeSendAckReaction({
-    cfg: params.cfg,
-    msg: params.msg,
-    agentId: params.route.agentId,
-    sessionKey: params.route.sessionKey,
-    conversationId,
-    verbose: params.verbose,
-    accountId: params.route.accountId,
-    info: params.replyLogger.info.bind(params.replyLogger),
-    warn: params.replyLogger.warn.bind(params.replyLogger),
-  });
+  if (autoReplyEnabled) {
+    maybeSendAckReaction({
+      cfg: params.cfg,
+      msg: params.msg,
+      agentId: params.route.agentId,
+      sessionKey: params.route.sessionKey,
+      conversationId,
+      verbose: params.verbose,
+      accountId: params.route.accountId,
+      info: params.replyLogger.info.bind(params.replyLogger),
+      warn: params.replyLogger.warn.bind(params.replyLogger),
+    });
+  }
 
   const correlationId = params.msg.id ?? newConnectionId();
   params.replyLogger.info(
@@ -387,6 +391,14 @@ export async function processMessage(params: {
     );
   });
   trackBackgroundTask(params.backgroundTasks, metaTask);
+
+  if (!autoReplyEnabled) {
+    if (shouldClearGroupHistory) {
+      params.groupHistories.set(params.groupHistoryKey, []);
+    }
+    logVerbose("Skipping auto-reply: channels.whatsapp.autoReply is disabled (read-only mode)");
+    return false;
+  }
 
   const { queuedFinal } = await dispatchReplyWithBufferedBlockDispatcher({
     ctx: ctxPayload,

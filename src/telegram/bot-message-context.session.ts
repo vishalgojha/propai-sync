@@ -7,7 +7,7 @@ import {
 import { finalizeInboundContext } from "../auto-reply/reply/inbound-context.js";
 import { toLocationContext } from "../channels/location.js";
 import { recordInboundSession } from "../channels/session.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { readSessionUpdatedAt, resolveStorePath } from "../config/sessions.js";
 import type {
   TelegramDirectConfig,
@@ -36,7 +36,7 @@ import type { TelegramContext } from "./bot/types.js";
 import { resolveTelegramGroupPromptSettings } from "./group-config-helpers.js";
 
 export async function buildTelegramInboundContextPayload(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   primaryCtx: TelegramContext;
   msg: TelegramContext["message"];
   allMedia: TelegramMediaRef[];
@@ -315,3 +315,5 @@ export async function buildTelegramInboundContextPayload(params: {
     skillFilter,
   };
 }
+
+

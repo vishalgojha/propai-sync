@@ -1,4 +1,4 @@
-import { parseFiniteNumber } from "openclaw/plugin-sdk/bluebubbles";
+import { parseFiniteNumber } from "propai/plugin-sdk/bluebubbles";
 import { extractHandleFromChatGuid, normalizeBlueBubblesHandle } from "./targets.js";
 import type { BlueBubblesAttachment } from "./types.js";
 
@@ -824,3 +824,5 @@ export function normalizeWebhookReaction(
     fromMe,
   };
 }
+
+

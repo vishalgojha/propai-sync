@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { OpenClawConfig } from "../../config/types.js";
+import type { PropAiSyncConfig } from "../../config/types.js";
 import type { createDiscordMessageHandler } from "./message-handler.js";
 import { createNoopThreadBindingManager } from "./thread-bindings.js";
 
@@ -11,7 +11,7 @@ export function createDiscordHandlerParams(overrides?: {
   abortSignal?: AbortSignal;
   workerRunTimeoutMs?: number;
 }): Parameters<typeof createDiscordMessageHandler>[0] {
-  const cfg: OpenClawConfig = {
+  const cfg: PropAiSyncConfig = {
     channels: {
       discord: {
         enabled: true,
@@ -74,3 +74,5 @@ export function createDiscordPreflightContext(channelId = "ch-1") {
     messageChannelId: channelId,
   };
 }
+
+

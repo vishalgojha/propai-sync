@@ -1,5 +1,5 @@
 import { resolveSessionAgentId } from "../../agents/agent-scope.js";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 
 export type OutboundSessionContext = {
   /** Canonical session key used for internal hook dispatch. */
@@ -17,7 +17,7 @@ function normalizeOptionalString(value?: string | null): string | undefined {
 }
 
 export function buildOutboundSessionContext(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   sessionKey?: string | null;
   agentId?: string | null;
 }): OutboundSessionContext | undefined {
@@ -35,3 +35,5 @@ export function buildOutboundSessionContext(params: {
     ...(agentId ? { agentId } : {}),
   };
 }
+
+

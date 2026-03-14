@@ -197,25 +197,25 @@ describe("cdp.helpers", () => {
 
   it("does not add relay header for unknown loopback ports", () => {
     const headers = getHeadersWithAuth("http://127.0.0.1:19444/json/version");
-    expect(headers["x-openclaw-relay-token"]).toBeUndefined();
+    expect(headers["x-propai-relay-token"]).toBeUndefined();
   });
 
   it("adds relay header for known relay ports", async () => {
     const port = await getFreePort();
     const cdpUrl = `http://127.0.0.1:${port}`;
-    const prev = process.env.OPENCLAW_GATEWAY_TOKEN;
-    process.env.OPENCLAW_GATEWAY_TOKEN = "test-gateway-token";
+    const prev = process.env.propai_GATEWAY_TOKEN;
+    process.env.propai_GATEWAY_TOKEN = "test-gateway-token";
     try {
       await ensureChromeExtensionRelayServer({ cdpUrl });
       const headers = getHeadersWithAuth(`${cdpUrl}/json/version`);
-      expect(headers["x-openclaw-relay-token"]).toBeTruthy();
-      expect(headers["x-openclaw-relay-token"]).not.toBe("test-gateway-token");
+      expect(headers["x-propai-relay-token"]).toBeTruthy();
+      expect(headers["x-propai-relay-token"]).not.toBe("test-gateway-token");
     } finally {
       await stopChromeExtensionRelayServer({ cdpUrl }).catch(() => {});
       if (prev === undefined) {
-        delete process.env.OPENCLAW_GATEWAY_TOKEN;
+        delete process.env.propai_GATEWAY_TOKEN;
       } else {
-        process.env.OPENCLAW_GATEWAY_TOKEN = prev;
+        process.env.propai_GATEWAY_TOKEN = prev;
       }
     }
   });
@@ -241,14 +241,14 @@ describe("fetchBrowserJson loopback auth (bridge auth registry)", () => {
 describe("browser server-context listKnownProfileNames", () => {
   it("includes configured and runtime-only profile names", () => {
     const resolved = resolveBrowserConfig({
-      defaultProfile: "openclaw",
+      defaultProfile: "PropAi Sync",
       profiles: {
-        openclaw: { cdpPort: 18800, color: "#FF4500" },
+        "PropAi Sync": { cdpPort: 18800, color: "#FF4500" },
       },
     });
-    const openclaw = resolveProfile(resolved, "openclaw");
-    if (!openclaw) {
-      throw new Error("expected openclaw profile");
+    const PropAi Sync = resolveProfile(resolved, "PropAi Sync");
+    if (!PropAi Sync) {
+      throw new Error("expected PropAi Sync profile");
     }
 
     const state: BrowserServerState = {
@@ -259,7 +259,7 @@ describe("browser server-context listKnownProfileNames", () => {
         [
           "stale-removed",
           {
-            profile: { ...openclaw, name: "stale-removed" },
+            profile: { ...propai, name: "stale-removed" },
             running: null,
           },
         ],
@@ -268,8 +268,11 @@ describe("browser server-context listKnownProfileNames", () => {
 
     expect(listKnownProfileNames(state).toSorted()).toEqual([
       "chrome",
-      "openclaw",
+      "PropAi Sync",
       "stale-removed",
     ]);
   });
 });
+
+
+

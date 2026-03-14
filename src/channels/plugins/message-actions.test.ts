@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { setActivePluginRegistry } from "../../plugins/runtime.js";
 import {
   createChannelTestPluginBase,
@@ -66,22 +66,24 @@ describe("message action capability checks", () => {
   it("aggregates buttons/card support across plugins", () => {
     activateMessageActionTestRegistry();
 
-    expect(supportsChannelMessageButtons({} as OpenClawConfig)).toBe(true);
-    expect(supportsChannelMessageCards({} as OpenClawConfig)).toBe(true);
+    expect(supportsChannelMessageButtons({} as PropAiSyncConfig)).toBe(true);
+    expect(supportsChannelMessageCards({} as PropAiSyncConfig)).toBe(true);
   });
 
   it("checks per-channel capabilities", () => {
     activateMessageActionTestRegistry();
 
     expect(
-      supportsChannelMessageButtonsForChannel({ cfg: {} as OpenClawConfig, channel: "discord" }),
+      supportsChannelMessageButtonsForChannel({ cfg: {} as PropAiSyncConfig, channel: "discord" }),
     ).toBe(true);
     expect(
-      supportsChannelMessageButtonsForChannel({ cfg: {} as OpenClawConfig, channel: "telegram" }),
+      supportsChannelMessageButtonsForChannel({ cfg: {} as PropAiSyncConfig, channel: "telegram" }),
     ).toBe(false);
     expect(
-      supportsChannelMessageCardsForChannel({ cfg: {} as OpenClawConfig, channel: "telegram" }),
+      supportsChannelMessageCardsForChannel({ cfg: {} as PropAiSyncConfig, channel: "telegram" }),
     ).toBe(true);
-    expect(supportsChannelMessageCardsForChannel({ cfg: {} as OpenClawConfig })).toBe(false);
+    expect(supportsChannelMessageCardsForChannel({ cfg: {} as PropAiSyncConfig })).toBe(false);
   });
 });
+
+

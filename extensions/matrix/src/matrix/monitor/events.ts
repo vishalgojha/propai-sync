@@ -1,5 +1,5 @@
 import type { MatrixClient } from "@vector-im/matrix-bot-sdk";
-import type { PluginRuntime, RuntimeLogger } from "openclaw/plugin-sdk/matrix";
+import type { PluginRuntime, RuntimeLogger } from "propai/plugin-sdk/matrix";
 import type { MatrixAuth } from "../client.js";
 import { sendReadReceiptMatrix } from "../send.js";
 import type { MatrixRawEvent } from "./types.js";
@@ -166,3 +166,5 @@ export function registerMatrixMonitorEvents(params: {
     }
   });
 }
+
+

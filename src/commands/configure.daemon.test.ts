@@ -85,7 +85,7 @@ describe("maybeInstallDaemon", () => {
       warnings: [],
     });
     buildGatewayInstallPlan.mockResolvedValue({
-      programArguments: ["openclaw", "gateway", "run"],
+      programArguments: ["PropAi Sync", "gateway", "run"],
       workingDirectory: "/tmp",
       environment: {},
     });
@@ -184,3 +184,4 @@ describe("maybeInstallDaemon", () => {
     expect(progressSetLabel).toHaveBeenLastCalledWith("Gateway service restart scheduled.");
   });
 });
+

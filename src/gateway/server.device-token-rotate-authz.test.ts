@@ -26,7 +26,7 @@ import {
 installGatewayTestHooks({ scope: "suite" });
 
 function resolveDeviceIdentityPath(name: string): string {
-  const root = process.env.OPENCLAW_STATE_DIR ?? process.env.HOME ?? os.tmpdir();
+  const root = process.env.propai_STATE_DIR ?? process.env.HOME ?? os.tmpdir();
   return path.join(root, "test-device-identities", `${name}.json`);
 }
 
@@ -282,3 +282,5 @@ describe("gateway device.token.rotate caller scope guard", () => {
     }
   });
 });
+
+

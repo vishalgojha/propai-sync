@@ -6,7 +6,7 @@ import {
   readWebhookBodyOrReject,
   resolveWebhookTargetWithAuthOrRejectSync,
   withResolvedWebhookRequestPipeline,
-} from "openclaw/plugin-sdk/bluebubbles";
+} from "propai/plugin-sdk/bluebubbles";
 import { createBlueBubblesDebounceRegistry } from "./monitor-debounce.js";
 import { normalizeWebhookMessage, normalizeWebhookReaction } from "./monitor-normalize.js";
 import { logVerbose, processMessage, processReaction } from "./monitor-processing.js";
@@ -313,3 +313,5 @@ export async function monitorBlueBubblesProvider(
 }
 
 export { _resetBlueBubblesShortIdState, resolveBlueBubblesMessageId, resolveWebhookPathFromConfig };
+
+

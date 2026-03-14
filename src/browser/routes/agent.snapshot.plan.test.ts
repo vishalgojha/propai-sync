@@ -19,7 +19,7 @@ describe("resolveSnapshotPlan", () => {
 
   it("keeps ai snapshots for managed browsers when Playwright is available", () => {
     const resolved = resolveBrowserConfig({});
-    const profile = resolveProfile(resolved, "openclaw");
+    const profile = resolveProfile(resolved, "PropAi Sync");
     expect(profile).toBeTruthy();
 
     const plan = resolveSnapshotPlan({
@@ -31,3 +31,4 @@ describe("resolveSnapshotPlan", () => {
     expect(plan.format).toBe("ai");
   });
 });
+

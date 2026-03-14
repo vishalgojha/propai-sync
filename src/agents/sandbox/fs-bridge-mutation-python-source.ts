@@ -44,7 +44,7 @@ def walk_parent(root_fd, rel_parent, mkdir_enabled):
 
 
 def create_temp_file(parent_fd, basename):
-    prefix = ".openclaw-write-" + basename + "."
+    prefix = ".propai-write-" + basename + "."
     for _ in range(128):
         candidate = prefix + secrets.token_hex(6)
         try:
@@ -188,3 +188,5 @@ if operation not in OPERATIONS:
     raise RuntimeError(f"unknown sandbox fs mutation: {operation}")
 
 OPERATIONS[operation](sys.argv[2:])`;
+
+

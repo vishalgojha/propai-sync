@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import type { OpenClawConfig } from "openclaw/plugin-sdk/bluebubbles";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/bluebubbles";
 import { resolveBlueBubblesServerAccount } from "./account-resolve.js";
 import { postMultipartFormData } from "./multipart.js";
 import { getCachedBlueBubblesPrivateApiStatus } from "./probe.js";
@@ -11,7 +11,7 @@ export type BlueBubblesChatOpts = {
   password?: string;
   accountId?: string;
   timeoutMs?: number;
-  cfg?: OpenClawConfig;
+  cfg?: PropAiSyncConfig;
 };
 
 function resolveAccount(params: BlueBubblesChatOpts) {
@@ -334,3 +334,6 @@ export async function setGroupIconBlueBubbles(
     throw new Error(`BlueBubbles setGroupIcon failed (${res.status}): ${errorText || "unknown"}`);
   }
 }
+
+
+

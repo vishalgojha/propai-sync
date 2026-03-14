@@ -96,7 +96,7 @@ const coreEntries: CoreCliEntry[] = [
     commands: [
       {
         name: "backup",
-        description: "Create and verify local backup archives for OpenClaw state",
+        description: "Create and verify local backup archives for propai state",
         hasSubcommands: true,
       },
     ],
@@ -206,7 +206,7 @@ const coreEntries: CoreCliEntry[] = [
     commands: [
       {
         name: "browser",
-        description: "Manage OpenClaw's dedicated browser (Chrome/Chromium)",
+        description: "Manage PropAi Sync's dedicated browser (Chrome/Chromium)",
         hasSubcommands: true,
       },
     ],
@@ -315,3 +315,5 @@ export function registerProgramCommands(
   registerCoreCliCommands(program, ctx, argv);
   registerSubCliCommands(program, argv);
 }
+
+

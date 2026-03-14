@@ -1,9 +1,9 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { collectConfigServiceEnvVars } from "../config/env-vars.js";
 import { hasConfiguredSecretInput } from "../config/types.secrets.js";
 
 export function shouldRequireGatewayTokenForInstall(
-  cfg: OpenClawConfig,
+  cfg: PropAiSyncConfig,
   _env: NodeJS.ProcessEnv,
 ): boolean {
   const mode = cfg.gateway?.auth?.mode;
@@ -26,7 +26,7 @@ export function shouldRequireGatewayTokenForInstall(
   // survive outside the invoking shell.
   const configServiceEnv = collectConfigServiceEnvVars(cfg);
   const hasConfiguredPasswordEnvCandidate = Boolean(
-    configServiceEnv.OPENCLAW_GATEWAY_PASSWORD?.trim() ||
+    configServiceEnv.propai_GATEWAY_PASSWORD?.trim() ||
     configServiceEnv.CLAWDBOT_GATEWAY_PASSWORD?.trim(),
   );
   if (hasConfiguredPasswordEnvCandidate) {
@@ -35,3 +35,6 @@ export function shouldRequireGatewayTokenForInstall(
 
   return true;
 }
+
+
+

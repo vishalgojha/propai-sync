@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   loadConfig,
   resolveConfigPath,
@@ -8,7 +8,7 @@ import {
 import { buildCleanupPlan } from "./cleanup-utils.js";
 
 export function resolveCleanupPlanFromDisk(): {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   stateDir: string;
   configPath: string;
   oauthDir: string;
@@ -23,3 +23,5 @@ export function resolveCleanupPlanFromDisk(): {
   const plan = buildCleanupPlan({ cfg, stateDir, configPath, oauthDir });
   return { cfg, stateDir, configPath, oauthDir, ...plan };
 }
+
+

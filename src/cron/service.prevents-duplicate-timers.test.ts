@@ -7,7 +7,7 @@ import {
 } from "./service.test-harness.js";
 
 const noopLogger = createNoopLogger();
-const { makeStorePath } = createCronStoreHarness({ prefix: "openclaw-cron-" });
+const { makeStorePath } = createCronStoreHarness({ prefix: "propai-cron-" });
 installCronTestHooks({
   logger: noopLogger,
   baseTimeIso: "2025-12-13T00:00:00.000Z",
@@ -64,3 +64,5 @@ describe("CronService", () => {
     await store.cleanup();
   });
 });
+
+

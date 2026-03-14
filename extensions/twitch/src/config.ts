@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/twitch";
+import type { PropAiSyncConfig } from "propai/plugin-sdk/twitch";
 import type { TwitchAccountConfig } from "./types.js";
 
 /**
@@ -24,7 +24,7 @@ export function getAccountConfig(
     return null;
   }
 
-  const cfg = coreConfig as OpenClawConfig;
+  const cfg = coreConfig as PropAiSyncConfig;
   const twitch = cfg.channels?.twitch;
   // Access accounts via unknown to handle union type (single-account vs multi-account)
   const twitchRaw = twitch as Record<string, unknown> | undefined;
@@ -88,7 +88,7 @@ export function getAccountConfig(
  *
  * Includes both explicit accounts and implicit "default" from base-level config
  */
-export function listAccountIds(cfg: OpenClawConfig): string[] {
+export function listAccountIds(cfg: PropAiSyncConfig): string[] {
   const twitch = cfg.channels?.twitch;
   // Access accounts via unknown to handle union type (single-account vs multi-account)
   const twitchRaw = twitch as Record<string, unknown> | undefined;
@@ -114,3 +114,6 @@ export function listAccountIds(cfg: OpenClawConfig): string[] {
 
   return ids;
 }
+
+
+

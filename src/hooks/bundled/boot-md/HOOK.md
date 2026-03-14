@@ -1,15 +1,15 @@
 ---
 name: boot-md
 description: "Run BOOT.md on gateway startup"
-homepage: https://docs.openclaw.ai/automation/hooks#boot-md
+homepage: https://docs.propai.ai/automation/hooks#boot-md
 metadata:
   {
-    "openclaw":
+    "PropAi Sync":
       {
         "emoji": "🚀",
         "events": ["gateway:startup"],
         "requires": { "config": ["workspace.dir"] },
-        "install": [{ "id": "bundled", "kind": "bundled", "label": "Bundled with OpenClaw" }],
+        "install": [{ "id": "bundled", "kind": "bundled", "label": "Bundled with PropAi Sync" }],
       },
   }
 ---
@@ -18,3 +18,5 @@ metadata:
 
 Runs `BOOT.md` at gateway startup for each configured agent scope, if the file exists in that
 agent's resolved workspace.
+
+

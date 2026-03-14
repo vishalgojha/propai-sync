@@ -26,7 +26,7 @@ describe("safePathSegmentHashed", () => {
 
 describe("assertCanonicalPathWithinBase", () => {
   it("accepts in-base directories", async () => {
-    const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-install-safe-"));
+    const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-install-safe-"));
     try {
       const candidate = path.join(baseDir, "tools");
       await fs.mkdir(candidate, { recursive: true });
@@ -45,8 +45,8 @@ describe("assertCanonicalPathWithinBase", () => {
   it.runIf(process.platform !== "win32")(
     "rejects symlinked candidate directories that escape the base",
     async () => {
-      const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-install-safe-"));
-      const outsideDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-install-safe-outside-"));
+      const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-install-safe-"));
+      const outsideDir = await fs.mkdtemp(path.join(os.tmpdir(), "propai-install-safe-outside-"));
       try {
         const linkDir = path.join(baseDir, "alias");
         await fs.symlink(outsideDir, linkDir);
@@ -64,3 +64,5 @@ describe("assertCanonicalPathWithinBase", () => {
     },
   );
 });
+
+

@@ -8,7 +8,7 @@ function createHost() {
     connectGeneration: 0,
     connected: true,
     tab: "chat",
-    assistantName: "OpenClaw",
+    assistantName: "PropAi Sync",
     assistantAvatar: null,
     assistantAgentId: null,
     chatHasAutoScrolled: false,
@@ -44,3 +44,4 @@ describe("handleDisconnected", () => {
     removeSpy.mockRestore();
   });
 });
+

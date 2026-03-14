@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   resolveGatewayConnectionAuth,
   resolveGatewayConnectionAuthFromConfig,
@@ -10,19 +10,19 @@ type ResolvedAuth = { token?: string; password?: string };
 
 type ConnectionAuthCase = {
   name: string;
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   env: NodeJS.ProcessEnv;
   options?: Partial<Omit<GatewayConnectionAuthOptions, "config" | "env">>;
   expected: ResolvedAuth;
 };
 
-function cfg(input: Partial<OpenClawConfig>): OpenClawConfig {
-  return input as OpenClawConfig;
+function cfg(input: Partial<PropAiSyncConfig>): PropAiSyncConfig {
+  return input as PropAiSyncConfig;
 }
 
 const DEFAULT_ENV = {
-  OPENCLAW_GATEWAY_TOKEN: "env-token",
-  OPENCLAW_GATEWAY_PASSWORD: "env-password", // pragma: allowlist secret
+  PROPAI_GATEWAY_TOKEN: "env-token",
+  PROPAI_GATEWAY_PASSWORD: "env-password", // pragma: allowlist secret
 } as NodeJS.ProcessEnv;
 
 describe("resolveGatewayConnectionAuth", () => {
@@ -281,7 +281,7 @@ describe("resolveGatewayConnectionAuth", () => {
     });
   });
 
-  it("resolves config-first token SecretRef even when OPENCLAW env token exists", async () => {
+  it("resolves config-first token SecretRef even when PropAi Sync env token exists", async () => {
     const config = cfg({
       gateway: {
         mode: "local",
@@ -296,7 +296,7 @@ describe("resolveGatewayConnectionAuth", () => {
       },
     });
     const env = {
-      OPENCLAW_GATEWAY_TOKEN: "env-token",
+      PROPAI_GATEWAY_TOKEN: "env-token",
       CONFIG_FIRST_TOKEN: "config-first-token",
     } as NodeJS.ProcessEnv;
 
@@ -312,7 +312,7 @@ describe("resolveGatewayConnectionAuth", () => {
     });
   });
 
-  it("resolves config-first password SecretRef even when OPENCLAW env password exists", async () => {
+  it("resolves config-first password SecretRef even when PropAi Sync env password exists", async () => {
     const config = cfg({
       gateway: {
         mode: "local",
@@ -328,7 +328,7 @@ describe("resolveGatewayConnectionAuth", () => {
       },
     });
     const env = {
-      OPENCLAW_GATEWAY_PASSWORD: "env-password", // pragma: allowlist secret
+      PROPAI_GATEWAY_PASSWORD: "env-password", // pragma: allowlist secret
       CONFIG_FIRST_PASSWORD: "config-first-password", // pragma: allowlist secret
     } as NodeJS.ProcessEnv;
 
@@ -359,7 +359,7 @@ describe("resolveGatewayConnectionAuth", () => {
       },
     });
     const env = {
-      OPENCLAW_GATEWAY_TOKEN: "env-token",
+      PROPAI_GATEWAY_TOKEN: "env-token",
     } as NodeJS.ProcessEnv;
 
     await expect(
@@ -396,7 +396,7 @@ describe("resolveGatewayConnectionAuth", () => {
       },
     });
     const env = {
-      OPENCLAW_GATEWAY_PASSWORD: "env-password", // pragma: allowlist secret
+      PROPAI_GATEWAY_PASSWORD: "env-password", // pragma: allowlist secret
     } as NodeJS.ProcessEnv;
 
     await expect(
@@ -487,3 +487,6 @@ describe("resolveGatewayConnectionAuth", () => {
     ).toThrow("gateway.auth.password");
   });
 });
+
+
+

@@ -150,7 +150,7 @@ function prependInternalEventContext(
   body: string,
   events: AgentCommandOpts["internalEvents"],
 ): string {
-  if (body.includes("OpenClaw runtime context (internal):")) {
+  if (body.includes("PropAi Sync runtime context (internal):")) {
     return body;
   }
   const renderedEvents = formatAgentInternalEventsForPrompt(events);
@@ -305,7 +305,7 @@ async function persistAcpTurnTranscript(params: {
       role: "assistant",
       content: [{ type: "text", text: replyText }],
       api: "openai-responses",
-      provider: "openclaw",
+      provider: "PropAi Sync",
       model: "acp-runtime",
       usage: ACP_TRANSCRIPT_USAGE,
       stopReason: "stop",
@@ -548,7 +548,7 @@ async function prepareAgentCommandExecution(
     const knownAgents = listAgentIds(cfg);
     if (!knownAgents.includes(agentIdOverride)) {
       throw new Error(
-        `Unknown agent id "${agentIdOverrideRaw}". Use "${formatCliCommand("openclaw agents list")}" to see configured agents.`,
+        `Unknown agent id "${agentIdOverrideRaw}". Use "${formatCliCommand("PropAi Sync agents list")}" to see configured agents.`,
       );
     }
   }
@@ -1254,3 +1254,4 @@ export async function agentCommandFromIngress(
     deps,
   );
 }
+

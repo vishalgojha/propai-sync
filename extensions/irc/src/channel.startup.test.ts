@@ -33,9 +33,9 @@ describe("ircPlugin gateway.startAccount", () => {
       host: "irc.example.com",
       port: 6697,
       tls: true,
-      nick: "openclaw",
-      username: "openclaw",
-      realname: "OpenClaw",
+      nick: "PropAi Sync",
+      username: "PropAi Sync",
+      realname: "PropAi Sync",
       password: "",
       passwordSource: "none",
       config: {} as ResolvedIrcAccount["config"],
@@ -65,3 +65,4 @@ describe("ircPlugin gateway.startAccount", () => {
     expect(stop).toHaveBeenCalledOnce();
   });
 });
+

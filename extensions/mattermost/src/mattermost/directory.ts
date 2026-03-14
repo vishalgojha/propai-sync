@@ -1,8 +1,8 @@
 import type {
   ChannelDirectoryEntry,
-  OpenClawConfig,
+  PropAiSyncConfig,
   RuntimeEnv,
-} from "openclaw/plugin-sdk/mattermost";
+} from "propai/plugin-sdk/mattermost";
 import { listMattermostAccountIds, resolveMattermostAccount } from "./accounts.js";
 import {
   createMattermostClient,
@@ -13,7 +13,7 @@ import {
 } from "./client.js";
 
 export type MattermostDirectoryParams = {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
   query?: string | null;
   limit?: number | null;
@@ -21,7 +21,7 @@ export type MattermostDirectoryParams = {
 };
 
 function buildClient(params: {
-  cfg: OpenClawConfig;
+  cfg: PropAiSyncConfig;
   accountId?: string | null;
 }): MattermostClient | null {
   const account = resolveMattermostAccount({ cfg: params.cfg, accountId: params.accountId });
@@ -170,3 +170,6 @@ export async function listMattermostDirectoryPeers(
     return [];
   }
 }
+
+
+

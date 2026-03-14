@@ -1,11 +1,13 @@
 {
-  "name": "@openclaw/discord",
+  "name": "@propai/discord",
   "version": "2026.3.11",
-  "description": "OpenClaw Discord channel plugin",
+  "description": "PropAi Sync Discord channel plugin",
   "type": "module",
-  "openclaw": {
+  "PropAi Sync": {
     "extensions": [
       "./index.ts"
     ]
   }
 }
+
+

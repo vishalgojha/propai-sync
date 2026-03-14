@@ -9,7 +9,7 @@ import {
 } from "./secret-file.js";
 
 const tempDirs = createTrackedTempDirs();
-const createTempDir = () => tempDirs.make("openclaw-secret-file-test-");
+const createTempDir = () => tempDirs.make("propai-secret-file-test-");
 
 afterEach(async () => {
   await tempDirs.cleanup();
@@ -68,3 +68,5 @@ describe("readSecretFileSync", () => {
     );
   });
 });
+
+

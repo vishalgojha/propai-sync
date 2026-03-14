@@ -38,7 +38,7 @@ function createProps(overrides: Partial<ChatProps> = {}): ChatProps {
     error: null,
     sessions: createSessions(),
     focusMode: false,
-    assistantName: "OpenClaw",
+    assistantName: "PropAi Sync",
     assistantAvatar: null,
     onRefresh: () => undefined,
     onToggleFocusMode: () => undefined,
@@ -284,3 +284,4 @@ describe("chat view", () => {
     expect(senderLabels).toContain("Joaquin De Rojas");
   });
 });
+

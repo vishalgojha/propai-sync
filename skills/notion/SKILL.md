@@ -4,7 +4,7 @@ description: Notion API for creating and managing pages, databases, and blocks.
 homepage: https://developers.notion.com
 metadata:
   {
-    "openclaw":
+    "PropAi Sync":
       { "emoji": "📝", "requires": { "env": ["NOTION_API_KEY"] }, "primaryEnv": "NOTION_API_KEY" },
   }
 ---
@@ -172,3 +172,4 @@ Common property formats for database items:
 - Append block children: up to 100 children per request, up to two levels of nesting in a single append request
 - Payload size limits: up to 1000 block elements and 500KB overall
 - Use `is_inline: true` when creating data sources to embed them in pages
+

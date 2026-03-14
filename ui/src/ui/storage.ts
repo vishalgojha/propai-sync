@@ -1,6 +1,6 @@
-const KEY = "openclaw.control.settings.v1";
-const LEGACY_TOKEN_SESSION_KEY = "openclaw.control.token.v1";
-const TOKEN_SESSION_KEY_PREFIX = "openclaw.control.token.v1:";
+const KEY = "PropAiSync.control.settings.v1";
+const LEGACY_TOKEN_SESSION_KEY = "PropAiSync.control.token.v1";
+const TOKEN_SESSION_KEY_PREFIX = "PropAiSync.control.token.v1:";
 
 type PersistedUiSettings = Omit<UiSettings, "token"> & { token?: never };
 
@@ -102,8 +102,8 @@ export function loadSettings(): UiSettings {
     const proto = location.protocol === "https:" ? "wss" : "ws";
     const configured =
       typeof window !== "undefined" &&
-      typeof window.__OPENCLAW_CONTROL_UI_BASE_PATH__ === "string" &&
-      window.__OPENCLAW_CONTROL_UI_BASE_PATH__.trim();
+      typeof window.__PROPAI_CONTROL_UI_BASE_PATH__ === "string" &&
+      window.__PROPAI_CONTROL_UI_BASE_PATH__.trim();
     const basePath = configured
       ? normalizeBasePath(configured)
       : inferBasePathFromPathname(location.pathname);
@@ -212,3 +212,6 @@ function persistSettings(next: UiSettings) {
   };
   localStorage.setItem(KEY, JSON.stringify(persisted));
 }
+
+
+

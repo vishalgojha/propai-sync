@@ -1,4 +1,4 @@
-import type { RuntimeEnv } from "openclaw/plugin-sdk/tlon";
+import type { RuntimeEnv } from "propai/plugin-sdk/tlon";
 import { extractMessageText } from "./utils.js";
 
 /**
@@ -189,3 +189,5 @@ export async function fetchThreadHistory(
     return [];
   }
 }
+
+

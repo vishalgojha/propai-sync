@@ -10,11 +10,11 @@ const TAURI_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const REPO_ROOT = path.resolve(TAURI_DIR, "../..");
 
 function log(message) {
-  process.stdout.write(`[openclaw-desktop] ${message}\n`);
+  process.stdout.write(`[propai-desktop] ${message}\n`);
 }
 
 function fail(message) {
-  process.stderr.write(`[openclaw-desktop] ${message}\n`);
+  process.stderr.write(`[propai-desktop] ${message}\n`);
   process.exit(1);
 }
 
@@ -95,3 +95,5 @@ function main() {
 }
 
 main();
+
+

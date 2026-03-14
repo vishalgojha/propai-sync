@@ -1,5 +1,5 @@
 import type { AgentToolResult } from "@mariozechner/pi-agent-core";
-import type { OpenClawConfig } from "../../config/config.js";
+import type { PropAiSyncConfig } from "../../config/config.js";
 import { readBooleanParam } from "../../plugin-sdk/boolean-param.js";
 import { resolvePollMaxSelections } from "../../polls.js";
 import {
@@ -91,7 +91,7 @@ export function readTelegramButtons(
 
 export async function handleTelegramAction(
   params: Record<string, unknown>,
-  cfg: OpenClawConfig,
+  cfg: PropAiSyncConfig,
   options?: {
     mediaLocalRoots?: readonly string[];
   },
@@ -476,3 +476,5 @@ export async function handleTelegramAction(
 
   throw new Error(`Unsupported Telegram action: ${action}`);
 }
+
+

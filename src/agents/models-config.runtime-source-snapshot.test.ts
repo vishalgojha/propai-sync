@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import {
   clearConfigCache,
   clearRuntimeConfigSnapshot,
@@ -11,7 +11,7 @@ import {
   installModelsConfigTestHooks,
   withModelsTempHome as withTempHome,
 } from "./models-config.e2e-harness.js";
-import { ensureOpenClawModelsJson } from "./models-config.js";
+import { ensurePropAiSyncModelsJson } from "./models-config.js";
 import { readGeneratedModelsJson } from "./models-config.test-utils.js";
 
 installModelsConfigTestHooks();
@@ -19,7 +19,7 @@ installModelsConfigTestHooks();
 describe("models-config runtime source snapshot", () => {
   it("uses runtime source snapshot markers when passed the active runtime config", async () => {
     await withTempHome(async () => {
-      const sourceConfig: OpenClawConfig = {
+      const sourceConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -31,7 +31,7 @@ describe("models-config runtime source snapshot", () => {
           },
         },
       };
-      const runtimeConfig: OpenClawConfig = {
+      const runtimeConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -46,7 +46,7 @@ describe("models-config runtime source snapshot", () => {
 
       try {
         setRuntimeConfigSnapshot(runtimeConfig, sourceConfig);
-        await ensureOpenClawModelsJson(loadConfig());
+        await ensurePropAiSyncModelsJson(loadConfig());
 
         const parsed = await readGeneratedModelsJson<{
           providers: Record<string, { apiKey?: string }>;
@@ -61,7 +61,7 @@ describe("models-config runtime source snapshot", () => {
 
   it("uses non-env marker from runtime source snapshot for file refs", async () => {
     await withTempHome(async () => {
-      const sourceConfig: OpenClawConfig = {
+      const sourceConfig: PropAiSyncConfig = {
         models: {
           providers: {
             moonshot: {
@@ -73,7 +73,7 @@ describe("models-config runtime source snapshot", () => {
           },
         },
       };
-      const runtimeConfig: OpenClawConfig = {
+      const runtimeConfig: PropAiSyncConfig = {
         models: {
           providers: {
             moonshot: {
@@ -88,7 +88,7 @@ describe("models-config runtime source snapshot", () => {
 
       try {
         setRuntimeConfigSnapshot(runtimeConfig, sourceConfig);
-        await ensureOpenClawModelsJson(loadConfig());
+        await ensurePropAiSyncModelsJson(loadConfig());
 
         const parsed = await readGeneratedModelsJson<{
           providers: Record<string, { apiKey?: string }>;
@@ -103,7 +103,7 @@ describe("models-config runtime source snapshot", () => {
 
   it("projects cloned runtime configs onto source snapshot when preserving provider auth", async () => {
     await withTempHome(async () => {
-      const sourceConfig: OpenClawConfig = {
+      const sourceConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -115,7 +115,7 @@ describe("models-config runtime source snapshot", () => {
           },
         },
       };
-      const runtimeConfig: OpenClawConfig = {
+      const runtimeConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -127,7 +127,7 @@ describe("models-config runtime source snapshot", () => {
           },
         },
       };
-      const clonedRuntimeConfig: OpenClawConfig = {
+      const clonedRuntimeConfig: PropAiSyncConfig = {
         ...runtimeConfig,
         agents: {
           defaults: {
@@ -138,7 +138,7 @@ describe("models-config runtime source snapshot", () => {
 
       try {
         setRuntimeConfigSnapshot(runtimeConfig, sourceConfig);
-        await ensureOpenClawModelsJson(clonedRuntimeConfig);
+        await ensurePropAiSyncModelsJson(clonedRuntimeConfig);
 
         const parsed = await readGeneratedModelsJson<{
           providers: Record<string, { apiKey?: string }>;
@@ -153,7 +153,7 @@ describe("models-config runtime source snapshot", () => {
 
   it("uses header markers from runtime source snapshot instead of resolved runtime values", async () => {
     await withTempHome(async () => {
-      const sourceConfig: OpenClawConfig = {
+      const sourceConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -176,7 +176,7 @@ describe("models-config runtime source snapshot", () => {
           },
         },
       };
-      const runtimeConfig: OpenClawConfig = {
+      const runtimeConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -194,7 +194,7 @@ describe("models-config runtime source snapshot", () => {
 
       try {
         setRuntimeConfigSnapshot(runtimeConfig, sourceConfig);
-        await ensureOpenClawModelsJson(loadConfig());
+        await ensurePropAiSyncModelsJson(loadConfig());
 
         const parsed = await readGeneratedModelsJson<{
           providers: Record<string, { headers?: Record<string, string> }>;
@@ -212,7 +212,7 @@ describe("models-config runtime source snapshot", () => {
 
   it("keeps source markers when runtime projection is skipped for incompatible top-level shape", async () => {
     await withTempHome(async () => {
-      const sourceConfig: OpenClawConfig = {
+      const sourceConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -229,7 +229,7 @@ describe("models-config runtime source snapshot", () => {
           },
         },
       };
-      const runtimeConfig: OpenClawConfig = {
+      const runtimeConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -246,7 +246,7 @@ describe("models-config runtime source snapshot", () => {
           },
         },
       };
-      const incompatibleCandidate: OpenClawConfig = {
+      const incompatibleCandidate: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -261,7 +261,7 @@ describe("models-config runtime source snapshot", () => {
 
       try {
         setRuntimeConfigSnapshot(runtimeConfig, sourceConfig);
-        await ensureOpenClawModelsJson(incompatibleCandidate);
+        await ensurePropAiSyncModelsJson(incompatibleCandidate);
 
         const parsed = await readGeneratedModelsJson<{
           providers: Record<string, { apiKey?: string }>;
@@ -276,7 +276,7 @@ describe("models-config runtime source snapshot", () => {
 
   it("keeps source header markers when runtime projection is skipped for incompatible top-level shape", async () => {
     await withTempHome(async () => {
-      const sourceConfig: OpenClawConfig = {
+      const sourceConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -304,7 +304,7 @@ describe("models-config runtime source snapshot", () => {
           },
         },
       };
-      const runtimeConfig: OpenClawConfig = {
+      const runtimeConfig: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -324,7 +324,7 @@ describe("models-config runtime source snapshot", () => {
           },
         },
       };
-      const incompatibleCandidate: OpenClawConfig = {
+      const incompatibleCandidate: PropAiSyncConfig = {
         models: {
           providers: {
             openai: {
@@ -342,7 +342,7 @@ describe("models-config runtime source snapshot", () => {
 
       try {
         setRuntimeConfigSnapshot(runtimeConfig, sourceConfig);
-        await ensureOpenClawModelsJson(incompatibleCandidate);
+        await ensurePropAiSyncModelsJson(incompatibleCandidate);
 
         const parsed = await readGeneratedModelsJson<{
           providers: Record<string, { headers?: Record<string, string> }>;
@@ -358,3 +358,5 @@ describe("models-config runtime source snapshot", () => {
     });
   });
 });
+
+

@@ -1,11 +1,11 @@
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
 import { buildWorkspaceSkillStatus } from "../agents/skills-status.js";
-import type { OpenClawConfig } from "../config/config.js";
-import { loadOpenClawPlugins } from "../plugins/loader.js";
+import type { PropAiSyncConfig } from "../config/config.js";
+import { loadPropAiSyncPlugins } from "../plugins/loader.js";
 import { note } from "../terminal/note.js";
 import { detectLegacyWorkspaceDirs, formatLegacyWorkspaceWarning } from "./doctor-workspace.js";
 
-export function noteWorkspaceStatus(cfg: OpenClawConfig) {
+export function noteWorkspaceStatus(cfg: PropAiSyncConfig) {
   const workspaceDir = resolveAgentWorkspaceDir(cfg, resolveDefaultAgentId(cfg));
   const legacyWorkspace = detectLegacyWorkspaceDirs({ workspaceDir });
   if (legacyWorkspace.legacyDirs.length > 0) {
@@ -25,7 +25,7 @@ export function noteWorkspaceStatus(cfg: OpenClawConfig) {
     "Skills status",
   );
 
-  const pluginRegistry = loadOpenClawPlugins({
+  const pluginRegistry = loadPropAiSyncPlugins({
     config: cfg,
     workspaceDir,
     logger: {
@@ -66,3 +66,5 @@ export function noteWorkspaceStatus(cfg: OpenClawConfig) {
 
   return { workspaceDir };
 }
+
+

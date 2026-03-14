@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../../../config/config.js";
+import type { PropAiSyncConfig } from "../../../config/config.js";
 import { imessageOutbound } from "./imessage.js";
 
 describe("imessageOutbound", () => {
-  const cfg: OpenClawConfig = {
+  const cfg: PropAiSyncConfig = {
     channels: {
       imessage: {
         mediaMaxMb: 2,
@@ -67,3 +67,5 @@ describe("imessageOutbound", () => {
     expect(result).toEqual({ channel: "imessage", messageId: "media-1" });
   });
 });
+
+

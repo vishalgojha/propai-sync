@@ -1,4 +1,4 @@
-import SHARED_TOOL_DISPLAY_JSON from "../../../apps/shared/OpenClawKit/Sources/OpenClawKit/Resources/tool-display.json" with { type: "json" };
+import SHARED_TOOL_DISPLAY_JSON from "../../../apps/shared/PropAiSyncKit/Sources/PropAiSyncKit/Resources/tool-display.json" with { type: "json" };
 import {
   defaultTitle,
   formatToolDetailText,
@@ -157,3 +157,5 @@ export function formatToolSummary(display: ToolDisplay): string {
   const detail = formatToolDetail(display);
   return detail ? `${display.label}: ${detail}` : display.label;
 }
+
+

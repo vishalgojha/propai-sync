@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { PropAiSyncConfig } from "../config/config.js";
 import { resolveMemorySearchConfig } from "./memory-search.js";
 
-const asConfig = (cfg: OpenClawConfig): OpenClawConfig => cfg;
+const asConfig = (cfg: PropAiSyncConfig): PropAiSyncConfig => cfg;
 
 describe("memory search config", () => {
   function configWithDefaultProvider(
     provider: "openai" | "local" | "gemini" | "mistral" | "ollama",
-  ): OpenClawConfig {
+  ): PropAiSyncConfig {
     return asConfig({
       agents: {
         defaults: {
@@ -410,3 +410,5 @@ describe("memory search config", () => {
     expect(resolved?.sources).toContain("sessions");
   });
 });
+
+

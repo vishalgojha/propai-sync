@@ -82,7 +82,7 @@ describe("resolveDefaultIrcAccountId", () => {
 
 describe("resolveIrcAccount", () => {
   it.runIf(process.platform !== "win32")("rejects symlinked password files", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-irc-account-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "propai-irc-account-"));
     const passwordFile = path.join(dir, "password.txt");
     const passwordLink = path.join(dir, "password-link.txt");
     fs.writeFileSync(passwordFile, "secret-pass\n", "utf8");
@@ -104,3 +104,5 @@ describe("resolveIrcAccount", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });
+
+
