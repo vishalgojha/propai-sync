@@ -67,6 +67,9 @@ apps/tauri/src-tauri/resources/
 !apps/tauri/src-tauri/resources/.gitkeep
 !apps/tauri/src-tauri/resources/placeholder.txt
 
+# Licensing service data
+services/licensing/data/
+
 # fastlane (iOS)
 apps/ios/fastlane/README.md
 apps/ios/fastlane/report.xml

@@ -37,6 +37,7 @@ import type { NostrProfileFormState } from "./views/channels.nostr-profile-form.
 import type { SessionLogEntry } from "./views/usage.ts";
 import type { WizardStep } from "../../../src/gateway/protocol/index.js";
 import type { OnboardingWizardPresetId } from "./onboarding-presets.ts";
+import type { LicenseEntitlement, LicenseStatus } from "./license.ts";
 
 export type AppViewState = {
   settings: UiSettings;
@@ -53,6 +54,13 @@ export type AppViewState = {
   onboardingWizardDraft: unknown;
   onboardingWizardPresetId: OnboardingWizardPresetId;
   onboardingWizardAutoAdvance: boolean;
+  licenseGateActive: boolean;
+  licenseStatus: LicenseStatus;
+  licenseToken: string;
+  licenseApiUrl: string;
+  licenseBusy: boolean;
+  licenseError: string | null;
+  licenseEntitlement: LicenseEntitlement | null;
   basePath: string;
   connected: boolean;
   theme: ThemeName;
@@ -321,6 +329,9 @@ export type AppViewState = {
     handleOnboardingAutoAdvanceChange: (value: boolean) => void;
     submitOnboardingWizardStep: () => Promise<void>;
     skipOnboardingWizard: () => void;
+    handleLicenseTokenInput: (value: string) => void;
+    handleLicenseApiInput: (value: string) => void;
+    submitLicenseToken: () => Promise<void>;
     setTab: (tab: Tab) => void;
     setTheme: (theme: ThemeName, context?: ThemeTransitionContext) => void;
     setThemeMode: (mode: ThemeMode, context?: ThemeTransitionContext) => void;

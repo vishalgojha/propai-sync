@@ -91,6 +91,7 @@ import { renderOverview } from "./views/overview.ts";
 import { renderSessions } from "./views/sessions.ts";
 import { renderSkills } from "./views/skills.ts";
 import { renderOnboardingWizard } from "./views/onboarding.ts";
+import { renderLanding } from "./views/landing.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
 const AVATAR_HTTP_RE = /^https?:\/\//i;
@@ -234,6 +235,19 @@ export function renderApp(state: AppViewState) {
     state.cronForm.deliveryMode === "webhook"
       ? rawDeliveryToSuggestions.filter((value) => isHttpUrl(value))
       : rawDeliveryToSuggestions;
+  if (state.licenseGateActive) {
+    return renderLanding({
+      token: state.licenseToken,
+      apiUrl: state.licenseApiUrl,
+      busy: state.licenseBusy,
+      status: state.licenseStatus,
+      entitlement: state.licenseEntitlement,
+      error: state.licenseError,
+      onTokenChange: (value) => state.handleLicenseTokenInput(value),
+      onApiUrlChange: (value) => state.handleLicenseApiInput(value),
+      onSubmit: () => void state.submitLicenseToken(),
+    });
+  }
   if (state.onboarding) {
     return html`
       <div class="shell shell--onboarding">

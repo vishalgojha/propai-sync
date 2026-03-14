@@ -97,6 +97,19 @@ import { generateUUID } from "./uuid.ts";
 import { restartDesktopGateway } from "./desktop/gateway.ts";
 import { isTauriRuntime } from "./desktop/tauri.ts";
 import type { NostrProfileFormState } from "./views/channels.nostr-profile-form.ts";
+import {
+  getOrCreateLicenseDeviceId,
+  isEntitlementValid,
+  loadLicenseApiUrl,
+  loadLicenseCache,
+  loadLicenseToken,
+  saveLicenseApiUrl,
+  saveLicenseCache,
+  saveLicenseToken,
+  verifyLicenseToken,
+  type LicenseEntitlement,
+  type LicenseStatus,
+} from "./license.ts";
 
 declare global {
   interface Window {
@@ -208,6 +221,13 @@ export class OpenClawApp extends LitElement {
   @state() onboardingWizardDraftTouched = false;
   @state() onboardingWizardPresetId: OnboardingWizardPresetId = resolveOnboardingPresetId();
   @state() onboardingWizardAutoAdvance = resolveOnboardingAutoAdvance();
+  @state() licenseToken = loadLicenseToken();
+  @state() licenseApiUrl = loadLicenseApiUrl();
+  @state() licenseStatus: LicenseStatus = "unknown";
+  @state() licenseError: string | null = null;
+  @state() licenseEntitlement: LicenseEntitlement | null = loadLicenseCache();
+  @state() licenseBusy = false;
+  @state() licenseGateActive = !isEntitlementValid(this.licenseEntitlement);
   @state() connected = false;
   @state() theme: ThemeName = this.settings.theme;
   @state() themeMode: ThemeMode = this.settings.themeMode;
@@ -486,6 +506,8 @@ export class OpenClawApp extends LitElement {
   private topbarObserver: ResizeObserver | null = null;
   private tauriUnlistenOnboardingOpen: (() => void) | null = null;
   private tauriUnlistenGatewayRestart: (() => void) | null = null;
+  private licenseDeviceId = getOrCreateLicenseDeviceId();
+  private appStarted = false;
 
   createRenderRoot() {
     return this;
@@ -513,10 +535,109 @@ export class OpenClawApp extends LitElement {
     }
   }
 
+  private startAppIfLicensed() {
+    if (this.appStarted) {
+      return;
+    }
+    if (this.licenseGateActive) {
+      return;
+    }
+    this.appStarted = true;
+    handleConnected(this as unknown as Parameters<typeof handleConnected>[0]);
+  }
+
+  private updateLicenseGate() {
+    const valid = isEntitlementValid(this.licenseEntitlement);
+    this.licenseGateActive = !valid;
+    if (valid) {
+      this.licenseStatus = this.licenseEntitlement?.status ?? "active";
+    }
+    this.startAppIfLicensed();
+  }
+
+  private async bootstrapLicense() {
+    this.licenseApiUrl = loadLicenseApiUrl();
+    if (this.licenseEntitlement && isEntitlementValid(this.licenseEntitlement)) {
+      this.licenseStatus = this.licenseEntitlement.status;
+      this.updateLicenseGate();
+    }
+    if (!this.licenseToken.trim()) {
+      return;
+    }
+    await this.submitLicenseToken({ silent: true });
+  }
+
+  async submitLicenseToken(opts: { silent?: boolean } = {}) {
+    const token = this.licenseToken.trim();
+    if (!token) {
+      if (!opts.silent) {
+        this.licenseError = "Enter a license token to continue.";
+      }
+      return;
+    }
+    this.licenseBusy = true;
+    this.licenseError = null;
+    this.licenseStatus = "checking";
+    try {
+      const result = await verifyLicenseToken({
+        apiUrl: this.licenseApiUrl,
+        token,
+        deviceId: this.licenseDeviceId,
+        appVersion: this.hello?.server?.version ?? null,
+      });
+      if (!result.ok) {
+        this.licenseStatus = result.status === "expired" ? "expired" : "invalid";
+        if (!opts.silent) {
+          this.licenseError = result.message ?? "License verification failed.";
+        }
+        return;
+      }
+      const entitlement: LicenseEntitlement = {
+        status: result.status,
+        plan: result.plan ?? null,
+        trialEndsAt: result.trialEndsAt ?? null,
+        expiresAt: result.expiresAt ?? null,
+        graceEndsAt: result.graceEndsAt ?? null,
+        features: result.features ?? [],
+        issuedAt: result.issuedAt ?? null,
+      };
+      this.licenseEntitlement = entitlement;
+      this.licenseStatus = entitlement.status;
+      saveLicenseToken(token);
+      saveLicenseCache(entitlement);
+      this.licenseError = null;
+      this.updateLicenseGate();
+    } catch (err) {
+      this.licenseStatus = "invalid";
+      if (!opts.silent) {
+        const message = err instanceof Error ? err.message : String(err);
+        this.licenseError = message || "License verification failed.";
+      }
+    } finally {
+      this.licenseBusy = false;
+    }
+  }
+
+  handleLicenseTokenInput(value: string) {
+    this.licenseToken = value;
+    if (this.licenseError) {
+      this.licenseError = null;
+    }
+  }
+
+  handleLicenseApiInput(value: string) {
+    this.licenseApiUrl = value;
+    saveLicenseApiUrl(value);
+  }
+
   connectedCallback() {
     super.connectedCallback();
     applyBrandTheme();
-    handleConnected(this as unknown as Parameters<typeof handleConnected>[0]);
+    if (this.licenseGateActive) {
+      applyResolvedThemeInternal(this, resolveTheme("knot", "dark"));
+    } else {
+      this.startAppIfLicensed();
+    }
     if (this.onboarding) {
       applyResolvedThemeInternal(this, resolveTheme(this.theme, "dark"));
     }
@@ -525,6 +646,7 @@ export class OpenClawApp extends LitElement {
 
   protected firstUpdated() {
     handleFirstUpdated(this as unknown as Parameters<typeof handleFirstUpdated>[0]);
+    void this.bootstrapLicense();
   }
 
   disconnectedCallback() {
@@ -538,6 +660,13 @@ export class OpenClawApp extends LitElement {
 
   protected updated(changed: Map<PropertyKey, unknown>) {
     handleUpdated(this as unknown as Parameters<typeof handleUpdated>[0], changed);
+    if (changed.has("licenseGateActive")) {
+      if (this.licenseGateActive) {
+        applyResolvedThemeInternal(this, resolveTheme("knot", "dark"));
+      } else if (!this.onboarding) {
+        syncThemeWithSettingsInternal(this);
+      }
+    }
     if (changed.has("onboarding")) {
       if (this.onboarding) {
         applyResolvedThemeInternal(this, resolveTheme(this.theme, "dark"));

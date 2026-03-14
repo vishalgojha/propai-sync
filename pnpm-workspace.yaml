@@ -2,6 +2,7 @@ packages:
   - .
   - ui
   - apps/*
+  - services/*
   - packages/*
   - extensions/*
 
