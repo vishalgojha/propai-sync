@@ -61,6 +61,11 @@ vendor/a2ui/renderers/lit/dist/
 src/canvas-host/a2ui/*.bundle.js
 src/canvas-host/a2ui/*.map
 .bundle.hash
+apps/tauri/src-tauri/target/
+apps/tauri/src-tauri/gen/
+apps/tauri/src-tauri/resources/
+!apps/tauri/src-tauri/resources/.gitkeep
+!apps/tauri/src-tauri/resources/placeholder.txt
 
 # fastlane (iOS)
 apps/ios/fastlane/README.md

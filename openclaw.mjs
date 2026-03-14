@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
 import module from "node:module";
+import { fileURLToPath } from "node:url";
 
 const MIN_NODE_MAJOR = 22;
 const MIN_NODE_MINOR = 12;
@@ -47,17 +49,28 @@ if (module.enableCompileCache && !process.env.NODE_DISABLE_COMPILE_CACHE) {
 const isModuleNotFoundError = (err) =>
   err && typeof err === "object" && "code" in err && err.code === "ERR_MODULE_NOT_FOUND";
 
+const isMissingSelf = (err, specifierUrl) =>
+  isModuleNotFoundError(err) && err && typeof err === "object" && "url" in err && err.url === specifierUrl;
+
+const resolveDistPath = (rel) => fileURLToPath(new URL(rel, import.meta.url));
+const resolveDistUrl = (rel) => new URL(rel, import.meta.url).href;
+
 const installProcessWarningFilter = async () => {
   // Keep bootstrap warnings consistent with the TypeScript runtime.
   for (const specifier of ["./dist/warning-filter.js", "./dist/warning-filter.mjs"]) {
+    const specifierPath = resolveDistPath(specifier);
+    if (!fs.existsSync(specifierPath)) {
+      continue;
+    }
     try {
-      const mod = await import(specifier);
+      const mod = await import(resolveDistUrl(specifier));
       if (typeof mod.installProcessWarningFilter === "function") {
         mod.installProcessWarningFilter();
         return;
       }
     } catch (err) {
-      if (isModuleNotFoundError(err)) {
+      // Only swallow "missing file" errors for this exact specifier.
+      if (isMissingSelf(err, resolveDistUrl(specifier))) {
         continue;
       }
       throw err;
@@ -68,12 +81,19 @@ const installProcessWarningFilter = async () => {
 await installProcessWarningFilter();
 
 const tryImport = async (specifier) => {
+  const specifierPath = resolveDistPath(specifier);
+  if (!fs.existsSync(specifierPath)) {
+    return false;
+  }
+
+  const specifierUrl = resolveDistUrl(specifier);
   try {
-    await import(specifier);
+    await import(specifierUrl);
     return true;
   } catch (err) {
-    // Only swallow missing-module errors; rethrow real runtime errors.
-    if (isModuleNotFoundError(err)) {
+    // Only swallow "missing file" errors for this exact specifier; rethrow
+    // missing-dependency errors so we don't hide the real root cause.
+    if (isMissingSelf(err, specifierUrl)) {
       return false;
     }
     throw err;
@@ -85,5 +105,20 @@ if (await tryImport("./dist/entry.js")) {
 } else if (await tryImport("./dist/entry.mjs")) {
   // OK
 } else {
-  throw new Error("openclaw: missing dist/entry.(m)js (build output).");
+  const basePath = fileURLToPath(import.meta.url);
+  const candidates = ["./dist/entry.js", "./dist/entry.mjs"].map((rel) => ({
+    rel,
+    path: resolveDistPath(rel),
+    exists: fs.existsSync(resolveDistPath(rel)),
+  }));
+  throw new Error(
+    [
+      "openclaw: missing dist/entry.(m)js (build output).",
+      "openclaw: desktop debug info:",
+      `- import.meta.url: ${import.meta.url}`,
+      `- basePath: ${basePath}`,
+      `- cwd: ${process.cwd()}`,
+      `- candidates: ${JSON.stringify(candidates)}`,
+    ].join("\n"),
+  );
 }

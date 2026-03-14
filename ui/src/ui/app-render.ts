@@ -5,6 +5,7 @@ import { refreshChatAvatar } from "./app-chat.ts";
 import { renderUsageTab } from "./app-render-usage-tab.ts";
 import { renderChatControls, renderTab, renderThemeToggle } from "./app-render.helpers.ts";
 import type { AppViewState } from "./app-view-state.ts";
+import { isTauriRuntime } from "./desktop/tauri.ts";
 import { loadAgentFileContent, loadAgentFiles, saveAgentFile } from "./controllers/agent-files.ts";
 import { loadAgentIdentities, loadAgentIdentity } from "./controllers/agent-identity.ts";
 import { loadAgentSkills } from "./controllers/agent-skills.ts";
@@ -89,6 +90,7 @@ import { renderNodes } from "./views/nodes.ts";
 import { renderOverview } from "./views/overview.ts";
 import { renderSessions } from "./views/sessions.ts";
 import { renderSkills } from "./views/skills.ts";
+import { renderOnboardingWizard } from "./views/onboarding.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
 const AVATAR_HTTP_RE = /^https?:\/\//i;
@@ -232,6 +234,34 @@ export function renderApp(state: AppViewState) {
     state.cronForm.deliveryMode === "webhook"
       ? rawDeliveryToSuggestions.filter((value) => isHttpUrl(value))
       : rawDeliveryToSuggestions;
+  if (state.onboarding) {
+    return html`
+      <div class="shell shell--onboarding">
+        <header class="topbar"></header>
+        <aside class="nav"></aside>
+        <main class="content">
+          ${renderOnboardingWizard({
+            connected: state.connected,
+            busy: state.onboardingWizardBusy,
+            error: state.onboardingWizardError,
+            sessionId: state.onboardingWizardSessionId,
+            status: state.onboardingWizardStatus,
+            step: state.onboardingWizardStep,
+            draft: state.onboardingWizardDraft,
+            presetId: state.onboardingWizardPresetId,
+            autoAdvance: state.onboardingWizardAutoAdvance,
+            onPresetChange: (value) => state.handleOnboardingPresetChange(value),
+            onAutoAdvanceChange: (value) => state.handleOnboardingAutoAdvanceChange(value),
+            onStart: () => void state.startOnboardingWizard(),
+            onCancel: () => void state.cancelOnboardingWizard(),
+            onDraftChange: (value) => state.handleOnboardingDraftChange(value),
+            onSubmit: () => void state.submitOnboardingWizardStep(),
+            onExitSetup: () => state.skipOnboardingWizard(),
+          })}
+        </main>
+      </div>
+    `;
+  }
 
   return html`
     <div class="shell ${isChat ? "shell--chat" : ""} ${chatFocus ? "shell--chat-focus" : ""} ${state.settings.navCollapsed ? "shell--nav-collapsed" : ""} ${state.onboarding ? "shell--onboarding" : ""}">
@@ -251,11 +281,11 @@ export function renderApp(state: AppViewState) {
           </button>
           <div class="brand">
             <div class="brand-logo">
-              <img src=${basePath ? `${basePath}/favicon.svg` : "/favicon.svg"} alt="OpenClaw" />
+              <img src=${basePath ? `${basePath}/favicon.svg` : "/favicon.svg"} alt="PropAi" />
             </div>
             <div class="brand-text">
-              <div class="brand-title">OPENCLAW</div>
-              <div class="brand-sub">Gateway Dashboard</div>
+              <div class="brand-title">PROPAI</div>
+              <div class="brand-sub">Control Console</div>
             </div>
           </div>
         </div>
@@ -372,6 +402,7 @@ export function renderApp(state: AppViewState) {
                 },
                 onConnect: () => state.connect(),
                 onRefresh: () => state.loadOverview(),
+                onRestartGateway: isTauriRuntime() ? () => state.restartDesktopGateway() : undefined,
               })
             : nothing
         }
@@ -1122,3 +1153,7 @@ export function renderApp(state: AppViewState) {
     </div>
   `;
 }
+
+
+
+

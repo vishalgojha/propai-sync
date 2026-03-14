@@ -35,6 +35,8 @@ import type {
 import type { ChatAttachment, ChatQueueItem } from "./ui-types.ts";
 import type { NostrProfileFormState } from "./views/channels.nostr-profile-form.ts";
 import type { SessionLogEntry } from "./views/usage.ts";
+import type { WizardStep } from "../../../src/gateway/protocol/index.js";
+import type { OnboardingWizardPresetId } from "./onboarding-presets.ts";
 
 export type AppViewState = {
   settings: UiSettings;
@@ -43,6 +45,14 @@ export type AppViewState = {
   loginShowGatewayPassword: boolean;
   tab: Tab;
   onboarding: boolean;
+  onboardingWizardBusy: boolean;
+  onboardingWizardError: string | null;
+  onboardingWizardSessionId: string | null;
+  onboardingWizardStatus: string | null;
+  onboardingWizardStep: WizardStep | null;
+  onboardingWizardDraft: unknown;
+  onboardingWizardPresetId: OnboardingWizardPresetId;
+  onboardingWizardAutoAdvance: boolean;
   basePath: string;
   connected: boolean;
   theme: ThemeName;
@@ -303,6 +313,14 @@ export type AppViewState = {
     client: GatewayBrowserClient | null;
     refreshSessionsAfterChat: Set<string>;
     connect: () => void;
+    restartDesktopGateway: () => Promise<void>;
+    startOnboardingWizard: () => Promise<void>;
+    cancelOnboardingWizard: () => Promise<void>;
+    handleOnboardingDraftChange: (value: unknown) => void;
+    handleOnboardingPresetChange: (value: OnboardingWizardPresetId) => void;
+    handleOnboardingAutoAdvanceChange: (value: boolean) => void;
+    submitOnboardingWizardStep: () => Promise<void>;
+    skipOnboardingWizard: () => void;
     setTab: (tab: Tab) => void;
     setTheme: (theme: ThemeName, context?: ThemeTransitionContext) => void;
     setThemeMode: (mode: ThemeMode, context?: ThemeTransitionContext) => void;
@@ -365,3 +383,10 @@ export type AppViewState = {
     handleCloseSidebar: () => void;
     handleSplitRatioChange: (ratio: number) => void;
   };
+
+
+
+
+
+
+

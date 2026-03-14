@@ -66,6 +66,15 @@ describe("checkBrowserOrigin", () => {
     expect(result.ok).toBe(false);
   });
 
+  it("accepts missing origin for local clients (desktop webviews)", () => {
+    const result = checkBrowserOrigin({
+      requestHost: "127.0.0.1:18789",
+      origin: "null",
+      isLocalClient: true,
+    });
+    expect(result.ok).toBe(true);
+  });
+
   it("rejects mismatched origins", () => {
     const result = checkBrowserOrigin({
       requestHost: "gateway.example.com:18789",

@@ -18,6 +18,7 @@ import { renderChannelConfigSection } from "./channels.config.ts";
 import { renderDiscordCard } from "./channels.discord.ts";
 import { renderGoogleChatCard } from "./channels.googlechat.ts";
 import { renderIMessageCard } from "./channels.imessage.ts";
+import { renderInstagramCard } from "./channels.instagram.ts";
 import { renderNostrCard } from "./channels.nostr.ts";
 import { channelEnabled, renderChannelAccountCount } from "./channels.shared.ts";
 import { renderSignalCard } from "./channels.signal.ts";
@@ -29,6 +30,7 @@ import { renderWhatsAppCard } from "./channels.whatsapp.ts";
 export function renderChannels(props: ChannelsProps) {
   const channels = props.snapshot?.channels as Record<string, unknown> | null;
   const whatsapp = (channels?.whatsapp ?? undefined) as WhatsAppStatus | undefined;
+  const instagram = (channels?.instagram ?? null) as Record<string, unknown> | null;
   const telegram = (channels?.telegram ?? undefined) as TelegramStatus | undefined;
   const discord = (channels?.discord ?? null) as DiscordStatus | null;
   const googlechat = (channels?.googlechat ?? null) as GoogleChatStatus | null;
@@ -55,6 +57,7 @@ export function renderChannels(props: ChannelsProps) {
       ${orderedChannels.map((channel) =>
         renderChannel(channel.key, props, {
           whatsapp,
+          instagram,
           telegram,
           discord,
           googlechat,
@@ -83,20 +86,24 @@ export function renderChannels(props: ChannelsProps) {
           : nothing
       }
       <pre class="code-block" style="margin-top: 12px;">
-${props.snapshot ? JSON.stringify(props.snapshot, null, 2) : "No snapshot yet."}
+${props.snapshot ? JSON.stringify(filterChannelSnapshot(props.snapshot), null, 2) : "No snapshot yet."}
       </pre>
     </section>
   `;
 }
 
 function resolveChannelOrder(snapshot: ChannelsStatusSnapshot | null): ChannelKey[] {
+  const allowed = ["whatsapp", "instagram"];
   if (snapshot?.channelMeta?.length) {
-    return snapshot.channelMeta.map((entry) => entry.id);
+    const ordered = snapshot.channelMeta.map((entry) => entry.id);
+    const filtered = ordered.filter((id) => allowed.includes(id));
+    return filtered.length ? filtered : allowed;
   }
   if (snapshot?.channelOrder?.length) {
-    return snapshot.channelOrder;
+    const filtered = snapshot.channelOrder.filter((id) => allowed.includes(id));
+    return filtered.length ? filtered : allowed;
   }
-  return ["whatsapp", "telegram", "discord", "googlechat", "slack", "signal", "imessage", "nostr"];
+  return allowed;
 }
 
 function renderChannel(key: ChannelKey, props: ChannelsProps, data: ChannelsChannelData) {
@@ -106,6 +113,12 @@ function renderChannel(key: ChannelKey, props: ChannelsProps, data: ChannelsChan
       return renderWhatsAppCard({
         props,
         whatsapp: data.whatsapp,
+        accountCountLabel,
+      });
+    case "instagram":
+      return renderInstagramCard({
+        props,
+        instagram: data.instagram,
         accountCountLabel,
       });
     case "telegram":
@@ -245,8 +258,48 @@ function resolveChannelMetaMap(
 }
 
 function resolveChannelLabel(snapshot: ChannelsStatusSnapshot | null, key: string): string {
+  if (key === "instagram") {
+    return "Instagram";
+  }
   const meta = resolveChannelMetaMap(snapshot)[key];
   return meta?.label ?? snapshot?.channelLabels?.[key] ?? key;
+}
+
+function filterChannelSnapshot(snapshot: ChannelsStatusSnapshot) {
+  const allowed = new Set(["whatsapp", "instagram"]);
+  const channels: Record<string, unknown> = {};
+  const labels: Record<string, string> = {};
+  const accounts: Record<string, ChannelAccountSnapshot[]> = {};
+  for (const key of Object.keys(snapshot.channels ?? {})) {
+    if (!allowed.has(key)) {
+      continue;
+    }
+    channels[key] = snapshot.channels[key];
+  }
+  for (const key of Object.keys(snapshot.channelLabels ?? {})) {
+    if (!allowed.has(key)) {
+      continue;
+    }
+    labels[key] = snapshot.channelLabels?.[key] ?? key;
+  }
+  for (const key of Object.keys(snapshot.channelAccounts ?? {})) {
+    if (!allowed.has(key)) {
+      continue;
+    }
+    accounts[key] = snapshot.channelAccounts?.[key] ?? [];
+  }
+  return {
+    ...snapshot,
+    channelOrder: Array.isArray(snapshot.channelOrder)
+      ? snapshot.channelOrder.filter((key) => allowed.has(key))
+      : snapshot.channelOrder,
+    channelMeta: Array.isArray(snapshot.channelMeta)
+      ? snapshot.channelMeta.filter((entry) => allowed.has(entry.id))
+      : snapshot.channelMeta,
+    channels,
+    channelLabels: labels,
+    channelAccounts: accounts,
+  };
 }
 
 const RECENT_ACTIVITY_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes

@@ -92,6 +92,13 @@ function persistSessionToken(gatewayUrl: string, token: string) {
 
 export function loadSettings(): UiSettings {
   const defaultUrl = (() => {
+    if (
+      location.host === "tauri.localhost" ||
+      location.hostname === "tauri.localhost" ||
+      location.protocol === "tauri:"
+    ) {
+      return "ws://127.0.0.1:18789";
+    }
     const proto = location.protocol === "https:" ? "wss" : "ws";
     const configured =
       typeof window !== "undefined" &&

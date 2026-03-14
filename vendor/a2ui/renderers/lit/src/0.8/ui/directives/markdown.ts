@@ -23,12 +23,12 @@ import {
 } from "lit/directive.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import MarkdownIt from "markdown-it";
-import { RenderRule } from "markdown-it/lib/renderer.mjs";
+import type { Options, RenderRule, Renderer, Token } from "markdown-it";
 import * as Sanitizer from "./sanitizer.js";
 
 class MarkdownDirective extends Directive {
   #markdownIt = MarkdownIt({
-    highlight: (str, lang) => {
+    highlight: (str: string, lang: string, _attrs: string) => {
       switch (lang) {
         case "html": {
           const iframe = document.createElement("iframe");
@@ -101,11 +101,11 @@ class MarkdownDirective extends Directive {
 
       const key = `${tokenName}_open`;
       this.#markdownIt.renderer.rules[key] = (
-        tokens,
-        idx,
-        options,
-        _env,
-        self
+        tokens: Token[],
+        idx: number,
+        options: Options,
+        _env: unknown,
+        self: Renderer,
       ) => {
         const token = tokens[idx];
         const tokenClasses = tagClassMap[token.tag] ?? [];

@@ -8,6 +8,7 @@ export const es: TranslationMap = {
     offline: "Desconectado",
     connect: "Conectar",
     refresh: "Actualizar",
+    restartGateway: "Reiniciar gateway",
     enabled: "Habilitado",
     disabled: "Deshabilitado",
     na: "n/a",

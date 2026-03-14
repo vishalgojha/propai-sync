@@ -44,6 +44,8 @@ import {
   setTheme as setThemeInternal,
   setThemeMode as setThemeModeInternal,
   onPopState as onPopStateInternal,
+  applyResolvedTheme as applyResolvedThemeInternal,
+  syncThemeWithSettings as syncThemeWithSettingsInternal,
 } from "./app-settings.ts";
 import {
   resetToolStream as resetToolStreamInternal,
@@ -60,8 +62,15 @@ import type { ExecApprovalRequest } from "./controllers/exec-approval.ts";
 import type { ExecApprovalsFile, ExecApprovalsSnapshot } from "./controllers/exec-approvals.ts";
 import type { SkillMessage } from "./controllers/skills.ts";
 import type { GatewayBrowserClient, GatewayHelloOk } from "./gateway.ts";
+import type { WizardNextResult, WizardStartResult, WizardStep } from "../../../src/gateway/protocol/index.js";
+import {
+  resolveOnboardingWizardPreset,
+  resolveOnboardingWizardPresetId,
+  type OnboardingWizardPresetId,
+} from "./onboarding-presets.ts";
 import type { Tab } from "./navigation.ts";
 import { loadSettings, type UiSettings } from "./storage.ts";
+import { resolveTheme } from "./theme.ts";
 import type { ResolvedTheme, ThemeMode, ThemeName } from "./theme.ts";
 import type {
   AgentsListResult,
@@ -85,6 +94,8 @@ import type {
 } from "./types.ts";
 import { type ChatAttachment, type ChatQueueItem, type CronFormState } from "./ui-types.ts";
 import { generateUUID } from "./uuid.ts";
+import { restartDesktopGateway } from "./desktop/gateway.ts";
+import { isTauriRuntime } from "./desktop/tauri.ts";
 import type { NostrProfileFormState } from "./views/channels.nostr-profile-form.ts";
 
 declare global {
@@ -94,7 +105,72 @@ declare global {
 }
 
 const bootAssistantIdentity = normalizeAssistantIdentity({});
+const DESKTOP_ONBOARDING_DONE_KEY = "openclaw.desktop.onboarding.done";
+const TAURI_ONBOARDING_OPEN_EVENT = "openclaw:onboarding-open";
+const TAURI_GATEWAY_RESTART_EVENT = "openclaw:gateway-restart";
+const BRAND_NAME = "propai";
 
+function applyBrandTheme() {
+  if (typeof document === "undefined") {
+    return;
+  }
+  document.documentElement.dataset.brand = BRAND_NAME;
+}
+
+function readDesktopOnboardingDoneFlag(): boolean {
+  try {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    const value = window.localStorage?.getItem(DESKTOP_ONBOARDING_DONE_KEY);
+    return value === "1" || value === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeDesktopOnboardingDoneFlag() {
+  try {
+    window.localStorage?.setItem(DESKTOP_ONBOARDING_DONE_KEY, "1");
+  } catch {
+    // ignore
+  }
+}
+
+function resolveDesktopOnboardingMode(): boolean {
+  if (!isTauriRuntime()) {
+    return false;
+  }
+  // If explicitly requested via URL, always honor it.
+  if (resolveOnboardingMode()) {
+    return true;
+  }
+  // Otherwise, show onboarding on first run until completed.
+  return !readDesktopOnboardingDoneFlag();
+}
+
+
+function resolveOnboardingPresetId(): OnboardingWizardPresetId {
+  if (!window.location.search) {
+    return resolveOnboardingWizardPresetId("none");
+  }
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("preset") ?? params.get("onboardingPreset") ?? "";
+  return resolveOnboardingWizardPresetId(raw);
+}
+
+function resolveOnboardingAutoAdvance(): boolean {
+  if (!window.location.search) {
+    return false;
+  }
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("auto") ?? params.get("autoAdvance") ?? "";
+  if (!raw) {
+    return true;
+  }
+  const normalized = raw.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
+}
 function resolveOnboardingMode(): boolean {
   if (!window.location.search) {
     return false;
@@ -122,7 +198,16 @@ export class OpenClawApp extends LitElement {
   }
   @state() password = "";
   @state() tab: Tab = "chat";
-  @state() onboarding = resolveOnboardingMode();
+  @state() onboarding = resolveOnboardingMode() || resolveDesktopOnboardingMode();
+  @state() onboardingWizardBusy = false;
+  @state() onboardingWizardError: string | null = null;
+  @state() onboardingWizardSessionId: string | null = null;
+  @state() onboardingWizardStatus: string | null = null;
+  @state() onboardingWizardStep: WizardStep | null = null;
+  @state() onboardingWizardDraft: unknown = null;
+  @state() onboardingWizardDraftTouched = false;
+  @state() onboardingWizardPresetId: OnboardingWizardPresetId = resolveOnboardingPresetId();
+  @state() onboardingWizardAutoAdvance = resolveOnboardingAutoAdvance();
   @state() connected = false;
   @state() theme: ThemeName = this.settings.theme;
   @state() themeMode: ThemeMode = this.settings.themeMode;
@@ -183,7 +268,7 @@ export class OpenClawApp extends LitElement {
   pendingGatewayToken: string | null = null;
 
   @state() configLoading = false;
-  @state() configRaw = "{\n}\n";
+  @state() configRaw = "{\\n}\\n";
   @state() configRawOriginal = "";
   @state() configValid: boolean | null = null;
   @state() configIssues: unknown[] = [];
@@ -399,14 +484,43 @@ export class OpenClawApp extends LitElement {
   private themeMedia: MediaQueryList | null = null;
   private themeMediaHandler: ((event: MediaQueryListEvent) => void) | null = null;
   private topbarObserver: ResizeObserver | null = null;
+  private tauriUnlistenOnboardingOpen: (() => void) | null = null;
+  private tauriUnlistenGatewayRestart: (() => void) | null = null;
 
   createRenderRoot() {
     return this;
   }
+  private async ensureTauriMenuListeners() {
+    if (!isTauriRuntime()) {
+      return;
+    }
+    try {
+      const mod = (await import("@tauri-apps/api/event")) as {
+        listen: (event: string, handler: (event: { payload: unknown }) => void) => Promise<() => void>;
+      };
+      if (!this.tauriUnlistenOnboardingOpen) {
+        this.tauriUnlistenOnboardingOpen = await mod.listen(TAURI_ONBOARDING_OPEN_EVENT, () => {
+          this.enterOnboardingMode();
+        });
+      }
+      if (!this.tauriUnlistenGatewayRestart) {
+        this.tauriUnlistenGatewayRestart = await mod.listen(TAURI_GATEWAY_RESTART_EVENT, () => {
+          void this.restartDesktopGateway();
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   connectedCallback() {
     super.connectedCallback();
+    applyBrandTheme();
     handleConnected(this as unknown as Parameters<typeof handleConnected>[0]);
+    if (this.onboarding) {
+      applyResolvedThemeInternal(this, resolveTheme(this.theme, "dark"));
+    }
+    void this.ensureTauriMenuListeners();
   }
 
   protected firstUpdated() {
@@ -414,16 +528,291 @@ export class OpenClawApp extends LitElement {
   }
 
   disconnectedCallback() {
+    this.tauriUnlistenOnboardingOpen?.();
+    this.tauriUnlistenOnboardingOpen = null;
+    this.tauriUnlistenGatewayRestart?.();
+    this.tauriUnlistenGatewayRestart = null;
     handleDisconnected(this as unknown as Parameters<typeof handleDisconnected>[0]);
     super.disconnectedCallback();
   }
 
   protected updated(changed: Map<PropertyKey, unknown>) {
     handleUpdated(this as unknown as Parameters<typeof handleUpdated>[0], changed);
+    if (changed.has("onboarding")) {
+      if (this.onboarding) {
+        applyResolvedThemeInternal(this, resolveTheme(this.theme, "dark"));
+      } else {
+        syncThemeWithSettingsInternal(this);
+      }
+    }
   }
 
   connect() {
     connectGatewayInternal(this as unknown as Parameters<typeof connectGatewayInternal>[0]);
+  }
+
+  async restartDesktopGateway() {
+    await restartDesktopGateway(this);
+    this.connect();
+  }
+  handleOnboardingPresetChange(value: OnboardingWizardPresetId) {
+    this.onboardingWizardPresetId = value;
+  }
+
+  handleOnboardingAutoAdvanceChange(value: boolean) {
+    this.onboardingWizardAutoAdvance = value;
+  }
+
+  private findWizardOptionValue(step: WizardStep, desired: string): unknown | undefined {
+    const options = Array.isArray(step.options) ? step.options : [];
+    for (const opt of options) {
+      if (opt.value === desired) {
+        return opt.value;
+      }
+      if (String(opt.value) === desired) {
+        return opt.value;
+      }
+    }
+    return undefined;
+  }
+
+  private resolvePresetValueForStep(step: WizardStep): unknown | undefined {
+    const preset = resolveOnboardingWizardPreset(this.onboardingWizardPresetId);
+    if (preset.id === "none") {
+      return undefined;
+    }
+
+    const message = typeof step.message === "string" ? step.message.trim() : "";
+    if (step.type !== "select" || !message) {
+      return undefined;
+    }
+
+    if (message === "Model/auth provider" && preset.providerGroup) {
+      return this.findWizardOptionValue(step, preset.providerGroup);
+    }
+
+    if (message.endsWith(" auth method") && preset.authChoice) {
+      return this.findWizardOptionValue(step, preset.authChoice);
+    }
+
+    if (message === "Filter models by provider" && preset.model) {
+      const provider = preset.model.split("/")[0] ?? "";
+      return provider ? this.findWizardOptionValue(step, provider) : undefined;
+    }
+
+    if (message.startsWith("Default model") && preset.model) {
+      return this.findWizardOptionValue(step, preset.model);
+    }
+
+    return undefined;
+  }
+
+  private applyOnboardingWizardPresetToStep() {
+    const step = this.onboardingWizardStep;
+    if (!step) {
+      return;
+    }
+    if (this.onboardingWizardDraftTouched) {
+      return;
+    }
+    const desired = this.resolvePresetValueForStep(step);
+    if (desired === undefined) {
+      return;
+    }
+    this.onboardingWizardDraft = desired;
+  }
+
+  private async driveOnboardingWizardPresetSteps() {
+    if (!this.onboardingWizardAutoAdvance) {
+      return;
+    }
+    const preset = resolveOnboardingWizardPreset(this.onboardingWizardPresetId);
+    if (preset.id === "none") {
+      return;
+    }
+
+    let guard = 0;
+    while (guard++ < 15) {
+      const sessionId = this.onboardingWizardSessionId;
+      const step = this.onboardingWizardStep;
+      if (!sessionId || !step || !this.client) {
+        return;
+      }
+
+      const desired = this.resolvePresetValueForStep(step);
+      if (desired === undefined) {
+        return;
+      }
+
+      this.onboardingWizardDraft = desired;
+
+      const result = await this.client.request<WizardNextResult>("wizard.next", {
+        sessionId,
+        answer: {
+          stepId: step.id,
+          value: desired,
+        },
+      });
+
+      this.onboardingWizardStatus = result.status ?? null;
+      this.onboardingWizardStep = (result.step as WizardStep | undefined) ?? null;
+      this.onboardingWizardDraft = this.onboardingWizardStep?.initialValue ?? null;
+      this.onboardingWizardDraftTouched = false;
+
+      if (result.done) {
+        this.onboardingWizardSessionId = null;
+        this.onboardingWizardStep = null;
+        this.onboardingWizardDraft = null;
+      this.onboardingWizardDraftTouched = false;
+        return;
+      }
+
+      this.applyOnboardingWizardPresetToStep();
+    }
+  }
+
+  async startOnboardingWizard() {
+    if (this.onboardingWizardBusy) {
+      return;
+    }
+    this.onboardingWizardError = null;
+    if (!this.connected || !this.client) {
+      this.onboardingWizardError = "Gateway not connected.";
+      this.connect();
+      return;
+    }
+    this.onboardingWizardBusy = true;
+    try {
+      const result = await this.client.request<WizardStartResult>("wizard.start", {
+        mode: "local",
+      });
+      this.onboardingWizardSessionId = result.sessionId;
+      this.onboardingWizardStatus = result.status ?? null;
+      this.onboardingWizardStep = (result.step as WizardStep | undefined) ?? null;
+      this.onboardingWizardDraft = this.onboardingWizardStep?.initialValue ?? null;
+      this.onboardingWizardDraftTouched = false;
+      this.applyOnboardingWizardPresetToStep();
+      await this.driveOnboardingWizardPresetSteps();
+      if (result.done) {
+        this.onboardingWizardSessionId = null;
+        this.onboardingWizardStep = null;
+        if (result.status === "done") {
+          this.finishOnboardingWizard();
+        }
+      }
+    } catch (err) {
+      this.onboardingWizardError = `Wizard start failed: ${String(err)}`;
+    } finally {
+      this.onboardingWizardBusy = false;
+    }
+  }
+
+  async cancelOnboardingWizard() {
+    if (this.onboardingWizardBusy) {
+      return;
+    }
+    this.onboardingWizardError = null;
+    const sessionId = this.onboardingWizardSessionId;
+    if (!sessionId || !this.client) {
+      this.onboardingWizardSessionId = null;
+      this.onboardingWizardStep = null;
+      return;
+    }
+    this.onboardingWizardBusy = true;
+    try {
+      const result = await this.client.request<{ status?: string; error?: string }>(
+        "wizard.cancel",
+        {
+          sessionId,
+        },
+      );
+      this.onboardingWizardStatus = result.status ?? null;
+      this.onboardingWizardSessionId = null;
+      this.onboardingWizardStep = null;
+      this.onboardingWizardDraft = null;
+      this.onboardingWizardDraftTouched = false;
+    } catch (err) {
+      this.onboardingWizardError = `Wizard cancel failed: ${String(err)}`;
+    } finally {
+      this.onboardingWizardBusy = false;
+    }
+  }
+
+  handleOnboardingDraftChange(value: unknown) {
+    this.onboardingWizardDraftTouched = true;
+    this.onboardingWizardDraft = value;
+  }
+
+
+  private exitOnboardingMode(params?: { completed?: boolean }) {
+    if (params?.completed) {
+      writeDesktopOnboardingDoneFlag();
+    }
+    this.onboarding = false;
+    this.tab = "chat";
+    syncThemeWithSettingsInternal(this);
+    try {
+      const url = new URL(window.location.href);
+      const params = url.searchParams;
+      params.delete("onboarding");
+      params.delete("onboardingPreset");
+      params.delete("preset");
+      params.delete("auto");
+      params.delete("autoAdvance");
+      url.search = params.toString();
+      window.history.replaceState({}, "", url.toString());
+    } catch {
+      // ignore
+    }
+  }
+
+  finishOnboardingWizard() {
+    this.exitOnboardingMode({ completed: true });
+  }
+
+  skipOnboardingWizard() {
+    if (isTauriRuntime()) {
+      writeDesktopOnboardingDoneFlag();
+    }
+    this.exitOnboardingMode({ completed: false });
+  }
+  async submitOnboardingWizardStep() {
+    if (this.onboardingWizardBusy) {
+      return;
+    }
+    this.onboardingWizardError = null;
+    const sessionId = this.onboardingWizardSessionId;
+    const step = this.onboardingWizardStep;
+    if (!sessionId || !step || !this.client) {
+      return;
+    }
+    this.onboardingWizardBusy = true;
+    try {
+      const result = await this.client.request<WizardNextResult>("wizard.next", {
+        sessionId,
+        answer: {
+          stepId: step.id,
+          value: this.onboardingWizardDraft,
+        },
+      });
+      this.onboardingWizardStatus = result.status ?? null;
+      this.onboardingWizardStep = (result.step as WizardStep | undefined) ?? null;
+      this.onboardingWizardDraft = this.onboardingWizardStep?.initialValue ?? null;
+      this.onboardingWizardDraftTouched = false;
+      this.applyOnboardingWizardPresetToStep();
+      await this.driveOnboardingWizardPresetSteps();
+      if (result.done) {
+        this.onboardingWizardSessionId = null;
+        this.onboardingWizardStep = null;
+        if (result.status === "done") {
+          this.finishOnboardingWizard();
+        }
+      }
+    } catch (err) {
+      this.onboardingWizardError = `Wizard step failed: ${String(err)}`;
+    } finally {
+      this.onboardingWizardBusy = false;
+    }
   }
 
   handleChatScroll(event: Event) {
@@ -637,3 +1026,20 @@ export class OpenClawApp extends LitElement {
     return renderApp(this as unknown as AppViewState);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

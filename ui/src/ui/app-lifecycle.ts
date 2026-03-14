@@ -16,14 +16,17 @@ import {
   syncTabWithLocation,
   syncThemeWithSettings,
 } from "./app-settings.ts";
+import { ensureDesktopGateway } from "./desktop/gateway.ts";
 import { loadControlUiBootstrapConfig } from "./controllers/control-ui-bootstrap.ts";
 import type { Tab } from "./navigation.ts";
+import type { UiSettings } from "./storage.ts";
 
 type LifecycleHost = {
   basePath: string;
   client?: { stop: () => void } | null;
   connectGeneration: number;
   connected?: boolean;
+  settings: UiSettings;
   tab: Tab;
   assistantName: string;
   assistantAvatar: string | null;
@@ -46,12 +49,13 @@ export function handleConnected(host: LifecycleHost) {
   const connectGeneration = ++host.connectGeneration;
   host.basePath = inferBasePath();
   applySettingsFromUrl(host as unknown as Parameters<typeof applySettingsFromUrl>[0]);
+  const desktopReady = ensureDesktopGateway(host as unknown as Parameters<typeof ensureDesktopGateway>[0]);
   const bootstrapReady = loadControlUiBootstrapConfig(host);
   syncTabWithLocation(host as unknown as Parameters<typeof syncTabWithLocation>[0], true);
   syncThemeWithSettings(host as unknown as Parameters<typeof syncThemeWithSettings>[0]);
   attachThemeListener(host as unknown as Parameters<typeof attachThemeListener>[0]);
   window.addEventListener("popstate", host.popStateHandler);
-  void bootstrapReady.finally(() => {
+  void Promise.allSettled([Promise.resolve(desktopReady), Promise.resolve(bootstrapReady)]).finally(() => {
     if (host.connectGeneration !== connectGeneration) {
       return;
     }

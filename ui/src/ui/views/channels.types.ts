@@ -51,6 +51,7 @@ export type ChannelsProps = {
 
 export type ChannelsChannelData = {
   whatsapp?: WhatsAppStatus;
+  instagram?: Record<string, unknown> | null;
   telegram?: TelegramStatus;
   discord?: DiscordStatus | null;
   googlechat?: GoogleChatStatus | null;

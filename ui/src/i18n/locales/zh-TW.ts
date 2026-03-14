@@ -8,6 +8,7 @@ export const zh_TW: TranslationMap = {
     offline: "離線",
     connect: "連接",
     refresh: "刷新",
+    restartGateway: "重新啟動網關",
     enabled: "已啟用",
     disabled: "已禁用",
     na: "不適用",

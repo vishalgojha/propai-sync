@@ -49,6 +49,7 @@
 }
 
 .shell--onboarding {
+  grid-template-columns: 0px minmax(0, 1fr);
   grid-template-rows: 0 1fr;
 }
 
@@ -85,6 +86,14 @@
   height: var(--shell-topbar-height);
   border-bottom: 1px solid var(--border);
   background: var(--bg);
+}
+
+:root[data-brand="propai"] .topbar {
+  background:
+    radial-gradient(120% 120% at 10% 0%, rgba(59, 130, 246, 0.18), transparent 50%),
+    radial-gradient(120% 120% at 90% 10%, rgba(14, 165, 233, 0.16), transparent 55%),
+    var(--bg);
+  border-bottom-color: rgba(59, 130, 246, 0.25);
 }
 
 .topbar-left {
@@ -128,6 +137,10 @@
   object-fit: contain;
 }
 
+:root[data-brand="propai"] .brand-logo {
+  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.35));
+}
+
 .brand-text {
   display: flex;
   flex-direction: column;
@@ -149,6 +162,10 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1;
+}
+
+:root[data-brand="propai"] .brand-sub {
+  letter-spacing: 0.12em;
 }
 
 /* Topbar status */
@@ -212,7 +229,8 @@
   display: none; /* Chrome/Safari */
 }
 
-.shell--chat-focus .nav {
+.shell--chat-focus .nav,
+.shell--onboarding .nav {
   width: 0;
   padding: 0;
   border-width: 0;
@@ -619,3 +637,4 @@
     grid-template-columns: 1fr;
   }
 }
+

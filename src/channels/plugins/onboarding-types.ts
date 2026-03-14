@@ -16,6 +16,7 @@ export type SetupChannelsOptions = {
   onWhatsAppAccountId?: (accountId: string) => void;
   forceAllowFromChannels?: ChannelId[];
   skipStatusNote?: boolean;
+  showStatusWhenUnconfigured?: boolean;
   skipDmPolicyPrompt?: boolean;
   skipConfirm?: boolean;
   quickstartDefaults?: boolean;
