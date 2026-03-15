@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { resolveOAuthDir } from "./config/paths.js";
 import { logVerbose, shouldLogVerbose } from "./globals.js";
+import { readPropAiEnvValue } from "./infra/env-read.js";
 import {
   expandHomePrefix,
   resolveEffectiveHomeDir,
@@ -294,7 +295,7 @@ export function resolveConfigDir(
   env: NodeJS.ProcessEnv = process.env,
   homedir: () => string = os.homedir,
 ): string {
-  const override = env.propai_STATE_DIR?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
+  const override = readPropAiEnvValue(env, "STATE_DIR")?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
   if (override) {
     return resolveUserPath(override);
   }
@@ -319,7 +320,7 @@ function resolveHomeDisplayPrefix(): { home: string; prefix: string } | undefine
   if (!home) {
     return undefined;
   }
-  const explicitHome = process.env.propai_HOME?.trim();
+  const explicitHome = readPropAiEnvValue(process.env, "HOME")?.trim();
   if (explicitHome) {
     return { home, prefix: "$PROPAI_HOME" };
   }

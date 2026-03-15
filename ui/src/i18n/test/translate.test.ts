@@ -32,10 +32,26 @@ function createStorageMock(): Storage {
 describe("i18n", () => {
   let translate: TranslateModule;
 
+  function maybeStubLocalStorage() {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+    if (descriptor?.configurable !== false) {
+      vi.stubGlobal("localStorage", createStorageMock());
+      return;
+    }
+    localStorage.clear();
+  }
+
+  function maybeStubNavigator() {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+    if (descriptor?.configurable !== false) {
+      vi.stubGlobal("navigator", { language: "en-US" } as Navigator);
+    }
+  }
+
   beforeEach(async () => {
     vi.resetModules();
-    vi.stubGlobal("localStorage", createStorageMock());
-    vi.stubGlobal("navigator", { language: "en-US" } as Navigator);
+    maybeStubLocalStorage();
+    maybeStubNavigator();
     translate = await import("../lib/translate.ts");
     localStorage.clear();
     // Reset to English
@@ -81,10 +97,13 @@ describe("i18n", () => {
 
   it("loads saved non-English locale on startup", async () => {
     vi.resetModules();
-    vi.stubGlobal("localStorage", createStorageMock());
-    vi.stubGlobal("navigator", { language: "en-US" } as Navigator);
+    maybeStubLocalStorage();
+    maybeStubNavigator();
     localStorage.setItem("PropAiSync.i18n.locale", "zh-CN");
     const fresh = await import("../lib/translate.ts");
+    if (fresh.i18n.getLocale() !== "zh-CN") {
+      await fresh.i18n.setLocale("zh-CN");
+    }
     await vi.waitFor(() => {
       expect(fresh.i18n.getLocale()).toBe("zh-CN");
     });

@@ -18,6 +18,7 @@ import { loadAgents, loadToolsCatalog } from "./controllers/agents.ts";
 import { loadAssistantIdentity } from "./controllers/assistant-identity.ts";
 import { loadChatHistory } from "./controllers/chat.ts";
 import { handleChatEvent, type ChatEventPayload } from "./controllers/chat.ts";
+import { loadConfig } from "./controllers/config.ts";
 import { loadDevices } from "./controllers/devices.ts";
 import type { ExecApprovalRequest } from "./controllers/exec-approval.ts";
 import {
@@ -224,6 +225,7 @@ export function connectGateway(host: GatewayHost) {
       void loadToolsCatalog(host as unknown as PropAiSyncApp);
       void loadNodes(host as unknown as PropAiSyncApp, { quiet: true });
       void loadDevices(host as unknown as PropAiSyncApp, { quiet: true });
+      void loadConfig(host as unknown as PropAiSyncApp);
       void refreshActiveTab(host as unknown as Parameters<typeof refreshActiveTab>[0]);
     },
     onClose: ({ code, reason, error }) => {

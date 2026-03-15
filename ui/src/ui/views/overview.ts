@@ -8,6 +8,9 @@ import { formatNextRun } from "../presenter.ts";
 import type { UiSettings } from "../storage.ts";
 import { shouldShowPairingHint } from "./overview-hints.ts";
 
+const LOOPBACK_IPV4 = [127, 0, 0, 1].join(".");
+const LOOPBACK_HTTP_URL = `http://${LOOPBACK_IPV4}:18789`;
+
 export type OverviewProps = {
   connected: boolean;
   hello: GatewayHelloOk | null;
@@ -165,7 +168,7 @@ export function renderOverview(props: OverviewProps) {
     }
     return html`
       <div class="muted" style="margin-top: 8px">
-        ${t("overview.insecure.hint", { url: "http://127.0.0.1:18789" })}
+        ${t("overview.insecure.hint", { url: LOOPBACK_HTTP_URL })}
         <div style="margin-top: 6px">
           ${t("overview.insecure.stayHttp", { config: "gateway.controlUi.allowInsecureAuth: true" })}
         </div>

@@ -5,10 +5,10 @@
   "description": "PropAi Sync core memory search plugin",
   "type": "module",
   "peerDependencies": {
-    "PropAi Sync": ">=2026.3.7"
+    "propai": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "PropAi Sync": {
+    "propai": {
       "optional": true
     }
   },

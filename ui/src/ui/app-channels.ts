@@ -6,6 +6,7 @@ import {
   waitWhatsAppLogin,
 } from "./controllers/channels.ts";
 import { loadConfig, saveConfig } from "./controllers/config.ts";
+import { tauriInvoke } from "./desktop/tauri.ts";
 import type { NostrProfile } from "./types.ts";
 import { createNostrProfileFormState } from "./views/channels.nostr-profile-form.ts";
 
@@ -60,31 +61,6 @@ function parseValidationErrors(details: unknown): Record<string, string> {
 function resolveNostrAccountId(host: PropAiSyncApp): string {
   const accounts = host.channelsSnapshot?.channelAccounts?.nostr ?? [];
   return accounts[0]?.accountId ?? host.nostrProfileAccountId ?? "default";
-}
-
-function buildNostrProfileUrl(accountId: string, suffix = ""): string {
-  return `/api/channels/nostr/${encodeURIComponent(accountId)}/profile${suffix}`;
-}
-
-function resolveGatewayHttpAuthHeader(host: PropAiSyncApp): string | null {
-  const deviceToken = host.hello?.auth?.deviceToken?.trim();
-  if (deviceToken) {
-    return `Bearer ${deviceToken}`;
-  }
-  const token = host.settings.token.trim();
-  if (token) {
-    return `Bearer ${token}`;
-  }
-  const password = host.password.trim();
-  if (password) {
-    return `Bearer ${password}`;
-  }
-  return null;
-}
-
-function buildGatewayHttpHeaders(host: PropAiSyncApp): Record<string, string> {
-  const authorization = resolveGatewayHttpAuthHeader(host);
-  return authorization ? { Authorization: authorization } : {};
 }
 
 export function handleNostrProfileEdit(
@@ -150,23 +126,29 @@ export async function handleNostrProfileSave(host: PropAiSyncApp) {
   };
 
   try {
-    const response = await fetch(buildNostrProfileUrl(accountId), {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...buildGatewayHttpHeaders(host),
-      },
-      body: JSON.stringify(state.values),
-    });
-    const data = (await response.json().catch(() => null)) as {
+    const gatewayUrl = host.settings?.gatewayUrl?.trim() || "";
+    const token = host.settings?.token?.trim() || "";
+    const data = await tauriInvoke<{
       ok?: boolean;
       error?: string;
       details?: unknown;
       persisted?: boolean;
-    } | null;
+    } | null>("update_channels_nostr_profile", {
+      accountId,
+      ...(gatewayUrl ? { gatewayUrl } : {}),
+      ...(token ? { token } : {}),
+      ...state.values,
+    });
 
-    if (!response.ok || data?.ok === false || !data) {
-      const errorMessage = data?.error ?? `Profile update failed (${response.status})`;
+    if (data?.ok === false || !data) {
+      const status = (() => {
+        if (!data || typeof data !== "object") {
+          return 0;
+        }
+        const raw = (data as { status?: unknown }).status;
+        return typeof raw === "number" ? raw : 0;
+      })();
+      const errorMessage = data?.error ?? `Profile update failed (${status})`;
       host.nostrProfileFormState = {
         ...state,
         saving: false,
@@ -221,24 +203,30 @@ export async function handleNostrProfileImport(host: PropAiSyncApp) {
   };
 
   try {
-    const response = await fetch(buildNostrProfileUrl(accountId, "/import"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...buildGatewayHttpHeaders(host),
-      },
-      body: JSON.stringify({ autoMerge: true }),
-    });
-    const data = (await response.json().catch(() => null)) as {
+    const gatewayUrl = host.settings?.gatewayUrl?.trim() || "";
+    const token = host.settings?.token?.trim() || "";
+    const data = await tauriInvoke<{
       ok?: boolean;
       error?: string;
       imported?: NostrProfile;
       merged?: NostrProfile;
       saved?: boolean;
-    } | null;
+    } | null>("channels_nostr_profile_import", {
+      accountId,
+      autoMerge: true,
+      ...(gatewayUrl ? { gatewayUrl } : {}),
+      ...(token ? { token } : {}),
+    });
 
-    if (!response.ok || data?.ok === false || !data) {
-      const errorMessage = data?.error ?? `Profile import failed (${response.status})`;
+    if (data?.ok === false || !data) {
+      const status = (() => {
+        if (!data || typeof data !== "object") {
+          return 0;
+        }
+        const raw = (data as { status?: unknown }).status;
+        return typeof raw === "number" ? raw : 0;
+      })();
+      const errorMessage = data?.error ?? `Profile import failed (${status})`;
       host.nostrProfileFormState = {
         ...state,
         importing: false,

@@ -167,7 +167,7 @@ describe("security audit", () => {
     const credentialsDir = path.join(sharedChannelSecurityStateDir, "credentials");
     await fs.rm(credentialsDir, { recursive: true, force: true }).catch(() => undefined);
     await fs.mkdir(credentialsDir, { recursive: true, mode: 0o700 });
-    await withEnvAsync({ PropAi Sync_STATE_DIR: sharedChannelSecurityStateDir }, () =>
+    await withEnvAsync({ propai_STATE_DIR: sharedChannelSecurityStateDir }, () =>
       fn(sharedChannelSecurityStateDir),
     );
   };
@@ -183,7 +183,7 @@ describe("security audit", () => {
       path.join(pluginDir, "package.json"),
       JSON.stringify({
         name: "evil-plugin",
-        PropAi Sync: { extensions: [".hidden/index.js"] },
+        "PropAi Sync": { extensions: [".hidden/index.js"] },
       }),
     );
     await fs.writeFile(
@@ -213,7 +213,7 @@ description: test skill
   };
 
   beforeAll(async () => {
-    fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "PropAi Sync-security-audit-"));
+    fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "propai-security-audit-"));
     channelSecurityRoot = path.join(fixtureRoot, "channel-security");
     await fs.mkdir(channelSecurityRoot, { recursive: true, mode: 0o700 });
     sharedChannelSecurityStateDir = path.join(channelSecurityRoot, "state-shared");
@@ -261,10 +261,10 @@ description: test skill
 
   it("flags non-loopback bind without auth as critical", async () => {
     // Clear env tokens so resolveGatewayAuth defaults to mode=none
-    const prevToken = process.env\.propai_GATEWAY_TOKEN;
-    const prevPassword = process.env\.propai_GATEWAY_PASSWORD;
-    delete process.env\.propai_GATEWAY_TOKEN;
-    delete process.env\.propai_GATEWAY_PASSWORD;
+    const prevToken = process.env.propai_GATEWAY_TOKEN;
+    const prevPassword = process.env.propai_GATEWAY_PASSWORD;
+    delete process.env.propai_GATEWAY_TOKEN;
+    delete process.env.propai_GATEWAY_PASSWORD;
 
     try {
       const cfg: PropAiSyncConfig = {
@@ -280,14 +280,14 @@ description: test skill
     } finally {
       // Restore env
       if (prevToken === undefined) {
-        delete process.env\.propai_GATEWAY_TOKEN;
+        delete process.env.propai_GATEWAY_TOKEN;
       } else {
-        process.env\.propai_GATEWAY_TOKEN = prevToken;
+        process.env.propai_GATEWAY_TOKEN = prevToken;
       }
       if (prevPassword === undefined) {
-        delete process.env\.propai_GATEWAY_PASSWORD;
+        delete process.env.propai_GATEWAY_PASSWORD;
       } else {
-        process.env\.propai_GATEWAY_PASSWORD = prevPassword;
+        process.env.propai_GATEWAY_PASSWORD = prevPassword;
       }
     }
   });
@@ -300,7 +300,7 @@ description: test skill
           password: {
             source: "env",
             provider: "default",
-            id: "PropAi Sync_GATEWAY_PASSWORD",
+            id: "PROPAI_GATEWAY_PASSWORD",
           },
         },
       },
@@ -531,7 +531,7 @@ description: test skill
     const riskyGlobalTrustedDirs =
       process.platform === "win32"
         ? [String.raw`C:\Users\ci-user\bin`, String.raw`C:\Users\ci-user\.local\bin`]
-        : ["/usr/local/bin", "/tmp/PropAi Sync-safe-bins"];
+        : ["/usr/local/bin", "/tmp/propai-safe-bins"];
     const cfg: PropAiSyncConfig = {
       tools: {
         exec: {
@@ -712,19 +712,19 @@ description: test skill
     const execDockerRawFn = (async (args: string[]) => {
       if (args[0] === "ps") {
         return {
-          stdout: Buffer.from("PropAi Sync-sbx-browser-old\nPropAi Sync-sbx-browser-missing-hash\n"),
+          stdout: Buffer.from("propai-sbx-browser-old\npropai-sbx-browser-missing-hash\n"),
           stderr: Buffer.alloc(0),
           code: 0,
         };
       }
-      if (args[0] === "inspect" && args.at(-1) === "PropAi Sync-sbx-browser-old") {
+      if (args[0] === "inspect" && args.at(-1) === "propai-sbx-browser-old") {
         return {
           stdout: Buffer.from("abc123\tepoch-v0\n"),
           stderr: Buffer.alloc(0),
           code: 0,
         };
       }
-      if (args[0] === "inspect" && args.at(-1) === "PropAi Sync-sbx-browser-missing-hash") {
+      if (args[0] === "inspect" && args.at(-1) === "propai-sbx-browser-missing-hash") {
         return {
           stdout: Buffer.from("<no value>\t<no value>\n"),
           stderr: Buffer.alloc(0),
@@ -752,7 +752,7 @@ description: test skill
     const staleEpoch = res.findings.find(
       (f) => f.checkId === "sandbox.browser_container.hash_epoch_stale",
     );
-    expect(staleEpoch?.detail).toContain("PropAi Sync-sbx-browser-old");
+    expect(staleEpoch?.detail).toContain("propai-sbx-browser-old");
   });
 
   it("skips sandbox browser hash label checks when docker inspect is unavailable", async () => {
@@ -783,19 +783,19 @@ description: test skill
     const execDockerRawFn = (async (args: string[]) => {
       if (args[0] === "ps") {
         return {
-          stdout: Buffer.from("PropAi Sync-sbx-browser-exposed\n"),
+          stdout: Buffer.from("propai-sbx-browser-exposed\n"),
           stderr: Buffer.alloc(0),
           code: 0,
         };
       }
-      if (args[0] === "inspect" && args.at(-1) === "PropAi Sync-sbx-browser-exposed") {
+      if (args[0] === "inspect" && args.at(-1) === "propai-sbx-browser-exposed") {
         return {
           stdout: Buffer.from("hash123\t2026-02-21-novnc-auth-default\n"),
           stderr: Buffer.alloc(0),
           code: 0,
         };
       }
-      if (args[0] === "port" && args.at(-1) === "PropAi Sync-sbx-browser-exposed") {
+      if (args[0] === "port" && args.at(-1) === "propai-sbx-browser-exposed") {
         return {
           stdout: Buffer.from("6080/tcp -> 0.0.0.0:49101\n9222/tcp -> 127.0.0.1:49100\n"),
           stderr: Buffer.alloc(0),
@@ -1315,7 +1315,7 @@ description: test skill
           password: {
             source: "env",
             provider: "default",
-            id: "PropAi Sync_GATEWAY_PASSWORD",
+            id: "PROPAI_GATEWAY_PASSWORD",
           },
         },
       },
@@ -1900,8 +1900,8 @@ description: test skill
   });
 
   it("flags hooks token reuse of the gateway env token as critical", async () => {
-    const prevToken = process.env\.propai_GATEWAY_TOKEN;
-    process.env\.propai_GATEWAY_TOKEN = "shared-gateway-token-1234567890";
+    const prevToken = process.env.propai_GATEWAY_TOKEN;
+    process.env.propai_GATEWAY_TOKEN = "shared-gateway-token-1234567890";
     const cfg: PropAiSyncConfig = {
       hooks: { enabled: true, token: "shared-gateway-token-1234567890" },
     };
@@ -1911,9 +1911,9 @@ description: test skill
       expectFinding(res, "hooks.token_reuse_gateway_token", "critical");
     } finally {
       if (prevToken === undefined) {
-        delete process.env\.propai_GATEWAY_TOKEN;
+        delete process.env.propai_GATEWAY_TOKEN;
       } else {
-        process.env\.propai_GATEWAY_TOKEN = prevToken;
+        process.env.propai_GATEWAY_TOKEN = prevToken;
       }
     }
   });
@@ -2177,7 +2177,7 @@ description: test skill
         installs: {
           "voice-call": {
             source: "npm",
-            spec: "@PropAi Sync/voice-call",
+            spec: "@propai/voice-call",
           },
         },
       },
@@ -2186,7 +2186,7 @@ description: test skill
           installs: {
             "test-hooks": {
               source: "npm",
-              spec: "@PropAi Sync/test-hooks",
+              spec: "@propai/test-hooks",
             },
           },
         },
@@ -2214,7 +2214,7 @@ description: test skill
         installs: {
           "voice-call": {
             source: "npm",
-            spec: "@PropAi Sync/voice-call@1.2.3",
+            spec: "@propai/voice-call@1.2.3",
             integrity: "sha512-plugin",
           },
         },
@@ -2224,7 +2224,7 @@ description: test skill
           installs: {
             "test-hooks": {
               source: "npm",
-              spec: "@PropAi Sync/test-hooks@1.2.3",
+              spec: "@propai/test-hooks@1.2.3",
               integrity: "sha512-hook",
             },
           },
@@ -2256,12 +2256,12 @@ description: test skill
     await fs.mkdir(hookDir, { recursive: true });
     await fs.writeFile(
       path.join(pluginDir, "package.json"),
-      JSON.stringify({ name: "@PropAi Sync/voice-call", version: "9.9.9" }),
+      JSON.stringify({ name: "@propai/voice-call", version: "9.9.9" }),
       "utf-8",
     );
     await fs.writeFile(
       path.join(hookDir, "package.json"),
-      JSON.stringify({ name: "@PropAi Sync/test-hooks", version: "8.8.8" }),
+      JSON.stringify({ name: "@propai/test-hooks", version: "8.8.8" }),
       "utf-8",
     );
 
@@ -2270,7 +2270,7 @@ description: test skill
         installs: {
           "voice-call": {
             source: "npm",
-            spec: "@PropAi Sync/voice-call@1.2.3",
+            spec: "@propai/voice-call@1.2.3",
             integrity: "sha512-plugin",
             resolvedVersion: "1.2.3",
           },
@@ -2281,7 +2281,7 @@ description: test skill
           installs: {
             "test-hooks": {
               source: "npm",
-              spec: "@PropAi Sync/test-hooks@1.2.3",
+              spec: "@propai/test-hooks@1.2.3",
               integrity: "sha512-hook",
               resolvedVersion: "1.2.3",
             },
@@ -2477,7 +2477,7 @@ description: test skill
       path.join(pluginDir, "package.json"),
       JSON.stringify({
         name: "escape-plugin",
-        PropAi Sync: { extensions: ["../outside.js"] },
+        "PropAi Sync": { extensions: ["../outside.js"] },
       }),
     );
     await fs.writeFile(path.join(pluginDir, "index.js"), "export {};");
@@ -2499,7 +2499,7 @@ description: test skill
         path.join(pluginDir, "package.json"),
         JSON.stringify({
           name: "scanfail-plugin",
-          PropAi Sync: { extensions: ["index.js"] },
+          "PropAi Sync": { extensions: ["index.js"] },
         }),
       );
       await fs.writeFile(path.join(pluginDir, "index.js"), "export {};");
@@ -2643,10 +2643,10 @@ description: test skill
     const makeProbeEnv = (env?: { token?: string; password?: string }) => {
       const probeEnv: NodeJS.ProcessEnv = {};
       if (env?.token !== undefined) {
-        probeEnv\.propai_GATEWAY_TOKEN = env.token;
+        probeEnv.propai_GATEWAY_TOKEN = env.token;
       }
       if (env?.password !== undefined) {
-        probeEnv\.propai_GATEWAY_PASSWORD = env.password;
+        probeEnv.propai_GATEWAY_PASSWORD = env.password;
       }
       return probeEnv;
     };

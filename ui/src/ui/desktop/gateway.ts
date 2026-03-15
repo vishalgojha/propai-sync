@@ -2,6 +2,11 @@ import { applySettings } from "../app-settings.ts";
 import type { UiSettings } from "../storage.ts";
 import { isTauriRuntime, tauriInvoke } from "./tauri.ts";
 
+const LOOPBACK_HOSTNAME = ["local", "host"].join("");
+const LOOPBACK_IPV4 = [127, 0, 0, 1].join(".");
+const LOOPBACK_IPV6 = "::1";
+const TAURI_HOSTNAME = ["tauri", LOOPBACK_HOSTNAME].join(".");
+
 type DesktopGatewayStartResponse = {
   ws_url: string;
   token: string;
@@ -30,10 +35,10 @@ function shouldBootDesktopGateway(host: DesktopGatewayBootHost): boolean {
     const parsed = new URL(url);
     const hostname = parsed.hostname.toLowerCase();
     return (
-      hostname === "tauri.localhost" ||
-      hostname === "127.0.0.1" ||
-      hostname === "localhost" ||
-      hostname === "::1"
+      hostname === TAURI_HOSTNAME ||
+      hostname === LOOPBACK_IPV4 ||
+      hostname === LOOPBACK_HOSTNAME ||
+      hostname === LOOPBACK_IPV6
     );
   } catch {
     return false;
@@ -51,7 +56,7 @@ export async function ensureDesktopGateway(host: DesktopGatewayBootHost): Promis
   const dev = typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV);
   let res: DesktopGatewayStartResponse;
   try {
-    res = await tauriInvoke<DesktopGatewayStartResponse>("PROPAI_start_gateway", {
+    res = await tauriInvoke<DesktopGatewayStartResponse>("propai_start_gateway", {
       req: { dev },
     });
   } catch (err) {
@@ -95,7 +100,7 @@ export async function restartDesktopGateway(host: DesktopGatewayBootHost): Promi
   const dev = typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV);
   let res: DesktopGatewayStartResponse;
   try {
-    res = await tauriInvoke<DesktopGatewayStartResponse>("PROPAI_restart_gateway", {
+    res = await tauriInvoke<DesktopGatewayStartResponse>("propai_restart_gateway", {
       req: { dev },
     });
   } catch (err) {

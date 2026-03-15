@@ -2,17 +2,20 @@ import { t } from "../i18n/index.ts";
 import type { IconName } from "./icons.js";
 
 export const TAB_GROUPS = [
-  { label: "chat", tabs: ["chat"] },
+  { label: "Chat", tabs: ["chat"] },
   {
-    label: "control",
+    label: "Control",
     tabs: ["overview", "channels", "instances", "sessions", "usage", "cron"],
   },
-  { label: "agent", tabs: ["agents", "skills", "nodes"] },
+  { label: "Agent", tabs: ["agents", "skills", "nodes"] },
   {
-    label: "settings",
+    label: "Settings",
     tabs: ["config", "debug", "logs"],
   },
 ] as const;
+
+const APP_BASE_NAME = "PropAiSync";
+const APP_SLUG = "propai";
 
 export type Tab =
   | "agents"
@@ -86,6 +89,49 @@ export function normalizeBasePath(basePath: string): string {
   return base;
 }
 
+export function canonicalizeBasePath(basePath: string): string {
+  if (!basePath) {
+    return "";
+  }
+  const normalized = normalizeBasePath(basePath);
+  if (!normalized) {
+    return "";
+  }
+  const segments = normalized.split("/").filter(Boolean);
+  if (segments.length === 0) {
+    return "";
+  }
+  const last = segments[segments.length - 1];
+  if (last.toLowerCase() === APP_SLUG) {
+    segments[segments.length - 1] = APP_BASE_NAME;
+    return `/${segments.join("/")}`;
+  }
+  return normalized;
+}
+
+function slugifyBasePath(basePath: string): string {
+  if (!basePath) {
+    return "";
+  }
+  const normalized = normalizeBasePath(basePath);
+  if (!normalized) {
+    return "";
+  }
+  const segments = normalized.split("/").filter(Boolean);
+  if (segments.length === 0) {
+    return normalized;
+  }
+  const last = segments[segments.length - 1];
+  if (
+    last.toLowerCase() === APP_BASE_NAME.toLowerCase() ||
+    last.toLowerCase() === APP_SLUG
+  ) {
+    segments[segments.length - 1] = APP_SLUG;
+    return `/${segments.join("/")}`;
+  }
+  return normalized;
+}
+
 export function normalizePath(path: string): string {
   if (!path) {
     return "/";
@@ -101,13 +147,13 @@ export function normalizePath(path: string): string {
 }
 
 export function pathForTab(tab: Tab, basePath = ""): string {
-  const base = normalizeBasePath(basePath);
+  const base = slugifyBasePath(basePath);
   const path = TAB_PATHS[tab];
   return base ? `${base}${path}` : path;
 }
 
 export function tabFromPath(pathname: string, basePath = ""): Tab | null {
-  const base = normalizeBasePath(basePath);
+  const base = slugifyBasePath(basePath);
   let path = pathname || "/";
   if (base) {
     if (path === base) {
@@ -142,10 +188,10 @@ export function inferBasePathFromPathname(pathname: string): string {
     const candidate = `/${segments.slice(i).join("/")}`.toLowerCase();
     if (PATH_TO_TAB.has(candidate)) {
       const prefix = segments.slice(0, i);
-      return prefix.length ? `/${prefix.join("/")}` : "";
+      return prefix.length ? canonicalizeBasePath(`/${prefix.join("/")}`) : "";
     }
   }
-  return `/${segments.join("/")}`;
+  return canonicalizeBasePath(`/${segments.join("/")}`);
 }
 
 export function iconForTab(tab: Tab): IconName {

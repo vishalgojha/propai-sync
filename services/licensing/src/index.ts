@@ -9,10 +9,19 @@ const PORT = Number(process.env.PORT ?? "8787");
 const DATABASE_URL = process.env.DATABASE_URL ?? "./data/licensing.db";
 const TRIAL_DAYS = Number(process.env.TRIAL_DAYS ?? "7");
 const ADMIN_KEY = process.env.ADMIN_KEY ?? "";
-const JWT_SECRET = process.env.LICENSE_JWT_SECRET ?? "";
+const isDev =
+  process.env.PROPAI_PROFILE === "dev" || (process.env.NODE_ENV ?? "development") !== "production";
+let jwtSecret = process.env.LICENSE_JWT_SECRET ?? "";
 
-if (!JWT_SECRET) {
-  throw new Error("LICENSE_JWT_SECRET is required");
+if (!jwtSecret) {
+  if (isDev) {
+    jwtSecret = crypto.randomBytes(32).toString("hex");
+    console.warn(
+      "LICENSE_JWT_SECRET is not set; using ephemeral dev secret. Set LICENSE_JWT_SECRET for stable tokens.",
+    );
+  } else {
+    throw new Error("LICENSE_JWT_SECRET is required");
+  }
 }
 
 const db = new Database(path.resolve(DATABASE_URL));
@@ -174,7 +183,7 @@ app.post("/v1/license/verify", (req, res) => {
     expiresAt: status === "active" ? (license.expiresAt as string | null) : null,
     issuedAt: updatedAt,
   };
-  const entitlementJwt = jwt.sign(entitlement, JWT_SECRET, {
+  const entitlementJwt = jwt.sign(entitlement, jwtSecret, {
     expiresIn: "30d",
     issuer: "propai-licensing",
   });

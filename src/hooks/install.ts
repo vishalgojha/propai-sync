@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { MANIFEST_KEY } from "../compat/legacy-names.js";
+import { LEGACY_MANIFEST_KEYS, MANIFEST_KEY } from "../compat/legacy-names.js";
 import { fileExists, readJsonFile, resolveArchiveKind } from "../infra/archive.js";
 import { resolveExistingInstallPath, withExtractedArchiveRoot } from "../infra/install-flow.js";
 import { installFromValidatedNpmSpecArchive } from "../infra/install-from-npm-spec.js";
@@ -112,14 +112,25 @@ export function resolveHookInstallDir(hookId: string, hooksDir?: string): string
   return targetDirResult.path;
 }
 
+function resolveManifestHooks(manifest: HookPackageManifest): string[] | undefined {
+  const manifestKeys = [MANIFEST_KEY, ...LEGACY_MANIFEST_KEYS];
+  for (const key of manifestKeys) {
+    const hooks = manifest[key]?.hooks;
+    if (Array.isArray(hooks)) {
+      return hooks;
+    }
+  }
+  return undefined;
+}
+
 async function ensurePropAiSyncHooks(manifest: HookPackageManifest) {
-  const hooks = manifest[MANIFEST_KEY]?.hooks;
+  const hooks = resolveManifestHooks(manifest);
   if (!Array.isArray(hooks)) {
-    throw new Error("package.json missing PropAiSync.hooks");
+    throw new Error(`package.json missing ${MANIFEST_KEY}.hooks`);
   }
   const list = hooks.map((e) => (typeof e === "string" ? e.trim() : "")).filter(Boolean);
   if (list.length === 0) {
-    throw new Error("package.json PropAiSync.hooks is empty");
+    throw new Error(`package.json ${MANIFEST_KEY}.hooks is empty`);
   }
   return list;
 }
@@ -265,7 +276,7 @@ async function installHookPackageFromDir(
     if (!isPathInside(params.packageDir, hookDir)) {
       return {
         ok: false,
-        error: `PropAiSync.hooks entry escapes package directory: ${entry}`,
+        error: `${MANIFEST_KEY}.hooks entry escapes package directory: ${entry}`,
       };
     }
     await validateHookDir(hookDir);
@@ -276,7 +287,7 @@ async function installHookPackageFromDir(
     ) {
       return {
         ok: false,
-        error: `PropAiSync.hooks entry resolves outside package directory: ${entry}`,
+        error: `${MANIFEST_KEY}.hooks entry resolves outside package directory: ${entry}`,
       };
     }
     const hookName = await resolveHookNameFromDir(hookDir);

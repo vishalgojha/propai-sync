@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { readPropAiEnvValue } from "../infra/env-read.js";
 import { expandHomePrefix, resolveRequiredHomeDir } from "../infra/home-dir.js";
 import type { PropAiSyncConfig } from "./types.js";
 
@@ -12,7 +13,7 @@ import type { PropAiSyncConfig } from "./types.js";
  * - Config is managed externally (read-only from Nix perspective)
  */
 export function resolveIsNixMode(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.propai_NIX_MODE === "1";
+  return readPropAiEnvValue(env, "NIX_MODE") === "1";
 }
 
 export const isNixMode = resolveIsNixMode();
@@ -62,12 +63,12 @@ export function resolveStateDir(
   homedir: () => string = envHomedir(env),
 ): string {
   const effectiveHomedir = () => resolveRequiredHomeDir(env, homedir);
-  const override = env.propai_STATE_DIR?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
+  const override = readPropAiEnvValue(env, "STATE_DIR")?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
   if (override) {
     return resolveUserPath(override, env, effectiveHomedir);
   }
   const newDir = newStateDir(effectiveHomedir);
-  if (env.propai_TEST_FAST === "1") {
+  if (readPropAiEnvValue(env, "TEST_FAST") === "1") {
     return newDir;
   }
   const legacyDirs = legacyStateDirs(effectiveHomedir);
@@ -119,7 +120,8 @@ export function resolveCanonicalConfigPath(
   env: NodeJS.ProcessEnv = process.env,
   stateDir: string = resolveStateDir(env, envHomedir(env)),
 ): string {
-  const override = env.propai_CONFIG_PATH?.trim() || env.CLAWDBOT_CONFIG_PATH?.trim();
+  const override =
+    readPropAiEnvValue(env, "CONFIG_PATH")?.trim() || env.CLAWDBOT_CONFIG_PATH?.trim();
   if (override) {
     return resolveUserPath(override, env, envHomedir(env));
   }
@@ -134,7 +136,7 @@ export function resolveConfigPathCandidate(
   env: NodeJS.ProcessEnv = process.env,
   homedir: () => string = envHomedir(env),
 ): string {
-  if (env.propai_TEST_FAST === "1") {
+  if (readPropAiEnvValue(env, "TEST_FAST") === "1") {
     return resolveCanonicalConfigPath(env, resolveStateDir(env, homedir));
   }
   const candidates = resolveDefaultConfigCandidates(env, homedir);
@@ -159,14 +161,14 @@ export function resolveConfigPath(
   stateDir: string = resolveStateDir(env, envHomedir(env)),
   homedir: () => string = envHomedir(env),
 ): string {
-  const override = env.propai_CONFIG_PATH?.trim();
+  const override = readPropAiEnvValue(env, "CONFIG_PATH")?.trim();
   if (override) {
     return resolveUserPath(override, env, homedir);
   }
-  if (env.propai_TEST_FAST === "1") {
+  if (readPropAiEnvValue(env, "TEST_FAST") === "1") {
     return path.join(stateDir, CONFIG_FILENAME);
   }
-  const stateOverride = env.propai_STATE_DIR?.trim();
+  const stateOverride = readPropAiEnvValue(env, "STATE_DIR")?.trim();
   const candidates = [
     path.join(stateDir, CONFIG_FILENAME),
     ...LEGACY_CONFIG_FILENAMES.map((name) => path.join(stateDir, name)),
@@ -202,13 +204,15 @@ export function resolveDefaultConfigCandidates(
   homedir: () => string = envHomedir(env),
 ): string[] {
   const effectiveHomedir = () => resolveRequiredHomeDir(env, homedir);
-  const explicit = env.propai_CONFIG_PATH?.trim() || env.CLAWDBOT_CONFIG_PATH?.trim();
+  const explicit =
+    readPropAiEnvValue(env, "CONFIG_PATH")?.trim() || env.CLAWDBOT_CONFIG_PATH?.trim();
   if (explicit) {
     return [resolveUserPath(explicit, env, effectiveHomedir)];
   }
 
   const candidates: string[] = [];
-  const PropAiSyncStateDir = env.propai_STATE_DIR?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
+  const PropAiSyncStateDir =
+    readPropAiEnvValue(env, "STATE_DIR")?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
   if (PropAiSyncStateDir) {
     const resolved = resolveUserPath(PropAiSyncStateDir, env, effectiveHomedir);
     candidates.push(path.join(resolved, CONFIG_FILENAME));
@@ -249,7 +253,7 @@ export function resolveOAuthDir(
   env: NodeJS.ProcessEnv = process.env,
   stateDir: string = resolveStateDir(env, envHomedir(env)),
 ): string {
-  const override = env.propai_OAUTH_DIR?.trim();
+  const override = readPropAiEnvValue(env, "OAUTH_DIR")?.trim();
   if (override) {
     return resolveUserPath(override, env, envHomedir(env));
   }
@@ -267,7 +271,8 @@ export function resolveGatewayPort(
   cfg?: PropAiSyncConfig,
   env: NodeJS.ProcessEnv = process.env,
 ): number {
-  const envRaw = env.propai_GATEWAY_PORT?.trim() || env.CLAWDBOT_GATEWAY_PORT?.trim();
+  const envRaw =
+    readPropAiEnvValue(env, "GATEWAY_PORT")?.trim() || env.CLAWDBOT_GATEWAY_PORT?.trim();
   if (envRaw) {
     const parsed = Number.parseInt(envRaw, 10);
     if (Number.isFinite(parsed) && parsed > 0) {

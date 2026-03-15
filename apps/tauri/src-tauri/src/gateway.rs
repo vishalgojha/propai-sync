@@ -541,15 +541,15 @@ pub fn start_gateway(
       base.join("node").join("node")
     };
     let app_data_dir_path = app_data_dir.as_ref().ok_or(DesktopGatewayError::MissingResources)?;
-    let PROPAI_root = ensure_desktop_runtime(&base, app_data_dir_path)?;
-    let PROPAI_entry = PROPAI_root.join("propai.mjs");
-    if !node_bin.is_file() || !PROPAI_entry.is_file() {
+    let propai_root = ensure_desktop_runtime(&base, app_data_dir_path)?;
+    let propai_entry = propai_root.join("propai.mjs");
+    if !node_bin.is_file() || !propai_entry.is_file() {
       return Err(DesktopGatewayError::MissingResources);
     }
 
     let mut cmd = Command::new(node_bin);
-    cmd.current_dir(&PROPAI_root);
-    cmd.arg(PROPAI_entry)
+    cmd.current_dir(&propai_root);
+    cmd.arg(propai_entry)
       .arg("gateway")
       .arg("--bind")
       .arg("loopback")

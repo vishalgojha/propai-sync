@@ -15,6 +15,7 @@ export function mountApp(pathname: string) {
 export function registerAppMountHooks() {
   beforeEach(() => {
     window.__PROPAI_CONTROL_UI_BASE_PATH__ = undefined;
+    (window as unknown as { __PROPAI_LICENSE_BYPASS__?: boolean }).__PROPAI_LICENSE_BYPASS__ = true;
     localStorage.clear();
     sessionStorage.clear();
     document.body.innerHTML = "";
@@ -22,6 +23,8 @@ export function registerAppMountHooks() {
 
   afterEach(() => {
     window.__PROPAI_CONTROL_UI_BASE_PATH__ = undefined;
+    (window as unknown as { __PROPAI_LICENSE_BYPASS__?: boolean }).__PROPAI_LICENSE_BYPASS__ =
+      undefined;
     localStorage.clear();
     sessionStorage.clear();
     document.body.innerHTML = "";

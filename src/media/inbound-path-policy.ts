@@ -1,8 +1,11 @@
 import path from "node:path";
+import type { PropAiSyncConfig } from "../config/config.js";
 
 const WILDCARD_SEGMENT = "*";
 const WINDOWS_DRIVE_ABS_RE = /^[A-Za-z]:\//;
 const WINDOWS_DRIVE_ROOT_RE = /^[A-Za-z]:$/;
+
+export const DEFAULT_IMESSAGE_ATTACHMENT_ROOTS = ["/Users/*/Library/Messages/Attachments"];
 
 function normalizePosixAbsolutePath(value: string): string | undefined {
   const trimmed = value.trim();
@@ -92,6 +95,48 @@ export function mergeInboundPathRoots(
     }
   }
   return merged;
+}
+
+export function resolveIMessageRemoteAttachmentRoots(params: {
+  cfg: PropAiSyncConfig;
+  accountId?: string;
+}): string[] {
+  const channels = params.cfg.channels as
+    | {
+        imessage?: {
+          attachmentRoots?: readonly string[];
+          remoteAttachmentRoots?: readonly string[];
+          accounts?: Record<
+            string,
+            {
+              attachmentRoots?: readonly string[];
+              remoteAttachmentRoots?: readonly string[];
+            }
+          >;
+        };
+      }
+    | undefined;
+  const imessage = channels?.imessage;
+  const accountId = params.accountId?.trim();
+  const account = accountId ? imessage?.accounts?.[accountId] : undefined;
+
+  const remoteRoots = mergeInboundPathRoots(
+    account?.remoteAttachmentRoots,
+    imessage?.remoteAttachmentRoots,
+  );
+  if (remoteRoots.length > 0) {
+    return remoteRoots;
+  }
+
+  const attachmentRoots = mergeInboundPathRoots(
+    account?.attachmentRoots,
+    imessage?.attachmentRoots,
+  );
+  if (attachmentRoots.length > 0) {
+    return attachmentRoots;
+  }
+
+  return mergeInboundPathRoots(DEFAULT_IMESSAGE_ATTACHMENT_ROOTS);
 }
 
 export function isInboundPathAllowed(params: {

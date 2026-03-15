@@ -198,7 +198,7 @@ describe("resolveUserPath", () => {
   });
 
   it("expands ~/ to home dir", () => {
-    expect(resolveUserPath("~/PropAiSync")).toBe(path.resolve(os.homedir(), "PropAi Sync"));
+    expect(resolveUserPath("~/PropAiSync")).toBe(path.resolve(os.homedir(), "PropAiSync"));
   });
 
   it("resolves relative paths", () => {
@@ -209,7 +209,7 @@ describe("resolveUserPath", () => {
     vi.stubEnv("PROPAI_HOME", "/srv/propai-home");
     vi.stubEnv("HOME", "/home/other");
 
-    expect(resolveUserPath("~/PropAiSync")).toBe(path.resolve("/srv/propai-home", "PropAi Sync"));
+    expect(resolveUserPath("~/PropAiSync")).toBe(path.resolve("/srv/propai-home", "PropAiSync"));
 
     vi.unstubAllEnvs();
   });

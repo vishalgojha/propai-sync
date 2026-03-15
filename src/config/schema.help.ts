@@ -28,6 +28,7 @@ export const FIELD_HELP: Record<string, string> = {
   "wizard.lastRunMode":
     'Wizard execution mode recorded as "local" or "remote" for the most recent onboarding flow. Use this to understand whether setup targeted direct local runtime or remote gateway topology.',
   diagnostics:
+    "Diagnostics and telemetry configuration for tracing, metrics, and targeted cache instrumentation. Use this when integrating with observability backends or debugging performance.",
   "diagnostics.otel":
     "OpenTelemetry export settings for traces, metrics, and logs emitted by gateway components. Use this when integrating with centralized observability backends and distributed tracing pipelines.",
   "diagnostics.cacheTrace":
@@ -258,6 +259,7 @@ export const FIELD_HELP: Record<string, string> = {
   "browser.profiles.*.attachOnly":
     "Per-profile attach-only override that skips local browser launch and only attaches to an existing CDP endpoint. Useful when one profile is externally managed but others are locally launched.",
   "browser.profiles.*.color":
+    "Per-profile accent color for UI/profile hints. Use distinct colors to help operators identify profile context quickly.",
   "browser.evaluateEnabled":
     "Enables browser-side evaluate helpers for runtime script evaluation capabilities where supported. Keep disabled unless your workflows require evaluate semantics beyond snapshots/navigation.",
   "browser.snapshotDefaults":
@@ -281,8 +283,11 @@ export const FIELD_HELP: Record<string, string> = {
   "discovery.mdns.mode":
     'mDNS broadcast mode ("minimal" default, "full" includes cliPath/sshPort, "off" disables mDNS).',
   discovery:
+    "Discovery configuration for local and wide-area gateway advertising. Keep defaults unless you need custom discovery behavior.",
   "discovery.wideArea":
+    "Wide-area discovery settings for publishing gateway metadata beyond the local network (for example tailnet-assisted discovery).",
   "discovery.wideArea.enabled":
+    "Enable wide-area discovery publishing when supported by your environment. Keep off unless remote clients must locate this gateway.",
   "discovery.mdns":
     "mDNS discovery configuration group for local network advertisement and discovery behavior tuning. Keep minimal mode for routine LAN discovery unless extra metadata is required.",
   tools:
@@ -440,6 +445,7 @@ export const FIELD_HELP: Record<string, string> = {
   "bindings[].match":
     "Match rule object for deciding when a binding applies, including channel and optional account/peer constraints. Keep rules narrow to avoid accidental agent takeover across contexts.",
   "bindings[].match.channel":
+    "Channel provider id to match for this binding (for example telegram, discord, slack, whatsapp).",
   "bindings[].match.accountId":
     "Optional account selector for multi-account channel setups so the binding applies only to one identity. Use this when account scoping is required for the route and leave unset otherwise.",
   "bindings[].match.peer":
@@ -449,7 +455,9 @@ export const FIELD_HELP: Record<string, string> = {
   "bindings[].match.peer.id":
     "Conversation identifier used with peer matching, such as a chat ID, channel ID, or group ID from the provider. Keep this exact to avoid silent non-matches.",
   "bindings[].match.guildId":
+    "Discord guild ID filter for bindings (use when the same channel id can exist across guilds).",
   "bindings[].match.teamId":
+    "Slack team/workspace ID filter for bindings.",
   "bindings[].match.roles":
     "Optional role-based filter list used by providers that attach roles to chat context. Use this to route privileged or operational role traffic to specialized agents.",
   "bindings[].acp":
@@ -483,8 +491,11 @@ export const FIELD_HELP: Record<string, string> = {
   "diagnostics.otel.serviceName":
     "Service name reported in telemetry resource attributes to identify this gateway instance in observability backends. Use stable names so dashboards and alerts remain consistent over deployments.",
   "diagnostics.otel.traces":
+    "Enable or configure OpenTelemetry trace export for gateway/runtime activity.",
   "diagnostics.otel.metrics":
+    "Enable or configure OpenTelemetry metrics export for gateway/runtime activity.",
   "diagnostics.otel.logs":
+    "Enable or configure OpenTelemetry log export for gateway/runtime activity.",
   "diagnostics.otel.sampleRate":
     "Trace sampling rate (0-1) controlling how much trace traffic is exported to observability backends. Lower rates reduce overhead/cost, while higher rates improve debugging fidelity.",
   "diagnostics.otel.flushIntervalMs":
@@ -510,6 +521,7 @@ export const FIELD_HELP: Record<string, string> = {
     "Warning threshold for repetitive patterns when detector is enabled (default: 10).",
   "tools.loopDetection.criticalThreshold":
     "Critical threshold for repetitive patterns when detector is enabled (default: 20).",
+  "tools.loopDetection.globalCircuitBreakerThreshold":
     "Global no-progress breaker threshold (default: 30).",
   "tools.loopDetection.detectors.genericRepeat":
     "Enable generic repeated same-tool/same-params loop detection (default: true).",
@@ -603,9 +615,11 @@ export const FIELD_HELP: Record<string, string> = {
   "approvals.exec.agentFilter":
     'Optional allowlist of agent IDs eligible for forwarded approvals, for example `["primary", "ops-agent"]`. Use this to limit forwarding blast radius and avoid notifying channels for unrelated agents.',
   "approvals.exec.sessionFilter":
+    "Optional session-key filters (substring or regex-style) that must match before approvals are forwarded.",
   "approvals.exec.targets":
     "Explicit delivery targets used when forwarding mode includes targets, each with channel and destination details. Keep target lists least-privilege and validate each destination before enabling broad forwarding.",
   "approvals.exec.targets[].channel":
+    "Channel provider id for approval routing (for example telegram, slack, discord).",
   "approvals.exec.targets[].to":
     "Destination identifier inside the target channel (channel ID, user ID, or thread root depending on provider). Verify semantics per provider because destination format differs across channel integrations.",
   "approvals.exec.targets[].accountId":
@@ -710,8 +724,6 @@ export const FIELD_HELP: Record<string, string> = {
   "models.bedrockDiscovery.defaultMaxTokens":
     "Fallback max-token value applied to discovered models without explicit output token limits. Use conservative defaults to reduce truncation surprises and unexpected token spend.",
   auth: "Authentication profile root used for multi-profile provider credentials and cooldown-based failover ordering. Keep profiles minimal and explicit so automatic failover behavior stays auditable.",
-    'Reply to channel messages on mention ("oncall"), on trigger chars (">" or "!") ("onchar"), or on every message ("onmessage").',
-    "Require @mention in channels before responding (default: true).",
   "auth.profiles": "Named auth profiles (provider + mode + optional email).",
   "auth.order": "Ordered auth profile IDs per provider (used for automatic failover).",
   "auth.cooldowns":
@@ -818,6 +830,7 @@ export const FIELD_HELP: Record<string, string> = {
   "memory.backend":
     'Selects the global memory engine: "builtin" uses PropAi Sync memory internals, while "qmd" uses the QMD sidecar pipeline. Keep "builtin" unless you intentionally operate QMD.',
   "memory.citations":
+    "Citation formatting controls for memory retrieval and injected summaries. Use this to tune how sources are referenced in responses.",
   "memory.qmd.command":
     "Sets the executable path for the `qmd` binary used by the QMD backend (default: resolved from PATH). Use an explicit absolute path when multiple qmd installs exist or PATH differs across environments.",
   "memory.qmd.mcporter":
@@ -1015,6 +1028,7 @@ export const FIELD_HELP: Record<string, string> = {
   commands:
     "Controls chat command surfaces, owner gating, and elevated command access behavior across providers. Keep defaults unless you need stricter operator controls or broader command availability.",
   "commands.native":
+    "Registers native command menus/buttons where supported (for example Telegram slash commands).",
   "commands.nativeSkills":
     "Registers native skill commands so users can invoke skills directly from provider command menus where supported. Keep aligned with your skill policy so exposed commands match what operators expect.",
   "commands.text":
@@ -1082,11 +1096,13 @@ export const FIELD_HELP: Record<string, string> = {
   "session.sendPolicy.default":
     'Sets fallback action when no sendPolicy rule matches: "allow" or "deny". Keep "allow" for simpler setups, or choose "deny" when you require explicit allow rules for every destination.',
   "session.sendPolicy.rules":
+    "Ordered list of allow/deny rules evaluated before the default send policy. Earlier rules take precedence.",
   "session.sendPolicy.rules[].action":
     'Defines rule decision as "allow" or "deny" when the corresponding match criteria are satisfied. Use deny-first ordering when enforcing strict boundaries with explicit allow exceptions.',
   "session.sendPolicy.rules[].match":
     "Defines optional rule match conditions that can combine channel, chatType, and key-prefix constraints. Keep matches narrow so policy intent stays readable and debugging remains straightforward.",
   "session.sendPolicy.rules[].match.channel":
+    "Channel provider id match for send-policy rules (for example telegram, whatsapp, slack, discord).",
   "session.sendPolicy.rules[].match.chatType":
     "Matches rule application to chat type (direct, group, thread) so behavior varies by conversation form. Use this when DM and group destinations require different safety boundaries.",
   "session.sendPolicy.rules[].match.keyPrefix":
@@ -1201,6 +1217,7 @@ export const FIELD_HELP: Record<string, string> = {
   "hooks.mappings[].allowUnsafeExternalContent":
     "When true, mapping content may include less-sanitized external payload data in generated messages. Keep false by default and enable only for trusted sources with reviewed transform logic.",
   "hooks.mappings[].channel":
+    "Explicit channel provider id for routing mapping output (for example telegram, whatsapp, slack, discord).",
   "hooks.mappings[].to":
     "Destination identifier inside the selected channel when mapping replies should route to a fixed target. Verify provider-specific destination formats before enabling production mappings.",
   "hooks.mappings[].model":
@@ -1294,6 +1311,7 @@ export const FIELD_HELP: Record<string, string> = {
   "messages.queue.mode":
     'Queue behavior mode: "steer", "followup", "collect", "steer-backlog", "steer+backlog", "queue", or "interrupt". Keep conservative modes unless you intentionally need aggressive interruption/backlog semantics.',
   "messages.queue.byChannel":
+    "Per-channel queue configuration overrides keyed by provider id. Use this to tune queueing behavior independently for different messaging surfaces.",
   "messages.queue.debounceMs":
     "Global queue debounce window in milliseconds before processing buffered inbound messages. Use higher values to coalesce rapid bursts, or lower values for reduced response latency.",
   "messages.queue.debounceMsByChannel":
@@ -1405,11 +1423,6 @@ export const FIELD_HELP: Record<string, string> = {
   "channels.whatsapp.selfChatMode": "Same-phone setup (bot uses your personal WhatsApp number).",
   "channels.whatsapp.debounceMs":
     "Debounce window (ms) for batching rapid consecutive messages from the same sender (0 to disable).",
-    "Voice channels to auto-join on startup (list of guildId/channelId entries).",
-    "Resolve PluralKit proxied messages and treat system members as distinct senders.",
-    "Optional PluralKit token for resolving private systems or members.",
-    "Optional custom status text while runtime/model availability is degraded or unknown (idle).",
-    "Optional custom status text while runtime detects exhausted/unavailable model quota (dnd). Supports {reason} template placeholder.",
 };
 
 

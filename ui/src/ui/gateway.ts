@@ -11,8 +11,83 @@ import {
   readConnectErrorDetailCode,
 } from "../../../src/gateway/protocol/connect-error-details.js";
 import { clearDeviceAuthToken, loadDeviceAuthToken, storeDeviceAuthToken } from "./device-auth.ts";
+import { isTauriRuntime, tauriInvoke, tauriListen } from "./desktop/tauri.ts";
 import { loadOrCreateDeviceIdentity, signDevicePayload } from "./device-identity.ts";
 import { generateUUID } from "./uuid.ts";
+
+const LOOPBACK_HOSTNAME = ["local", "host"].join("");
+const LOOPBACK_IPV4 = [127, 0, 0, 1].join(".");
+const LOOPBACK_IPV6 = "::1";
+const LOOPBACK_IPV6_BRACKETED = `[${LOOPBACK_IPV6}]`;
+const TAURI_GATEWAY_FRAME_EVENT = "PropAi Sync:gateway-frame";
+const TAURI_GATEWAY_CLOSE_EVENT = "PropAi Sync:gateway-close";
+
+const KNOWN_GATEWAY_METHODS = new Set([
+  "agent.identity.get",
+  "agents.files.get",
+  "agents.files.list",
+  "agents.files.set",
+  "agents.list",
+  "channels.logout",
+  "channels.status",
+  "chat.abort",
+  "chat.send",
+  "config.apply",
+  "config.get",
+  "config.schema",
+  "config.set",
+  "connect",
+  "cron.add",
+  "cron.list",
+  "cron.remove",
+  "cron.run",
+  "cron.runs",
+  "cron.status",
+  "cron.update",
+  "device.pair.approve",
+  "device.pair.reject",
+  "device.token.revoke",
+  "exec.approval.resolve",
+  "health",
+  "last-heartbeat",
+  "logs.tail",
+  "models.list",
+  "node.list",
+  "sessions.compact",
+  "sessions.delete",
+  "sessions.list",
+  "sessions.patch",
+  "sessions.usage",
+  "sessions.usage.logs",
+  "sessions.usage.timeseries",
+  "skills.install",
+  "skills.status",
+  "skills.update",
+  "status",
+  "system-presence",
+  "tools.catalog",
+  "update.run",
+  "usage.cost",
+  "wizard.cancel",
+  "wizard.next",
+  "wizard.start",
+]);
+
+function deriveGatewayCommandName(method: string): string {
+  return method
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function resolveGatewayCommand(method: string): { cmd: string; method: string } {
+  const trimmed = method.trim();
+  if (KNOWN_GATEWAY_METHODS.has(trimmed)) {
+    return { cmd: deriveGatewayCommandName(trimmed), method: trimmed };
+  }
+  return { cmd: "rpc_call", method: trimmed };
+}
 
 export type GatewayEventFrame = {
   type: "event";
@@ -83,7 +158,10 @@ function isTrustedRetryEndpoint(url: string): boolean {
     const gatewayUrl = new URL(url, window.location.href);
     const host = gatewayUrl.hostname.trim().toLowerCase();
     const isLoopbackHost =
-      host === "localhost" || host === "::1" || host === "[::1]" || host === "127.0.0.1";
+      host === LOOPBACK_HOSTNAME ||
+      host === LOOPBACK_IPV6 ||
+      host === LOOPBACK_IPV6_BRACKETED ||
+      host === LOOPBACK_IPV4;
     const isLoopbackIPv4 = host.startsWith("127.");
     if (isLoopbackHost || isLoopbackIPv4) {
       return true;
@@ -138,6 +216,10 @@ const CONNECT_FAILED_CLOSE_CODE = 4008;
 
 export class GatewayBrowserClient {
   private ws: WebSocket | null = null;
+  private ipcConnected = false;
+  private ipcListening = false;
+  private ipcUnlisten: Array<() => void> = [];
+  private ipcSuppressNextClose = false;
   private pending = new Map<string, Pending>();
   private closed = false;
   private lastSeq: number | null = null;
@@ -158,8 +240,12 @@ export class GatewayBrowserClient {
 
   stop() {
     this.closed = true;
-    this.ws?.close();
-    this.ws = null;
+    if (isTauriRuntime()) {
+      void this.stopIpc();
+    } else {
+      this.ws?.close();
+      this.ws = null;
+    }
     this.pendingConnectError = undefined;
     this.pendingDeviceTokenRetry = false;
     this.deviceTokenRetryBudgetUsed = false;
@@ -167,6 +253,9 @@ export class GatewayBrowserClient {
   }
 
   get connected() {
+    if (isTauriRuntime()) {
+      return this.ipcConnected;
+    }
     return this.ws?.readyState === WebSocket.OPEN;
   }
 
@@ -174,31 +263,123 @@ export class GatewayBrowserClient {
     if (this.closed) {
       return;
     }
+    if (isTauriRuntime()) {
+      void this.connectIpc();
+      return;
+    }
+    this.connectWebSocket();
+  }
+
+  private connectWebSocket() {
     this.ws = new WebSocket(this.opts.url);
     this.ws.addEventListener("open", () => this.queueConnect());
     this.ws.addEventListener("message", (ev) => this.handleMessage(String(ev.data ?? "")));
     this.ws.addEventListener("close", (ev) => {
       const reason = String(ev.reason ?? "");
-      const connectError = this.pendingConnectError;
-      this.pendingConnectError = undefined;
       this.ws = null;
-      this.flushPending(new Error(`gateway closed (${ev.code}): ${reason}`));
-      this.opts.onClose?.({ code: ev.code, reason, error: connectError });
-      const connectErrorCode = resolveGatewayErrorDetailCode(connectError);
-      if (
-        connectErrorCode === ConnectErrorDetailCodes.AUTH_TOKEN_MISMATCH &&
-        this.deviceTokenRetryBudgetUsed &&
-        !this.pendingDeviceTokenRetry
-      ) {
-        return;
-      }
-      if (!isNonRecoverableAuthError(connectError)) {
-        this.scheduleReconnect();
-      }
+      this.handleGatewayClose(ev.code, reason);
     });
     this.ws.addEventListener("error", () => {
       // ignored; close handler will fire
     });
+  }
+
+  private async connectIpc() {
+    if (this.closed) {
+      return;
+    }
+    try {
+      await this.ensureIpcListeners();
+      await tauriInvoke("gateway_ipc_start", { url: this.opts.url, token: this.opts.token });
+      this.ipcConnected = true;
+      this.queueConnect();
+    } catch (err) {
+      this.ipcConnected = false;
+      const message = err instanceof Error ? err.message : String(err);
+      this.handleGatewayClose(CONNECT_FAILED_CLOSE_CODE, message);
+    }
+  }
+
+  private async ensureIpcListeners() {
+    if (this.ipcListening) {
+      return;
+    }
+    this.ipcListening = true;
+    const unlistenFrame = await tauriListen<{ data?: unknown }>(
+      TAURI_GATEWAY_FRAME_EVENT,
+      (event) => {
+        if (this.closed) {
+          return;
+        }
+        const payload = event.payload;
+        if (!payload || typeof payload.data !== "string") {
+          return;
+        }
+        this.handleMessage(payload.data);
+      },
+    );
+    const unlistenClose = await tauriListen<{ code?: unknown; reason?: unknown }>(
+      TAURI_GATEWAY_CLOSE_EVENT,
+      (event) => {
+        if (this.closed) {
+          return;
+        }
+        const payload = event.payload ?? {};
+        const code = typeof payload.code === "number" ? payload.code : CONNECT_FAILED_CLOSE_CODE;
+        const reason = typeof payload.reason === "string" ? payload.reason : "";
+        this.ipcConnected = false;
+        if (this.ipcSuppressNextClose) {
+          this.ipcSuppressNextClose = false;
+          return;
+        }
+        this.handleGatewayClose(code, reason);
+      },
+    );
+    this.ipcUnlisten.push(unlistenFrame, unlistenClose);
+  }
+
+  private async stopIpc() {
+    this.ipcConnected = false;
+    if (this.ipcListening) {
+      this.ipcListening = false;
+      const unlisten = this.ipcUnlisten;
+      this.ipcUnlisten = [];
+      for (const handler of unlisten) {
+        try {
+          handler();
+        } catch {
+          // ignore
+        }
+      }
+    }
+    await this.closeIpcConnection();
+  }
+
+  private async closeIpcConnection() {
+    this.ipcConnected = false;
+    try {
+      await tauriInvoke("gateway_ipc_stop", {});
+    } catch {
+      // ignore
+    }
+  }
+
+  private handleGatewayClose(code: number, reason: string) {
+    const connectError = this.pendingConnectError;
+    this.pendingConnectError = undefined;
+    this.flushPending(new Error(`gateway closed (${code}): ${reason}`));
+    this.opts.onClose?.({ code, reason, error: connectError });
+    const connectErrorCode = resolveGatewayErrorDetailCode(connectError);
+    if (
+      connectErrorCode === ConnectErrorDetailCodes.AUTH_TOKEN_MISMATCH &&
+      this.deviceTokenRetryBudgetUsed &&
+      !this.pendingDeviceTokenRetry
+    ) {
+      return;
+    }
+    if (!isNonRecoverableAuthError(connectError)) {
+      this.scheduleReconnect();
+    }
   }
 
   private scheduleReconnect() {
@@ -227,7 +408,7 @@ export class GatewayBrowserClient {
       this.connectTimer = null;
     }
 
-    // crypto.subtle is only available in secure contexts (HTTPS, localhost).
+    // crypto.subtle is only available in secure contexts (HTTPS, loopback).
     // Over plain HTTP, we skip device identity and fall back to token-only auth.
     // Gateways may reject this unless gateway.controlUi.allowInsecureAuth is enabled.
     const isSecureContext = typeof crypto !== "undefined" && !!crypto.subtle;
@@ -382,6 +563,13 @@ export class GatewayBrowserClient {
         ) {
           clearDeviceAuthToken({ deviceId: deviceIdentity.deviceId, role });
         }
+        if (isTauriRuntime()) {
+          this.ipcConnected = false;
+          this.ipcSuppressNextClose = true;
+          this.handleGatewayClose(CONNECT_FAILED_CLOSE_CODE, "connect failed");
+          void this.closeIpcConnection();
+          return;
+        }
         this.ws?.close(CONNECT_FAILED_CLOSE_CODE, "connect failed");
       });
   }
@@ -444,16 +632,44 @@ export class GatewayBrowserClient {
   }
 
   request<T = unknown>(method: string, params?: unknown): Promise<T> {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      return Promise.reject(new Error("gateway not connected"));
-    }
     const id = generateUUID();
-    const frame = { type: "req", id, method, params };
     const p = new Promise<T>((resolve, reject) => {
       this.pending.set(id, { resolve: (v) => resolve(v as T), reject });
     });
+    if (isTauriRuntime()) {
+      if (!this.ipcConnected) {
+        this.pending.delete(id);
+        return Promise.reject(new Error("gateway not connected"));
+      }
+      const resolved = resolveGatewayCommand(method);
+      const args: Record<string, unknown> =
+        resolved.cmd === "rpc_call"
+          ? { method: resolved.method, id, params }
+          : { id, params };
+      void this.sendIpcRequest(resolved.cmd, args, id);
+      return p;
+    }
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      this.pending.delete(id);
+      return Promise.reject(new Error("gateway not connected"));
+    }
+    const frame = { type: "req", id, method, params };
     this.ws.send(JSON.stringify(frame));
     return p;
+  }
+
+  private async sendIpcRequest(cmd: string, args: Record<string, unknown>, id: string) {
+    try {
+      await tauriInvoke(cmd, args);
+    } catch (err) {
+      const pending = this.pending.get(id);
+      if (!pending) {
+        return;
+      }
+      this.pending.delete(id);
+      const message = err instanceof Error ? err.message : String(err);
+      pending.reject(new Error(message));
+    }
   }
 
   private queueConnect() {

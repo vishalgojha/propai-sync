@@ -47,9 +47,29 @@ function readGatewayEnv(
   names: readonly string[],
   includeLegacyEnv: boolean,
 ): string | undefined {
+  const readEnvValue = (name: string): string | undefined => {
+    const direct = trimToUndefined(env[name]);
+    if (direct) {
+      return direct;
+    }
+    if (name.startsWith("PROPAI_")) {
+      const mixed = trimToUndefined(env[`propai_${name.slice("PROPAI_".length)}`]);
+      if (mixed) {
+        return mixed;
+      }
+    }
+    if (name.startsWith("CLAWDBOT_")) {
+      const mixed = trimToUndefined(env[`clawdbot_${name.slice("CLAWDBOT_".length)}`]);
+      if (mixed) {
+        return mixed;
+      }
+    }
+    const lower = trimToUndefined(env[name.toLowerCase()]);
+    return lower;
+  };
   const keys = includeLegacyEnv ? names : names.slice(0, 1);
   for (const name of keys) {
-    const value = trimToUndefined(env[name]);
+    const value = readEnvValue(name);
     if (value) {
       return value;
     }

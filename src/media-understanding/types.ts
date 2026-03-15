@@ -98,7 +98,7 @@ export type ImageDescriptionRequest = {
   profile?: string;
   preferredProfile?: string;
   agentDir: string;
-  cfg: import("../config/config.js").propaiConfig;
+  cfg: import("../config/config.js").PropAiSyncConfig;
 };
 
 export type ImageDescriptionResult = {

@@ -290,7 +290,7 @@ describe("installHooksFromPath", () => {
       hooksDir: path.join(stateDir, "hooks"),
     });
 
-    expectPathInstallFailureContains(result, "PropAiSync.hooks entry escapes package directory");
+    expectPathInstallFailureContains(result, "PropAi Sync.hooks entry escapes package directory");
   });
 
   it("rejects hook pack entries that escape via symlink", async () => {
@@ -320,7 +320,7 @@ describe("installHooksFromPath", () => {
 
     expectPathInstallFailureContains(
       result,
-      "PropAiSync.hooks entry resolves outside package directory",
+      "PropAi Sync.hooks entry resolves outside package directory",
     );
   });
 });

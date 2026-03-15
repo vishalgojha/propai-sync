@@ -106,36 +106,36 @@ describe("resolvePropAiSyncPackageRoot", () => {
 
   it("resolves package root from .bin argv1", async () => {
     const project = fx("bin-scenario");
-    const argv1 = path.join(project, "node_modules", ".bin", "PropAi Sync");
-    const pkgRoot = path.join(project, "node_modules", "PropAi Sync");
-    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "PropAi Sync" }));
+    const argv1 = path.join(project, "node_modules", ".bin", "propai");
+    const pkgRoot = path.join(project, "node_modules", "propai");
+    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "propai" }));
 
     expect(resolvePropAiSyncPackageRootSync({ argv1 })).toBe(pkgRoot);
   });
 
   it("resolves package root via symlinked argv1", async () => {
     const project = fx("symlink-scenario");
-    const bin = path.join(project, "bin", "PropAi Sync");
+    const bin = path.join(project, "bin", "propai");
     const realPkg = path.join(project, "real-pkg");
     state.realpaths.set(abs(bin), abs(path.join(realPkg, "propai.mjs")));
-    setFile(path.join(realPkg, "package.json"), JSON.stringify({ name: "PropAi Sync" }));
+    setFile(path.join(realPkg, "package.json"), JSON.stringify({ name: "propai" }));
 
     expect(resolvePropAiSyncPackageRootSync({ argv1: bin })).toBe(realPkg);
   });
 
   it("falls back when argv1 realpath throws", async () => {
     const project = fx("realpath-throw-scenario");
-    const argv1 = path.join(project, "node_modules", ".bin", "PropAi Sync");
-    const pkgRoot = path.join(project, "node_modules", "PropAi Sync");
+    const argv1 = path.join(project, "node_modules", ".bin", "propai");
+    const pkgRoot = path.join(project, "node_modules", "propai");
     state.realpathErrors.add(abs(argv1));
-    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "PropAi Sync" }));
+    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "propai" }));
 
     expect(resolvePropAiSyncPackageRootSync({ argv1 })).toBe(pkgRoot);
   });
 
   it("prefers moduleUrl candidates", async () => {
     const pkgRoot = fx("moduleurl");
-    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "PropAi Sync" }));
+    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "propai" }));
     const moduleUrl = pathToFileURL(path.join(pkgRoot, "dist", "index.js")).toString();
 
     expect(resolvePropAiSyncPackageRootSync({ moduleUrl })).toBe(pkgRoot);
@@ -143,7 +143,7 @@ describe("resolvePropAiSyncPackageRoot", () => {
 
   it("ignores invalid moduleUrl values and falls back to cwd", async () => {
     const pkgRoot = fx("invalid-moduleurl");
-    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "PropAi Sync" }));
+    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "propai" }));
 
     expect(resolvePropAiSyncPackageRootSync({ moduleUrl: "not-a-file-url", cwd: pkgRoot })).toBe(
       pkgRoot,
@@ -154,15 +154,15 @@ describe("resolvePropAiSyncPackageRoot", () => {
   });
 
   it("returns null for non-PropAi Sync package roots", async () => {
-    const pkgRoot = fx("not-PropAi Sync");
-    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "not-PropAi Sync" }));
+    const pkgRoot = fx("not-propai");
+    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "not-propai" }));
 
     expect(resolvePropAiSyncPackageRootSync({ cwd: pkgRoot })).toBeNull();
   });
 
   it("async resolver matches sync behavior", async () => {
     const pkgRoot = fx("async");
-    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "PropAi Sync" }));
+    setFile(path.join(pkgRoot, "package.json"), JSON.stringify({ name: "propai" }));
 
     await expect(resolvePropAiSyncPackageRoot({ cwd: pkgRoot })).resolves.toBe(pkgRoot);
   });

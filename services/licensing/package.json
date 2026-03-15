@@ -10,7 +10,8 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "build": "tsup src/index.ts --format esm --target node22 --out-dir dist",
-    "create-license": "tsx scripts/create-license.ts"
+    "create-license": "tsx scripts/create-license.ts",
+    "issue-license": "tsx scripts/issue-license.ts"
   },
   "dependencies": {
     "better-sqlite3": "^11.6.0",

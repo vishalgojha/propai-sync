@@ -1,5 +1,7 @@
 import type { PropAiSyncConfig } from "../config/config.js";
 import { normalizeAccountId } from "../routing/session-key.js";
+
+export const DISCORD_THREAD_BINDING_CHANNEL = "discord";
 const DEFAULT_THREAD_BINDING_IDLE_HOURS = 24;
 const DEFAULT_THREAD_BINDING_MAX_AGE_HOURS = 0;
 

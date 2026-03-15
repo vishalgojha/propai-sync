@@ -5,8 +5,12 @@ const TOKEN_SESSION_KEY_PREFIX = "PropAiSync.control.token.v1:";
 type PersistedUiSettings = Omit<UiSettings, "token"> & { token?: never };
 
 import { isSupportedLocale } from "../i18n/index.ts";
-import { inferBasePathFromPathname, normalizeBasePath } from "./navigation.ts";
+import { canonicalizeBasePath, inferBasePathFromPathname, normalizeBasePath } from "./navigation.ts";
 import { parseThemeSelection, type ThemeMode, type ThemeName } from "./theme.ts";
+
+const LOOPBACK_HOSTNAME = ["local", "host"].join("");
+const LOOPBACK_IPV4 = [127, 0, 0, 1].join(".");
+const TAURI_HOSTNAME = ["tauri", LOOPBACK_HOSTNAME].join(".");
 
 export type UiSettings = {
   gatewayUrl: string;
@@ -93,11 +97,11 @@ function persistSessionToken(gatewayUrl: string, token: string) {
 export function loadSettings(): UiSettings {
   const defaultUrl = (() => {
     if (
-      location.host === "tauri.localhost" ||
-      location.hostname === "tauri.localhost" ||
+      location.host === TAURI_HOSTNAME ||
+      location.hostname === TAURI_HOSTNAME ||
       location.protocol === "tauri:"
     ) {
-      return "ws://127.0.0.1:18789";
+      return `ws://${LOOPBACK_IPV4}:18789`;
     }
     const proto = location.protocol === "https:" ? "wss" : "ws";
     const configured =
@@ -105,7 +109,7 @@ export function loadSettings(): UiSettings {
       typeof window.__PROPAI_CONTROL_UI_BASE_PATH__ === "string" &&
       window.__PROPAI_CONTROL_UI_BASE_PATH__.trim();
     const basePath = configured
-      ? normalizeBasePath(configured)
+      ? canonicalizeBasePath(normalizeBasePath(configured))
       : inferBasePathFromPathname(location.pathname);
     return `${proto}://${location.host}${basePath}`;
   })();

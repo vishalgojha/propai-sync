@@ -1,11 +1,21 @@
 import { spawn } from "node:child_process";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
+import { formatCliCommand } from "../../cli/command-format.js";
+import { markPropAiSyncExecEnv } from "../../infra/propai-exec-env.js";
 import {
   materializeWindowsSpawnProgram,
   resolveWindowsSpawnProgram,
 } from "../../plugin-sdk/windows-spawn.js";
+import { defaultRuntime } from "../../runtime.js";
 import { sanitizeEnvVars } from "./sanitize-env-vars.js";
 import type { EnvSanitizationOptions } from "./sanitize-env-vars.js";
+import { computeSandboxConfigHash } from "./config-hash.js";
+import { DEFAULT_SANDBOX_IMAGE } from "./constants.js";
+import { readRegistry, updateRegistry } from "./registry.js";
+import { resolveSandboxAgentId, resolveSandboxScopeKey, slugifySessionKey } from "./shared.js";
+import type { SandboxConfig, SandboxDockerConfig, SandboxWorkspaceAccess } from "./types.js";
+import { validateSandboxSecurity } from "./validate-sandbox-security.js";
+import { appendWorkspaceMountArgs } from "./workspace-mounts.js";
 
 type ExecDockerRawOptions = {
   allowFailure?: boolean;
@@ -161,17 +171,6 @@ export function execDockerRaw(
     }
   });
 }
-
-import { formatCliCommand } from "../../cli/command-format.js";
-import { markPropAiSyncExecEnv } from "../../infra/propai-exec-env.js";
-import { defaultRuntime } from "../../runtime.js";
-import { computeSandboxConfigHash } from "./config-hash.js";
-import { DEFAULT_SANDBOX_IMAGE } from "./constants.js";
-import { readRegistry, updateRegistry } from "./registry.js";
-import { resolveSandboxAgentId, resolveSandboxScopeKey, slugifySessionKey } from "./shared.js";
-import type { SandboxConfig, SandboxDockerConfig, SandboxWorkspaceAccess } from "./types.js";
-import { validateSandboxSecurity } from "./validate-sandbox-security.js";
-import { appendWorkspaceMountArgs } from "./workspace-mounts.js";
 
 const log = createSubsystemLogger("docker");
 

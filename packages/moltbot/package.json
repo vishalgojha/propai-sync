@@ -11,7 +11,7 @@
     "./cli-entry": "./bin/moltbot.js"
   },
   "dependencies": {
-    "PropAi Sync": "workspace:*"
+    "propai": "workspace:*"
   }
 }
 

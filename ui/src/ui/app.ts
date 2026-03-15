@@ -72,6 +72,7 @@ import type { Tab } from "./navigation.ts";
 import { loadSettings, type UiSettings } from "./storage.ts";
 import { resolveTheme } from "./theme.ts";
 import type { ResolvedTheme, ThemeMode, ThemeName } from "./theme.ts";
+import { hasConfiguredSecretInput } from "../../../src/config/types.secrets.js";
 import type {
   AgentsListResult,
   AgentsFilesListResult,
@@ -99,6 +100,7 @@ import { isTauriRuntime } from "./desktop/tauri.ts";
 import type { NostrProfileFormState } from "./views/channels.nostr-profile-form.ts";
 import {
   getOrCreateLicenseDeviceId,
+  isLicenseBypassEnabled,
   isEntitlementValid,
   loadLicenseApiUrl,
   loadLicenseCache,
@@ -122,6 +124,63 @@ const DESKTOP_ONBOARDING_DONE_KEY = "PropAiSync.desktop.onboarding.done";
 const TAURI_ONBOARDING_OPEN_EVENT = "PropAi Sync:onboarding-open";
 const TAURI_GATEWAY_RESTART_EVENT = "PropAi Sync:gateway-restart";
 const BRAND_NAME = "propai";
+
+type ConfigShape = Record<string, unknown> | null | undefined;
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasAuthProfiles(config: ConfigShape): boolean {
+  if (!isPlainObject(config)) {
+    return false;
+  }
+  const auth = config.auth;
+  if (!isPlainObject(auth)) {
+    return false;
+  }
+  const profiles = auth.profiles;
+  return isPlainObject(profiles) && Object.keys(profiles).length > 0;
+}
+
+function hasProviderSecrets(config: ConfigShape): boolean {
+  if (!isPlainObject(config)) {
+    return false;
+  }
+  const models = config.models;
+  if (!isPlainObject(models)) {
+    return false;
+  }
+  const providers = models.providers;
+  if (!isPlainObject(providers)) {
+    return false;
+  }
+  const secrets = isPlainObject(config.secrets) ? config.secrets : null;
+  const defaults = isPlainObject(secrets?.defaults) ? secrets?.defaults : undefined;
+
+  for (const provider of Object.values(providers)) {
+    if (!isPlainObject(provider)) {
+      continue;
+    }
+    if (hasConfiguredSecretInput(provider.apiKey, defaults)) {
+      return true;
+    }
+    const headers = provider.headers;
+    if (!isPlainObject(headers)) {
+      continue;
+    }
+    for (const value of Object.values(headers)) {
+      if (hasConfiguredSecretInput(value, defaults)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function hasDesktopAuthConfigured(config: ConfigShape): boolean {
+  return hasAuthProfiles(config) || hasProviderSecrets(config);
+}
 
 function applyBrandTheme() {
   if (typeof document === "undefined") {
@@ -227,7 +286,8 @@ export class PropAiSyncApp extends LitElement {
   @state() licenseError: string | null = null;
   @state() licenseEntitlement: LicenseEntitlement | null = loadLicenseCache();
   @state() licenseBusy = false;
-  @state() licenseGateActive = !isEntitlementValid(this.licenseEntitlement);
+  @state() licenseGateActive =
+    !isLicenseBypassEnabled() && !isEntitlementValid(this.licenseEntitlement);
   @state() connected = false;
   @state() theme: ThemeName = this.settings.theme;
   @state() themeMode: ThemeMode = this.settings.themeMode;
@@ -507,7 +567,9 @@ export class PropAiSyncApp extends LitElement {
   private tauriUnlistenOnboardingOpen: (() => void) | null = null;
   private tauriUnlistenGatewayRestart: (() => void) | null = null;
   private licenseDeviceId = getOrCreateLicenseDeviceId();
+  private readonly licenseBypass = isLicenseBypassEnabled();
   private appStarted = false;
+  private desktopOnboardingSuppressed = false;
 
   createRenderRoot() {
     return this;
@@ -547,6 +609,12 @@ export class PropAiSyncApp extends LitElement {
   }
 
   private updateLicenseGate() {
+    if (this.licenseBypass) {
+      this.licenseGateActive = false;
+      this.licenseStatus = "active";
+      this.startAppIfLicensed();
+      return;
+    }
     const valid = isEntitlementValid(this.licenseEntitlement);
     this.licenseGateActive = !valid;
     if (valid) {
@@ -556,6 +624,12 @@ export class PropAiSyncApp extends LitElement {
   }
 
   private async bootstrapLicense() {
+    if (this.licenseBypass) {
+      this.licenseGateActive = false;
+      this.licenseStatus = "active";
+      this.startAppIfLicensed();
+      return;
+    }
     this.licenseApiUrl = loadLicenseApiUrl();
     if (this.licenseEntitlement && isEntitlementValid(this.licenseEntitlement)) {
       this.licenseStatus = this.licenseEntitlement.status;
@@ -678,6 +752,22 @@ export class PropAiSyncApp extends LitElement {
 
   connect() {
     connectGatewayInternal(this as unknown as Parameters<typeof connectGatewayInternal>[0]);
+  }
+
+  private enterOnboardingMode() {
+    if (this.onboarding) {
+      return;
+    }
+    this.onboarding = true;
+    this.onboardingWizardError = null;
+    this.onboardingWizardSessionId = null;
+    this.onboardingWizardStatus = null;
+    this.onboardingWizardStep = null;
+    this.onboardingWizardDraft = null;
+    this.onboardingWizardDraftTouched = false;
+    this.onboardingWizardPresetId = resolveOnboardingPresetId();
+    this.onboardingWizardAutoAdvance = resolveOnboardingAutoAdvance();
+    this.desktopOnboardingSuppressed = false;
   }
 
   async restartDesktopGateway() {
@@ -900,10 +990,25 @@ export class PropAiSyncApp extends LitElement {
   }
 
   skipOnboardingWizard() {
-    if (isTauriRuntime()) {
-      writeDesktopOnboardingDoneFlag();
-    }
+    this.desktopOnboardingSuppressed = true;
     this.exitOnboardingMode({ completed: false });
+  }
+
+  onConfigSnapshotApplied(snapshot: ConfigSnapshot) {
+    if (import.meta.env.MODE === "test") {
+      return;
+    }
+    if (!isTauriRuntime()) {
+      return;
+    }
+    if (hasDesktopAuthConfigured(snapshot.config)) {
+      writeDesktopOnboardingDoneFlag();
+      return;
+    }
+    if (this.onboarding || this.desktopOnboardingSuppressed) {
+      return;
+    }
+    this.enterOnboardingMode();
   }
   async submitOnboardingWizardStep() {
     if (this.onboardingWizardBusy) {

@@ -14,7 +14,12 @@ vi.mock("./controllers/control-ui-bootstrap.ts", () => ({
   loadControlUiBootstrapConfig: loadBootstrapMock,
 }));
 
+vi.mock("./desktop/gateway.ts", () => ({
+  ensureDesktopGateway: vi.fn(),
+}));
+
 vi.mock("./app-settings.ts", () => ({
+  applySettings: vi.fn(),
   applySettingsFromUrl: applySettingsFromUrlMock,
   attachThemeListener: vi.fn(),
   detachThemeListener: vi.fn(),
@@ -86,7 +91,7 @@ describe("handleConnected", () => {
     expect(connectGatewayMock).not.toHaveBeenCalled();
 
     resolveBootstrap();
-    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(connectGatewayMock).toHaveBeenCalledTimes(1);
   });
 
@@ -105,7 +110,7 @@ describe("handleConnected", () => {
 
     host.connectGeneration += 1;
     resolveBootstrap();
-    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(connectGatewayMock).not.toHaveBeenCalled();
   });

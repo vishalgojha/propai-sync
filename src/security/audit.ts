@@ -318,9 +318,9 @@ function collectGatewayConfigFindings(
   const hasToken = typeof auth.token === "string" && auth.token.trim().length > 0;
   const hasPassword = typeof auth.password === "string" && auth.password.trim().length > 0;
   const envTokenConfigured =
-    hasNonEmptyString(env\.propai_GATEWAY_TOKEN) || hasNonEmptyString(env.CLAWDBOT_GATEWAY_TOKEN);
+    hasNonEmptyString(env.propai_GATEWAY_TOKEN) || hasNonEmptyString(env.CLAWDBOT_GATEWAY_TOKEN);
   const envPasswordConfigured =
-    hasNonEmptyString(env\.propai_GATEWAY_PASSWORD) ||
+    hasNonEmptyString(env.propai_GATEWAY_PASSWORD) ||
     hasNonEmptyString(env.CLAWDBOT_GATEWAY_PASSWORD);
   const tokenConfiguredFromConfig = hasConfiguredSecretInput(
     cfg.gateway?.auth?.token,
@@ -692,7 +692,7 @@ function collectBrowserControlFindings(
   const explicitAuthMode = cfg.gateway?.auth?.mode;
   const tokenConfigured =
     Boolean(browserAuth.token) ||
-    hasNonEmptyString(env\.propai_GATEWAY_TOKEN) ||
+    hasNonEmptyString(env.propai_GATEWAY_TOKEN) ||
     hasNonEmptyString(env.CLAWDBOT_GATEWAY_TOKEN) ||
     hasConfiguredSecretInput(cfg.gateway?.auth?.token, cfg.secrets?.defaults);
   const passwordCanWin =
@@ -704,7 +704,7 @@ function collectBrowserControlFindings(
   const passwordConfigured =
     Boolean(browserAuth.password) ||
     (passwordCanWin &&
-      (hasNonEmptyString(env\.propai_GATEWAY_PASSWORD) ||
+      (hasNonEmptyString(env.propai_GATEWAY_PASSWORD) ||
         hasNonEmptyString(env.CLAWDBOT_GATEWAY_PASSWORD) ||
         hasConfiguredSecretInput(cfg.gateway?.auth?.password, cfg.secrets?.defaults)));
   if (!tokenConfigured && !passwordConfigured) {
@@ -1193,7 +1193,7 @@ export async function runSecurityAudit(opts: SecurityAuditOptions): Promise<Secu
       severity: "warn",
       title: "Gateway probe auth SecretRef is unavailable",
       detail: deepProbeResult.authWarning,
-      remediation: `Set PropAi Sync_GATEWAY_TOKEN/PropAi Sync_GATEWAY_PASSWORD in this shell or resolve the external secret provider, then re-run "${formatCliCommand("PropAi Sync security audit --deep")}".`,
+      remediation: `Set PROPAI_GATEWAY_TOKEN/PROPAI_GATEWAY_PASSWORD in this shell or resolve the external secret provider, then re-run "${formatCliCommand("PropAi Sync security audit --deep")}".`,
     });
   }
 

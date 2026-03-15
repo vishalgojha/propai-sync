@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { MANIFEST_KEY } from "../compat/legacy-names.js";
+import { LEGACY_MANIFEST_KEYS, MANIFEST_KEY } from "../compat/legacy-names.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { openBoundaryFileSync } from "../infra/boundary-file-read.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
@@ -53,7 +53,10 @@ function readHookPackageManifest(dir: string): HookPackageManifest | null {
 }
 
 function resolvePackageHooks(manifest: HookPackageManifest): string[] {
-  const raw = manifest[MANIFEST_KEY]?.hooks;
+  const manifestKeys = [MANIFEST_KEY, ...LEGACY_MANIFEST_KEYS];
+  const raw = manifestKeys
+    .map((key) => manifest[key]?.hooks)
+    .find((hooks) => Array.isArray(hooks)) as string[] | undefined;
   if (!Array.isArray(raw)) {
     return [];
   }

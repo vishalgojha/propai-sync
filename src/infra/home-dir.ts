@@ -1,5 +1,6 @@
 import os from "node:os";
 import path from "node:path";
+import { readPropAiEnvValue } from "./env-read.js";
 
 function normalize(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
@@ -15,7 +16,7 @@ export function resolveEffectiveHomeDir(
 }
 
 function resolveRawHomeDir(env: NodeJS.ProcessEnv, homedir: () => string): string | undefined {
-  const explicitHome = normalize(env.propai_HOME);
+  const explicitHome = normalize(readPropAiEnvValue(env, "HOME"));
   if (explicitHome) {
     if (explicitHome === "~" || explicitHome.startsWith("~/") || explicitHome.startsWith("~\\")) {
       const fallbackHome =

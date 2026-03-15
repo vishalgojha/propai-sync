@@ -65,6 +65,53 @@ function isMcporterCommand(cmd: unknown): boolean {
   return /(^|[\\/])mcporter(?:\.cmd)?$/i.test(cmd);
 }
 
+function isPathLike(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+  return value.includes("/") || value.includes("\\") || /\.[cm]?js$/i.test(value);
+}
+
+function getMcporterSubcommand(args: string[]): "call" | "daemon" | null {
+  const direct = args[0];
+  if (direct === "call" || direct === "daemon") {
+    return direct;
+  }
+  const viaNode = args[1];
+  if ((viaNode === "call" || viaNode === "daemon") && isPathLike(args[0])) {
+    return viaNode;
+  }
+  return null;
+}
+
+function expectMcporterConfig(
+  resolved: ResolvedMemoryBackendConfig,
+  params?: {
+    enabled?: boolean;
+    serverName?: string;
+    startDaemon?: boolean;
+    searchMode?: "search" | "vsearch" | "query";
+    command?: string;
+  },
+): void {
+  expect(resolved.backend).toBe("qmd");
+  const mcporter = resolved.qmd?.mcporter;
+  expect(mcporter).toBeTruthy();
+  if (params?.command !== undefined) {
+    expect(resolved.qmd?.command).toBe(params.command);
+  }
+  if (params?.searchMode !== undefined) {
+    expect(resolved.qmd?.searchMode).toBe(params.searchMode);
+  }
+  expect(mcporter?.enabled).toBe(params?.enabled ?? true);
+  if (params?.serverName !== undefined) {
+    expect(mcporter?.serverName).toBe(params.serverName);
+  }
+  if (params?.startDaemon !== undefined) {
+    expect(mcporter?.startDaemon).toBe(params.startDaemon);
+  }
+}
+
 vi.mock("../logging/subsystem.js", () => ({
   createSubsystemLogger: () => {
     const logger = {
@@ -88,6 +135,7 @@ vi.mock("node:child_process", async (importOriginal) => {
 import { spawn as mockedSpawn } from "node:child_process";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { resolveMemoryBackendConfig } from "./backend-config.js";
+import type { ResolvedMemoryBackendConfig } from "./backend-config.js";
 import { QmdMemoryManager } from "./qmd-manager.js";
 import { requireNodeSqlite } from "./sqlite.js";
 
@@ -164,6 +212,11 @@ describe("QmdMemoryManager", () => {
 
   it("debounces back-to-back sync calls", async () => {
     const { manager, resolved } = await createManager();
+    expectMcporterConfig(resolved, {
+      command: "qmd",
+      enabled: false,
+      searchMode: "search",
+    });
 
     const baselineCalls = spawnMock.mock.calls.length;
 
@@ -958,6 +1011,11 @@ describe("QmdMemoryManager", () => {
     });
 
     const { manager, resolved } = await createManager();
+    expectMcporterConfig(resolved, {
+      command: "qmd",
+      enabled: false,
+      searchMode: "search",
+    });
     const maxResults = resolved.qmd?.limits.maxResults;
     if (!maxResults) {
       throw new Error("qmd maxResults missing");
@@ -1132,6 +1190,11 @@ describe("QmdMemoryManager", () => {
     });
 
     const { manager, resolved } = await createManager();
+    expectMcporterConfig(resolved, {
+      command: "qmd",
+      enabled: false,
+      searchMode: "search",
+    });
     const maxResults = resolved.qmd?.limits.maxResults;
     if (!maxResults) {
       throw new Error("qmd maxResults missing");
@@ -1252,6 +1315,11 @@ describe("QmdMemoryManager", () => {
     });
 
     const { manager, resolved } = await createManager();
+    expectMcporterConfig(resolved, {
+      command: "qmd",
+      enabled: false,
+      searchMode: "search",
+    });
     const maxResults = resolved.qmd?.limits.maxResults;
     if (!maxResults) {
       throw new Error("qmd maxResults missing");
@@ -1549,7 +1617,7 @@ describe("QmdMemoryManager", () => {
 
     spawnMock.mockImplementation((cmd: string, args: string[]) => {
       const child = createMockChild({ autoClose: false });
-      if (isMcporterCommand(cmd) && args[0] === "call") {
+      if (getMcporterSubcommand(args) === "call") {
         emitAndClose(child, "stdout", JSON.stringify({ results: [] }));
         return child;
       }
@@ -1557,20 +1625,28 @@ describe("QmdMemoryManager", () => {
       return child;
     });
 
-    const { manager } = await createManager();
+    const { manager, resolved } = await createManager();
+    expectMcporterConfig(resolved, {
+      command: "qmd",
+      serverName: "qmd",
+      startDaemon: false,
+      searchMode: "search",
+    });
 
     logWarnMock.mockClear();
     await expect(
       manager.search("hello", { sessionKey: "agent:main:slack:dm:u123" }),
     ).resolves.toEqual([]);
 
-    const mcporterCalls = spawnMock.mock.calls.filter((call: unknown[]) =>
-      isMcporterCommand(call[0]),
+    const mcporterCalls = spawnMock.mock.calls.filter(
+      (call: unknown[]) => getMcporterSubcommand(call[1] as string[]) === "call",
     );
     expect(mcporterCalls.length).toBeGreaterThan(0);
-    expect(mcporterCalls.some((call: unknown[]) => (call[1] as string[])[0] === "daemon")).toBe(
-      false,
-    );
+    expect(
+      spawnMock.mock.calls.some(
+        (call: unknown[]) => getMcporterSubcommand(call[1] as string[]) === "daemon",
+      ),
+    ).toBe(false);
     expect(logWarnMock).toHaveBeenCalledWith(expect.stringContaining("cold-start"));
 
     await manager.close();
@@ -1594,7 +1670,7 @@ describe("QmdMemoryManager", () => {
 
       spawnMock.mockImplementation((_cmd: string, args: string[]) => {
         const child = createMockChild({ autoClose: false });
-        if (args[0] === "call") {
+        if (getMcporterSubcommand(args) === "call") {
           emitAndClose(child, "stdout", JSON.stringify({ results: [] }));
           return child;
         }
@@ -1602,7 +1678,13 @@ describe("QmdMemoryManager", () => {
         return child;
       });
 
-      const { manager } = await createManager();
+      const { manager, resolved } = await createManager();
+      expectMcporterConfig(resolved, {
+        command: "qmd",
+        serverName: "qmd",
+        startDaemon: false,
+        searchMode: "search",
+      });
       await manager.search("hello", { sessionKey: "agent:main:slack:dm:u123" });
 
       const mcporterCall = spawnMock.mock.calls.find((call: unknown[]) =>
@@ -1650,10 +1732,14 @@ describe("QmdMemoryManager", () => {
       let sawRetry = false;
       let firstCallCommand: string | null = null;
       spawnMock.mockImplementation((cmd: string, args: string[]) => {
-        if (args[0] === "call" && firstCallCommand === null) {
+        if (getMcporterSubcommand(args) === "call" && firstCallCommand === null) {
           firstCallCommand = cmd;
         }
-        if (args[0] === "call" && typeof cmd === "string" && cmd.toLowerCase().endsWith(".cmd")) {
+        if (
+          getMcporterSubcommand(args) === "call" &&
+          typeof cmd === "string" &&
+          cmd.toLowerCase().endsWith(".cmd")
+        ) {
           const child = createMockChild({ autoClose: false });
           queueMicrotask(() => {
             const err = Object.assign(new Error("spawn EINVAL"), { code: "EINVAL" });
@@ -1661,7 +1747,7 @@ describe("QmdMemoryManager", () => {
           });
           return child;
         }
-        if (args[0] === "call" && cmd === "mcporter") {
+        if (getMcporterSubcommand(args) === "call" && cmd === "mcporter") {
           sawRetry = true;
           const child = createMockChild({ autoClose: false });
           emitAndClose(child, "stdout", JSON.stringify({ results: [] }));
@@ -1672,7 +1758,13 @@ describe("QmdMemoryManager", () => {
         return child;
       });
 
-      const { manager } = await createManager();
+      const { manager, resolved } = await createManager();
+      expectMcporterConfig(resolved, {
+        command: "qmd",
+        serverName: "qmd",
+        startDaemon: false,
+        searchMode: "search",
+      });
       await expect(
         manager.search("hello", { sessionKey: "agent:main:slack:dm:u123" }),
       ).resolves.toEqual([]);
@@ -1709,7 +1801,7 @@ describe("QmdMemoryManager", () => {
 
     spawnMock.mockImplementation((cmd: string, args: string[]) => {
       const child = createMockChild({ autoClose: false });
-      if (isMcporterCommand(cmd) && args[0] === "call") {
+      if (getMcporterSubcommand(args) === "call") {
         emitAndClose(child, "stdout", JSON.stringify({ results: [] }));
         return child;
       }
@@ -1717,11 +1809,17 @@ describe("QmdMemoryManager", () => {
       return child;
     });
 
-    const { manager } = await createManager();
+    const { manager, resolved } = await createManager();
+    expectMcporterConfig(resolved, {
+      command: "qmd",
+      serverName: "qmd",
+      startDaemon: false,
+      searchMode: "search",
+    });
     await manager.search("hello", { sessionKey: "agent:main:slack:dm:u123" });
 
     const mcporterCall = spawnMock.mock.calls.find(
-      (call: unknown[]) => isMcporterCommand(call[0]) && (call[1] as string[])[0] === "call",
+      (call: unknown[]) => getMcporterSubcommand(call[1] as string[]) === "call",
     );
     expect(mcporterCall).toBeDefined();
     const spawnOpts = mcporterCall?.[2] as { env?: NodeJS.ProcessEnv } | undefined;
@@ -1749,7 +1847,7 @@ describe("QmdMemoryManager", () => {
     let daemonAttempts = 0;
     spawnMock.mockImplementation((cmd: string, args: string[]) => {
       const child = createMockChild({ autoClose: false });
-      if (isMcporterCommand(cmd) && args[0] === "daemon") {
+      if (getMcporterSubcommand(args) === "daemon") {
         daemonAttempts += 1;
         if (daemonAttempts === 1) {
           emitAndClose(child, "stderr", "failed", 1);
@@ -1758,7 +1856,7 @@ describe("QmdMemoryManager", () => {
         }
         return child;
       }
-      if (isMcporterCommand(cmd) && args[0] === "call") {
+      if (getMcporterSubcommand(args) === "call") {
         emitAndClose(child, "stdout", JSON.stringify({ results: [] }));
         return child;
       }
@@ -1766,7 +1864,13 @@ describe("QmdMemoryManager", () => {
       return child;
     });
 
-    const { manager } = await createManager();
+    const { manager, resolved } = await createManager();
+    expectMcporterConfig(resolved, {
+      command: "qmd",
+      serverName: "qmd",
+      startDaemon: true,
+      searchMode: "search",
+    });
 
     await manager.search("one", { sessionKey: "agent:main:slack:dm:u123" });
     await manager.search("two", { sessionKey: "agent:main:slack:dm:u123" });
@@ -1792,11 +1896,11 @@ describe("QmdMemoryManager", () => {
 
     spawnMock.mockImplementation((cmd: string, args: string[]) => {
       const child = createMockChild({ autoClose: false });
-      if (isMcporterCommand(cmd) && args[0] === "daemon") {
+      if (getMcporterSubcommand(args) === "daemon") {
         emitAndClose(child, "stdout", "");
         return child;
       }
-      if (isMcporterCommand(cmd) && args[0] === "call") {
+      if (getMcporterSubcommand(args) === "call") {
         emitAndClose(child, "stdout", JSON.stringify({ results: [] }));
         return child;
       }
@@ -1804,13 +1908,19 @@ describe("QmdMemoryManager", () => {
       return child;
     });
 
-    const { manager } = await createManager();
+    const { manager, resolved } = await createManager();
+    expectMcporterConfig(resolved, {
+      command: "qmd",
+      serverName: "qmd",
+      startDaemon: true,
+      searchMode: "search",
+    });
 
     await manager.search("one", { sessionKey: "agent:main:slack:dm:u123" });
     await manager.search("two", { sessionKey: "agent:main:slack:dm:u123" });
 
     const daemonStarts = spawnMock.mock.calls.filter(
-      (call: unknown[]) => isMcporterCommand(call[0]) && (call[1] as string[])[0] === "daemon",
+      (call: unknown[]) => getMcporterSubcommand(call[1] as string[]) === "daemon",
     );
     expect(daemonStarts).toHaveLength(1);
 
@@ -2130,11 +2240,13 @@ describe("QmdMemoryManager", () => {
 
     const target = path.join(workspaceDir, "target.md");
     await fs.writeFile(target, "ok", "utf-8");
-    const link = path.join(workspaceDir, "link.md");
-    await fs.symlink(target, link);
-    await expect(manager.readFile({ relPath: "qmd/workspace-main/link.md" })).rejects.toThrow(
-      "path required",
-    );
+    if (process.platform !== "win32") {
+      const link = path.join(workspaceDir, "link.md");
+      await fs.symlink(target, link);
+      await expect(manager.readFile({ relPath: "qmd/workspace-main/link.md" })).rejects.toThrow(
+        "path required",
+      );
+    }
 
     await manager.close();
   });

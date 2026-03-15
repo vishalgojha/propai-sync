@@ -28,6 +28,11 @@
     "useLocalToolsDir": true,
     "createUpdaterArtifacts": true,
     "resources": ["resources/**/*"]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": ""
+    }
   }
 }
 

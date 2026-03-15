@@ -47,7 +47,7 @@ describe("state + config path candidates", () => {
   }
 
   function expectPropAiSyncHomeDefaults(env: NodeJS.ProcessEnv): void {
-    const configuredHome = env.propai_HOME;
+    const configuredHome = env.PROPAI_HOME ?? env.propai_HOME;
     if (!configuredHome) {
       throw new Error("PROPAI_HOME must be set for this assertion helper");
     }

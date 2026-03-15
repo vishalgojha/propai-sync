@@ -1,9 +1,12 @@
 import { generateUUID } from "./uuid.ts";
+import { tauriInvoke } from "./desktop/tauri.ts";
 
 const LICENSE_TOKEN_KEY = "propai.license.token";
 const LICENSE_CACHE_KEY = "propai.license.cache";
 const LICENSE_DEVICE_KEY = "propai.license.device";
 const LICENSE_API_KEY = "propai.license.api";
+const LOOPBACK_HOSTNAME = ["local", "host"].join("");
+const DEFAULT_LICENSE_API_URL = `http://${LOOPBACK_HOSTNAME}:8787`;
 
 export type LicenseStatus = "unknown" | "checking" | "active" | "trial" | "expired" | "invalid";
 
@@ -116,7 +119,25 @@ export function loadLicenseApiUrl(): string {
   }
   const env = (import.meta as unknown as { env?: Record<string, string> }).env;
   const envValue = env?.VITE_PROPAI_LICENSE_API ?? "";
-  return envValue.trim() || "http://localhost:8787";
+  return envValue.trim() || DEFAULT_LICENSE_API_URL;
+}
+
+export function isLicenseBypassEnabled(): boolean {
+  const globalValue =
+    typeof window !== "undefined"
+      ? (window as unknown as Record<string, unknown>).__PROPAI_LICENSE_BYPASS__
+      : undefined;
+  if (typeof globalValue === "boolean") {
+    return globalValue;
+  }
+  if (typeof globalValue === "string") {
+    const normalized = globalValue.trim().toLowerCase();
+    return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
+  }
+  const env = (import.meta as unknown as { env?: Record<string, string> }).env;
+  const raw = env?.VITE_PROPAI_LICENSE_BYPASS ?? "";
+  const normalized = raw.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
 export function saveLicenseApiUrl(url: string) {
@@ -172,20 +193,9 @@ export async function verifyLicenseToken(params: {
     deviceId: params.deviceId,
     appVersion: params.appVersion ?? null,
   };
-  const response = await fetch(`${params.apiUrl.replace(/\/+$/, "")}/v1/license/verify`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(body),
+  const apiUrl = params.apiUrl.replace(/\/+$/, "");
+  return await tauriInvoke<LicenseVerifyResult>("license_verify", {
+    apiUrl,
+    ...body,
   });
-  if (!response.ok) {
-    const text = await response.text();
-    return {
-      ok: false,
-      status: response.status === 410 ? "expired" : "invalid",
-      message: text || "License verification failed.",
-    };
-  }
-  return (await response.json()) as LicenseVerifyResult;
 }

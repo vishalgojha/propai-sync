@@ -88,7 +88,7 @@ describe("Nix integration (U3, U5, U9)", () => {
         resolveConfigPathCandidate(
           envWith({ PROPAI_CONFIG_PATH: undefined, PROPAI_STATE_DIR: undefined }),
         ),
-      ).toMatch(/\.propai[\\/]PropAi Sync\.json$/);
+      ).toMatch(/\.propai[\\/]propai\.json$/);
     });
 
     it("CONFIG_PATH respects PROPAI_CONFIG_PATH override", () => {
