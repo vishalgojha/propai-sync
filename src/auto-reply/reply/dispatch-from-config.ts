@@ -6,7 +6,6 @@ import {
   resolveStorePath,
   type SessionEntry,
 } from "../../config/sessions.js";
-import { shouldSuppressLocalDiscordExecApprovalPrompt } from "../../discord/exec-approvals.js";
 import { logVerbose } from "../../globals.js";
 import { fireAndForgetHook } from "../../hooks/fire-and-forget.js";
 import { createInternalHookEvent, triggerInternalHook } from "../../hooks/internal-hooks.js";
@@ -211,7 +210,7 @@ export async function dispatchReplyFromConfig(params: {
   // Check if we should route replies to originating channel instead of dispatcher.
   // Only route when the originating channel is DIFFERENT from the current surface.
   // This handles cross-provider routing (e.g., message from Telegram being processed
-  // by a shared session that's currently on Slack) while preserving normal dispatcher
+  // by a shared session that's currently on WhatsApp) while preserving normal dispatcher
   // flow when the provider handles its own messages.
   //
   // Debug: `pnpm test src/auto-reply/reply/dispatch-from-config.test.ts`
@@ -366,16 +365,6 @@ export async function dispatchReplyFromConfig(params: {
     let blockCount = 0;
 
     const resolveToolDeliveryPayload = (payload: ReplyPayload): ReplyPayload | null => {
-      if (
-        normalizeMessageChannel(ctx.Surface ?? ctx.Provider) === "discord" &&
-        shouldSuppressLocalDiscordExecApprovalPrompt({
-          cfg,
-          accountId: ctx.AccountId,
-          payload,
-        })
-      ) {
-        return null;
-      }
       if (shouldSendToolSummaries) {
         return payload;
       }
@@ -608,5 +597,4 @@ export async function dispatchReplyFromConfig(params: {
     throw err;
   }
 }
-
 

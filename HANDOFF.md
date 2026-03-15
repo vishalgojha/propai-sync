@@ -1,29 +1,28 @@
-Handoff (2026-03-15)
+# Handoff
 
-Summary
-- Added WhatsApp read-only mode via `channels.whatsapp.autoReply` (default `false`).
-- Gated WhatsApp auto-replies + ack reactions behind the new toggle.
-- Updated WhatsApp config schema, labels/help, docs, and examples to document the toggle and ban-risk warning.
-- Adjusted web test helpers to default `autoReply: true` in mocks to keep existing auto-reply tests stable.
+## Summary
+- Base used: `C:\Users\visha\propai-sync` (fully rebranded) with WA/TG-only cleanup ported from `C:\Users\visha\openclaw`.
+- Removed Discord/Slack/etc channel surface usage where appropriate; WA/TG are the only required channels now.
+- Implemented WA/TG-only CLI and config cleanups, and removed `discord-preview-streaming` in favor of `streaming-modes`.
+- `/session` lifecycle command is Telegram-only (matches openclaw); WhatsApp continues to use standard session reset/idle policies.
+- Removed Discord community link from system prompt.
 
-Code Changes
-- Config + schema: `src/config/types.whatsapp.ts`, `src/config/zod-schema.providers-whatsapp.ts`,
-  `src/config/schema.help.ts`, `src/config/schema.labels.ts`
-- Runtime gating: `src/web/auto-reply/monitor/process-message.ts`
-- Account resolution: `src/web/accounts.ts`
-- Test helpers: `src/web/test-helpers.ts`, `src/web/auto-reply/monitor/process-message.inbound-contract.test.ts`
-- Docs: `docs/channels/whatsapp.md`, `docs/gateway/configuration-reference.md`,
-  `docs/gateway/configuration-examples.md`
+## Key Changes
+- Added `src/config/streaming-modes.ts`; replaced `discord-preview-streaming` imports in config/doctor/telegram helper.
+- CLI cleanups for WA/TG only in:
+  - `src/cli/channels-cli.ts`
+  - `src/cli/program/register.message.ts`
+  - `src/cli/program/register.agent.ts`
+  - `src/cli/directory-cli.ts`
+  - `src/cli/program/register.status-health-sessions.ts`
+- Removed `allowSignalInstall` from onboarding.
+- Updated/replaced a large set of outbound/secrets/audit files with WA/TG-safe versions from openclaw + rebrand mapping.
+- `src/auto-reply/reply/commands-session.ts` now Telegram-only for `/session` idle/max-age; restart uses `triggerPropAiSyncRestart`.
 
-Behavior Notes
-- Read-only mode still ingests messages and records session meta, but skips all auto-replies and ack reactions.
-- Enabling `channels.whatsapp.autoReply: true` allows responses; warning added about ban risk.
+## Pending / Open Questions
+- If you want `/session` to affect WhatsApp, it will require a WhatsApp session-binding adapter or a separate WA-specific interpretation.
+- Optional cleanup: remove remaining non-WA/TG references in comments/test harnesses if desired (currently left to avoid unintended behavior changes).
 
-Pending / Follow-ups
-- Decide whether to add tests explicitly covering `autoReply: false` behavior.
-- Consider updating any UI/config editors that rely on schema labels/help if they need surfacing for `autoReply`.
-- Run test suite (not run in this session).
-
-Git Status
-- Large working tree with many files modified/added beyond the WhatsApp changes (rebrand/skills/etc).
-- No commits created for the WhatsApp change in this session.
+## Notes
+- Many channel extensions and docs were removed as part of WA/TG-only cleanup.
+- WhatsApp sessions still operate via `session` policies and `/new`/`/reset`.

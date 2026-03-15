@@ -78,7 +78,7 @@ export function resolveScopedChannelMediaMaxBytes(params: {
   });
 }
 
-export function createScopedChannelMediaMaxBytesResolver(channel: "imessage" | "signal") {
+export function createScopedChannelMediaMaxBytesResolver(channel: "telegram" | "whatsapp") {
   return (params: { cfg: PropAiSyncConfig; accountId?: string | null }) =>
     resolveScopedChannelMediaMaxBytes({
       cfg: params.cfg,
@@ -93,7 +93,7 @@ export function createDirectTextMediaOutbound<
   TOpts extends Record<string, unknown>,
   TResult extends DirectSendResult,
 >(params: {
-  channel: "imessage" | "signal";
+  channel: "telegram" | "whatsapp";
   resolveSender: (deps: OutboundSendDeps | undefined) => DirectSendFn<TOpts, TResult>;
   resolveMaxBytes: (params: {
     cfg: PropAiSyncConfig;
@@ -167,5 +167,4 @@ export function createDirectTextMediaOutbound<
   };
   return outbound;
 }
-
 

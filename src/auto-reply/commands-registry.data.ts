@@ -355,7 +355,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
       key: "focus",
       nativeName: "focus",
       description:
-        "Bind this thread (Discord) or topic/conversation (Telegram) to a session target.",
+        "Bind this topic/conversation (Telegram) to a session target.",
       textAlias: "/focus",
       category: "management",
       args: [
@@ -370,7 +370,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "unfocus",
       nativeName: "unfocus",
-      description: "Remove the current thread (Discord) or topic/conversation (Telegram) binding.",
+      description: "Remove the current topic/conversation (Telegram) binding.",
       textAlias: "/unfocus",
       category: "management",
     }),
@@ -498,7 +498,7 @@ function buildChatCommands(): ChatCommandDefinition[] {
     defineChatCommand({
       key: "restart",
       nativeName: "restart",
-      description: "Restart PropAiSync.",
+      description: "Restart PropAi Sync.",
       textAlias: "/restart",
       category: "tools",
     }),
@@ -775,5 +775,4 @@ export function getNativeCommandSurfaces(): Set<string> {
   cachedNativeRegistry = registry;
   return cachedNativeCommandSurfaces;
 }
-
 

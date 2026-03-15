@@ -146,7 +146,7 @@ export type PropAiSyncPluginGatewayMethod = {
 export type PluginCommandContext = {
   /** The sender's identifier (e.g., Telegram user ID) */
   senderId?: string;
-  /** The channel/surface (e.g., "telegram", "discord") */
+  /** The channel/surface (e.g., "telegram", "whatsapp") */
   channel: string;
   /** Provider channel id (e.g., "telegram") */
   channelId?: ChannelId;
@@ -189,7 +189,7 @@ export type PropAiSyncPluginCommandDefinition = {
   /**
    * Optional native-command aliases for slash/menu surfaces.
    * `default` applies to all native providers unless a provider-specific
-   * override exists (for example `{ default: "talkvoice", discord: "voice2" }`).
+   * override exists (for example `{ default: "talkvoice", telegram: "voice2" }`).
    */
   nativeNames?: Partial<Record<string, string>> & { default?: string };
   /** Description shown in /help and command menus */
@@ -402,7 +402,7 @@ export type PluginHookAgentContext = {
   messageProvider?: string;
   /** What initiated this agent run: "user", "heartbeat", "cron", or "memory". */
   trigger?: string;
-  /** Channel identifier (e.g. "telegram", "discord", "whatsapp"). */
+  /** Channel identifier (e.g. "telegram", "whatsapp"). */
   channelId?: string;
 };
 

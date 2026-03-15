@@ -129,33 +129,6 @@ function resolveChannelAccountConfig<T>(
   return fallbackKey ? accounts[fallbackKey] : undefined;
 }
 
-// Discord has component-based exec approvals; skip text fallback only when the
-// Discord-specific handler is enabled for the same target account.
-function shouldSkipDiscordForwarding(
-  target: ExecApprovalForwardTarget,
-  cfg: PropAiSyncConfig,
-): boolean {
-  const channel = normalizeMessageChannel(target.channel) ?? target.channel;
-  if (channel !== "discord") {
-    return false;
-  }
-  const discord = cfg.channels?.discord as
-    | {
-        execApprovals?: { enabled?: boolean; approvers?: Array<string | number> };
-        accounts?: Record<
-          string,
-          { execApprovals?: { enabled?: boolean; approvers?: Array<string | number> } }
-        >;
-      }
-    | undefined;
-  if (!discord) {
-    return false;
-  }
-  const account = resolveChannelAccountConfig(discord.accounts, target.accountId);
-  const execApprovals = account?.execApprovals ?? discord.execApprovals;
-  return Boolean(execApprovals?.enabled && (execApprovals.approvers?.length ?? 0) > 0);
-}
-
 function shouldSkipTelegramForwarding(params: {
   target: ExecApprovalForwardTarget;
   cfg: PropAiSyncConfig;
@@ -466,9 +439,7 @@ export function createExecApprovalForwarder(
           })
         : []),
     ].filter(
-      (target) =>
-        !shouldSkipDiscordForwarding(target, cfg) &&
-        !shouldSkipTelegramForwarding({ target, cfg, request }),
+      (target) => !shouldSkipTelegramForwarding({ target, cfg, request }),
     );
 
     if (filteredTargets.length === 0) {
@@ -541,9 +512,7 @@ export function createExecApprovalForwarder(
             })
           : []),
       ].filter(
-        (target) =>
-          !shouldSkipDiscordForwarding(target, cfg) &&
-          !shouldSkipTelegramForwarding({ target, cfg, request }),
+        (target) => !shouldSkipTelegramForwarding({ target, cfg, request }),
       );
     }
     if (!targets || targets.length === 0) {
@@ -571,5 +540,4 @@ export function shouldForwardExecApproval(params: {
 }): boolean {
   return shouldForward(params);
 }
-
 

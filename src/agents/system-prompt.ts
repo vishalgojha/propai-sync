@@ -178,7 +178,6 @@ function buildDocsSection(params: { docsPath?: string; isMinimal: boolean; readT
     `PropAi Sync docs: ${docsPath}`,
     "Mirror: https://docs.propai.ai",
     "Source: https://github.com/propai/propai",
-    "Community: https://discord.com/invite/clawd",
     "Find new skills: https://clawhub.com",
     "For PropAi Sync behavior, commands, config, or architecture: consult local docs first.",
     "When diagnosing issues, run `PropAi Sync status` yourself when possible; only ask the user if you lack access (e.g., sandboxed).",

@@ -23,21 +23,7 @@ import { channelLabel, requireValidConfig, shouldUseWizard } from "./shared.js";
 export type ChannelsAddOptions = {
   channel?: string;
   account?: string;
-  initialSyncLimit?: number | string;
-  groupChannels?: string;
-  dmAllowlist?: string;
-} & Omit<ChannelSetupInput, "groupChannels" | "dmAllowlist" | "initialSyncLimit">;
-
-function parseList(value: string | undefined): string[] | undefined {
-  if (!value?.trim()) {
-    return undefined;
-  }
-  const parsed = value
-    .split(/[\n,;]+/g)
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-  return parsed.length > 0 ? parsed : undefined;
-}
+} & ChannelSetupInput;
 
 function resolveCatalogChannelEntry(raw: string, cfg: PropAiSyncConfig | null) {
   const trimmed = raw.trim().toLowerCase();
@@ -72,7 +58,6 @@ export async function channelsAddCommand(
     await prompter.intro("Channel setup");
     let nextConfig = await setupChannels(cfg, runtime, prompter, {
       allowDisable: false,
-      allowSignalInstall: true,
       promptAccountIds: true,
       onSelection: (value) => {
         selection = value;
@@ -219,47 +204,13 @@ export async function channelsAddCommand(
     return;
   }
   const useEnv = opts.useEnv === true;
-  const initialSyncLimit =
-    typeof opts.initialSyncLimit === "number"
-      ? opts.initialSyncLimit
-      : typeof opts.initialSyncLimit === "string" && opts.initialSyncLimit.trim()
-        ? Number.parseInt(opts.initialSyncLimit, 10)
-        : undefined;
-  const groupChannels = parseList(opts.groupChannels);
-  const dmAllowlist = parseList(opts.dmAllowlist);
-
   const input: ChannelSetupInput = {
     name: opts.name,
     token: opts.token,
     tokenFile: opts.tokenFile,
     botToken: opts.botToken,
-    appToken: opts.appToken,
-    signalNumber: opts.signalNumber,
-    cliPath: opts.cliPath,
-    dbPath: opts.dbPath,
-    service: opts.service,
-    region: opts.region,
     authDir: opts.authDir,
-    httpUrl: opts.httpUrl,
-    httpHost: opts.httpHost,
-    httpPort: opts.httpPort,
-    webhookPath: opts.webhookPath,
-    webhookUrl: opts.webhookUrl,
-    audienceType: opts.audienceType,
-    audience: opts.audience,
-    homeserver: opts.homeserver,
-    userId: opts.userId,
-    accessToken: opts.accessToken,
-    password: opts.password,
-    deviceName: opts.deviceName,
-    initialSyncLimit,
     useEnv,
-    ship: opts.ship,
-    url: opts.url,
-    code: opts.code,
-    groupChannels,
-    dmAllowlist,
-    autoDiscoverChannels: opts.autoDiscoverChannels,
   };
   const accountId =
     plugin.setup.resolveAccountId?.({
@@ -309,5 +260,4 @@ export async function channelsAddCommand(
   await writeConfigFile(nextConfig);
   runtime.log(`Added ${channelLabel(channel)} account "${accountId}".`);
 }
-
 

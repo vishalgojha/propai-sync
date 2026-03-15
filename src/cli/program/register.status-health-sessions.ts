@@ -59,10 +59,7 @@ export function registerStatusHealthSessionsCommands(program: Command) {
           ["propai status --all", "Full diagnosis (read-only)."],
           ["propai status --json", "Machine-readable output."],
           ["propai status --usage", "Show model provider usage/quota snapshots."],
-          [
-            "propai status --deep",
-            "Run channel probes (WA + Telegram + Discord + Slack + Signal).",
-          ],
+          ["propai status --deep", "Run channel probes (WA + Telegram)."],
           ["propai status --deep --timeout 5000", "Tighten probe timeout."],
         ])}`,
     )

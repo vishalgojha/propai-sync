@@ -119,26 +119,9 @@ export function listChatCommandsForConfig(
   return [...base, ...buildSkillCommandDefinitions(params.skillCommands)];
 }
 
-const NATIVE_NAME_OVERRIDES: Record<string, Record<string, string>> = {
-  discord: {
-    tts: "voice",
-  },
-  slack: {
-    // Slack reserves /status — registering it returns "invalid name"
-    // and invalidates the entire slash_commands manifest array.
-    status: "agentstatus",
-  },
-};
-
 function resolveNativeName(command: ChatCommandDefinition, provider?: string): string | undefined {
   if (!command.nativeName) {
     return undefined;
-  }
-  if (provider) {
-    const override = NATIVE_NAME_OVERRIDES[provider]?.[command.key];
-    if (override) {
-      return override;
-    }
   }
   return command.nativeName;
 }
@@ -528,5 +511,4 @@ export function shouldHandleTextCommands(params: ShouldHandleTextCommandsParams)
   }
   return !isNativeCommandSurface(params.surface);
 }
-
 

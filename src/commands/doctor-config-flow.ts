@@ -12,7 +12,6 @@ import { getChannelsCommandSecretTargetIds } from "../cli/command-secret-targets
 import { listRouteBindings } from "../config/bindings.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { CONFIG_PATH, migrateLegacyConfig, readConfigFileSnapshot } from "../config/config.js";
-import { collectProviderDangerousNameMatchingScopes } from "../config/dangerous-name-matching.js";
 import { formatConfigIssueLines } from "../config/issue-format.js";
 import { applyPluginAutoEnable } from "../config/plugin-auto-enable.js";
 import { parseToolsBySenderTypedKey } from "../config/types.tools.js";
@@ -37,14 +36,6 @@ import {
   normalizeAccountId,
   normalizeOptionalAccountId,
 } from "../routing/session-key.js";
-import {
-  isDiscordMutableAllowEntry,
-  isGoogleChatMutableAllowEntry,
-  isIrcMutableAllowEntry,
-  isMSTeamsMutableAllowEntry,
-  isMattermostMutableAllowEntry,
-  isSlackMutableAllowEntry,
-} from "../security/mutable-allowlist-detectors.js";
 import { inspectTelegramAccount } from "../telegram/account-inspect.js";
 import { listTelegramAccountIds, resolveTelegramAccount } from "../telegram/accounts.js";
 import { note } from "../terminal/note.js";
@@ -458,164 +449,6 @@ async function maybeRepairTelegramAllowFromUsernames(cfg: PropAiSyncConfig): Pro
   return { config: next, changes };
 }
 
-type DiscordNumericIdHit = { path: string; entry: number };
-
-type DiscordIdListRef = {
-  pathLabel: string;
-  holder: Record<string, unknown>;
-  key: string;
-};
-
-function collectDiscordAccountScopes(
-  cfg: PropAiSyncConfig,
-): Array<{ prefix: string; account: Record<string, unknown> }> {
-  const scopes: Array<{ prefix: string; account: Record<string, unknown> }> = [];
-  const discord = asObjectRecord(cfg.channels?.discord);
-  if (!discord) {
-    return scopes;
-  }
-
-  scopes.push({ prefix: "channels.discord", account: discord });
-  const accounts = asObjectRecord(discord.accounts);
-  if (!accounts) {
-    return scopes;
-  }
-  for (const key of Object.keys(accounts)) {
-    const account = asObjectRecord(accounts[key]);
-    if (!account) {
-      continue;
-    }
-    scopes.push({ prefix: `channels.discord.accounts.${key}`, account });
-  }
-
-  return scopes;
-}
-
-function collectDiscordIdLists(
-  prefix: string,
-  account: Record<string, unknown>,
-): DiscordIdListRef[] {
-  const refs: DiscordIdListRef[] = [
-    { pathLabel: `${prefix}.allowFrom`, holder: account, key: "allowFrom" },
-  ];
-  const dm = asObjectRecord(account.dm);
-  if (dm) {
-    refs.push({ pathLabel: `${prefix}.dm.allowFrom`, holder: dm, key: "allowFrom" });
-    refs.push({ pathLabel: `${prefix}.dm.groupChannels`, holder: dm, key: "groupChannels" });
-  }
-  const execApprovals = asObjectRecord(account.execApprovals);
-  if (execApprovals) {
-    refs.push({
-      pathLabel: `${prefix}.execApprovals.approvers`,
-      holder: execApprovals,
-      key: "approvers",
-    });
-  }
-  const guilds = asObjectRecord(account.guilds);
-  if (!guilds) {
-    return refs;
-  }
-
-  for (const guildId of Object.keys(guilds)) {
-    const guild = asObjectRecord(guilds[guildId]);
-    if (!guild) {
-      continue;
-    }
-    refs.push({ pathLabel: `${prefix}.guilds.${guildId}.users`, holder: guild, key: "users" });
-    refs.push({ pathLabel: `${prefix}.guilds.${guildId}.roles`, holder: guild, key: "roles" });
-    const channels = asObjectRecord(guild.channels);
-    if (!channels) {
-      continue;
-    }
-    for (const channelId of Object.keys(channels)) {
-      const channel = asObjectRecord(channels[channelId]);
-      if (!channel) {
-        continue;
-      }
-      refs.push({
-        pathLabel: `${prefix}.guilds.${guildId}.channels.${channelId}.users`,
-        holder: channel,
-        key: "users",
-      });
-      refs.push({
-        pathLabel: `${prefix}.guilds.${guildId}.channels.${channelId}.roles`,
-        holder: channel,
-        key: "roles",
-      });
-    }
-  }
-  return refs;
-}
-
-function scanDiscordNumericIdEntries(cfg: PropAiSyncConfig): DiscordNumericIdHit[] {
-  const hits: DiscordNumericIdHit[] = [];
-  const scanList = (pathLabel: string, list: unknown) => {
-    if (!Array.isArray(list)) {
-      return;
-    }
-    for (const [index, entry] of list.entries()) {
-      if (typeof entry !== "number") {
-        continue;
-      }
-      hits.push({ path: `${pathLabel}[${index}]`, entry });
-    }
-  };
-
-  for (const scope of collectDiscordAccountScopes(cfg)) {
-    for (const ref of collectDiscordIdLists(scope.prefix, scope.account)) {
-      scanList(ref.pathLabel, ref.holder[ref.key]);
-    }
-  }
-
-  return hits;
-}
-
-function maybeRepairDiscordNumericIds(cfg: PropAiSyncConfig): {
-  config: PropAiSyncConfig;
-  changes: string[];
-} {
-  const hits = scanDiscordNumericIdEntries(cfg);
-  if (hits.length === 0) {
-    return { config: cfg, changes: [] };
-  }
-
-  const next = structuredClone(cfg);
-  const changes: string[] = [];
-
-  const repairList = (pathLabel: string, holder: Record<string, unknown>, key: string) => {
-    const raw = holder[key];
-    if (!Array.isArray(raw)) {
-      return;
-    }
-    let converted = 0;
-    const updated = raw.map((entry) => {
-      if (typeof entry === "number") {
-        converted += 1;
-        return String(entry);
-      }
-      return entry;
-    });
-    if (converted === 0) {
-      return;
-    }
-    holder[key] = updated;
-    changes.push(
-      `- ${pathLabel}: converted ${converted} numeric ${converted === 1 ? "entry" : "entries"} to strings`,
-    );
-  };
-
-  for (const scope of collectDiscordAccountScopes(next)) {
-    for (const ref of collectDiscordIdLists(scope.prefix, scope.account)) {
-      repairList(ref.pathLabel, ref.holder, ref.key);
-    }
-  }
-
-  if (changes.length === 0) {
-    return { config: cfg, changes: [] };
-  }
-  return { config: next, changes };
-}
-
 type MutableAllowlistHit = {
   channel: string;
   path: string;
@@ -623,269 +456,9 @@ type MutableAllowlistHit = {
   dangerousFlagPath: string;
 };
 
-function addMutableAllowlistHits(params: {
-  hits: MutableAllowlistHit[];
-  pathLabel: string;
-  list: unknown;
-  detector: (entry: string) => boolean;
-  channel: string;
-  dangerousFlagPath: string;
-}) {
-  if (!Array.isArray(params.list)) {
-    return;
-  }
-  for (const entry of params.list) {
-    const text = String(entry).trim();
-    if (!text || text === "*") {
-      continue;
-    }
-    if (!params.detector(text)) {
-      continue;
-    }
-    params.hits.push({
-      channel: params.channel,
-      path: params.pathLabel,
-      entry: text,
-      dangerousFlagPath: params.dangerousFlagPath,
-    });
-  }
-}
-
 function scanMutableAllowlistEntries(cfg: PropAiSyncConfig): MutableAllowlistHit[] {
-  const hits: MutableAllowlistHit[] = [];
-
-  for (const scope of collectProviderDangerousNameMatchingScopes(cfg, "discord")) {
-    if (scope.dangerousNameMatchingEnabled) {
-      continue;
-    }
-    addMutableAllowlistHits({
-      hits,
-      pathLabel: `${scope.prefix}.allowFrom`,
-      list: scope.account.allowFrom,
-      detector: isDiscordMutableAllowEntry,
-      channel: "discord",
-      dangerousFlagPath: scope.dangerousFlagPath,
-    });
-    const dm = asObjectRecord(scope.account.dm);
-    if (dm) {
-      addMutableAllowlistHits({
-        hits,
-        pathLabel: `${scope.prefix}.dm.allowFrom`,
-        list: dm.allowFrom,
-        detector: isDiscordMutableAllowEntry,
-        channel: "discord",
-        dangerousFlagPath: scope.dangerousFlagPath,
-      });
-    }
-    const guilds = asObjectRecord(scope.account.guilds);
-    if (!guilds) {
-      continue;
-    }
-    for (const [guildId, guildRaw] of Object.entries(guilds)) {
-      const guild = asObjectRecord(guildRaw);
-      if (!guild) {
-        continue;
-      }
-      addMutableAllowlistHits({
-        hits,
-        pathLabel: `${scope.prefix}.guilds.${guildId}.users`,
-        list: guild.users,
-        detector: isDiscordMutableAllowEntry,
-        channel: "discord",
-        dangerousFlagPath: scope.dangerousFlagPath,
-      });
-      const channels = asObjectRecord(guild.channels);
-      if (!channels) {
-        continue;
-      }
-      for (const [channelId, channelRaw] of Object.entries(channels)) {
-        const channel = asObjectRecord(channelRaw);
-        if (!channel) {
-          continue;
-        }
-        addMutableAllowlistHits({
-          hits,
-          pathLabel: `${scope.prefix}.guilds.${guildId}.channels.${channelId}.users`,
-          list: channel.users,
-          detector: isDiscordMutableAllowEntry,
-          channel: "discord",
-          dangerousFlagPath: scope.dangerousFlagPath,
-        });
-      }
-    }
-  }
-
-  for (const scope of collectProviderDangerousNameMatchingScopes(cfg, "slack")) {
-    if (scope.dangerousNameMatchingEnabled) {
-      continue;
-    }
-    addMutableAllowlistHits({
-      hits,
-      pathLabel: `${scope.prefix}.allowFrom`,
-      list: scope.account.allowFrom,
-      detector: isSlackMutableAllowEntry,
-      channel: "slack",
-      dangerousFlagPath: scope.dangerousFlagPath,
-    });
-    const dm = asObjectRecord(scope.account.dm);
-    if (dm) {
-      addMutableAllowlistHits({
-        hits,
-        pathLabel: `${scope.prefix}.dm.allowFrom`,
-        list: dm.allowFrom,
-        detector: isSlackMutableAllowEntry,
-        channel: "slack",
-        dangerousFlagPath: scope.dangerousFlagPath,
-      });
-    }
-    const channels = asObjectRecord(scope.account.channels);
-    if (!channels) {
-      continue;
-    }
-    for (const [channelKey, channelRaw] of Object.entries(channels)) {
-      const channel = asObjectRecord(channelRaw);
-      if (!channel) {
-        continue;
-      }
-      addMutableAllowlistHits({
-        hits,
-        pathLabel: `${scope.prefix}.channels.${channelKey}.users`,
-        list: channel.users,
-        detector: isSlackMutableAllowEntry,
-        channel: "slack",
-        dangerousFlagPath: scope.dangerousFlagPath,
-      });
-    }
-  }
-
-  for (const scope of collectProviderDangerousNameMatchingScopes(cfg, "googlechat")) {
-    if (scope.dangerousNameMatchingEnabled) {
-      continue;
-    }
-    addMutableAllowlistHits({
-      hits,
-      pathLabel: `${scope.prefix}.groupAllowFrom`,
-      list: scope.account.groupAllowFrom,
-      detector: isGoogleChatMutableAllowEntry,
-      channel: "googlechat",
-      dangerousFlagPath: scope.dangerousFlagPath,
-    });
-    const dm = asObjectRecord(scope.account.dm);
-    if (dm) {
-      addMutableAllowlistHits({
-        hits,
-        pathLabel: `${scope.prefix}.dm.allowFrom`,
-        list: dm.allowFrom,
-        detector: isGoogleChatMutableAllowEntry,
-        channel: "googlechat",
-        dangerousFlagPath: scope.dangerousFlagPath,
-      });
-    }
-    const groups = asObjectRecord(scope.account.groups);
-    if (!groups) {
-      continue;
-    }
-    for (const [groupKey, groupRaw] of Object.entries(groups)) {
-      const group = asObjectRecord(groupRaw);
-      if (!group) {
-        continue;
-      }
-      addMutableAllowlistHits({
-        hits,
-        pathLabel: `${scope.prefix}.groups.${groupKey}.users`,
-        list: group.users,
-        detector: isGoogleChatMutableAllowEntry,
-        channel: "googlechat",
-        dangerousFlagPath: scope.dangerousFlagPath,
-      });
-    }
-  }
-
-  for (const scope of collectProviderDangerousNameMatchingScopes(cfg, "msteams")) {
-    if (scope.dangerousNameMatchingEnabled) {
-      continue;
-    }
-    addMutableAllowlistHits({
-      hits,
-      pathLabel: `${scope.prefix}.allowFrom`,
-      list: scope.account.allowFrom,
-      detector: isMSTeamsMutableAllowEntry,
-      channel: "msteams",
-      dangerousFlagPath: scope.dangerousFlagPath,
-    });
-    addMutableAllowlistHits({
-      hits,
-      pathLabel: `${scope.prefix}.groupAllowFrom`,
-      list: scope.account.groupAllowFrom,
-      detector: isMSTeamsMutableAllowEntry,
-      channel: "msteams",
-      dangerousFlagPath: scope.dangerousFlagPath,
-    });
-  }
-
-  for (const scope of collectProviderDangerousNameMatchingScopes(cfg, "mattermost")) {
-    if (scope.dangerousNameMatchingEnabled) {
-      continue;
-    }
-    addMutableAllowlistHits({
-      hits,
-      pathLabel: `${scope.prefix}.allowFrom`,
-      list: scope.account.allowFrom,
-      detector: isMattermostMutableAllowEntry,
-      channel: "mattermost",
-      dangerousFlagPath: scope.dangerousFlagPath,
-    });
-    addMutableAllowlistHits({
-      hits,
-      pathLabel: `${scope.prefix}.groupAllowFrom`,
-      list: scope.account.groupAllowFrom,
-      detector: isMattermostMutableAllowEntry,
-      channel: "mattermost",
-      dangerousFlagPath: scope.dangerousFlagPath,
-    });
-  }
-
-  for (const scope of collectProviderDangerousNameMatchingScopes(cfg, "irc")) {
-    if (scope.dangerousNameMatchingEnabled) {
-      continue;
-    }
-    addMutableAllowlistHits({
-      hits,
-      pathLabel: `${scope.prefix}.allowFrom`,
-      list: scope.account.allowFrom,
-      detector: isIrcMutableAllowEntry,
-      channel: "irc",
-      dangerousFlagPath: scope.dangerousFlagPath,
-    });
-    addMutableAllowlistHits({
-      hits,
-      pathLabel: `${scope.prefix}.groupAllowFrom`,
-      list: scope.account.groupAllowFrom,
-      detector: isIrcMutableAllowEntry,
-      channel: "irc",
-      dangerousFlagPath: scope.dangerousFlagPath,
-    });
-    const groups = asObjectRecord(scope.account.groups);
-    if (!groups) {
-      continue;
-    }
-    for (const [groupKey, groupRaw] of Object.entries(groups)) {
-      const group = asObjectRecord(groupRaw);
-      if (!group) {
-        continue;
-      }
-      addMutableAllowlistHits({
-        hits,
-        pathLabel: `${scope.prefix}.groups.${groupKey}.allowFrom`,
-        list: group.allowFrom,
-        detector: isIrcMutableAllowEntry,
-        channel: "irc",
-        dangerousFlagPath: scope.dangerousFlagPath,
-      });
-    }
-  }
-
-  return hits;
+  void cfg;
+  return [];
 }
 
 /**
@@ -909,12 +482,7 @@ function maybeRepairOpenPolicyAllowFrom(cfg: PropAiSyncConfig): {
   type OpenPolicyAllowFromMode = "topOnly" | "topOrNested" | "nestedOnly";
 
   const resolveAllowFromMode = (channelName: string): OpenPolicyAllowFromMode => {
-    if (channelName === "googlechat") {
-      return "nestedOnly";
-    }
-    if (channelName === "discord" || channelName === "slack") {
-      return "topOrNested";
-    }
+    void channelName;
     return "topOnly";
   };
 
@@ -998,7 +566,7 @@ function maybeRepairOpenPolicyAllowFrom(cfg: PropAiSyncConfig): {
     // Check the top-level channel config
     ensureWildcard(channelConfig, `channels.${channelName}`, allowFromMode);
 
-    // Check per-account configs (e.g. channels.discord.accounts.mybot)
+    // Check per-account configs (e.g. channels.telegram.accounts.work)
     const accounts = channelConfig.accounts as Record<string, Record<string, unknown>> | undefined;
     if (accounts && typeof accounts === "object") {
       for (const [accountName, accountConfig] of Object.entries(accounts)) {
@@ -1035,12 +603,7 @@ async function maybeRepairAllowlistPolicyAllowFrom(cfg: PropAiSyncConfig): Promi
   type AllowFromMode = "topOnly" | "topOrNested" | "nestedOnly";
 
   const resolveAllowFromMode = (channelName: string): AllowFromMode => {
-    if (channelName === "googlechat") {
-      return "nestedOnly";
-    }
-    if (channelName === "discord" || channelName === "slack") {
-      return "topOrNested";
-    }
+    void channelName;
     return "topOnly";
   };
 
@@ -1191,26 +754,13 @@ function detectEmptyAllowlistPolicy(cfg: PropAiSyncConfig): string[] {
   const warnings: string[] = [];
 
   const usesSenderBasedGroupAllowlist = (channelName?: string): boolean => {
-    if (!channelName) {
-      return true;
-    }
-    // These channels enforce group access via channel/space config, not sender-based
-    // groupAllowFrom lists.
-    return !(channelName === "discord" || channelName === "slack" || channelName === "googlechat");
+    void channelName;
+    return true;
   };
 
   const allowsGroupAllowFromFallback = (channelName?: string): boolean => {
-    if (!channelName) {
-      return true;
-    }
-    // Keep doctor warnings aligned with runtime access semantics.
-    return !(
-      channelName === "googlechat" ||
-      channelName === "imessage" ||
-      channelName === "matrix" ||
-      channelName === "msteams" ||
-      channelName === "irc"
-    );
+    void channelName;
+    return true;
   };
 
   const checkAccount = (
@@ -1609,7 +1159,7 @@ async function maybeMigrateLegacyConfig(): Promise<string[]> {
     return changes;
   }
 
-  const targetDir = path.join(home, ".propai");
+  const targetDir = path.join(home, "\.propai");
   const targetPath = path.join(targetDir, "propai.json");
   try {
     await fs.access(targetPath);
@@ -1752,14 +1302,6 @@ export async function loadAndMaybeMigrateDoctorConfig(params: {
       cfg = repair.config;
     }
 
-    const discordRepair = maybeRepairDiscordNumericIds(candidate);
-    if (discordRepair.changes.length > 0) {
-      note(discordRepair.changes.join("\n"), "Doctor changes");
-      candidate = discordRepair.config;
-      pendingChanges = true;
-      cfg = discordRepair.config;
-    }
-
     const allowFromRepair = maybeRepairOpenPolicyAllowFrom(candidate);
     if (allowFromRepair.changes.length > 0) {
       note(allowFromRepair.changes.join("\n"), "Doctor changes");
@@ -1806,17 +1348,6 @@ export async function loadAndMaybeMigrateDoctorConfig(params: {
         [
           `- Telegram allowFrom contains ${hits.length} non-numeric entries (e.g. ${hits[0]?.entry ?? "@"}); Telegram authorization requires numeric sender IDs.`,
           `- Run "${formatCliCommand("PropAi Sync doctor --fix")}" to auto-resolve @username entries to numeric IDs (requires a Telegram bot token).`,
-        ].join("\n"),
-        "Doctor warnings",
-      );
-    }
-
-    const discordHits = scanDiscordNumericIdEntries(candidate);
-    if (discordHits.length > 0) {
-      note(
-        [
-          `- Discord allowlists contain ${discordHits.length} numeric entries (e.g. ${discordHits[0]?.path}=${discordHits[0]?.entry}).`,
-          `- Discord IDs must be strings; run "${formatCliCommand("PropAi Sync doctor --fix")}" to convert numeric IDs to quoted strings.`,
         ].join("\n"),
         "Doctor warnings",
       );
@@ -1975,6 +1506,4 @@ export async function loadAndMaybeMigrateDoctorConfig(params: {
     sourceConfigValid: snapshot.valid,
   };
 }
-
-
 

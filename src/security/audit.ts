@@ -165,45 +165,6 @@ function hasNonEmptyString(value: unknown): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function isFeishuDocToolEnabled(cfg: PropAiSyncConfig): boolean {
-  const channels = asRecord(cfg.channels);
-  const feishu = asRecord(channels?.feishu);
-  if (!feishu || feishu.enabled === false) {
-    return false;
-  }
-
-  const baseTools = asRecord(feishu.tools);
-  const baseDocEnabled = baseTools?.doc !== false;
-  const baseAppId = hasNonEmptyString(feishu.appId);
-  const baseAppSecret = hasConfiguredSecretInput(feishu.appSecret, cfg.secrets?.defaults);
-  const baseConfigured = baseAppId && baseAppSecret;
-
-  const accounts = asRecord(feishu.accounts);
-  if (!accounts || Object.keys(accounts).length === 0) {
-    return baseDocEnabled && baseConfigured;
-  }
-
-  for (const accountValue of Object.values(accounts)) {
-    const account = asRecord(accountValue) ?? {};
-    if (account.enabled === false) {
-      continue;
-    }
-    const accountTools = asRecord(account.tools);
-    const effectiveTools = accountTools ?? baseTools;
-    const docEnabled = effectiveTools?.doc !== false;
-    if (!docEnabled) {
-      continue;
-    }
-    const accountConfigured =
-      (hasNonEmptyString(account.appId) || baseAppId) &&
-      (hasConfiguredSecretInput(account.appSecret, cfg.secrets?.defaults) || baseAppSecret);
-    if (accountConfigured) {
-      return true;
-    }
-  }
-
-  return false;
-}
 
 async function collectFilesystemFindings(params: {
   stateDir: string;
@@ -357,9 +318,9 @@ function collectGatewayConfigFindings(
   const hasToken = typeof auth.token === "string" && auth.token.trim().length > 0;
   const hasPassword = typeof auth.password === "string" && auth.password.trim().length > 0;
   const envTokenConfigured =
-    hasNonEmptyString(env.propai_GATEWAY_TOKEN) || hasNonEmptyString(env.CLAWDBOT_GATEWAY_TOKEN);
+    hasNonEmptyString(env\.propai_GATEWAY_TOKEN) || hasNonEmptyString(env.CLAWDBOT_GATEWAY_TOKEN);
   const envPasswordConfigured =
-    hasNonEmptyString(env.propai_GATEWAY_PASSWORD) ||
+    hasNonEmptyString(env\.propai_GATEWAY_PASSWORD) ||
     hasNonEmptyString(env.CLAWDBOT_GATEWAY_PASSWORD);
   const tokenConfiguredFromConfig = hasConfiguredSecretInput(
     cfg.gateway?.auth?.token,
@@ -576,18 +537,6 @@ function collectGatewayConfigFindings(
     });
   }
 
-  if (isFeishuDocToolEnabled(cfg)) {
-    findings.push({
-      checkId: "channels.feishu.doc_owner_open_id",
-      severity: "warn",
-      title: "Feishu doc create can grant requester permissions",
-      detail:
-        'channels.feishu tools include "doc"; feishu_doc action "create" can grant document access to the trusted requesting Feishu user.',
-      remediation:
-        "Disable channels.feishu.tools.doc when not needed, and restrict tool access for untrusted prompts.",
-    });
-  }
-
   const enabledDangerousFlags = collectEnabledInsecureOrDangerousFlags(cfg);
   if (enabledDangerousFlags.length > 0) {
     findings.push({
@@ -743,7 +692,7 @@ function collectBrowserControlFindings(
   const explicitAuthMode = cfg.gateway?.auth?.mode;
   const tokenConfigured =
     Boolean(browserAuth.token) ||
-    hasNonEmptyString(env.propai_GATEWAY_TOKEN) ||
+    hasNonEmptyString(env\.propai_GATEWAY_TOKEN) ||
     hasNonEmptyString(env.CLAWDBOT_GATEWAY_TOKEN) ||
     hasConfiguredSecretInput(cfg.gateway?.auth?.token, cfg.secrets?.defaults);
   const passwordCanWin =
@@ -755,7 +704,7 @@ function collectBrowserControlFindings(
   const passwordConfigured =
     Boolean(browserAuth.password) ||
     (passwordCanWin &&
-      (hasNonEmptyString(env.propai_GATEWAY_PASSWORD) ||
+      (hasNonEmptyString(env\.propai_GATEWAY_PASSWORD) ||
         hasNonEmptyString(env.CLAWDBOT_GATEWAY_PASSWORD) ||
         hasConfiguredSecretInput(cfg.gateway?.auth?.password, cfg.secrets?.defaults)));
   if (!tokenConfigured && !passwordConfigured) {
@@ -1244,13 +1193,11 @@ export async function runSecurityAudit(opts: SecurityAuditOptions): Promise<Secu
       severity: "warn",
       title: "Gateway probe auth SecretRef is unavailable",
       detail: deepProbeResult.authWarning,
-      remediation: `Set PROPAI_GATEWAY_TOKEN/PROPAI_GATEWAY_PASSWORD in this shell or resolve the external secret provider, then re-run "${formatCliCommand("PropAi Sync security audit --deep")}".`,
+      remediation: `Set PropAi Sync_GATEWAY_TOKEN/PropAi Sync_GATEWAY_PASSWORD in this shell or resolve the external secret provider, then re-run "${formatCliCommand("PropAi Sync security audit --deep")}".`,
     });
   }
 
   const summary = countBySeverity(findings);
   return { ts: Date.now(), summary, findings, deep };
 }
-
-
 

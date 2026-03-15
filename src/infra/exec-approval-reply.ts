@@ -148,21 +148,21 @@ export function buildExecApprovalUnavailableReplyPayload(
       `Exec approval is required, but chat exec approvals are not enabled on ${params.channelLabel ?? "this platform"}.`,
     );
     lines.push(
-      "Approve it from the Web UI or terminal UI, or from Discord or Telegram if those approval clients are enabled.",
+      "Approve it from the Web UI or terminal UI, or from Telegram if chat approvals are enabled.",
     );
   } else if (params.reason === "initiating-platform-unsupported") {
     lines.push(
       `Exec approval is required, but ${params.channelLabel ?? "this platform"} does not support chat exec approvals.`,
     );
     lines.push(
-      "Approve it from the Web UI or terminal UI, or from Discord or Telegram if those approval clients are enabled.",
+      "Approve it from the Web UI or terminal UI, or from Telegram if chat approvals are enabled.",
     );
   } else {
     lines.push(
       "Exec approval is required, but no interactive approval client is currently available.",
     );
     lines.push(
-      "Open the Web UI or terminal UI, or enable Discord or Telegram exec approvals, then retry the command.",
+      "Open the Web UI or terminal UI, or enable Telegram exec approvals, then retry the command.",
     );
   }
 

@@ -146,9 +146,7 @@ export function filterMessagingToolMediaDuplicates(params: {
   });
 }
 
-const PROVIDER_ALIAS_MAP: Record<string, string> = {
-  lark: "feishu",
-};
+const PROVIDER_ALIAS_MAP: Record<string, string> = {};
 
 function normalizeProviderForComparison(value?: string): string | undefined {
   const trimmed = value?.trim();

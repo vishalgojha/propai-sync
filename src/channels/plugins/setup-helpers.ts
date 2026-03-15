@@ -206,27 +206,8 @@ const COMMON_SINGLE_ACCOUNT_KEYS_TO_MOVE = new Set([
   "token",
   "tokenFile",
   "botToken",
-  "appToken",
-  "account",
-  "signalNumber",
   "authDir",
-  "cliPath",
-  "dbPath",
-  "httpUrl",
-  "httpHost",
-  "httpPort",
-  "webhookPath",
-  "webhookUrl",
   "webhookSecret",
-  "service",
-  "region",
-  "homeserver",
-  "userId",
-  "accessToken",
-  "password",
-  "deviceName",
-  "url",
-  "code",
   "dmPolicy",
   "allowFrom",
   "groupPolicy",
@@ -308,5 +289,4 @@ export function moveSingleAccountChannelSectionToDefaultAccount(params: {
     },
   } as PropAiSyncConfig;
 }
-
 

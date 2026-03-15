@@ -9,7 +9,7 @@ export type PollInput = {
   durationSeconds?: number;
   /**
    * Poll duration in hours.
-   * Used by channels that model duration in hours (e.g. Discord).
+   * Used by channels that model duration in hours.
    */
   durationHours?: number;
 };

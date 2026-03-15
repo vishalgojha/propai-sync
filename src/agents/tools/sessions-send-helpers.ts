@@ -55,9 +55,6 @@ export function resolveAnnounceTargetFromKey(sessionKey: string): AnnounceTarget
     if (!normalizedChannel) {
       return id;
     }
-    if (normalizedChannel === "discord" || normalizedChannel === "slack") {
-      return `channel:${id}`;
-    }
     return kind === "channel" ? `channel:${id}` : `group:${id}`;
   })();
   const normalized = normalizedChannel
@@ -164,5 +161,4 @@ export function resolvePingPongTurns(cfg?: PropAiSyncConfig) {
   const rounded = Math.floor(raw);
   return Math.max(0, Math.min(MAX_PING_PONG_TURNS, rounded));
 }
-
 

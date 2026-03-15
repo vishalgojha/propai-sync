@@ -1,6 +1,6 @@
 import type { Chat, Message, MessageOrigin, User } from "@grammyjs/types";
 import { formatLocationText, type NormalizedLocation } from "../../channels/location.js";
-import { resolveTelegramPreviewStreamMode } from "../../config/discord-preview-streaming.js";
+import { resolveTelegramPreviewStreamMode } from "../../config/streaming-modes.js";
 import type {
   TelegramDirectConfig,
   TelegramGroupConfig,
@@ -605,3 +605,4 @@ export function extractTelegramLocation(msg: Message): NormalizedLocation | null
 
   return null;
 }
+

@@ -21,18 +21,7 @@ import {
 } from "./subagent-followup.js";
 
 function normalizeDeliveryTarget(channel: string, to: string): string {
-  const channelLower = channel.trim().toLowerCase();
-  const toTrimmed = to.trim();
-  if (channelLower === "feishu" || channelLower === "lark") {
-    const lowered = toTrimmed.toLowerCase();
-    if (lowered.startsWith("user:")) {
-      return toTrimmed.slice("user:".length).trim();
-    }
-    if (lowered.startsWith("chat:")) {
-      return toTrimmed.slice("chat:".length).trim();
-    }
-  }
-  return toTrimmed;
+  return to.trim();
 }
 
 export function matchesMessagingToolDeliveryTarget(
@@ -50,8 +39,7 @@ export function matchesMessagingToolDeliveryTarget(
   if (target.accountId && delivery.accountId && target.accountId !== delivery.accountId) {
     return false;
   }
-  // Strip :topic:NNN from message targets and normalize Feishu/Lark prefixes on
-  // both sides so cron duplicate suppression compares canonical IDs.
+  // Strip :topic:NNN from message targets so cron duplicate suppression compares canonical IDs.
   const normalizedTargetTo = normalizeDeliveryTarget(channel, target.to.replace(/:topic:\d+$/, ""));
   const normalizedDeliveryTo = normalizeDeliveryTarget(channel, delivery.to);
   return normalizedTargetTo === normalizedDeliveryTo;
@@ -157,7 +145,7 @@ function isTransientDirectCronDeliveryError(error: unknown): boolean {
 }
 
 function resolveDirectCronRetryDelaysMs(): readonly number[] {
-  return process.env.NODE_ENV === "test" && process.env.propai_TEST_FAST === "1"
+  return process.env.NODE_ENV === "test" && process.env\.propai_TEST_FAST === "1"
     ? [8, 16, 32]
     : [5_000, 10_000, 20_000];
 }
@@ -488,9 +476,4 @@ export async function dispatchCronDelivery(
     deliveryPayloads,
   };
 }
-
-
-
-
-
 

@@ -1,12 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { PropAiSyncConfig } from "../config/config.js";
 import {
-  DEFAULT_IMESSAGE_ATTACHMENT_ROOTS,
   isInboundPathAllowed,
   isValidInboundPathRootPattern,
   mergeInboundPathRoots,
-  resolveIMessageAttachmentRoots,
-  resolveIMessageRemoteAttachmentRoots,
 } from "./inbound-path-policy.js";
 
 describe("inbound-path-policy", () => {
@@ -17,7 +13,7 @@ describe("inbound-path-policy", () => {
     expect(isValidInboundPathRootPattern("/Users/**/Attachments")).toBe(false);
   });
 
-  it("matches wildcard roots for iMessage attachment paths", () => {
+  it("matches wildcard roots for attachment paths", () => {
     const roots = ["/Users/*/Library/Messages/Attachments"];
     expect(
       isInboundPathAllowed({
@@ -41,40 +37,4 @@ describe("inbound-path-policy", () => {
     expect(roots).toEqual(["/Users/*/Library/Messages/Attachments", "/Volumes/relay/attachments"]);
   });
 
-  it("resolves configured roots with account overrides", () => {
-    const cfg = {
-      channels: {
-        imessage: {
-          attachmentRoots: ["/Users/*/Library/Messages/Attachments"],
-          remoteAttachmentRoots: ["/Volumes/shared/imessage"],
-          accounts: {
-            work: {
-              attachmentRoots: ["/Users/work/Library/Messages/Attachments"],
-              remoteAttachmentRoots: ["/srv/work/attachments"],
-            },
-          },
-        },
-      },
-    } as PropAiSyncConfig;
-    expect(resolveIMessageAttachmentRoots({ cfg, accountId: "work" })).toEqual([
-      "/Users/work/Library/Messages/Attachments",
-      "/Users/*/Library/Messages/Attachments",
-    ]);
-    expect(resolveIMessageRemoteAttachmentRoots({ cfg, accountId: "work" })).toEqual([
-      "/srv/work/attachments",
-      "/Volumes/shared/imessage",
-      "/Users/work/Library/Messages/Attachments",
-      "/Users/*/Library/Messages/Attachments",
-    ]);
-  });
-
-  it("falls back to default iMessage roots", () => {
-    const cfg = {} as PropAiSyncConfig;
-    expect(resolveIMessageAttachmentRoots({ cfg })).toEqual([...DEFAULT_IMESSAGE_ATTACHMENT_ROOTS]);
-    expect(resolveIMessageRemoteAttachmentRoots({ cfg })).toEqual([
-      ...DEFAULT_IMESSAGE_ATTACHMENT_ROOTS,
-    ]);
-  });
 });
-
-

@@ -23,33 +23,8 @@ export type ChannelSetupInput = {
   token?: string;
   tokenFile?: string;
   botToken?: string;
-  appToken?: string;
-  signalNumber?: string;
-  cliPath?: string;
-  dbPath?: string;
-  service?: "imessage" | "sms" | "auto";
-  region?: string;
   authDir?: string;
-  httpUrl?: string;
-  httpHost?: string;
-  httpPort?: string;
-  webhookPath?: string;
-  webhookUrl?: string;
-  audienceType?: string;
-  audience?: string;
   useEnv?: boolean;
-  homeserver?: string;
-  userId?: string;
-  accessToken?: string;
-  password?: string;
-  deviceName?: string;
-  initialSyncLimit?: number;
-  ship?: string;
-  url?: string;
-  code?: string;
-  groupChannels?: string[];
-  dmAllowlist?: string[];
-  autoDiscoverChannels?: boolean;
 };
 
 export type ChannelStatusIssue = {
@@ -264,7 +239,7 @@ export type ChannelThreadingContext = {
   ReplyToIdFull?: string;
   ThreadLabel?: string;
   MessageThreadId?: string | number;
-  /** Platform-native channel/conversation id (e.g. Slack DM channel "D…" id). */
+  /** Platform-native channel/conversation id (e.g. Telegram chat id). */
   NativeChannelId?: string;
 };
 
@@ -400,5 +375,4 @@ export type BaseTokenResolution = {
   token: string;
   source: string;
 };
-
 

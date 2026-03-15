@@ -290,11 +290,6 @@ function applyConfigFixes(params: { cfg: PropAiSyncConfig; env: NodeJS.ProcessEn
   for (const channel of [
     "telegram",
     "whatsapp",
-    "discord",
-    "signal",
-    "imessage",
-    "slack",
-    "msteams",
   ]) {
     setGroupPolicyAllowlist({ cfg: next, channel, changes, policyFlips });
   }
@@ -475,5 +470,4 @@ export async function fixSecurityFootguns(opts?: {
     errors,
   };
 }
-
 

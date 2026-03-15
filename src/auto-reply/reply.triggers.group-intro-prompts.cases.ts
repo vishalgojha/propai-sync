@@ -29,23 +29,6 @@ export function registerGroupIntroPromptCases(params: {
       await withTempHome(async (home) => {
         const cases: GroupIntroCase[] = [
           {
-            name: "discord",
-            message: {
-              Body: "status update",
-              From: "discord:group:dev",
-              To: "+1888",
-              ChatType: "group",
-              GroupSubject: "Release Squad",
-              GroupMembers: "Alice, Bob",
-              Provider: "discord",
-            },
-            expected: [
-              '"channel": "discord"',
-              `You are in the Discord group chat "Release Squad". Participants: Alice, Bob.`,
-              `Activation: trigger-only (you are invoked only when explicitly mentioned; recent context may be included). ${groupParticipationNote} Address the specific sender noted in the message context.`,
-            ],
-          },
-          {
             name: "whatsapp",
             message: {
               Body: "ping",

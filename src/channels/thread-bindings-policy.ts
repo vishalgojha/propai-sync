@@ -1,7 +1,5 @@
 import type { PropAiSyncConfig } from "../config/config.js";
 import { normalizeAccountId } from "../routing/session-key.js";
-
-export const DISCORD_THREAD_BINDING_CHANNEL = "discord";
 const DEFAULT_THREAD_BINDING_IDLE_HOURS = 24;
 const DEFAULT_THREAD_BINDING_MAX_AGE_HOURS = 0;
 
@@ -127,8 +125,7 @@ export function resolveThreadBindingSpawnPolicy(params: {
   const spawnFlagKey = resolveSpawnFlagKey(params.kind);
   const spawnEnabledRaw =
     normalizeBoolean(account?.[spawnFlagKey]) ?? normalizeBoolean(root?.[spawnFlagKey]);
-  // Non-Discord channels currently have no dedicated spawn gate config keys.
-  const spawnEnabled = spawnEnabledRaw ?? channel !== DISCORD_THREAD_BINDING_CHANNEL;
+  const spawnEnabled = spawnEnabledRaw ?? true;
   return {
     channel,
     accountId,
@@ -180,9 +177,6 @@ export function formatThreadBindingDisabledError(params: {
   accountId: string;
   kind: ThreadBindingSpawnKind;
 }): string {
-  if (params.channel === DISCORD_THREAD_BINDING_CHANNEL) {
-    return "Discord thread bindings are disabled (set channels.discord.threadBindings.enabled=true to override for this account, or session.threadBindings.enabled=true globally).";
-  }
   return `Thread bindings are disabled for ${params.channel} (set session.threadBindings.enabled=true to enable).`;
 }
 
@@ -191,13 +185,6 @@ export function formatThreadBindingSpawnDisabledError(params: {
   accountId: string;
   kind: ThreadBindingSpawnKind;
 }): string {
-  if (params.channel === DISCORD_THREAD_BINDING_CHANNEL && params.kind === "acp") {
-    return "Discord thread-bound ACP spawns are disabled for this account (set channels.discord.threadBindings.spawnAcpSessions=true to enable).";
-  }
-  if (params.channel === DISCORD_THREAD_BINDING_CHANNEL && params.kind === "subagent") {
-    return "Discord thread-bound subagent spawns are disabled for this account (set channels.discord.threadBindings.spawnSubagentSessions=true to enable).";
-  }
   return `Thread-bound ${params.kind} spawns are disabled for ${params.channel}.`;
 }
-
 

@@ -70,14 +70,14 @@ export function registerDirectoryCli(program: Command) {
       "after",
       () =>
         `\n${theme.heading("Examples:")}\n${formatHelpExamples([
-          ["propai directory self --channel slack", "Show the connected account identity."],
+          ["propai directory self --channel telegram", "Show the connected account identity."],
           [
-            'propai directory peers list --channel slack --query "alice"',
+            'propai directory peers list --channel telegram --query "alice"',
             "Search contact/user IDs by name.",
           ],
-          ["propai directory groups list --channel discord", "List available groups/channels."],
+          ["propai directory groups list --channel telegram", "List available groups."],
           [
-            "propai directory groups members --channel discord --group-id <id>",
+            "propai directory groups members --channel telegram --group-id <id>",
             "List members for a specific group.",
           ],
         ])}\n\n${theme.muted("Docs:")} ${formatDocsLink(

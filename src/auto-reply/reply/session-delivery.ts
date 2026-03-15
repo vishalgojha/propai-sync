@@ -91,7 +91,7 @@ export function resolveLastChannelRaw(params: {
 }): string | undefined {
   const originatingChannel = normalizeMessageChannel(params.originatingChannelRaw);
   // WebChat should own reply routing for direct-session UI turns, even when the
-  // session previously replied through an external channel like iMessage.
+  // session previously replied through an external channel.
   if (
     originatingChannel === INTERNAL_MESSAGE_CHANNEL &&
     (isMainSessionKey(params.sessionKey) || isDirectSessionKey(params.sessionKey))

@@ -6,7 +6,6 @@ import type { ChannelMessageActionContext, ChannelMessageActionName } from "./ty
 const trustedRequesterRequiredByChannel: Readonly<
   Partial<Record<string, ReadonlySet<ChannelMessageActionName>>>
 > = {
-  discord: new Set<ChannelMessageActionName>(["timeout", "kick", "ban"]),
 };
 
 type ChannelActions = NonNullable<NonNullable<ReturnType<typeof getChannelPlugin>>["actions"]>;
@@ -101,5 +100,4 @@ export async function dispatchChannelMessageAction(
   }
   return await plugin.actions.handleAction(ctx);
 }
-
 

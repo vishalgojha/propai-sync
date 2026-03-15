@@ -8,15 +8,6 @@ function hasLegacyThreadBindingTtl(value: unknown): boolean {
   return isRecord(value) && Object.prototype.hasOwnProperty.call(value, "ttlHours");
 }
 
-function hasLegacyThreadBindingTtlInAccounts(value: unknown): boolean {
-  if (!isRecord(value)) {
-    return false;
-  }
-  return Object.values(value).some((entry) =>
-    hasLegacyThreadBindingTtl(isRecord(entry) ? entry.threadBindings : undefined),
-  );
-}
-
 function isLegacyGatewayBindHostAlias(value: unknown): boolean {
   if (typeof value !== "string") {
     return false;
@@ -56,42 +47,10 @@ export const LEGACY_CONFIG_RULES: LegacyConfigRule[] = [
     message: "telegram config moved to channels.telegram (auto-migrated on load).",
   },
   {
-    path: ["discord"],
-    message: "discord config moved to channels.discord (auto-migrated on load).",
-  },
-  {
-    path: ["slack"],
-    message: "slack config moved to channels.slack (auto-migrated on load).",
-  },
-  {
-    path: ["signal"],
-    message: "signal config moved to channels.signal (auto-migrated on load).",
-  },
-  {
-    path: ["imessage"],
-    message: "imessage config moved to channels.imessage (auto-migrated on load).",
-  },
-  {
-    path: ["msteams"],
-    message: "msteams config moved to channels.msteams (auto-migrated on load).",
-  },
-  {
     path: ["session", "threadBindings"],
     message:
       "session.threadBindings.ttlHours was renamed to session.threadBindings.idleHours (auto-migrated on load).",
     match: (value) => hasLegacyThreadBindingTtl(value),
-  },
-  {
-    path: ["channels", "discord", "threadBindings"],
-    message:
-      "channels.discord.threadBindings.ttlHours was renamed to channels.discord.threadBindings.idleHours (auto-migrated on load).",
-    match: (value) => hasLegacyThreadBindingTtl(value),
-  },
-  {
-    path: ["channels", "discord", "accounts"],
-    message:
-      "channels.discord.accounts.<id>.threadBindings.ttlHours was renamed to channels.discord.accounts.<id>.threadBindings.idleHours (auto-migrated on load).",
-    match: (value) => hasLegacyThreadBindingTtlInAccounts(value),
   },
   {
     path: ["routing", "allowFrom"],
@@ -119,7 +78,7 @@ export const LEGACY_CONFIG_RULES: LegacyConfigRule[] = [
   {
     path: ["routing", "groupChat", "requireMention"],
     message:
-      'routing.groupChat.requireMention was removed; use channels.whatsapp/telegram/imessage groups defaults (e.g. channels.whatsapp.groups."*".requireMention) instead (auto-migrated on load).',
+      'routing.groupChat.requireMention was removed; use channels.whatsapp/telegram groups defaults (e.g. channels.whatsapp.groups."*".requireMention) instead (auto-migrated on load).',
   },
   {
     path: ["routing", "groupChat", "mentionPatterns"],

@@ -27,7 +27,7 @@ const execDockerRawUnavailable: NonNullable<SecurityAuditOptions["execDockerRawF
 };
 
 function stubChannelPlugin(params: {
-  id: "discord" | "slack" | "telegram";
+  id: "telegram" | "whatsapp";
   label: string;
   resolveAccount: (cfg: PropAiSyncConfig, accountId: string | null | undefined) => unknown;
   inspectAccount?: (cfg: PropAiSyncConfig, accountId: string | null | undefined) => unknown;
@@ -65,36 +65,6 @@ function stubChannelPlugin(params: {
   };
 }
 
-const discordPlugin = stubChannelPlugin({
-  id: "discord",
-  label: "Discord",
-  listAccountIds: (cfg) => {
-    const ids = Object.keys(cfg.channels?.discord?.accounts ?? {});
-    return ids.length > 0 ? ids : ["default"];
-  },
-  resolveAccount: (cfg, accountId) => {
-    const resolvedAccountId = typeof accountId === "string" && accountId ? accountId : "default";
-    const base = cfg.channels?.discord ?? {};
-    const account = cfg.channels?.discord?.accounts?.[resolvedAccountId] ?? {};
-    return { config: { ...base, ...account } };
-  },
-});
-
-const slackPlugin = stubChannelPlugin({
-  id: "slack",
-  label: "Slack",
-  listAccountIds: (cfg) => {
-    const ids = Object.keys(cfg.channels?.slack?.accounts ?? {});
-    return ids.length > 0 ? ids : ["default"];
-  },
-  resolveAccount: (cfg, accountId) => {
-    const resolvedAccountId = typeof accountId === "string" && accountId ? accountId : "default";
-    const base = cfg.channels?.slack ?? {};
-    const account = cfg.channels?.slack?.accounts?.[resolvedAccountId] ?? {};
-    return { config: { ...base, ...account } };
-  },
-});
-
 const telegramPlugin = stubChannelPlugin({
   id: "telegram",
   label: "Telegram",
@@ -106,6 +76,21 @@ const telegramPlugin = stubChannelPlugin({
     const resolvedAccountId = typeof accountId === "string" && accountId ? accountId : "default";
     const base = cfg.channels?.telegram ?? {};
     const account = cfg.channels?.telegram?.accounts?.[resolvedAccountId] ?? {};
+    return { config: { ...base, ...account } };
+  },
+});
+
+const whatsappPlugin = stubChannelPlugin({
+  id: "whatsapp",
+  label: "WhatsApp",
+  listAccountIds: (cfg) => {
+    const ids = Object.keys(cfg.channels?.whatsapp?.accounts ?? {});
+    return ids.length > 0 ? ids : ["default"];
+  },
+  resolveAccount: (cfg, accountId) => {
+    const resolvedAccountId = typeof accountId === "string" && accountId ? accountId : "default";
+    const base = cfg.channels?.whatsapp ?? {};
+    const account = cfg.channels?.whatsapp?.accounts?.[resolvedAccountId] ?? {};
     return { config: { ...base, ...account } };
   },
 });
@@ -182,7 +167,7 @@ describe("security audit", () => {
     const credentialsDir = path.join(sharedChannelSecurityStateDir, "credentials");
     await fs.rm(credentialsDir, { recursive: true, force: true }).catch(() => undefined);
     await fs.mkdir(credentialsDir, { recursive: true, mode: 0o700 });
-    await withEnvAsync({ PROPAI_STATE_DIR: sharedChannelSecurityStateDir }, () =>
+    await withEnvAsync({ PropAi Sync_STATE_DIR: sharedChannelSecurityStateDir }, () =>
       fn(sharedChannelSecurityStateDir),
     );
   };
@@ -198,7 +183,7 @@ describe("security audit", () => {
       path.join(pluginDir, "package.json"),
       JSON.stringify({
         name: "evil-plugin",
-        "PropAi Sync": { extensions: [".hidden/index.js"] },
+        PropAi Sync: { extensions: [".hidden/index.js"] },
       }),
     );
     await fs.writeFile(
@@ -228,7 +213,7 @@ description: test skill
   };
 
   beforeAll(async () => {
-    fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "propai-security-audit-"));
+    fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "PropAi Sync-security-audit-"));
     channelSecurityRoot = path.join(fixtureRoot, "channel-security");
     await fs.mkdir(channelSecurityRoot, { recursive: true, mode: 0o700 });
     sharedChannelSecurityStateDir = path.join(channelSecurityRoot, "state-shared");
@@ -276,10 +261,10 @@ description: test skill
 
   it("flags non-loopback bind without auth as critical", async () => {
     // Clear env tokens so resolveGatewayAuth defaults to mode=none
-    const prevToken = process.env.propai_GATEWAY_TOKEN;
-    const prevPassword = process.env.propai_GATEWAY_PASSWORD;
-    delete process.env.propai_GATEWAY_TOKEN;
-    delete process.env.propai_GATEWAY_PASSWORD;
+    const prevToken = process.env\.propai_GATEWAY_TOKEN;
+    const prevPassword = process.env\.propai_GATEWAY_PASSWORD;
+    delete process.env\.propai_GATEWAY_TOKEN;
+    delete process.env\.propai_GATEWAY_PASSWORD;
 
     try {
       const cfg: PropAiSyncConfig = {
@@ -295,14 +280,14 @@ description: test skill
     } finally {
       // Restore env
       if (prevToken === undefined) {
-        delete process.env.propai_GATEWAY_TOKEN;
+        delete process.env\.propai_GATEWAY_TOKEN;
       } else {
-        process.env.propai_GATEWAY_TOKEN = prevToken;
+        process.env\.propai_GATEWAY_TOKEN = prevToken;
       }
       if (prevPassword === undefined) {
-        delete process.env.propai_GATEWAY_PASSWORD;
+        delete process.env\.propai_GATEWAY_PASSWORD;
       } else {
-        process.env.propai_GATEWAY_PASSWORD = prevPassword;
+        process.env\.propai_GATEWAY_PASSWORD = prevPassword;
       }
     }
   });
@@ -315,7 +300,7 @@ description: test skill
           password: {
             source: "env",
             provider: "default",
-            id: "PROPAI_GATEWAY_PASSWORD",
+            id: "PropAi Sync_GATEWAY_PASSWORD",
           },
         },
       },
@@ -546,7 +531,7 @@ description: test skill
     const riskyGlobalTrustedDirs =
       process.platform === "win32"
         ? [String.raw`C:\Users\ci-user\bin`, String.raw`C:\Users\ci-user\.local\bin`]
-        : ["/usr/local/bin", "/tmp/propai-safe-bins"];
+        : ["/usr/local/bin", "/tmp/PropAi Sync-safe-bins"];
     const cfg: PropAiSyncConfig = {
       tools: {
         exec: {
@@ -727,19 +712,19 @@ description: test skill
     const execDockerRawFn = (async (args: string[]) => {
       if (args[0] === "ps") {
         return {
-          stdout: Buffer.from("propai-sbx-browser-old\npropai-sbx-browser-missing-hash\n"),
+          stdout: Buffer.from("PropAi Sync-sbx-browser-old\nPropAi Sync-sbx-browser-missing-hash\n"),
           stderr: Buffer.alloc(0),
           code: 0,
         };
       }
-      if (args[0] === "inspect" && args.at(-1) === "propai-sbx-browser-old") {
+      if (args[0] === "inspect" && args.at(-1) === "PropAi Sync-sbx-browser-old") {
         return {
           stdout: Buffer.from("abc123\tepoch-v0\n"),
           stderr: Buffer.alloc(0),
           code: 0,
         };
       }
-      if (args[0] === "inspect" && args.at(-1) === "propai-sbx-browser-missing-hash") {
+      if (args[0] === "inspect" && args.at(-1) === "PropAi Sync-sbx-browser-missing-hash") {
         return {
           stdout: Buffer.from("<no value>\t<no value>\n"),
           stderr: Buffer.alloc(0),
@@ -767,7 +752,7 @@ description: test skill
     const staleEpoch = res.findings.find(
       (f) => f.checkId === "sandbox.browser_container.hash_epoch_stale",
     );
-    expect(staleEpoch?.detail).toContain("propai-sbx-browser-old");
+    expect(staleEpoch?.detail).toContain("PropAi Sync-sbx-browser-old");
   });
 
   it("skips sandbox browser hash label checks when docker inspect is unavailable", async () => {
@@ -798,19 +783,19 @@ description: test skill
     const execDockerRawFn = (async (args: string[]) => {
       if (args[0] === "ps") {
         return {
-          stdout: Buffer.from("propai-sbx-browser-exposed\n"),
+          stdout: Buffer.from("PropAi Sync-sbx-browser-exposed\n"),
           stderr: Buffer.alloc(0),
           code: 0,
         };
       }
-      if (args[0] === "inspect" && args.at(-1) === "propai-sbx-browser-exposed") {
+      if (args[0] === "inspect" && args.at(-1) === "PropAi Sync-sbx-browser-exposed") {
         return {
           stdout: Buffer.from("hash123\t2026-02-21-novnc-auth-default\n"),
           stderr: Buffer.alloc(0),
           code: 0,
         };
       }
-      if (args[0] === "port" && args.at(-1) === "propai-sbx-browser-exposed") {
+      if (args[0] === "port" && args.at(-1) === "PropAi Sync-sbx-browser-exposed") {
         return {
           stdout: Buffer.from("6080/tcp -> 0.0.0.0:49101\n9222/tcp -> 127.0.0.1:49100\n"),
           stderr: Buffer.alloc(0),
@@ -1330,7 +1315,7 @@ description: test skill
           password: {
             source: "env",
             provider: "default",
-            id: "PROPAI_GATEWAY_PASSWORD",
+            id: "PropAi Sync_GATEWAY_PASSWORD",
           },
         },
       },
@@ -1483,53 +1468,6 @@ description: test skill
     expect(flags?.detail ?? "").toContain(
       "gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback=true",
     );
-  });
-
-  it("warns when Feishu doc tool is enabled because create can grant requester access", async () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        feishu: {
-          appId: "cli_test",
-          appSecret: "secret_test", // pragma: allowlist secret
-        },
-      },
-    };
-
-    const res = await audit(cfg);
-    expectFinding(res, "channels.feishu.doc_owner_open_id", "warn");
-  });
-
-  it("treats Feishu SecretRef appSecret as configured for doc tool risk detection", async () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        feishu: {
-          appId: "cli_test",
-          appSecret: {
-            source: "env",
-            provider: "default",
-            id: "FEISHU_APP_SECRET",
-          },
-        },
-      },
-    };
-
-    const res = await audit(cfg);
-    expectFinding(res, "channels.feishu.doc_owner_open_id", "warn");
-  });
-
-  it("does not warn for Feishu doc grant risk when doc tools are disabled", async () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        feishu: {
-          appId: "cli_test",
-          appSecret: "secret_test", // pragma: allowlist secret
-          tools: { doc: false },
-        },
-      },
-    };
-
-    const res = await audit(cfg);
-    expectNoFinding(res, "channels.feishu.doc_owner_open_id");
   });
 
   it("scores X-Real-IP fallback risk by gateway exposure", async () => {
@@ -1804,672 +1742,6 @@ description: test skill
     );
   });
 
-  it("flags Discord native commands without a guild user allowlist", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            token: "t",
-            groupPolicy: "allowlist",
-            guilds: {
-              "123": {
-                channels: {
-                  general: { allow: true },
-                },
-              },
-            },
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [discordPlugin],
-      });
-
-      expect(res.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.discord.commands.native.no_allowlists",
-            severity: "warn",
-          }),
-        ]),
-      );
-    });
-  });
-
-  it("keeps channel security findings when SecretRef credentials are configured but unavailable", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const sourceConfig: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            token: { source: "env", provider: "default", id: "DISCORD_BOT_TOKEN" },
-            groupPolicy: "allowlist",
-            guilds: {
-              "123": {
-                channels: {
-                  general: { allow: true },
-                },
-              },
-            },
-          },
-        },
-      };
-      const resolvedConfig: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            groupPolicy: "allowlist",
-            guilds: {
-              "123": {
-                channels: {
-                  general: { allow: true },
-                },
-              },
-            },
-          },
-        },
-      };
-
-      const inspectableDiscordPlugin = stubChannelPlugin({
-        id: "discord",
-        label: "Discord",
-        inspectAccount: (cfg) => {
-          const channel = cfg.channels?.discord ?? {};
-          const token = channel.token;
-          return {
-            accountId: "default",
-            enabled: true,
-            configured:
-              Boolean(token) &&
-              typeof token === "object" &&
-              !Array.isArray(token) &&
-              "source" in token,
-            token: "",
-            tokenSource:
-              Boolean(token) &&
-              typeof token === "object" &&
-              !Array.isArray(token) &&
-              "source" in token
-                ? "config"
-                : "none",
-            tokenStatus:
-              Boolean(token) &&
-              typeof token === "object" &&
-              !Array.isArray(token) &&
-              "source" in token
-                ? "configured_unavailable"
-                : "missing",
-            config: channel,
-          };
-        },
-        resolveAccount: (cfg) => ({ config: cfg.channels?.discord ?? {} }),
-        isConfigured: (account) => Boolean((account as { configured?: boolean }).configured),
-      });
-
-      const res = await runSecurityAudit({
-        config: resolvedConfig,
-        sourceConfig,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [inspectableDiscordPlugin],
-      });
-
-      expect(res.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.discord.commands.native.no_allowlists",
-            severity: "warn",
-          }),
-        ]),
-      );
-    });
-  });
-
-  it("keeps Slack HTTP slash-command findings when resolved inspection only exposes signingSecret status", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const sourceConfig: PropAiSyncConfig = {
-        channels: {
-          slack: {
-            enabled: true,
-            mode: "http",
-            groupPolicy: "open",
-            slashCommand: { enabled: true },
-          },
-        },
-      };
-      const resolvedConfig: PropAiSyncConfig = {
-        channels: {
-          slack: {
-            enabled: true,
-            mode: "http",
-            groupPolicy: "open",
-            slashCommand: { enabled: true },
-          },
-        },
-      };
-
-      const inspectableSlackPlugin = stubChannelPlugin({
-        id: "slack",
-        label: "Slack",
-        inspectAccount: (cfg) => {
-          const channel = cfg.channels?.slack ?? {};
-          if (cfg === sourceConfig) {
-            return {
-              accountId: "default",
-              enabled: false,
-              configured: true,
-              mode: "http",
-              botTokenSource: "config",
-              botTokenStatus: "configured_unavailable",
-              signingSecretSource: "config", // pragma: allowlist secret
-              signingSecretStatus: "configured_unavailable", // pragma: allowlist secret
-              config: channel,
-            };
-          }
-          return {
-            accountId: "default",
-            enabled: true,
-            configured: true,
-            mode: "http",
-            botTokenSource: "config",
-            botTokenStatus: "available",
-            signingSecretSource: "config", // pragma: allowlist secret
-            signingSecretStatus: "available", // pragma: allowlist secret
-            config: channel,
-          };
-        },
-        resolveAccount: (cfg) => ({ config: cfg.channels?.slack ?? {} }),
-        isConfigured: (account) => Boolean((account as { configured?: boolean }).configured),
-      });
-
-      const res = await runSecurityAudit({
-        config: resolvedConfig,
-        sourceConfig,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [inspectableSlackPlugin],
-      });
-
-      expect(res.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.slack.commands.slash.no_allowlists",
-            severity: "warn",
-          }),
-        ]),
-      );
-    });
-  });
-
-  it("keeps source-configured Slack HTTP findings when resolved inspection is unconfigured", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const sourceConfig: PropAiSyncConfig = {
-        channels: {
-          slack: {
-            enabled: true,
-            mode: "http",
-            groupPolicy: "open",
-            slashCommand: { enabled: true },
-          },
-        },
-      };
-      const resolvedConfig: PropAiSyncConfig = {
-        channels: {
-          slack: {
-            enabled: true,
-            mode: "http",
-            groupPolicy: "open",
-            slashCommand: { enabled: true },
-          },
-        },
-      };
-
-      const inspectableSlackPlugin = stubChannelPlugin({
-        id: "slack",
-        label: "Slack",
-        inspectAccount: (cfg) => {
-          const channel = cfg.channels?.slack ?? {};
-          if (cfg === sourceConfig) {
-            return {
-              accountId: "default",
-              enabled: true,
-              configured: true,
-              mode: "http",
-              botTokenSource: "config",
-              botTokenStatus: "configured_unavailable",
-              signingSecretSource: "config", // pragma: allowlist secret
-              signingSecretStatus: "configured_unavailable", // pragma: allowlist secret
-              config: channel,
-            };
-          }
-          return {
-            accountId: "default",
-            enabled: true,
-            configured: false,
-            mode: "http",
-            botTokenSource: "config",
-            botTokenStatus: "available",
-            signingSecretSource: "config", // pragma: allowlist secret
-            signingSecretStatus: "missing", // pragma: allowlist secret
-            config: channel,
-          };
-        },
-        resolveAccount: (cfg) => ({ config: cfg.channels?.slack ?? {} }),
-        isConfigured: (account) => Boolean((account as { configured?: boolean }).configured),
-      });
-
-      const res = await runSecurityAudit({
-        config: resolvedConfig,
-        sourceConfig,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [inspectableSlackPlugin],
-      });
-
-      expect(res.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.slack.commands.slash.no_allowlists",
-            severity: "warn",
-          }),
-        ]),
-      );
-    });
-  });
-
-  it("does not flag Discord slash commands when dm.allowFrom includes a Discord snowflake id", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            token: "t",
-            dm: { allowFrom: ["387380367612706819"] },
-            groupPolicy: "allowlist",
-            guilds: {
-              "123": {
-                channels: {
-                  general: { allow: true },
-                },
-              },
-            },
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [discordPlugin],
-      });
-
-      expect(res.findings).not.toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.discord.commands.native.no_allowlists",
-          }),
-        ]),
-      );
-    });
-  });
-
-  it("warns when Discord allowlists contain name-based entries", async () => {
-    await withChannelSecurityStateDir(async (tmp) => {
-      await fs.writeFile(
-        path.join(tmp, "credentials", "discord-allowFrom.json"),
-        JSON.stringify({ version: 1, allowFrom: ["team.owner"] }),
-      );
-      const cfg: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            token: "t",
-            allowFrom: ["Alice#1234", "<@123456789012345678>"],
-            guilds: {
-              "123": {
-                users: ["trusted.operator"],
-                channels: {
-                  general: {
-                    users: ["987654321098765432", "security-team"],
-                  },
-                },
-              },
-            },
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [discordPlugin],
-      });
-
-      const finding = res.findings.find(
-        (entry) => entry.checkId === "channels.discord.allowFrom.name_based_entries",
-      );
-      expect(finding).toBeDefined();
-      expect(finding?.severity).toBe("warn");
-      expect(finding?.detail).toContain("channels.discord.allowFrom:Alice#1234");
-      expect(finding?.detail).toContain("channels.discord.guilds.123.users:trusted.operator");
-      expect(finding?.detail).toContain(
-        "channels.discord.guilds.123.channels.general.users:security-team",
-      );
-      expect(finding?.detail).toContain(
-        "~/.propai/credentials/discord-allowFrom.json:team.owner",
-      );
-      expect(finding?.detail).not.toContain("<@123456789012345678>");
-    });
-  });
-
-  it("marks Discord name-based allowlists as break-glass when dangerous matching is enabled", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            token: "t",
-            dangerouslyAllowNameMatching: true,
-            allowFrom: ["Alice#1234"],
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [discordPlugin],
-      });
-
-      const finding = res.findings.find(
-        (entry) => entry.checkId === "channels.discord.allowFrom.name_based_entries",
-      );
-      expect(finding).toBeDefined();
-      expect(finding?.severity).toBe("info");
-      expect(finding?.detail).toContain("out-of-scope");
-      expect(res.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.discord.allowFrom.dangerous_name_matching_enabled",
-            severity: "info",
-          }),
-        ]),
-      );
-    });
-  });
-
-  it("audits non-default Discord accounts for dangerous name matching", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            token: "t",
-            accounts: {
-              alpha: { token: "a" },
-              beta: {
-                token: "b",
-                dangerouslyAllowNameMatching: true,
-              },
-            },
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [discordPlugin],
-      });
-
-      expect(res.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.discord.allowFrom.dangerous_name_matching_enabled",
-            title: expect.stringContaining("(account: beta)"),
-            severity: "info",
-          }),
-        ]),
-      );
-    });
-  });
-
-  it("does not treat prototype properties as explicit Discord account config paths", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            token: "t",
-            dangerouslyAllowNameMatching: true,
-            allowFrom: ["Alice#1234"],
-            accounts: {},
-          },
-        },
-      };
-
-      const pluginWithProtoDefaultAccount: ChannelPlugin = {
-        ...discordPlugin,
-        config: {
-          ...discordPlugin.config,
-          listAccountIds: () => [],
-          defaultAccountId: () => "toString",
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [pluginWithProtoDefaultAccount],
-      });
-
-      const dangerousMatchingFinding = res.findings.find(
-        (entry) => entry.checkId === "channels.discord.allowFrom.dangerous_name_matching_enabled",
-      );
-      expect(dangerousMatchingFinding).toBeDefined();
-      expect(dangerousMatchingFinding?.title).not.toContain("(account: toString)");
-
-      const nameBasedFinding = res.findings.find(
-        (entry) => entry.checkId === "channels.discord.allowFrom.name_based_entries",
-      );
-      expect(nameBasedFinding).toBeDefined();
-      expect(nameBasedFinding?.detail).toContain("channels.discord.allowFrom:Alice#1234");
-      expect(nameBasedFinding?.detail).not.toContain("channels.discord.accounts.toString");
-    });
-  });
-
-  it("audits name-based allowlists on non-default Discord accounts", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            token: "t",
-            accounts: {
-              alpha: {
-                token: "a",
-                allowFrom: ["123456789012345678"],
-              },
-              beta: {
-                token: "b",
-                allowFrom: ["Alice#1234"],
-              },
-            },
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [discordPlugin],
-      });
-
-      const finding = res.findings.find(
-        (entry) => entry.checkId === "channels.discord.allowFrom.name_based_entries",
-      );
-      expect(finding).toBeDefined();
-      expect(finding?.detail).toContain("channels.discord.accounts.beta.allowFrom:Alice#1234");
-    });
-  });
-
-  it("does not warn when Discord allowlists use ID-style entries only", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        channels: {
-          discord: {
-            enabled: true,
-            token: "t",
-            allowFrom: [
-              "123456789012345678",
-              "<@223456789012345678>",
-              "user:323456789012345678",
-              "discord:423456789012345678",
-              "pk:member-123",
-            ],
-            guilds: {
-              "123": {
-                users: ["523456789012345678", "<@623456789012345678>", "pk:member-456"],
-                channels: {
-                  general: {
-                    users: ["723456789012345678", "user:823456789012345678"],
-                  },
-                },
-              },
-            },
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [discordPlugin],
-      });
-
-      expect(res.findings).not.toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ checkId: "channels.discord.allowFrom.name_based_entries" }),
-        ]),
-      );
-    });
-  });
-
-  it("flags Discord slash commands when access-group enforcement is disabled and no users allowlist exists", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        commands: { useAccessGroups: false },
-        channels: {
-          discord: {
-            enabled: true,
-            token: "t",
-            groupPolicy: "allowlist",
-            guilds: {
-              "123": {
-                channels: {
-                  general: { allow: true },
-                },
-              },
-            },
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [discordPlugin],
-      });
-
-      expect(res.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.discord.commands.native.unrestricted",
-            severity: "critical",
-          }),
-        ]),
-      );
-    });
-  });
-
-  it("flags Slack slash commands without a channel users allowlist", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        channels: {
-          slack: {
-            enabled: true,
-            botToken: "xoxb-test",
-            appToken: "xapp-test",
-            groupPolicy: "open",
-            slashCommand: { enabled: true },
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [slackPlugin],
-      });
-
-      expect(res.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.slack.commands.slash.no_allowlists",
-            severity: "warn",
-          }),
-        ]),
-      );
-    });
-  });
-
-  it("flags Slack slash commands when access-group enforcement is disabled", async () => {
-    await withChannelSecurityStateDir(async () => {
-      const cfg: PropAiSyncConfig = {
-        commands: { useAccessGroups: false },
-        channels: {
-          slack: {
-            enabled: true,
-            botToken: "xoxb-test",
-            appToken: "xapp-test",
-            groupPolicy: "open",
-            slashCommand: { enabled: true },
-          },
-        },
-      };
-
-      const res = await runSecurityAudit({
-        config: cfg,
-        includeFilesystem: false,
-        includeChannelSecurity: true,
-        plugins: [slackPlugin],
-      });
-
-      expect(res.findings).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            checkId: "channels.slack.commands.slash.useAccessGroups_off",
-            severity: "critical",
-          }),
-        ]),
-      );
-    });
-  });
-
   it("flags Telegram group commands without a sender allowlist", async () => {
     await withChannelSecurityStateDir(async () => {
       const cfg: PropAiSyncConfig = {
@@ -2628,8 +1900,8 @@ description: test skill
   });
 
   it("flags hooks token reuse of the gateway env token as critical", async () => {
-    const prevToken = process.env.propai_GATEWAY_TOKEN;
-    process.env.propai_GATEWAY_TOKEN = "shared-gateway-token-1234567890";
+    const prevToken = process.env\.propai_GATEWAY_TOKEN;
+    process.env\.propai_GATEWAY_TOKEN = "shared-gateway-token-1234567890";
     const cfg: PropAiSyncConfig = {
       hooks: { enabled: true, token: "shared-gateway-token-1234567890" },
     };
@@ -2639,9 +1911,9 @@ description: test skill
       expectFinding(res, "hooks.token_reuse_gateway_token", "critical");
     } finally {
       if (prevToken === undefined) {
-        delete process.env.propai_GATEWAY_TOKEN;
+        delete process.env\.propai_GATEWAY_TOKEN;
       } else {
-        process.env.propai_GATEWAY_TOKEN = prevToken;
+        process.env\.propai_GATEWAY_TOKEN = prevToken;
       }
     }
   });
@@ -2780,8 +2052,8 @@ description: test skill
     const cfg: PropAiSyncConfig = {};
 
     const res = await audit(cfg, {
-      stateDir: "/Users/test/Dropbox/.propai",
-      configPath: "/Users/test/Dropbox/.propai/propai.json",
+      stateDir: "/Users/test/Dropbox/\.propai",
+      configPath: "/Users/test/Dropbox/\.propai/propai.json",
     });
 
     expectFinding(res, "fs.synced_dir", "warn");
@@ -2905,7 +2177,7 @@ description: test skill
         installs: {
           "voice-call": {
             source: "npm",
-            spec: "@propai/voice-call",
+            spec: "@PropAi Sync/voice-call",
           },
         },
       },
@@ -2914,7 +2186,7 @@ description: test skill
           installs: {
             "test-hooks": {
               source: "npm",
-              spec: "@propai/test-hooks",
+              spec: "@PropAi Sync/test-hooks",
             },
           },
         },
@@ -2942,7 +2214,7 @@ description: test skill
         installs: {
           "voice-call": {
             source: "npm",
-            spec: "@propai/voice-call@1.2.3",
+            spec: "@PropAi Sync/voice-call@1.2.3",
             integrity: "sha512-plugin",
           },
         },
@@ -2952,7 +2224,7 @@ description: test skill
           installs: {
             "test-hooks": {
               source: "npm",
-              spec: "@propai/test-hooks@1.2.3",
+              spec: "@PropAi Sync/test-hooks@1.2.3",
               integrity: "sha512-hook",
             },
           },
@@ -2984,12 +2256,12 @@ description: test skill
     await fs.mkdir(hookDir, { recursive: true });
     await fs.writeFile(
       path.join(pluginDir, "package.json"),
-      JSON.stringify({ name: "@propai/voice-call", version: "9.9.9" }),
+      JSON.stringify({ name: "@PropAi Sync/voice-call", version: "9.9.9" }),
       "utf-8",
     );
     await fs.writeFile(
       path.join(hookDir, "package.json"),
-      JSON.stringify({ name: "@propai/test-hooks", version: "8.8.8" }),
+      JSON.stringify({ name: "@PropAi Sync/test-hooks", version: "8.8.8" }),
       "utf-8",
     );
 
@@ -2998,7 +2270,7 @@ description: test skill
         installs: {
           "voice-call": {
             source: "npm",
-            spec: "@propai/voice-call@1.2.3",
+            spec: "@PropAi Sync/voice-call@1.2.3",
             integrity: "sha512-plugin",
             resolvedVersion: "1.2.3",
           },
@@ -3009,7 +2281,7 @@ description: test skill
           installs: {
             "test-hooks": {
               source: "npm",
-              spec: "@propai/test-hooks@1.2.3",
+              spec: "@PropAi Sync/test-hooks@1.2.3",
               integrity: "sha512-hook",
               resolvedVersion: "1.2.3",
             },
@@ -3078,14 +2350,14 @@ description: test skill
   });
 
   it("flags unallowlisted extensions as critical when native skill commands are exposed", async () => {
-    const prevDiscordToken = process.env.DISCORD_BOT_TOKEN;
-    delete process.env.DISCORD_BOT_TOKEN;
+    const prevTelegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    delete process.env.TELEGRAM_BOT_TOKEN;
     const stateDir = sharedExtensionsStateDir;
 
     try {
       const cfg: PropAiSyncConfig = {
         channels: {
-          discord: { enabled: true, token: "t" },
+          telegram: { enabled: true, botToken: "t" },
         },
       };
       const res = await runSecurityAudit({
@@ -3106,28 +2378,28 @@ description: test skill
         ]),
       );
     } finally {
-      if (prevDiscordToken == null) {
-        delete process.env.DISCORD_BOT_TOKEN;
+      if (prevTelegramToken == null) {
+        delete process.env.TELEGRAM_BOT_TOKEN;
       } else {
-        process.env.DISCORD_BOT_TOKEN = prevDiscordToken;
+        process.env.TELEGRAM_BOT_TOKEN = prevTelegramToken;
       }
     }
   });
 
   it("treats SecretRef channel credentials as configured for extension allowlist severity", async () => {
-    const prevDiscordToken = process.env.DISCORD_BOT_TOKEN;
-    delete process.env.DISCORD_BOT_TOKEN;
+    const prevTelegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    delete process.env.TELEGRAM_BOT_TOKEN;
     const stateDir = sharedExtensionsStateDir;
 
     try {
       const cfg: PropAiSyncConfig = {
         channels: {
-          discord: {
+          telegram: {
             enabled: true,
-            token: {
+            botToken: {
               source: "env",
               provider: "default",
-              id: "DISCORD_BOT_TOKEN",
+              id: "TELEGRAM_BOT_TOKEN",
             } as unknown as string,
           },
         },
@@ -3150,10 +2422,10 @@ description: test skill
         ]),
       );
     } finally {
-      if (prevDiscordToken == null) {
-        delete process.env.DISCORD_BOT_TOKEN;
+      if (prevTelegramToken == null) {
+        delete process.env.TELEGRAM_BOT_TOKEN;
       } else {
-        process.env.DISCORD_BOT_TOKEN = prevDiscordToken;
+        process.env.TELEGRAM_BOT_TOKEN = prevTelegramToken;
       }
     }
   });
@@ -3205,7 +2477,7 @@ description: test skill
       path.join(pluginDir, "package.json"),
       JSON.stringify({
         name: "escape-plugin",
-        "PropAi Sync": { extensions: ["../outside.js"] },
+        PropAi Sync: { extensions: ["../outside.js"] },
       }),
     );
     await fs.writeFile(path.join(pluginDir, "index.js"), "export {};");
@@ -3227,7 +2499,7 @@ description: test skill
         path.join(pluginDir, "package.json"),
         JSON.stringify({
           name: "scanfail-plugin",
-          "PropAi Sync": { extensions: ["index.js"] },
+          PropAi Sync: { extensions: ["index.js"] },
         }),
       );
       await fs.writeFile(path.join(pluginDir, "index.js"), "export {};");
@@ -3317,15 +2589,9 @@ description: test skill
   it("warns when config heuristics suggest a likely multi-user setup", async () => {
     const cfg: PropAiSyncConfig = {
       channels: {
-        discord: {
+        telegram: {
           groupPolicy: "allowlist",
-          guilds: {
-            "1234567890": {
-              channels: {
-                "7777777777": { allow: true },
-              },
-            },
-          },
+          groups: { "-1001234567890": {} },
         },
       },
       tools: { elevated: { enabled: false } },
@@ -3338,7 +2604,7 @@ description: test skill
 
     expect(finding?.severity).toBe("warn");
     expect(finding?.detail).toContain(
-      'channels.discord.groupPolicy="allowlist" with configured group targets',
+      'channels.telegram.groupPolicy="allowlist" with configured group targets',
     );
     expect(finding?.detail).toContain("personal-assistant");
     expect(finding?.remediation).toContain('agents.defaults.sandbox.mode="all"');
@@ -3347,7 +2613,7 @@ description: test skill
   it("does not warn for multi-user heuristic when no shared-user signals are configured", async () => {
     const cfg: PropAiSyncConfig = {
       channels: {
-        discord: {
+        telegram: {
           groupPolicy: "allowlist",
         },
       },
@@ -3377,10 +2643,10 @@ description: test skill
     const makeProbeEnv = (env?: { token?: string; password?: string }) => {
       const probeEnv: NodeJS.ProcessEnv = {};
       if (env?.token !== undefined) {
-        probeEnv.propai_GATEWAY_TOKEN = env.token;
+        probeEnv\.propai_GATEWAY_TOKEN = env.token;
       }
       if (env?.password !== undefined) {
-        probeEnv.propai_GATEWAY_PASSWORD = env.password;
+        probeEnv\.propai_GATEWAY_PASSWORD = env.password;
       }
       return probeEnv;
     };
@@ -3533,6 +2799,4 @@ description: test skill
     });
   });
 });
-
-
 

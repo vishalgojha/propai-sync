@@ -89,29 +89,6 @@ const STRUCTURED_CHANNEL_CONFIG_SPECS: Record<string, StructuredChannelConfigSpe
     stringKeys: ["botToken", "tokenFile"],
     accountStringKeys: ["botToken", "tokenFile"],
   },
-  discord: {
-    envAny: ["DISCORD_BOT_TOKEN"],
-    stringKeys: ["token"],
-    accountStringKeys: ["token"],
-  },
-  irc: {
-    envAll: ["IRC_HOST", "IRC_NICK"],
-    stringKeys: ["host", "nick"],
-    accountStringKeys: ["host", "nick"],
-  },
-  slack: {
-    envAny: ["SLACK_BOT_TOKEN", "SLACK_APP_TOKEN", "SLACK_USER_TOKEN"],
-    stringKeys: ["botToken", "appToken", "userToken"],
-    accountStringKeys: ["botToken", "appToken", "userToken"],
-  },
-  signal: {
-    stringKeys: ["account", "httpUrl", "httpHost", "cliPath"],
-    numberKeys: ["httpPort"],
-    accountStringKeys: ["account", "httpUrl", "httpHost", "cliPath"],
-  },
-  imessage: {
-    stringKeys: ["cliPath"],
-  },
 };
 
 function envHasAnyKeys(env: NodeJS.ProcessEnv, keys: readonly string[]): boolean {
@@ -530,5 +507,4 @@ export function applyPluginAutoEnable(params: {
 
   return { config: next, changes };
 }
-
 

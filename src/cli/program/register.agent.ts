@@ -65,7 +65,7 @@ ${formatHelpExamples([
   ],
   ['propai agent --to +15555550123 --message "Summon reply" --deliver', "Deliver reply."],
   [
-    'propai agent --agent ops --message "Generate report" --deliver --reply-channel slack --reply-to "#reports"',
+    'propai agent --agent ops --message "Generate report" --deliver --reply-channel telegram --reply-to "<chat-id>"',
     "Send reply to a different channel/target.",
   ],
 ])}

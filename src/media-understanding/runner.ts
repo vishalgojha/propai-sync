@@ -19,10 +19,7 @@ import type {
   MediaUnderstandingModelConfig,
 } from "../config/types.tools.js";
 import { logVerbose, shouldLogVerbose } from "../globals.js";
-import {
-  mergeInboundPathRoots,
-  resolveIMessageAttachmentRoots,
-} from "../media/inbound-path-policy.js";
+import { mergeInboundPathRoots } from "../media/inbound-path-policy.js";
 import { getDefaultMediaLocalRoots } from "../media/local-roots.js";
 import { runExec } from "../process/exec.js";
 import {
@@ -87,13 +84,7 @@ export function resolveMediaAttachmentLocalRoots(params: {
   cfg: PropAiSyncConfig;
   ctx: MsgContext;
 }): readonly string[] {
-  return mergeInboundPathRoots(
-    getDefaultMediaLocalRoots(),
-    resolveIMessageAttachmentRoots({
-      cfg: params.cfg,
-      accountId: params.ctx.AccountId,
-    }),
-  );
+  return mergeInboundPathRoots(getDefaultMediaLocalRoots());
 }
 
 export function createMediaAttachmentCache(
@@ -803,5 +794,4 @@ export async function runCapability(params: {
     decision,
   };
 }
-
 

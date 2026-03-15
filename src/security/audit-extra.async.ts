@@ -355,7 +355,7 @@ async function listSandboxBrowserContainers(
 ): Promise<string[] | null> {
   try {
     const result = await execDockerRawFn(
-      ["ps", "-a", "--filter", "label=PropAiSync.sandboxBrowser=1", "--format", "{{.Names}}"],
+      ["ps", "-a", "--filter", "label=PropAi Sync.sandboxBrowser=1", "--format", "{{.Names}}"],
       { allowFailure: true },
     );
     if (result.code !== 0) {
@@ -380,7 +380,7 @@ async function readSandboxBrowserHashLabels(params: {
       [
         "inspect",
         "-f",
-        '{{ index .Config.Labels "PropAiSync.configHash" }}\t{{ index .Config.Labels "PropAiSync.browserConfigEpoch" }}',
+        '{{ index .Config.Labels "PropAi Sync.configHash" }}\t{{ index .Config.Labels "PropAi Sync.browserConfigEpoch" }}',
         params.containerName,
       ],
       { allowFailure: true },
@@ -501,7 +501,7 @@ export async function collectSandboxBrowserHashLabelFindings(params?: {
       title: "Sandbox browser container hash epoch is stale",
       detail:
         `Containers: ${staleEpoch.join(", ")}. ` +
-        `Expected PropAiSync.browserConfigEpoch=${SANDBOX_BROWSER_SECURITY_HASH_EPOCH}.`,
+        `Expected PropAi Sync.browserConfigEpoch=${SANDBOX_BROWSER_SECURITY_HASH_EPOCH}.`,
       remediation: `${formatCliCommand("PropAi Sync sandbox recreate --browser --all")} (add --force to skip prompt).`,
     });
   }
@@ -551,16 +551,6 @@ export async function collectPluginsTrustFindings(params: {
           hasSecretInput((account as Record<string, unknown>)[key]),
         );
 
-      const discordConfigured =
-        hasSecretInput(params.cfg.channels?.discord?.token) ||
-        Boolean(
-          params.cfg.channels?.discord?.accounts &&
-          Object.values(params.cfg.channels.discord.accounts).some((a) =>
-            hasAccountSecretInputKey(a, "token"),
-          ),
-        ) ||
-        hasString(process.env.DISCORD_BOT_TOKEN);
-
       const telegramConfigured =
         hasSecretInput(params.cfg.channels?.telegram?.botToken) ||
         hasString(params.cfg.channels?.telegram?.tokenFile) ||
@@ -572,36 +562,21 @@ export async function collectPluginsTrustFindings(params: {
         ) ||
         hasString(process.env.TELEGRAM_BOT_TOKEN);
 
-      const slackConfigured =
-        hasSecretInput(params.cfg.channels?.slack?.botToken) ||
-        hasSecretInput(params.cfg.channels?.slack?.appToken) ||
-        Boolean(
-          params.cfg.channels?.slack?.accounts &&
-          Object.values(params.cfg.channels.slack.accounts).some(
-            (a) =>
-              hasAccountSecretInputKey(a, "botToken") || hasAccountSecretInputKey(a, "appToken"),
-          ),
-        ) ||
-        hasString(process.env.SLACK_BOT_TOKEN) ||
-        hasString(process.env.SLACK_APP_TOKEN);
+      const whatsappConfigured = Boolean(
+        params.cfg.channels?.whatsapp && typeof params.cfg.channels.whatsapp === "object",
+      );
 
       const skillCommandsLikelyExposed =
-        (discordConfigured &&
-          resolveNativeSkillsEnabled({
-            providerId: "discord",
-            providerSetting: params.cfg.channels?.discord?.commands?.nativeSkills,
-            globalSetting: params.cfg.commands?.nativeSkills,
-          })) ||
         (telegramConfigured &&
           resolveNativeSkillsEnabled({
             providerId: "telegram",
             providerSetting: params.cfg.channels?.telegram?.commands?.nativeSkills,
             globalSetting: params.cfg.commands?.nativeSkills,
           })) ||
-        (slackConfigured &&
+        (whatsappConfigured &&
           resolveNativeSkillsEnabled({
-            providerId: "slack",
-            providerSetting: params.cfg.channels?.slack?.commands?.nativeSkills,
+            providerId: "whatsapp",
+            providerSetting: params.cfg.channels?.whatsapp?.commands?.nativeSkills,
             globalSetting: params.cfg.commands?.nativeSkills,
           }));
 
@@ -651,7 +626,7 @@ export async function collectPluginsTrustFindings(params: {
           sandboxMode,
           agentId: context.agentId,
         });
-        const broadPolicy = isToolAllowedByPolicies("__PROPAI_plugin_probe__", policies);
+        const broadPolicy = isToolAllowedByPolicies("__PropAi Sync_plugin_probe__", policies);
         const explicitPluginAllow =
           !restrictiveProfile &&
           (hasExplicitPluginAllow({
@@ -1186,7 +1161,7 @@ export async function collectPluginsCodeSafetyFindings(params: {
         title: `Plugin "${pluginName}" has extension entry path traversal`,
         detail: `Found extension entries that escape the plugin directory:\n${escapedEntries.map((entry) => `  - ${entry}`).join("\n")}`,
         remediation:
-          "Update the plugin manifest so all PropAiSync.extensions entries stay inside the plugin directory.",
+          "Update the plugin manifest so all PropAi Sync.extensions entries stay inside the plugin directory.",
       });
     }
 
@@ -1251,7 +1226,7 @@ export async function collectInstalledSkillsCodeSafetyFindings(params: {
   for (const workspaceDir of workspaceDirs) {
     const entries = loadWorkspaceSkillEntries(workspaceDir, { config: params.cfg });
     for (const entry of entries) {
-      if (entry.skill.source === "propai-bundled") {
+      if (entry.skill.source === "PropAi Sync-bundled") {
         continue;
       }
 
@@ -1312,7 +1287,4 @@ export async function collectInstalledSkillsCodeSafetyFindings(params: {
 
   return findings;
 }
-
-
-
 

@@ -2,21 +2,21 @@ import { afterEach, beforeEach } from "vitest";
 import { setActivePluginRegistry } from "../../plugins/runtime.js";
 import { createOutboundTestPlugin, createTestRegistry } from "../../test-utils/channel-plugins.js";
 
-export const createDiscordRegistry = () =>
+export const createTelegramRegistry = () =>
   createTestRegistry([
     {
-      pluginId: "discord",
-      plugin: createOutboundTestPlugin({ id: "discord", outbound: { deliveryMode: "direct" } }),
+      pluginId: "telegram",
+      plugin: createOutboundTestPlugin({ id: "telegram", outbound: { deliveryMode: "direct" } }),
       source: "test",
     },
   ]);
 
-export function installDiscordRegistryHooks() {
+export function installTelegramRegistryHooks() {
   beforeEach(() => {
-    setActivePluginRegistry(createDiscordRegistry());
+    setActivePluginRegistry(createTelegramRegistry());
   });
 
   afterEach(() => {
-    setActivePluginRegistry(createDiscordRegistry());
+    setActivePluginRegistry(createTelegramRegistry());
   });
 }

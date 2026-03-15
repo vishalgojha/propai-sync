@@ -43,7 +43,7 @@ export function buildThreadingToolContext(params: {
     };
   }
   const provider = normalizeChannelId(rawProvider) ?? normalizeAnyChannelId(rawProvider);
-  // Fallback for unrecognized/plugin channels (e.g., BlueBubbles before plugin registry init)
+  // Fallback for unrecognized/plugin channels (e.g., before plugin registry init)
   const dock = provider ? getChannelDock(provider) : undefined;
   if (!dock?.threading?.buildToolContext) {
     return {
@@ -276,5 +276,4 @@ export function resolveProviderScopedAuthProfile(params: {
     authProfileIdSource: authProfileId ? params.authProfileIdSource : undefined,
   };
 }
-
 

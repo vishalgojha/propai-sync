@@ -28,7 +28,6 @@ const EXCLUDED_MUTABLE_OR_RUNTIME_MANAGED = [
   "hooks.gmail.pushToken",
   "hooks.mappings[].sessionKey",
   "auth-profiles.oauth.*",
-  "discord.threadBindings.*.webhookToken",
   "whatsapp.creds.json",
 ];
 
@@ -42,9 +41,6 @@ export function buildSecretRefCredentialMatrix(): SecretRefCredentialMatrixDocum
       ...(entry.authProfileType ? { when: { type: entry.authProfileType } } : {}),
       secretShape: entry.secretShape,
       optIn: true as const,
-      ...(entry.id.startsWith("channels.googlechat.")
-        ? { notes: "Google Chat compatibility exception: sibling ref field remains canonical." }
-        : {}),
     }))
     .toSorted((a, b) => a.id.localeCompare(b.id));
 
@@ -58,5 +54,4 @@ export function buildSecretRefCredentialMatrix(): SecretRefCredentialMatrixDocum
     entries,
   };
 }
-
 

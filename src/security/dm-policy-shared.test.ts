@@ -70,7 +70,7 @@ describe("security/dm-policy-shared", () => {
 
   it("handles empty allowlists and store failures", async () => {
     const state = await resolveDmAllowState({
-      provider: "slack",
+      provider: "whatsapp",
       accountId: "default",
       allowFrom: undefined,
       readStore: async (_provider, _accountId) => {
@@ -93,7 +93,7 @@ describe("security/dm-policy-shared", () => {
 
   it("skips pairing-store reads when shouldRead=false", async () => {
     await expectStoreReadSkipped({
-      provider: "slack",
+      provider: "telegram",
       accountId: "default",
       shouldRead: false,
     });
@@ -275,14 +275,8 @@ describe("security/dm-policy-shared", () => {
   });
 
   const channels = [
-    "bluebubbles",
-    "imessage",
-    "signal",
     "telegram",
     "whatsapp",
-    "msteams",
-    "matrix",
-    "zalo",
   ] as const;
 
   type ParityCase = {

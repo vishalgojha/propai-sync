@@ -1,10 +1,6 @@
-import {
-  DISCORD_DEFAULT_INBOUND_WORKER_TIMEOUT_MS,
-  DISCORD_DEFAULT_LISTENER_TIMEOUT_MS,
-} from "../discord/monitor/timeouts.js";
 import { MEDIA_AUDIO_FIELD_HELP } from "./media-audio-field-metadata.js";
-import { IRC_FIELD_HELP } from "./schema.irc.js";
 import { describeTalkSilenceTimeoutDefaults } from "./talk-defaults.js";
+
 
 export const FIELD_HELP: Record<string, string> = {
   meta: "Metadata fields automatically maintained by PropAi Sync to record write/version history for this config file. Keep these values system-managed and avoid manual edits unless debugging migration history.",
@@ -32,7 +28,6 @@ export const FIELD_HELP: Record<string, string> = {
   "wizard.lastRunMode":
     'Wizard execution mode recorded as "local" or "remote" for the most recent onboarding flow. Use this to understand whether setup targeted direct local runtime or remote gateway topology.',
   diagnostics:
-    "Diagnostics controls for targeted tracing, telemetry export, and cache inspection during debugging. Keep baseline diagnostics minimal in production and enable deeper signals only when investigating issues.",
   "diagnostics.otel":
     "OpenTelemetry export settings for traces, metrics, and logs emitted by gateway components. Use this when integrating with centralized observability backends and distributed tracing pipelines.",
   "diagnostics.cacheTrace":
@@ -263,7 +258,6 @@ export const FIELD_HELP: Record<string, string> = {
   "browser.profiles.*.attachOnly":
     "Per-profile attach-only override that skips local browser launch and only attaches to an existing CDP endpoint. Useful when one profile is externally managed but others are locally launched.",
   "browser.profiles.*.color":
-    "Per-profile accent color for visual differentiation in dashboards and browser-related UI hints. Use distinct colors for high-signal operator recognition of active profiles.",
   "browser.evaluateEnabled":
     "Enables browser-side evaluate helpers for runtime script evaluation capabilities where supported. Keep disabled unless your workflows require evaluate semantics beyond snapshots/navigation.",
   "browser.snapshotDefaults":
@@ -287,11 +281,8 @@ export const FIELD_HELP: Record<string, string> = {
   "discovery.mdns.mode":
     'mDNS broadcast mode ("minimal" default, "full" includes cliPath/sshPort, "off" disables mDNS).',
   discovery:
-    "Service discovery settings for local mDNS advertisement and optional wide-area presence signaling. Keep discovery scoped to expected networks to avoid leaking service metadata.",
   "discovery.wideArea":
-    "Wide-area discovery configuration group for exposing discovery signals beyond local-link scopes. Enable only in deployments that intentionally aggregate gateway presence across sites.",
   "discovery.wideArea.enabled":
-    "Enables wide-area discovery signaling when your environment needs non-local gateway discovery. Keep disabled unless cross-network discovery is operationally required.",
   "discovery.mdns":
     "mDNS discovery configuration group for local network advertisement and discovery behavior tuning. Keep minimal mode for routine LAN discovery unless extra metadata is required.",
   tools:
@@ -449,7 +440,6 @@ export const FIELD_HELP: Record<string, string> = {
   "bindings[].match":
     "Match rule object for deciding when a binding applies, including channel and optional account/peer constraints. Keep rules narrow to avoid accidental agent takeover across contexts.",
   "bindings[].match.channel":
-    "Channel/provider identifier this binding applies to, such as `telegram`, `discord`, or a plugin channel ID. Use the configured channel key exactly so binding evaluation works reliably.",
   "bindings[].match.accountId":
     "Optional account selector for multi-account channel setups so the binding applies only to one identity. Use this when account scoping is required for the route and leave unset otherwise.",
   "bindings[].match.peer":
@@ -459,9 +449,7 @@ export const FIELD_HELP: Record<string, string> = {
   "bindings[].match.peer.id":
     "Conversation identifier used with peer matching, such as a chat ID, channel ID, or group ID from the provider. Keep this exact to avoid silent non-matches.",
   "bindings[].match.guildId":
-    "Optional Discord-style guild/server ID constraint for binding evaluation in multi-server deployments. Use this when the same peer identifiers can appear across different guilds.",
   "bindings[].match.teamId":
-    "Optional team/workspace ID constraint used by providers that scope chats under teams. Add this when you need bindings isolated to one workspace context.",
   "bindings[].match.roles":
     "Optional role-based filter list used by providers that attach roles to chat context. Use this to route privileged or operational role traffic to specialized agents.",
   "bindings[].acp":
@@ -495,11 +483,8 @@ export const FIELD_HELP: Record<string, string> = {
   "diagnostics.otel.serviceName":
     "Service name reported in telemetry resource attributes to identify this gateway instance in observability backends. Use stable names so dashboards and alerts remain consistent over deployments.",
   "diagnostics.otel.traces":
-    "Enable trace signal export to the configured OpenTelemetry collector endpoint. Keep enabled when latency/debug tracing is needed, and disable if you only want metrics/logs.",
   "diagnostics.otel.metrics":
-    "Enable metrics signal export to the configured OpenTelemetry collector endpoint. Keep enabled for runtime health dashboards, and disable only if metric volume must be minimized.",
   "diagnostics.otel.logs":
-    "Enable log signal export through OpenTelemetry in addition to local logging sinks. Use this when centralized log correlation is required across services and agents.",
   "diagnostics.otel.sampleRate":
     "Trace sampling rate (0-1) controlling how much trace traffic is exported to observability backends. Lower rates reduce overhead/cost, while higher rates improve debugging fidelity.",
   "diagnostics.otel.flushIntervalMs":
@@ -525,7 +510,6 @@ export const FIELD_HELP: Record<string, string> = {
     "Warning threshold for repetitive patterns when detector is enabled (default: 10).",
   "tools.loopDetection.criticalThreshold":
     "Critical threshold for repetitive patterns when detector is enabled (default: 20).",
-  "tools.loopDetection.globalCircuitBreakerThreshold":
     "Global no-progress breaker threshold (default: 30).",
   "tools.loopDetection.detectors.genericRepeat":
     "Enable generic repeated same-tool/same-params loop detection (default: true).",
@@ -619,11 +603,9 @@ export const FIELD_HELP: Record<string, string> = {
   "approvals.exec.agentFilter":
     'Optional allowlist of agent IDs eligible for forwarded approvals, for example `["primary", "ops-agent"]`. Use this to limit forwarding blast radius and avoid notifying channels for unrelated agents.',
   "approvals.exec.sessionFilter":
-    'Optional session-key filters matched as substring or regex-style patterns, for example `["discord:", "^agent:ops:"]`. Use narrow patterns so only intended approval contexts are forwarded to shared destinations.',
   "approvals.exec.targets":
     "Explicit delivery targets used when forwarding mode includes targets, each with channel and destination details. Keep target lists least-privilege and validate each destination before enabling broad forwarding.",
   "approvals.exec.targets[].channel":
-    "Channel/provider ID used for forwarded approval delivery, such as discord, slack, or a plugin channel id. Use valid channel IDs only so approvals do not silently fail due to unknown routes.",
   "approvals.exec.targets[].to":
     "Destination identifier inside the target channel (channel ID, user ID, or thread root depending on provider). Verify semantics per provider because destination format differs across channel integrations.",
   "approvals.exec.targets[].accountId":
@@ -728,22 +710,7 @@ export const FIELD_HELP: Record<string, string> = {
   "models.bedrockDiscovery.defaultMaxTokens":
     "Fallback max-token value applied to discovered models without explicit output token limits. Use conservative defaults to reduce truncation surprises and unexpected token spend.",
   auth: "Authentication profile root used for multi-profile provider credentials and cooldown-based failover ordering. Keep profiles minimal and explicit so automatic failover behavior stays auditable.",
-  "channels.slack.allowBots":
-    "Allow bot-authored messages to trigger Slack replies (default: false).",
-  "channels.slack.thread.historyScope":
-    'Scope for Slack thread history context ("thread" isolates per thread; "channel" reuses channel history).',
-  "channels.slack.thread.inheritParent":
-    "If true, Slack thread sessions inherit the parent channel transcript (default: false).",
-  "channels.slack.thread.initialHistoryLimit":
-    "Maximum number of existing Slack thread messages to fetch when starting a new thread session (default: 20, set to 0 to disable).",
-  "channels.mattermost.botToken":
-    "Bot token from Mattermost System Console -> Integrations -> Bot Accounts.",
-  "channels.mattermost.baseUrl":
-    "Base URL for your Mattermost server (e.g., https://chat.example.com).",
-  "channels.mattermost.chatmode":
     'Reply to channel messages on mention ("oncall"), on trigger chars (">" or "!") ("onchar"), or on every message ("onmessage").',
-  "channels.mattermost.oncharPrefixes": 'Trigger prefixes for onchar mode (default: [">", "!"]).',
-  "channels.mattermost.requireMention":
     "Require @mention in channels before responding (default: true).",
   "auth.profiles": "Named auth profiles (provider + mode + optional email).",
   "auth.order": "Ordered auth profile IDs per provider (used for automatic failover).",
@@ -851,7 +818,6 @@ export const FIELD_HELP: Record<string, string> = {
   "memory.backend":
     'Selects the global memory engine: "builtin" uses PropAi Sync memory internals, while "qmd" uses the QMD sidecar pipeline. Keep "builtin" unless you intentionally operate QMD.',
   "memory.citations":
-    'Controls citation visibility in replies: "auto" shows citations when useful, "on" always shows them, and "off" hides them. Keep "auto" for a balanced signal-to-noise default.',
   "memory.qmd.command":
     "Sets the executable path for the `qmd` binary used by the QMD backend (default: resolved from PATH). Use an explicit absolute path when multiple qmd installs exist or PATH differs across environments.",
   "memory.qmd.mcporter":
@@ -1049,7 +1015,6 @@ export const FIELD_HELP: Record<string, string> = {
   commands:
     "Controls chat command surfaces, owner gating, and elevated command access behavior across providers. Keep defaults unless you need stricter operator controls or broader command availability.",
   "commands.native":
-    "Registers native slash/menu commands with channels that support command registration (Discord, Slack, Telegram). Keep enabled for discoverability unless you intentionally run text-only command workflows.",
   "commands.nativeSkills":
     "Registers native skill commands so users can invoke skills directly from provider command menus where supported. Keep aligned with your skill policy so exposed commands match what operators expect.",
   "commands.text":
@@ -1117,13 +1082,11 @@ export const FIELD_HELP: Record<string, string> = {
   "session.sendPolicy.default":
     'Sets fallback action when no sendPolicy rule matches: "allow" or "deny". Keep "allow" for simpler setups, or choose "deny" when you require explicit allow rules for every destination.',
   "session.sendPolicy.rules":
-    'Ordered allow/deny rules evaluated before the default action, for example `{ action: "deny", match: { channel: "discord" } }`. Put most specific rules first so broad rules do not shadow exceptions.',
   "session.sendPolicy.rules[].action":
     'Defines rule decision as "allow" or "deny" when the corresponding match criteria are satisfied. Use deny-first ordering when enforcing strict boundaries with explicit allow exceptions.',
   "session.sendPolicy.rules[].match":
     "Defines optional rule match conditions that can combine channel, chatType, and key-prefix constraints. Keep matches narrow so policy intent stays readable and debugging remains straightforward.",
   "session.sendPolicy.rules[].match.channel":
-    "Matches rule application to a specific channel/provider id (for example discord, telegram, slack). Use this when one channel should permit or deny delivery independently of others.",
   "session.sendPolicy.rules[].match.chatType":
     "Matches rule application to chat type (direct, group, thread) so behavior varies by conversation form. Use this when DM and group destinations require different safety boundaries.",
   "session.sendPolicy.rules[].match.keyPrefix":
@@ -1238,7 +1201,6 @@ export const FIELD_HELP: Record<string, string> = {
   "hooks.mappings[].allowUnsafeExternalContent":
     "When true, mapping content may include less-sanitized external payload data in generated messages. Keep false by default and enable only for trusted sources with reviewed transform logic.",
   "hooks.mappings[].channel":
-    'Delivery channel override for mapping outputs (for example "last", "telegram", "discord", "slack", "signal", "imessage", or "msteams"). Keep channel overrides explicit to avoid accidental cross-channel sends.',
   "hooks.mappings[].to":
     "Destination identifier inside the selected channel when mapping replies should route to a fixed target. Verify provider-specific destination formats before enabling production mappings.",
   "hooks.mappings[].model":
@@ -1332,7 +1294,6 @@ export const FIELD_HELP: Record<string, string> = {
   "messages.queue.mode":
     'Queue behavior mode: "steer", "followup", "collect", "steer-backlog", "steer+backlog", "queue", or "interrupt". Keep conservative modes unless you intentionally need aggressive interruption/backlog semantics.',
   "messages.queue.byChannel":
-    "Per-channel queue mode overrides keyed by provider id (for example telegram, discord, slack). Use this when one channel’s traffic pattern needs different queue behavior than global defaults.",
   "messages.queue.debounceMs":
     "Global queue debounce window in milliseconds before processing buffered inbound messages. Use higher values to coalesce rapid bursts, or lower values for reduced response latency.",
   "messages.queue.debounceMsByChannel":
@@ -1353,24 +1314,8 @@ export const FIELD_HELP: Record<string, string> = {
     "Channel provider configurations plus shared defaults that control access policies, heartbeat visibility, and per-surface behavior. Keep defaults centralized and override per provider only where required.",
   "channels.telegram":
     "Telegram channel provider configuration including auth tokens, retry behavior, and message rendering controls. Use this section to tune bot behavior for Telegram-specific API semantics.",
-  "channels.slack":
-    "Slack channel provider configuration for bot/app tokens, streaming behavior, and DM policy controls. Keep token handling and thread behavior explicit to avoid noisy workspace interactions.",
-  "channels.discord":
-    "Discord channel provider configuration for bot auth, retry policy, streaming, thread bindings, and optional voice capabilities. Keep privileged intents and advanced features disabled unless needed.",
   "channels.whatsapp":
     "WhatsApp channel provider configuration for access policy and message batching behavior. Use this section to tune responsiveness and direct-message routing safety for WhatsApp chats.",
-  "channels.signal":
-    "Signal channel provider configuration including account identity and DM policy behavior. Keep account mapping explicit so routing remains stable across multi-device setups.",
-  "channels.imessage":
-    "iMessage channel provider configuration for CLI integration and DM access policy handling. Use explicit CLI paths when runtime environments have non-standard binary locations.",
-  "channels.bluebubbles":
-    "BlueBubbles channel provider configuration used for Apple messaging bridge integrations. Keep DM policy aligned with your trusted sender model in shared deployments.",
-  "channels.msteams":
-    "Microsoft Teams channel provider configuration and provider-specific policy toggles. Use this section to isolate Teams behavior from other enterprise chat providers.",
-  "channels.mattermost":
-    "Mattermost channel provider configuration for bot credentials, base URL, and message trigger modes. Keep mention/trigger rules strict in high-volume team channels.",
-  "channels.irc":
-    "IRC channel provider configuration and compatibility settings for classic IRC transport workflows. Use this section when bridging legacy chat infrastructure into PropAiSync.",
   "channels.defaults":
     "Default channel behavior applied across providers when provider-specific settings are not set. Use this to enforce consistent baseline policy before per-provider tuning.",
   "channels.defaults.groupPolicy":
@@ -1405,56 +1350,13 @@ export const FIELD_HELP: Record<string, string> = {
     "Optional session-key filters matched as substring or regex-style patterns before Telegram approval routing is used. Use narrow patterns so Telegram approvals only appear for intended sessions.",
   "channels.telegram.execApprovals.target":
     'Controls where Telegram approval prompts are sent: "dm" sends to approver DMs (default), "channel" sends to the originating Telegram chat/topic, and "both" sends to both. Channel delivery exposes the command text to the chat, so only use it in trusted groups/topics.',
-  "channels.slack.configWrites":
-    "Allow Slack to write config in response to channel events/commands (default: true).",
-  "channels.slack.botToken":
-    "Slack bot token used for standard chat actions in the configured workspace. Keep this credential scoped and rotate if workspace app permissions change.",
-  "channels.slack.appToken":
-    "Slack app-level token used for Socket Mode connections and event transport when enabled. Use least-privilege app scopes and store this token as a secret.",
-  "channels.slack.userToken":
-    "Optional Slack user token for workflows requiring user-context API access beyond bot permissions. Use sparingly and audit scopes because this token can carry broader authority.",
-  "channels.slack.userTokenReadOnly":
-    "When true, treat configured Slack user token usage as read-only helper behavior where possible. Keep enabled if you only need supplemental reads without user-context writes.",
-  "channels.mattermost.configWrites":
-    "Allow Mattermost to write config in response to channel events/commands (default: true).",
-  "channels.discord.configWrites":
-    "Allow Discord to write config in response to channel events/commands (default: true).",
-  "channels.discord.token":
-    "Discord bot token used for gateway and REST API authentication for this provider account. Keep this secret out of committed config and rotate immediately after any leak.",
-  "channels.discord.allowBots":
-    'Allow bot-authored messages to trigger Discord replies (default: false). Set "mentions" to only accept bot messages that mention the bot.',
-  "channels.discord.proxy":
-    "Proxy URL for Discord gateway + API requests (app-id lookup and allowlist resolution). Set per account via channels.discord.accounts.<id>.proxy.",
   "channels.whatsapp.configWrites":
     "Allow WhatsApp to write config in response to channel events/commands (default: true).",
-  "channels.signal.configWrites":
-    "Allow Signal to write config in response to channel events/commands (default: true).",
-  "channels.signal.account":
-    "Signal account identifier (phone/number handle) used to bind this channel config to a specific Signal identity. Keep this aligned with your linked device/session state.",
-  "channels.imessage.configWrites":
-    "Allow iMessage to write config in response to channel events/commands (default: true).",
-  "channels.imessage.cliPath":
-    "Filesystem path to the iMessage bridge CLI binary used for send/receive operations. Set explicitly when the binary is not on PATH in service runtime environments.",
-  "channels.msteams.configWrites":
-    "Allow Microsoft Teams to write config in response to channel events/commands (default: true).",
   "channels.modelByChannel":
     "Map provider -> channel id -> model override (values are provider/model or aliases).",
-  ...IRC_FIELD_HELP,
-  "channels.discord.commands.native": 'Override native commands for Discord (bool or "auto").',
-  "channels.discord.commands.nativeSkills":
-    'Override native skill commands for Discord (bool or "auto").',
   "channels.telegram.commands.native": 'Override native commands for Telegram (bool or "auto").',
   "channels.telegram.commands.nativeSkills":
     'Override native skill commands for Telegram (bool or "auto").',
-  "channels.slack.commands.native": 'Override native commands for Slack (bool or "auto").',
-  "channels.slack.commands.nativeSkills":
-    'Override native skill commands for Slack (bool or "auto").',
-  "channels.slack.streaming":
-    'Unified Slack stream preview mode: "off" | "partial" | "block" | "progress". Legacy boolean/streamMode keys are auto-mapped.',
-  "channels.slack.nativeStreaming":
-    "Enable native Slack text streaming (chat.startStream/chat.appendStream/chat.stopStream) when channels.slack.streaming is partial (default: true).",
-  "channels.slack.streamMode":
-    "Legacy Slack preview mode alias (replace | status_final | append); auto-migrated to channels.slack.streaming.",
   "channels.telegram.customCommands":
     "Additional Telegram bot menu commands (merged with native; conflicts ignored).",
   "messages.suppressToolErrors":
@@ -1476,16 +1378,6 @@ export const FIELD_HELP: Record<string, string> = {
     'Direct message access control ("pairing" recommended). "open" requires channels.telegram.allowFrom=["*"].',
   "channels.telegram.streaming":
     'Unified Telegram stream preview mode: "off" | "partial" | "block" | "progress" (default: "partial"). "progress" maps to "partial" on Telegram. Legacy boolean/streamMode keys are auto-mapped.',
-  "channels.discord.streaming":
-    'Unified Discord stream preview mode: "off" | "partial" | "block" | "progress". "progress" maps to "partial" on Discord. Legacy boolean/streamMode keys are auto-mapped.',
-  "channels.discord.streamMode":
-    "Legacy Discord preview mode alias (off | partial | block); auto-migrated to channels.discord.streaming.",
-  "channels.discord.draftChunk.minChars":
-    'Minimum chars before emitting a Discord stream preview update when channels.discord.streaming="block" (default: 200).',
-  "channels.discord.draftChunk.maxChars":
-    'Target max size for a Discord stream preview chunk when channels.discord.streaming="block" (default: 800; clamped to channels.discord.textChunkLimit).',
-  "channels.discord.draftChunk.breakPreference":
-    "Preferred breakpoints for Discord draft chunks (paragraph | newline | sentence). Default: paragraph.",
   "channels.telegram.retry.attempts":
     "Max retry attempts for outbound Telegram API calls (default: 3).",
   "channels.telegram.retry.minDelayMs": "Minimum retry delay in ms for Telegram outbound calls.",
@@ -1513,79 +1405,11 @@ export const FIELD_HELP: Record<string, string> = {
   "channels.whatsapp.selfChatMode": "Same-phone setup (bot uses your personal WhatsApp number).",
   "channels.whatsapp.debounceMs":
     "Debounce window (ms) for batching rapid consecutive messages from the same sender (0 to disable).",
-  "channels.signal.dmPolicy":
-    'Direct message access control ("pairing" recommended). "open" requires channels.signal.allowFrom=["*"].',
-  "channels.imessage.dmPolicy":
-    'Direct message access control ("pairing" recommended). "open" requires channels.imessage.allowFrom=["*"].',
-  "channels.bluebubbles.dmPolicy":
-    'Direct message access control ("pairing" recommended). "open" requires channels.bluebubbles.allowFrom=["*"].',
-  "channels.discord.dmPolicy":
-    'Direct message access control ("pairing" recommended). "open" requires channels.discord.allowFrom=["*"].',
-  "channels.discord.dm.policy":
-    'Direct message access control ("pairing" recommended). "open" requires channels.discord.allowFrom=["*"] (legacy: channels.discord.dm.allowFrom).',
-  "channels.discord.retry.attempts":
-    "Max retry attempts for outbound Discord API calls (default: 3).",
-  "channels.discord.retry.minDelayMs": "Minimum retry delay in ms for Discord outbound calls.",
-  "channels.discord.retry.maxDelayMs": "Maximum retry delay cap in ms for Discord outbound calls.",
-  "channels.discord.retry.jitter": "Jitter factor (0-1) applied to Discord retry delays.",
-  "channels.discord.maxLinesPerMessage": "Soft max line count per Discord message (default: 17).",
-  "channels.discord.inboundWorker.runTimeoutMs": `Optional queued Discord inbound worker timeout in ms. This is separate from Carbon listener timeouts; defaults to ${DISCORD_DEFAULT_INBOUND_WORKER_TIMEOUT_MS} and can be disabled with 0. Set per account via channels.discord.accounts.<id>.inboundWorker.runTimeoutMs.`,
-  "channels.discord.eventQueue.listenerTimeout": `Canonical Discord listener timeout control in ms for gateway normalization/enqueue handlers. Default is ${DISCORD_DEFAULT_LISTENER_TIMEOUT_MS} in PropAi Sync; set per account via channels.discord.accounts.<id>.eventQueue.listenerTimeout.`,
-  "channels.discord.eventQueue.maxQueueSize":
-    "Optional Discord EventQueue capacity override (max queued events before backpressure). Set per account via channels.discord.accounts.<id>.eventQueue.maxQueueSize.",
-  "channels.discord.eventQueue.maxConcurrency":
-    "Optional Discord EventQueue concurrency override (max concurrent handler executions). Set per account via channels.discord.accounts.<id>.eventQueue.maxConcurrency.",
-  "channels.discord.threadBindings.enabled":
-    "Enable Discord thread binding features (/focus, bound-thread routing/delivery, and thread-bound subagent sessions). Overrides session.threadBindings.enabled when set.",
-  "channels.discord.threadBindings.idleHours":
-    "Inactivity window in hours for Discord thread-bound sessions (/focus and spawned thread sessions). Set 0 to disable idle auto-unfocus (default: 24). Overrides session.threadBindings.idleHours when set.",
-  "channels.discord.threadBindings.maxAgeHours":
-    "Optional hard max age in hours for Discord thread-bound sessions. Set 0 to disable hard cap (default: 0). Overrides session.threadBindings.maxAgeHours when set.",
-  "channels.discord.threadBindings.spawnSubagentSessions":
-    "Allow subagent spawns with thread=true to auto-create and bind Discord threads (default: false; opt-in). Set true to enable thread-bound subagent spawns for this account/channel.",
-  "channels.discord.threadBindings.spawnAcpSessions":
-    "Allow /acp spawn to auto-create and bind Discord threads for ACP sessions (default: false; opt-in). Set true to enable thread-bound ACP spawns for this account/channel.",
-  "channels.discord.ui.components.accentColor":
-    "Accent color for Discord component containers (hex). Set per account via channels.discord.accounts.<id>.ui.components.accentColor.",
-  "channels.discord.voice.enabled":
-    "Enable Discord voice channel conversations (default: true). Omit channels.discord.voice to keep voice support disabled for the account.",
-  "channels.discord.voice.autoJoin":
     "Voice channels to auto-join on startup (list of guildId/channelId entries).",
-  "channels.discord.voice.daveEncryption":
-    "Toggle DAVE end-to-end encryption for Discord voice joins (default: true in @discordjs/voice; Discord may require this).",
-  "channels.discord.voice.decryptionFailureTolerance":
-    "Consecutive decrypt failures before DAVE attempts session recovery (passed to @discordjs/voice; default: 24).",
-  "channels.discord.voice.tts":
-    "Optional TTS overrides for Discord voice playback (merged with messages.tts).",
-  "channels.discord.intents.presence":
-    "Enable the Guild Presences privileged intent. Must also be enabled in the Discord Developer Portal. Allows tracking user activities (e.g. Spotify). Default: false.",
-  "channels.discord.intents.guildMembers":
-    "Enable the Guild Members privileged intent. Must also be enabled in the Discord Developer Portal. Default: false.",
-  "channels.discord.pluralkit.enabled":
     "Resolve PluralKit proxied messages and treat system members as distinct senders.",
-  "channels.discord.pluralkit.token":
     "Optional PluralKit token for resolving private systems or members.",
-  "channels.discord.activity": "Discord presence activity text (defaults to custom status).",
-  "channels.discord.status": "Discord presence status (online, dnd, idle, invisible).",
-  "channels.discord.autoPresence.enabled":
-    "Enable automatic Discord bot presence updates based on runtime/model availability signals. When enabled: healthy=>online, degraded/unknown=>idle, exhausted/unavailable=>dnd.",
-  "channels.discord.autoPresence.intervalMs":
-    "How often to evaluate Discord auto-presence state in milliseconds (default: 30000).",
-  "channels.discord.autoPresence.minUpdateIntervalMs":
-    "Minimum time between actual Discord presence update calls in milliseconds (default: 15000). Prevents status spam on noisy state changes.",
-  "channels.discord.autoPresence.healthyText":
-    "Optional custom status text while runtime is healthy (online). If omitted, falls back to static channels.discord.activity when set.",
-  "channels.discord.autoPresence.degradedText":
     "Optional custom status text while runtime/model availability is degraded or unknown (idle).",
-  "channels.discord.autoPresence.exhaustedText":
     "Optional custom status text while runtime detects exhausted/unavailable model quota (dnd). Supports {reason} template placeholder.",
-  "channels.discord.activityType":
-    "Discord presence activity type (0=Playing,1=Streaming,2=Listening,3=Watching,4=Custom,5=Competing).",
-  "channels.discord.activityUrl": "Discord presence streaming URL (required for activityType=1).",
-  "channels.slack.dm.policy":
-    'Direct message access control ("pairing" recommended). "open" requires channels.slack.allowFrom=["*"] (legacy: channels.slack.dm.allowFrom).',
-  "channels.slack.dmPolicy":
-    'Direct message access control ("pairing" recommended). "open" requires channels.slack.allowFrom=["*"].',
 };
 
 

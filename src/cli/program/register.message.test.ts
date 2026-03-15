@@ -10,11 +10,7 @@ const registerMessageReactionsCommandsMock = vi.fn();
 const registerMessageReadEditDeleteCommandsMock = vi.fn();
 const registerMessagePinCommandsMock = vi.fn();
 const registerMessagePermissionsCommandMock = vi.fn();
-const registerMessageSearchCommandMock = vi.fn();
 const registerMessageThreadCommandsMock = vi.fn();
-const registerMessageEmojiCommandsMock = vi.fn();
-const registerMessageStickerCommandsMock = vi.fn();
-const registerMessageDiscordAdminCommandsMock = vi.fn();
 
 vi.mock("./message/helpers.js", () => ({
   createMessageCliHelpers: createMessageCliHelpersMock,
@@ -46,20 +42,10 @@ vi.mock("./message/register.pins.js", () => ({
 
 vi.mock("./message/register.permissions-search.js", () => ({
   registerMessagePermissionsCommand: registerMessagePermissionsCommandMock,
-  registerMessageSearchCommand: registerMessageSearchCommandMock,
 }));
 
 vi.mock("./message/register.thread.js", () => ({
   registerMessageThreadCommands: registerMessageThreadCommandsMock,
-}));
-
-vi.mock("./message/register.emoji-sticker.js", () => ({
-  registerMessageEmojiCommands: registerMessageEmojiCommandsMock,
-  registerMessageStickerCommands: registerMessageStickerCommandsMock,
-}));
-
-vi.mock("./message/register.discord-admin.js", () => ({
-  registerMessageDiscordAdminCommands: registerMessageDiscordAdminCommandsMock,
 }));
 
 let registerMessageCommands: typeof import("./register.message.js").registerMessageCommands;
@@ -71,9 +57,9 @@ beforeAll(async () => {
 describe("registerMessageCommands", () => {
   const ctx: ProgramContext = {
     programVersion: "9.9.9-test",
-    channelOptions: ["telegram", "discord"],
-    messageChannelOptions: "telegram|discord",
-    agentChannelOptions: "last|telegram|discord",
+    channelOptions: ["telegram", "whatsapp"],
+    messageChannelOptions: "telegram|whatsapp",
+    agentChannelOptions: "last|telegram|whatsapp",
   };
 
   beforeEach(() => {
@@ -87,7 +73,7 @@ describe("registerMessageCommands", () => {
 
     const message = program.commands.find((command) => command.name() === "message");
     expect(message).toBeDefined();
-    expect(createMessageCliHelpersMock).toHaveBeenCalledWith(message, "telegram|discord");
+    expect(createMessageCliHelpersMock).toHaveBeenCalledWith(message, "telegram|whatsapp");
 
     const expectedRegistrars = [
       registerMessageSendCommandMock,
@@ -97,11 +83,7 @@ describe("registerMessageCommands", () => {
       registerMessageReadEditDeleteCommandsMock,
       registerMessagePinCommandsMock,
       registerMessagePermissionsCommandMock,
-      registerMessageSearchCommandMock,
       registerMessageThreadCommandsMock,
-      registerMessageEmojiCommandsMock,
-      registerMessageStickerCommandsMock,
-      registerMessageDiscordAdminCommandsMock,
     ];
     for (const registrar of expectedRegistrars) {
       expect(registrar).toHaveBeenCalledWith(message, { helper: true });

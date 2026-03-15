@@ -30,7 +30,7 @@ function loadDeliverRuntime() {
 export type RouteReplyParams = {
   /** The reply payload to send. */
   payload: ReplyPayload;
-  /** The originating channel type (telegram, slack, etc). */
+  /** The originating channel type (telegram, whatsapp, etc). */
   channel: OriginatingChannelType;
   /** The destination chat/channel/user ID. */
   to: string;
@@ -127,10 +127,8 @@ export async function routeReply(params: RouteReplyParams): Promise<RouteReplyRe
     return { ok: false, error: "Reply routing aborted" };
   }
 
-  const resolvedReplyToId =
-    replyToId ??
-    (channelId === "slack" && threadId != null && threadId !== "" ? String(threadId) : undefined);
-  const resolvedThreadId = channelId === "slack" ? null : (threadId ?? null);
+  const resolvedReplyToId = replyToId ?? undefined;
+  const resolvedThreadId = threadId ?? null;
 
   try {
     // Provider docking: this is an execution boundary (we're about to send).
@@ -189,5 +187,4 @@ export function isRoutableChannel(
   }
   return normalizeChannelId(channel) !== null;
 }
-
 

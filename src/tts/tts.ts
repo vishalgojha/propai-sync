@@ -23,7 +23,7 @@ import type {
   TtsModelOverrideConfig,
 } from "../config/types.tts.js";
 import { logVerbose } from "../globals.js";
-import { resolvePreferredPropAiSyncTmpDir } from "../infra/tmp-propai-dir.js";
+import { resolvePreferredPropAi SyncTmpDir } from "../infra/tmp-PropAi Sync-dir.js";
 import { stripMarkdown } from "../line/markdown-to-line.js";
 import { isVoiceCompatibleAudio } from "../media/audio.js";
 import { CONFIG_DIR, resolveUserPath } from "../utils.js";
@@ -333,7 +333,7 @@ export function resolveTtsPrefsPath(config: ResolvedTtsConfig): string {
   if (config.prefsPath?.trim()) {
     return resolveUserPath(config.prefsPath.trim());
   }
-  const envPath = process.env.propai_TTS_PREFS?.trim();
+  const envPath = process.env\.propai_TTS_PREFS?.trim();
   if (envPath) {
     return resolveUserPath(envPath);
   }
@@ -501,7 +501,7 @@ export function setLastTtsAttempt(entry: TtsStatusEntry | undefined): void {
 }
 
 /** Channels that require opus audio and support voice-bubble playback */
-const VOICE_BUBBLE_CHANNELS = new Set(["telegram", "feishu", "whatsapp"]);
+const VOICE_BUBBLE_CHANNELS = new Set(["telegram", "whatsapp"]);
 
 function resolveOutputFormat(channelId?: string | null) {
   if (channelId && VOICE_BUBBLE_CHANNELS.has(channelId)) {
@@ -594,7 +594,7 @@ export async function textToSpeech(params: {
           continue;
         }
 
-        const tempRoot = resolvePreferredPropAiSyncTmpDir();
+        const tempRoot = resolvePreferredPropAi SyncTmpDir();
         mkdirSync(tempRoot, { recursive: true, mode: 0o700 });
         const tempDir = mkdtempSync(path.join(tempRoot, "tts-"));
         let edgeOutputFormat = resolveEdgeOutputFormat(config);
@@ -706,7 +706,7 @@ export async function textToSpeech(params: {
 
       const latencyMs = Date.now() - providerStart;
 
-      const tempRoot = resolvePreferredPropAiSyncTmpDir();
+      const tempRoot = resolvePreferredPropAi SyncTmpDir();
       mkdirSync(tempRoot, { recursive: true, mode: 0o700 });
       const tempDir = mkdtempSync(path.join(tempRoot, "tts-"));
       const audioPath = path.join(tempDir, `voice-${Date.now()}${output.extension}`);
@@ -977,6 +977,4 @@ export const _test = {
   resolveOutputFormat,
   resolveEdgeOutputFormat,
 };
-
-
 

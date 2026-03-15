@@ -49,13 +49,13 @@ export type RunEmbeddedPiAgentParams = {
   senderE164?: string | null;
   /** Whether the sender is an owner (required for owner-only tools). */
   senderIsOwner?: boolean;
-  /** Current channel ID for auto-threading (Slack). */
+  /** Current channel ID for auto-threading. */
   currentChannelId?: string;
-  /** Current thread timestamp for auto-threading (Slack). */
+  /** Current thread identifier for auto-threading. */
   currentThreadTs?: string;
   /** Current inbound message id for action fallbacks (e.g. Telegram react). */
   currentMessageId?: string | number;
-  /** Reply-to mode for Slack auto-threading. */
+  /** Reply-to mode for auto-threading. */
   replyToMode?: "off" | "first" | "all";
   /** Mutable ref to track if a reply was sent (for "first" mode). */
   hasRepliedRef?: { value: boolean };
@@ -125,5 +125,4 @@ export type RunEmbeddedPiAgentParams = {
    */
   allowTransientCooldownProbe?: boolean;
 };
-
 

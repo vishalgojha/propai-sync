@@ -10,7 +10,7 @@
 export type StatusReactionAdapter = {
   /** Set/replace the current reaction emoji. */
   setReaction: (emoji: string) => Promise<void>;
-  /** Remove a specific reaction emoji (optional — needed for Discord-style platforms). */
+  /** Remove a specific reaction emoji (optional — needed for platforms that require explicit removal). */
   removeReaction?: (emoji: string) => Promise<void>;
 };
 
@@ -339,7 +339,7 @@ export function createStatusReactionController(params: {
 
     await enqueue(async () => {
       if (adapter.removeReaction) {
-        // Remove all known emojis (Discord-style)
+        // Remove all known emojis (platforms requiring explicit removal)
         const emojisToRemove = Array.from(knownEmojis);
         for (const emoji of emojisToRemove) {
           try {

@@ -1,5 +1,4 @@
 import { Type } from "@sinclair/typebox";
-import { BLUEBUBBLES_GROUP_ACTIONS } from "../../channels/plugins/bluebubbles-actions.js";
 import { listChannelPlugins } from "../../channels/plugins/index.js";
 import {
   listChannelMessageActions,
@@ -16,7 +15,6 @@ import type { PropAiSyncConfig } from "../../config/config.js";
 import { loadConfig } from "../../config/config.js";
 import { GATEWAY_CLIENT_IDS, GATEWAY_CLIENT_MODES } from "../../gateway/protocol/client-info.js";
 import { getToolResult, runMessageAction } from "../../infra/outbound/message-action-runner.js";
-import { normalizeTargetForProvider } from "../../infra/outbound/target-normalization.js";
 import { POLL_CREATION_PARAM_DEFS, POLL_CREATION_PARAM_NAMES } from "../../poll-params.js";
 import { normalizeAccountId } from "../../routing/session-key.js";
 import { stripReasoningTagsFromText } from "../../shared/text/reasoning-tags.js";
@@ -51,120 +49,9 @@ function buildRoutingSchema() {
   };
 }
 
-const discordComponentEmojiSchema = Type.Object({
-  name: Type.String(),
-  id: Type.Optional(Type.String()),
-  animated: Type.Optional(Type.Boolean()),
-});
-
-const discordComponentOptionSchema = Type.Object({
-  label: Type.String(),
-  value: Type.String(),
-  description: Type.Optional(Type.String()),
-  emoji: Type.Optional(discordComponentEmojiSchema),
-  default: Type.Optional(Type.Boolean()),
-});
-
-const discordComponentButtonSchema = Type.Object({
-  label: Type.String(),
-  style: Type.Optional(stringEnum(["primary", "secondary", "success", "danger", "link"])),
-  url: Type.Optional(Type.String()),
-  emoji: Type.Optional(discordComponentEmojiSchema),
-  disabled: Type.Optional(Type.Boolean()),
-  allowedUsers: Type.Optional(
-    Type.Array(
-      Type.String({
-        description: "Discord user ids or names allowed to interact with this button.",
-      }),
-    ),
-  ),
-});
-
-const discordComponentSelectSchema = Type.Object({
-  type: Type.Optional(stringEnum(["string", "user", "role", "mentionable", "channel"])),
-  placeholder: Type.Optional(Type.String()),
-  minValues: Type.Optional(Type.Number()),
-  maxValues: Type.Optional(Type.Number()),
-  options: Type.Optional(Type.Array(discordComponentOptionSchema)),
-});
-
-const discordComponentBlockSchema = Type.Object({
-  type: Type.String(),
-  text: Type.Optional(Type.String()),
-  texts: Type.Optional(Type.Array(Type.String())),
-  accessory: Type.Optional(
-    Type.Object({
-      type: Type.String(),
-      url: Type.Optional(Type.String()),
-      button: Type.Optional(discordComponentButtonSchema),
-    }),
-  ),
-  spacing: Type.Optional(stringEnum(["small", "large"])),
-  divider: Type.Optional(Type.Boolean()),
-  buttons: Type.Optional(Type.Array(discordComponentButtonSchema)),
-  select: Type.Optional(discordComponentSelectSchema),
-  items: Type.Optional(
-    Type.Array(
-      Type.Object({
-        url: Type.String(),
-        description: Type.Optional(Type.String()),
-        spoiler: Type.Optional(Type.Boolean()),
-      }),
-    ),
-  ),
-  file: Type.Optional(Type.String()),
-  spoiler: Type.Optional(Type.Boolean()),
-});
-
-const discordComponentModalFieldSchema = Type.Object({
-  type: Type.String(),
-  name: Type.Optional(Type.String()),
-  label: Type.String(),
-  description: Type.Optional(Type.String()),
-  placeholder: Type.Optional(Type.String()),
-  required: Type.Optional(Type.Boolean()),
-  options: Type.Optional(Type.Array(discordComponentOptionSchema)),
-  minValues: Type.Optional(Type.Number()),
-  maxValues: Type.Optional(Type.Number()),
-  minLength: Type.Optional(Type.Number()),
-  maxLength: Type.Optional(Type.Number()),
-  style: Type.Optional(stringEnum(["short", "paragraph"])),
-});
-
-const discordComponentModalSchema = Type.Object({
-  title: Type.String(),
-  triggerLabel: Type.Optional(Type.String()),
-  triggerStyle: Type.Optional(stringEnum(["primary", "secondary", "success", "danger", "link"])),
-  fields: Type.Array(discordComponentModalFieldSchema),
-});
-
-const discordComponentMessageSchema = Type.Object(
-  {
-    text: Type.Optional(Type.String()),
-    reusable: Type.Optional(
-      Type.Boolean({
-        description: "Allow components to be used multiple times until they expire.",
-      }),
-    ),
-    container: Type.Optional(
-      Type.Object({
-        accentColor: Type.Optional(Type.String()),
-        spoiler: Type.Optional(Type.Boolean()),
-      }),
-    ),
-    blocks: Type.Optional(Type.Array(discordComponentBlockSchema)),
-    modal: Type.Optional(discordComponentModalSchema),
-  },
-  {
-    description:
-      "Discord components v2 payload. Set reusable=true to keep buttons, selects, and forms active until expiry.",
-  },
-);
-
 function buildSendSchema(options: {
   includeButtons: boolean;
   includeCards: boolean;
-  includeComponents: boolean;
 }) {
   const props: Record<string, unknown> = {
     message: Type.Optional(Type.String()),
@@ -224,16 +111,12 @@ function buildSendSchema(options: {
         },
       ),
     ),
-    components: Type.Optional(discordComponentMessageSchema),
   };
   if (!options.includeButtons) {
     delete props.buttons;
   }
   if (!options.includeCards) {
     delete props.card;
-  }
-  if (!options.includeComponents) {
-    delete props.components;
   }
   return props;
 }
@@ -442,7 +325,6 @@ function buildChannelManagementSchema() {
 function buildMessageToolSchemaProps(options: {
   includeButtons: boolean;
   includeCards: boolean;
-  includeComponents: boolean;
   includeTelegramPollExtras: boolean;
 }) {
   return {
@@ -467,7 +349,6 @@ function buildMessageToolSchemaFromActions(
   options: {
     includeButtons: boolean;
     includeCards: boolean;
-    includeComponents: boolean;
     includeTelegramPollExtras: boolean;
   },
 ) {
@@ -481,7 +362,6 @@ function buildMessageToolSchemaFromActions(
 const MessageToolSchema = buildMessageToolSchemaFromActions(AllMessageActions, {
   includeButtons: true,
   includeCards: true,
-  includeComponents: true,
   includeTelegramPollExtras: true,
 });
 
@@ -532,18 +412,6 @@ function resolveMessageToolSchemaActions(params: {
   return actions.length > 0 ? actions : ["send"];
 }
 
-function resolveIncludeComponents(params: {
-  cfg: PropAiSyncConfig;
-  currentChannelProvider?: string;
-}): boolean {
-  const currentChannel = normalizeMessageChannel(params.currentChannelProvider);
-  if (currentChannel) {
-    return currentChannel === "discord";
-  }
-  // Components are currently Discord-specific.
-  return listChannelSupportedActions({ cfg: params.cfg, channel: "discord" }).length > 0;
-}
-
 function resolveIncludeTelegramPollExtras(params: {
   cfg: PropAiSyncConfig;
   currentChannelProvider?: string;
@@ -567,12 +435,10 @@ function buildMessageToolSchema(params: {
   const includeCards = currentChannel
     ? supportsChannelMessageCardsForChannel({ cfg: params.cfg, channel: currentChannel })
     : supportsChannelMessageCards(params.cfg);
-  const includeComponents = resolveIncludeComponents(params);
   const includeTelegramPollExtras = resolveIncludeTelegramPollExtras(params);
   return buildMessageToolSchemaFromActions(actions.length > 0 ? actions : ["send"], {
     includeButtons,
     includeCards,
-    includeComponents,
     includeTelegramPollExtras,
   });
 }
@@ -590,26 +456,7 @@ function filterActionsForContext(params: {
   channel?: string;
   currentChannelId?: string;
 }): ChannelMessageActionName[] {
-  const channel = normalizeMessageChannel(params.channel);
-  if (!channel || channel !== "bluebubbles") {
-    return params.actions;
-  }
-  const currentChannelId = params.currentChannelId?.trim();
-  if (!currentChannelId) {
-    return params.actions;
-  }
-  const normalizedTarget =
-    normalizeTargetForProvider(channel, currentChannelId) ?? currentChannelId;
-  const lowered = normalizedTarget.trim().toLowerCase();
-  const isGroupTarget =
-    lowered.startsWith("chat_guid:") ||
-    lowered.startsWith("chat_id:") ||
-    lowered.startsWith("chat_identifier:") ||
-    lowered.startsWith("group:");
-  if (isGroupTarget) {
-    return params.actions;
-  }
-  return params.actions.filter((action) => !BLUEBUBBLES_GROUP_ACTIONS.has(action));
+  return params.actions;
 }
 
 function buildMessageToolDescription(options?: {
@@ -790,5 +637,4 @@ export function createMessageTool(options?: MessageToolOptions): AnyAgentTool {
     },
   };
 }
-
 

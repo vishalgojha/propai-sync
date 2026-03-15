@@ -15,9 +15,7 @@ type MarkdownConfigSection = MarkdownConfigEntry & {
 };
 
 export const DEFAULT_TABLE_MODES = new Map<string, MarkdownTableMode>([
-  ["signal", "bullets"],
   ["whatsapp", "bullets"],
-  ["mattermost", "off"],
 ]);
 
 const isMarkdownTableMode = (value: unknown): value is MarkdownTableMode =>
@@ -60,5 +58,4 @@ export function resolveMarkdownTableMode(params: {
     | undefined;
   return resolveMarkdownModeFromSection(section, params.accountId) ?? defaultMode;
 }
-
 

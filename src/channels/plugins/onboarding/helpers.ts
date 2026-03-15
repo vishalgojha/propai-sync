@@ -148,22 +148,6 @@ export async function resolveAccountIdForConfigure(params: {
   return accountId;
 }
 
-export function setAccountAllowFromForChannel(params: {
-  cfg: PropAiSyncConfig;
-  channel: "imessage" | "signal";
-  accountId: string;
-  allowFrom: string[];
-}): PropAiSyncConfig {
-  const { cfg, channel, accountId, allowFrom } = params;
-  return patchConfigForScopedAccount({
-    cfg,
-    channel,
-    accountId,
-    patch: { allowFrom },
-    ensureEnabled: false,
-  });
-}
-
 function patchTopLevelChannelConfig(params: {
   cfg: PropAiSyncConfig;
   channel: string;
@@ -239,7 +223,7 @@ export function setTopLevelChannelGroupPolicy(params: {
 
 export function setChannelDmPolicyWithAllowFrom(params: {
   cfg: PropAiSyncConfig;
-  channel: "imessage" | "signal" | "telegram";
+  channel: "telegram" | "whatsapp";
   dmPolicy: DmPolicy;
 }): PropAiSyncConfig {
   const { cfg, channel, dmPolicy } = params;
@@ -258,85 +242,7 @@ export function setChannelDmPolicyWithAllowFrom(params: {
   };
 }
 
-export function setLegacyChannelDmPolicyWithAllowFrom(params: {
-  cfg: PropAiSyncConfig;
-  channel: LegacyDmChannel;
-  dmPolicy: DmPolicy;
-}): PropAiSyncConfig {
-  const channelConfig = (params.cfg.channels?.[params.channel] as
-    | {
-        allowFrom?: Array<string | number>;
-        dm?: { allowFrom?: Array<string | number> };
-      }
-    | undefined) ?? {
-    allowFrom: undefined,
-    dm: undefined,
-  };
-  const existingAllowFrom = channelConfig.allowFrom ?? channelConfig.dm?.allowFrom;
-  const allowFrom =
-    params.dmPolicy === "open" ? addWildcardAllowFrom(existingAllowFrom) : undefined;
-  return patchLegacyDmChannelConfig({
-    cfg: params.cfg,
-    channel: params.channel,
-    patch: {
-      dmPolicy: params.dmPolicy,
-      ...(allowFrom ? { allowFrom } : {}),
-    },
-  });
-}
-
-export function setLegacyChannelAllowFrom(params: {
-  cfg: PropAiSyncConfig;
-  channel: LegacyDmChannel;
-  allowFrom: string[];
-}): PropAiSyncConfig {
-  return patchLegacyDmChannelConfig({
-    cfg: params.cfg,
-    channel: params.channel,
-    patch: { allowFrom: params.allowFrom },
-  });
-}
-
-export function setAccountGroupPolicyForChannel(params: {
-  cfg: PropAiSyncConfig;
-  channel: "discord" | "slack";
-  accountId: string;
-  groupPolicy: GroupPolicy;
-}): PropAiSyncConfig {
-  return patchChannelConfigForAccount({
-    cfg: params.cfg,
-    channel: params.channel,
-    accountId: params.accountId,
-    patch: { groupPolicy: params.groupPolicy },
-  });
-}
-
-type AccountScopedChannel = "discord" | "slack" | "telegram" | "imessage" | "signal";
-type LegacyDmChannel = "discord" | "slack";
-
-export function patchLegacyDmChannelConfig(params: {
-  cfg: PropAiSyncConfig;
-  channel: LegacyDmChannel;
-  patch: Record<string, unknown>;
-}): PropAiSyncConfig {
-  const { cfg, channel, patch } = params;
-  const channelConfig = (cfg.channels?.[channel] as Record<string, unknown> | undefined) ?? {};
-  const dmConfig = (channelConfig.dm as Record<string, unknown> | undefined) ?? {};
-  return {
-    ...cfg,
-    channels: {
-      ...cfg.channels,
-      [channel]: {
-        ...channelConfig,
-        ...patch,
-        dm: {
-          ...dmConfig,
-          enabled: typeof dmConfig.enabled === "boolean" ? dmConfig.enabled : true,
-        },
-      },
-    },
-  };
-}
+type AccountScopedChannel = "telegram" | "whatsapp";
 
 export function setOnboardingChannelEnabled(
   cfg: PropAiSyncConfig,
@@ -395,7 +301,7 @@ export function patchChannelConfigForAccount(params: {
 
 export function applySingleTokenPromptResult(params: {
   cfg: PropAiSyncConfig;
-  channel: "discord" | "telegram";
+  channel: "telegram";
   accountId: string;
   tokenPatchKey: "token" | "botToken";
   tokenResult: {
@@ -638,55 +544,6 @@ export async function promptSingleChannelSecretInput(params: {
   };
 }
 
-type ParsedAllowFromResult = { entries: string[]; error?: string };
-
-export async function promptParsedAllowFromForScopedChannel(params: {
-  cfg: PropAiSyncConfig;
-  channel: "imessage" | "signal";
-  accountId?: string;
-  defaultAccountId: string;
-  prompter: Pick<WizardPrompter, "note" | "text">;
-  noteTitle: string;
-  noteLines: string[];
-  message: string;
-  placeholder: string;
-  parseEntries: (raw: string) => ParsedAllowFromResult;
-  getExistingAllowFrom: (params: {
-    cfg: PropAiSyncConfig;
-    accountId: string;
-  }) => Array<string | number>;
-}): Promise<PropAiSyncConfig> {
-  const accountId = resolveOnboardingAccountId({
-    accountId: params.accountId,
-    defaultAccountId: params.defaultAccountId,
-  });
-  const existing = params.getExistingAllowFrom({
-    cfg: params.cfg,
-    accountId,
-  });
-  await params.prompter.note(params.noteLines.join("\n"), params.noteTitle);
-  const entry = await params.prompter.text({
-    message: params.message,
-    placeholder: params.placeholder,
-    initialValue: existing[0] ? String(existing[0]) : undefined,
-    validate: (value) => {
-      const raw = String(value ?? "").trim();
-      if (!raw) {
-        return "Required";
-      }
-      return params.parseEntries(raw).error;
-    },
-  });
-  const parsed = params.parseEntries(String(entry));
-  const unique = mergeAllowFromEntries(undefined, parsed.entries);
-  return setAccountAllowFromForChannel({
-    cfg: params.cfg,
-    channel: params.channel,
-    accountId,
-    allowFrom: unique,
-  });
-}
-
 export async function noteChannelLookupSummary(params: {
   prompter: Pick<WizardPrompter, "note">;
   label: string;
@@ -779,7 +636,6 @@ export async function promptResolvedAllowFrom(params: {
 
 export async function promptLegacyChannelAllowFrom(params: {
   cfg: PropAiSyncConfig;
-  channel: LegacyDmChannel;
   prompter: WizardPrompter;
   existing: Array<string | number>;
   token?: string | null;
@@ -790,9 +646,9 @@ export async function promptLegacyChannelAllowFrom(params: {
   parseId: (value: string) => string | null;
   invalidWithoutTokenNote: string;
   resolveEntries: (params: { token: string; entries: string[] }) => Promise<AllowFromResolution[]>;
-}): Promise<PropAiSyncConfig> {
+}): Promise<string[]> {
   await params.prompter.note(params.noteLines.join("\n"), params.noteTitle);
-  const unique = await promptResolvedAllowFrom({
+  return await promptResolvedAllowFrom({
     prompter: params.prompter,
     existing: params.existing,
     token: params.token,
@@ -803,11 +659,6 @@ export async function promptLegacyChannelAllowFrom(params: {
     parseId: params.parseId,
     invalidWithoutTokenNote: params.invalidWithoutTokenNote,
     resolveEntries: params.resolveEntries,
-  });
-  return setLegacyChannelAllowFrom({
-    cfg: params.cfg,
-    channel: params.channel,
-    allowFrom: unique,
   });
 }
 

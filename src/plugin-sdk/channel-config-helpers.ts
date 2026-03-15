@@ -6,7 +6,6 @@ import { buildAccountScopedDmSecurityPolicy } from "../channels/plugins/helpers.
 import { normalizeWhatsAppAllowFromEntries } from "../channels/plugins/normalize/whatsapp.js";
 import type { ChannelConfigAdapter } from "../channels/plugins/types.adapters.js";
 import type { PropAiSyncConfig } from "../config/config.js";
-import { resolveIMessageAccount } from "../imessage/accounts.js";
 import { normalizeAccountId } from "../routing/session-key.js";
 import { normalizeStringEntries } from "../shared/string-normalization.js";
 import { resolveWhatsAppAccount } from "../web/accounts.js";
@@ -164,19 +163,4 @@ export function resolveWhatsAppConfigDefaultTo(params: {
   const account = root?.accounts?.[normalized];
   return (account?.defaultTo ?? root?.defaultTo)?.trim() || undefined;
 }
-
-export function resolveIMessageConfigAllowFrom(params: {
-  cfg: PropAiSyncConfig;
-  accountId?: string | null;
-}): string[] {
-  return mapAllowFromEntries(resolveIMessageAccount(params).config.allowFrom);
-}
-
-export function resolveIMessageConfigDefaultTo(params: {
-  cfg: PropAiSyncConfig;
-  accountId?: string | null;
-}): string | undefined {
-  return resolveOptionalConfigString(resolveIMessageAccount(params).config.defaultTo);
-}
-
 

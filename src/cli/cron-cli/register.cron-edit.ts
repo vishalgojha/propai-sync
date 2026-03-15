@@ -60,7 +60,7 @@ export function registerCronEditCommand(cron: Command) {
       .option("--channel <channel>", `Delivery channel (${getCronChannelOptions()})`)
       .option(
         "--to <dest>",
-        "Delivery destination (E.164, Telegram chatId, or Discord channel/user)",
+        "Delivery destination (E.164 or Telegram chatId)",
       )
       .option("--account <id>", "Channel account id for delivery (multi-account setups)")
       .option("--best-effort-deliver", "Do not fail job if delivery fails")

@@ -16,10 +16,10 @@ describe("safe regex", () => {
   });
 
   it("compiles common safe filter regex", () => {
-    const re = compileSafeRegex("^agent:.*:discord:");
+    const re = compileSafeRegex("^agent:.*:telegram:");
     expect(re).toBeInstanceOf(RegExp);
-    expect(re?.test("agent:main:discord:channel:123")).toBe(true);
-    expect(re?.test("agent:main:telegram:channel:123")).toBe(false);
+    expect(re?.test("agent:main:telegram:channel:123")).toBe(true);
+    expect(re?.test("agent:main:whatsapp:channel:123")).toBe(false);
   });
 
   it("supports explicit flags", () => {
@@ -30,12 +30,15 @@ describe("safe regex", () => {
 
   it("checks bounded regex windows for long inputs", () => {
     expect(
-      testRegexWithBoundedInput(/^agent:main:discord:/, `agent:main:discord:${"x".repeat(5000)}`),
+      testRegexWithBoundedInput(
+        /^agent:main:telegram:/,
+        `agent:main:telegram:${"x".repeat(5000)}`,
+      ),
     ).toBe(true);
-    expect(testRegexWithBoundedInput(/discord:tail$/, `${"x".repeat(5000)}discord:tail`)).toBe(
+    expect(testRegexWithBoundedInput(/telegram:tail$/, `${"x".repeat(5000)}telegram:tail`)).toBe(
       true,
     );
-    expect(testRegexWithBoundedInput(/discord:tail$/, `${"x".repeat(5000)}telegram:tail`)).toBe(
+    expect(testRegexWithBoundedInput(/telegram:tail$/, `${"x".repeat(5000)}whatsapp:tail`)).toBe(
       false,
     );
   });
