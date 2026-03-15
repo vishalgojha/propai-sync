@@ -25,5 +25,5 @@ export const ChannelsSchema = z
     whatsapp: WhatsAppConfigSchema.optional(),
     telegram: TelegramConfigSchema.optional(),
   })
-  .passthrough() // Allow extension channel configs (nostr, matrix, zalo, etc.)
+  .passthrough() // Allow extension channel configs (custom extensions).
   .optional();

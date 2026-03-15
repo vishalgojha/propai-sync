@@ -228,7 +228,7 @@ export type ChannelGatewayContext<ResolvedAccount = unknown> = {
    * ## Backward Compatibility
    *
    * - This field is **optional** - channels that don't need it can ignore it
-   * - Built-in channels (slack, discord, etc.) typically don't use this field
+   * - Built-in channels (whatsapp, telegram) typically don't use this field
    *   because they can directly import internal modules
    * - External plugins should check for undefined before using
    *
