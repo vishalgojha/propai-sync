@@ -5,7 +5,7 @@ function Write-Step([string]$Message) {
   Write-Host ("[propai-desktop] " + $Message)
 }
 
-$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")
 $installer = Join-Path $repoRoot "apps\tauri\src-tauri\target\release\bundle\nsis\PROPAI_0.1.0_x64-setup.exe"
 
 Write-Step ("Repo root: " + $repoRoot)
