@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const TAURI_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_ROOT = path.resolve(TAURI_DIR, "../..");
 const SRC_TAURI_DIR = path.resolve(TAURI_DIR, "src-tauri");
+const TAURI_CONFIG_PATH = path.resolve(SRC_TAURI_DIR, "tauri.conf.json");
 
 function fail(message) {
   process.stderr.write(`[propai-desktop] ${message}\n`);
@@ -105,6 +106,38 @@ function exists(p) {
   } catch {
     return false;
   }
+}
+
+function normalizeUpdaterArtifacts() {
+  let raw = "";
+  try {
+    raw = fs.readFileSync(TAURI_CONFIG_PATH, "utf8");
+  } catch {
+    fail(`Unable to read ${TAURI_CONFIG_PATH}`);
+  }
+
+  let config = null;
+  try {
+    config = JSON.parse(raw);
+  } catch {
+    fail(`Unable to parse ${TAURI_CONFIG_PATH}`);
+  }
+
+  const hasSigningKey = Boolean(process.env.TAURI_SIGNING_PRIVATE_KEY?.trim());
+  const desired = hasSigningKey;
+  const bundle = typeof config.bundle === "object" && config.bundle ? config.bundle : {};
+  const current = bundle.createUpdaterArtifacts ?? false;
+
+  if (current === desired) {
+    return;
+  }
+
+  bundle.createUpdaterArtifacts = desired;
+  config.bundle = bundle;
+  fs.writeFileSync(TAURI_CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`);
+  process.stdout.write(
+    `[propai-desktop] updater artifacts ${desired ? "enabled" : "disabled"} (${hasSigningKey ? "TAURI_SIGNING_PRIVATE_KEY set" : "TAURI_SIGNING_PRIVATE_KEY missing"})\n`,
+  );
 }
 
 function ensureWindowsNsisTools() {
@@ -224,6 +257,7 @@ function ensureWindowsNsisTools() {
 }
 
 function main() {
+  normalizeUpdaterArtifacts();
   ensureWindowsNsisTools();
   run(process.execPath, [path.resolve(TAURI_DIR, "scripts/prepare-bundle.mjs")], { cwd: TAURI_DIR });
 }
