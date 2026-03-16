@@ -29,3 +29,13 @@ Environment:
 ```bash
 pnpm --dir services/licensing create-license -- --plan pro --max-devices 2
 ```
+
+## Issue a token via API (automation)
+
+Use the admin API to mint a token without touching the DB directly:
+
+```bash
+LICENSE_ADMIN_KEY=... pnpm --dir services/licensing issue-license -- --plan pro --max-devices 2
+```
+
+This posts to `POST /v1/admin/licenses` and prints the issued token.

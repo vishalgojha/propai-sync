@@ -34,6 +34,16 @@ Notes:
 - The build pipeline automatically runs the root `pnpm build` and UI build to stage a self-contained runtime.
 - If you only changed UI or backend code, you still just run `pnpm desktop:build`.
 
+## Custom icon
+
+From repo root:
+
+```bash
+pnpm --dir apps/tauri icon -- -i path/to/icon.png
+```
+
+This writes updated icons into `apps/tauri/src-tauri/icons/`. Commit those files after updating.
+
 ### Windows notes
 
 - Run `pnpm desktop:build` from Windows (PowerShell/CMD), not from WSL.

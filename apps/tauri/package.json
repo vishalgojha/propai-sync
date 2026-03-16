@@ -6,6 +6,7 @@
     "dev": "node scripts/run-tauri.mjs dev",
     "build": "node scripts/run-tauri.mjs build",
     "build:verbose": "node scripts/run-tauri.mjs build --verbose",
+    "icon": "node scripts/run-tauri.mjs icon",
     "prepare-bundle": "node scripts/prepare-bundle.mjs"
   },
   "dependencies": {
