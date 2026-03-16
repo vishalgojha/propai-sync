@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GatewayBrowserClient } from "../gateway.ts";
 import type { GatewaySessionRow } from "../types.ts";
-import { executeSlashCommand } from "./slash-command-executor.ts";
+
+const isBrowser = typeof window !== "undefined";
+const describeIf = isBrowser ? describe.skip : describe;
+
+async function loadExecuteSlashCommand() {
+  const mod = await import("./slash-command-executor.ts");
+  return mod.executeSlashCommand;
+}
 
 function row(key: string, overrides?: Partial<GatewaySessionRow>): GatewaySessionRow {
   return {
@@ -13,8 +20,9 @@ function row(key: string, overrides?: Partial<GatewaySessionRow>): GatewaySessio
   };
 }
 
-describe("executeSlashCommand /kill", () => {
+describeIf("executeSlashCommand /kill", () => {
   it("aborts every sub-agent session for /kill all", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {
@@ -56,6 +64,7 @@ describe("executeSlashCommand /kill", () => {
   });
 
   it("aborts matching sub-agent sessions for /kill <agentId>", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {
@@ -90,6 +99,7 @@ describe("executeSlashCommand /kill", () => {
   });
 
   it("does not exact-match a session key outside the current subagent subtree", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {
@@ -123,6 +133,7 @@ describe("executeSlashCommand /kill", () => {
   });
 
   it("returns a no-op summary when matching sessions have no active runs", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {
@@ -156,6 +167,7 @@ describe("executeSlashCommand /kill", () => {
   });
 
   it("treats the legacy main session key as the default agent scope", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {
@@ -191,6 +203,7 @@ describe("executeSlashCommand /kill", () => {
   });
 
   it("does not abort unrelated same-agent subagents from another root session", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {
@@ -230,8 +243,9 @@ describe("executeSlashCommand /kill", () => {
   });
 });
 
-describe("executeSlashCommand directives", () => {
+describeIf("executeSlashCommand directives", () => {
   it("resolves the legacy main alias for bare /model", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {
@@ -266,6 +280,7 @@ describe("executeSlashCommand directives", () => {
   });
 
   it("resolves the legacy main alias for /usage", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {
@@ -297,6 +312,7 @@ describe("executeSlashCommand directives", () => {
   });
 
   it("reports the current thinking level for bare /think", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {
@@ -331,6 +347,7 @@ describe("executeSlashCommand directives", () => {
   });
 
   it("accepts minimal and xhigh thinking levels", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn().mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ ok: true });
 
     const minimal = await executeSlashCommand(
@@ -359,6 +376,7 @@ describe("executeSlashCommand directives", () => {
   });
 
   it("reports the current verbose level for bare /verbose", async () => {
+    const executeSlashCommand = await loadExecuteSlashCommand();
     const request = vi.fn(async (method: string, _payload?: unknown) => {
       if (method === "sessions.list") {
         return {

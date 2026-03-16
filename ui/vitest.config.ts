@@ -10,6 +10,8 @@ export default defineConfig({
       instances: [{ browser: "chromium", name: "chromium" }],
       headless: true,
       ui: false,
+      include: ["src/**/*.browser.test.ts"],
+      exclude: ["src/**/*.node.test.ts"],
     },
   },
 });

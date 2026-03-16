@@ -161,9 +161,6 @@ export async function handleSubagentsFocusAction(
     );
   }
 
-  const actionText =
-    bindingContext.placement === "child"
-      ? `created thread ${binding.conversation.conversationId} and bound it to ${binding.targetSessionKey}`
-      : `bound this ${bindingContext.labelNoun} to ${binding.targetSessionKey}`;
+  const actionText = `bound this ${bindingContext.labelNoun} to ${binding.targetSessionKey}`;
   return stopWithText(`✅ ${actionText} (${focusTarget.targetKind}).`);
 }

@@ -99,6 +99,12 @@ export function applyConfigSnapshot(state: ConfigState, snapshot: ConfigSnapshot
     state.configFormOriginal = cloneConfigObject(snapshot.config ?? {});
     state.configRawOriginal = rawFromSnapshot;
   }
+
+  const handler = (state as { onConfigSnapshotApplied?: (snapshot: ConfigSnapshot) => void })
+    .onConfigSnapshotApplied;
+  if (typeof handler === "function") {
+    handler(snapshot);
+  }
 }
 
 function asJsonSchema(value: unknown): JsonSchema | null {

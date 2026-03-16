@@ -41,7 +41,7 @@ describe("TAB_GROUPS", () => {
   });
 
   it("does not expose unfinished settings slices in the sidebar", () => {
-    const settings = navigation.TAB_GROUPS.find((group) => group.label === "settings");
+    const settings = navigation.TAB_GROUPS.find((group) => group.label === "Settings");
     expect(settings?.tabs).toEqual(["config", "debug", "logs"]);
   });
 

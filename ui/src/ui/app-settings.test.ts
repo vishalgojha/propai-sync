@@ -121,10 +121,6 @@ describe("setTabFromRoute", () => {
     vi.resetModules();
     vi.stubGlobal("localStorage", createStorageMock());
     vi.stubGlobal("navigator", { language: "en-US" } as Navigator);
-    vi.stubGlobal("window", {
-      setInterval,
-      clearInterval,
-    } as unknown as Window & typeof globalThis);
   });
 
   afterEach(() => {
@@ -199,11 +195,6 @@ describe("setTabFromRoute", () => {
       removeEventListener: vi.fn(),
     });
     vi.stubGlobal("matchMedia", matchMedia);
-    vi.stubGlobal("window", {
-      setInterval,
-      clearInterval,
-      matchMedia,
-    } as unknown as Window & typeof globalThis);
 
     const host = createHost("chat");
     host.theme = "knot" as unknown as ThemeName & ThemeMode;
@@ -219,11 +210,9 @@ describe("setTabFromRoute", () => {
 
   it("normalizes light family themes to the shared light CSS token", async () => {
     appSettings ??= await import("./app-settings.ts");
-    const root = {
-      dataset: {} as DOMStringMap,
-      style: { colorScheme: "" } as CSSStyleDeclaration & { colorScheme: string },
-    };
-    vi.stubGlobal("document", { documentElement: root } as Document);
+    const root = document.documentElement;
+    const priorTheme = root.dataset.theme;
+    const priorColorScheme = root.style.colorScheme;
 
     const host = createHost("chat");
     appSettings.applyResolvedTheme(host, "dash-light");
@@ -231,5 +220,12 @@ describe("setTabFromRoute", () => {
     expect(host.themeResolved).toBe("dash-light");
     expect(root.dataset.theme).toBe("light");
     expect(root.style.colorScheme).toBe("light");
+
+    if (priorTheme === undefined) {
+      delete root.dataset.theme;
+    } else {
+      root.dataset.theme = priorTheme;
+    }
+    root.style.colorScheme = priorColorScheme;
   });
 });

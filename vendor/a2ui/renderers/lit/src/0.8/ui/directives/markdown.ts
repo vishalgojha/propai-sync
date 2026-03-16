@@ -23,7 +23,7 @@ import {
 } from "lit/directive.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import MarkdownIt from "markdown-it";
-import type { Options, RenderRule, Renderer, Token } from "markdown-it";
+import type { Options } from "markdown-it";
 import * as Sanitizer from "./sanitizer.js";
 
 class MarkdownDirective extends Directive {
@@ -59,7 +59,7 @@ class MarkdownDirective extends Directive {
     return this.render(value, tagClassMap);
   }
 
-  #originalClassMap = new Map<string, RenderRule | undefined>();
+  #originalClassMap = new Map<string, unknown>();
   #applyTagClassMap(tagClassMap: Record<string, string[]>) {
     Object.entries(tagClassMap).forEach(([tag]) => {
       let tokenName;
@@ -100,14 +100,14 @@ class MarkdownDirective extends Directive {
       }
 
       const key = `${tokenName}_open`;
-      this.#markdownIt.renderer.rules[key] = (
-        tokens: Token[],
+      const rule = (
+        tokens: unknown[],
         idx: number,
         options: Options,
         _env: unknown,
-        self: Renderer,
+        self: { renderToken: (tokens: unknown[], idx: number, options: Options) => string },
       ) => {
-        const token = tokens[idx];
+        const token = tokens[idx] as { tag: string; attrJoin: (name: string, value: string) => void };
         const tokenClasses = tagClassMap[token.tag] ?? [];
         for (const clazz of tokenClasses) {
           token.attrJoin("class", clazz);
@@ -115,6 +115,7 @@ class MarkdownDirective extends Directive {
 
         return self.renderToken(tokens, idx, options);
       };
+      this.#markdownIt.renderer.rules[key] = rule as any;
     });
   }
 

@@ -1,4 +1,8 @@
 type InvokeFn = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
+type ListenFn = <T>(
+  event: string,
+  handler: (event: { payload: T }) => void,
+) => Promise<() => void>;
 
 function hasTauriGlobals(): boolean {
   if (typeof window === "undefined") {
@@ -20,3 +24,13 @@ export async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>
   return await mod.invoke<T>(cmd, args);
 }
 
+export async function tauriListen<T>(
+  event: string,
+  handler: (event: { payload: T }) => void,
+): Promise<() => void> {
+  const mod = (await import("@tauri-apps/api/event")) as { listen?: ListenFn };
+  if (typeof mod.listen !== "function") {
+    throw new Error("Tauri listen is unavailable");
+  }
+  return await mod.listen<T>(event, handler);
+}
