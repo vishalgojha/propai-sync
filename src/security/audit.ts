@@ -679,7 +679,7 @@ function collectBrowserControlFindings(
       severity: "warn",
       title: "Browser control config looks invalid",
       detail: String(err),
-      remediation: `Fix browser.cdpUrl in ${resolveConfigPath()} and re-run "${formatCliCommand("PropAi Sync security audit --deep")}".`,
+      remediation: `Fix browser.cdpUrl in ${resolveConfigPath()} and re-run "${formatCliCommand("propai security audit --deep")}".`,
     });
     return findings;
   }
@@ -1184,7 +1184,7 @@ export async function runSecurityAudit(opts: SecurityAuditOptions): Promise<Secu
       severity: "warn",
       title: "Gateway probe failed (deep)",
       detail: deep.gateway.error ?? "gateway unreachable",
-      remediation: `Run "${formatCliCommand("PropAi Sync status --all")}" to debug connectivity/auth, then re-run "${formatCliCommand("PropAi Sync security audit --deep")}".`,
+      remediation: `Run "${formatCliCommand("propai status --all")}" to debug connectivity/auth, then re-run "${formatCliCommand("propai security audit --deep")}".`,
     });
   }
   if (deepProbeResult?.authWarning) {
@@ -1193,11 +1193,12 @@ export async function runSecurityAudit(opts: SecurityAuditOptions): Promise<Secu
       severity: "warn",
       title: "Gateway probe auth SecretRef is unavailable",
       detail: deepProbeResult.authWarning,
-      remediation: `Set PROPAI_GATEWAY_TOKEN/PROPAI_GATEWAY_PASSWORD in this shell or resolve the external secret provider, then re-run "${formatCliCommand("PropAi Sync security audit --deep")}".`,
+      remediation: `Set PROPAI_GATEWAY_TOKEN/PROPAI_GATEWAY_PASSWORD in this shell or resolve the external secret provider, then re-run "${formatCliCommand("propai security audit --deep")}".`,
     });
   }
 
   const summary = countBySeverity(findings);
   return { ts: Date.now(), summary, findings, deep };
 }
+
 

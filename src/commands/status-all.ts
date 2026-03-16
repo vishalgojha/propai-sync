@@ -304,7 +304,7 @@ export async function statusAllCommand(
       ...(probeAuthResolution.warning
         ? [{ Item: "Gateway auth warning", Value: probeAuthResolution.warning }]
         : []),
-      { Item: "Security", Value: `Run: ${formatCliCommand("PropAi Sync security audit --deep")}` },
+      { Item: "Security", Value: `Run: ${formatCliCommand("propai security audit --deep")}` },
       gatewaySelfLine
         ? { Item: "Gateway self", Value: gatewaySelfLine }
         : { Item: "Gateway self", Value: "unknown" },
@@ -363,6 +363,7 @@ export async function statusAllCommand(
     progress.tick();
   });
 }
+
 
 
 

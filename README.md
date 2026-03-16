@@ -12,6 +12,7 @@ PropAi Sync is a personal AI assistant you run on your own devices. It answers y
 Website · Docs · Getting Started · Updating · FAQ
 
 Preferred setup: run the onboarding wizard (`propai onboard`) in your terminal. The wizard guides you step by step through setting up the gateway, workspace, channels, and skills. The CLI wizard works on **macOS, Linux, and Windows (via WSL2)**. Works with npm, pnpm, or bun.
+CLI command: `propai` (product name: PropAi Sync).
 
 ## Install (recommended)
 

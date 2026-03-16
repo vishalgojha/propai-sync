@@ -58,7 +58,7 @@ export async function onboardCommand(opts: OnboardOptions, runtime: RuntimeEnv =
       [
         "Non-interactive onboarding requires explicit risk acknowledgement.",
         "Read: https://docs.propai.ai/security",
-        `Re-run with: ${formatCliCommand("PropAi Sync onboard --non-interactive --accept-risk ...")}`,
+        `Re-run with: ${formatCliCommand("propai onboard --non-interactive --accept-risk ...")}`,
       ].join("\n"),
     );
     runtime.exit(1);
@@ -94,5 +94,6 @@ export async function onboardCommand(opts: OnboardOptions, runtime: RuntimeEnv =
 }
 
 export type { OnboardOptions } from "./onboard-types.js";
+
 
 

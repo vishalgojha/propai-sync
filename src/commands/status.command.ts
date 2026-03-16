@@ -462,12 +462,12 @@ export async function statusCommand(
     if (pairingRecovery.requestId) {
       runtime.log(
         theme.muted(
-          `Recovery: ${formatCliCommand(`PropAi Sync devices approve ${pairingRecovery.requestId}`)}`,
+          `Recovery: ${formatCliCommand(`propai devices approve ${pairingRecovery.requestId}`)}`,
         ),
       );
     }
-    runtime.log(theme.muted(`Fallback: ${formatCliCommand("PropAi Sync devices approve --latest")}`));
-    runtime.log(theme.muted(`Inspect: ${formatCliCommand("PropAi Sync devices list")}`));
+    runtime.log(theme.muted(`Fallback: ${formatCliCommand("propai devices approve --latest")}`));
+    runtime.log(theme.muted(`Inspect: ${formatCliCommand("propai devices list")}`));
   }
 
   runtime.log("");
@@ -513,8 +513,8 @@ export async function statusCommand(
       runtime.log(theme.muted(`… +${sorted.length - shown.length} more`));
     }
   }
-  runtime.log(theme.muted(`Full report: ${formatCliCommand("PropAi Sync security audit")}`));
-  runtime.log(theme.muted(`Deep probe: ${formatCliCommand("PropAi Sync security audit --deep")}`));
+  runtime.log(theme.muted(`Full report: ${formatCliCommand("propai security audit")}`));
+  runtime.log(theme.muted(`Deep probe: ${formatCliCommand("propai security audit --deep")}`));
 
   runtime.log("");
   runtime.log(theme.heading("Channels"));
@@ -675,14 +675,15 @@ export async function statusCommand(
     runtime.log("");
   }
   runtime.log("Next steps:");
-  runtime.log(`  Need to share?      ${formatCliCommand("PropAi Sync status --all")}`);
-  runtime.log(`  Need to debug live? ${formatCliCommand("PropAi Sync logs --follow")}`);
+  runtime.log(`  Need to share?      ${formatCliCommand("propai status --all")}`);
+  runtime.log(`  Need to debug live? ${formatCliCommand("propai logs --follow")}`);
   if (gatewayReachable) {
-    runtime.log(`  Need to test channels? ${formatCliCommand("PropAi Sync status --deep")}`);
+    runtime.log(`  Need to test channels? ${formatCliCommand("propai status --deep")}`);
   } else {
-    runtime.log(`  Fix reachability first: ${formatCliCommand("PropAi Sync gateway probe")}`);
+    runtime.log(`  Fix reachability first: ${formatCliCommand("propai gateway probe")}`);
   }
 }
+
 
 
 

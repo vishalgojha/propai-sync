@@ -111,19 +111,42 @@ export function applyCliProfileEnv(params: {
 
   // Convenience only: fill defaults, never override explicit env values.
   env.propai_PROFILE = profile;
+  env.PROPAI_PROFILE = profile;
 
-  const stateDir = env.propai_STATE_DIR?.trim() || resolveProfileStateDir(profile, env, homedir);
+  const stateDir =
+    env.propai_STATE_DIR?.trim() ||
+    env.PROPAI_STATE_DIR?.trim() ||
+    resolveProfileStateDir(profile, env, homedir);
   if (!env.propai_STATE_DIR?.trim()) {
     env.propai_STATE_DIR = stateDir;
   }
-
-  if (!env.propai_CONFIG_PATH?.trim()) {
-    env.propai_CONFIG_PATH = path.join(stateDir, "propai.json");
+  if (!env.PROPAI_STATE_DIR?.trim()) {
+    env.PROPAI_STATE_DIR = stateDir;
   }
 
-  if (profile === "dev" && !env.propai_GATEWAY_PORT?.trim()) {
-    env.propai_GATEWAY_PORT = "19001";
+  const configPath =
+    env.propai_CONFIG_PATH?.trim() ||
+    env.PROPAI_CONFIG_PATH?.trim() ||
+    path.join(stateDir, "propai.json");
+  if (!env.propai_CONFIG_PATH?.trim()) {
+    env.propai_CONFIG_PATH = configPath;
+  }
+  if (!env.PROPAI_CONFIG_PATH?.trim()) {
+    env.PROPAI_CONFIG_PATH = configPath;
+  }
+
+  if (profile === "dev") {
+    const gatewayPort = env.propai_GATEWAY_PORT?.trim() || env.PROPAI_GATEWAY_PORT?.trim();
+    if (!gatewayPort) {
+      env.propai_GATEWAY_PORT = "19001";
+      env.PROPAI_GATEWAY_PORT = "19001";
+    } else {
+      if (!env.propai_GATEWAY_PORT?.trim()) {
+        env.propai_GATEWAY_PORT = gatewayPort;
+      }
+      if (!env.PROPAI_GATEWAY_PORT?.trim()) {
+        env.PROPAI_GATEWAY_PORT = gatewayPort;
+      }
+    }
   }
 }
-
-

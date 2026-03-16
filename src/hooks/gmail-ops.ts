@@ -265,7 +265,7 @@ export async function runGmailSetup(opts: GmailSetupOptions) {
   defaultRuntime.log(`- push endpoint: ${pushEndpoint}`);
   defaultRuntime.log(`- hook url: ${hookUrl}`);
   defaultRuntime.log(`- config: ${displayPath(CONFIG_PATH)}`);
-  defaultRuntime.log(`Next: ${formatCliCommand("PropAi Sync webhooks gmail run")}`);
+  defaultRuntime.log(`Next: ${formatCliCommand("propai webhooks gmail run")}`);
 }
 
 export async function runGmailService(opts: GmailRunOptions) {
@@ -371,5 +371,6 @@ async function startGmailWatch(
     defaultRuntime.error(message);
   }
 }
+
 
 

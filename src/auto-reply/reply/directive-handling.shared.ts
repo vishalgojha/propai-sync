@@ -75,9 +75,10 @@ export function formatElevatedUnavailableText(params: {
   }
   if (params.sessionKey) {
     lines.push(
-      `See: ${formatCliCommand(`PropAi Sync sandbox explain --session ${params.sessionKey}`)}`,
+      `See: ${formatCliCommand(`propai sandbox explain --session ${params.sessionKey}`)}`,
     );
   }
   return lines.join("\n");
 }
+
 

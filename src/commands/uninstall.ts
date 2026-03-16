@@ -94,7 +94,7 @@ async function removeMacApp(runtime: RuntimeEnv, dryRun?: boolean) {
 }
 
 function logBackupRecommendation(runtime: RuntimeEnv) {
-  runtime.log(`Recommended first: ${formatCliCommand("PropAi Sync backup create")}`);
+  runtime.log(`Recommended first: ${formatCliCommand("propai backup create")}`);
 }
 
 export async function uninstallCommand(runtime: RuntimeEnv, opts: UninstallOptions) {
@@ -197,6 +197,7 @@ export async function uninstallCommand(runtime: RuntimeEnv, opts: UninstallOptio
     }
   }
 }
+
 
 
 

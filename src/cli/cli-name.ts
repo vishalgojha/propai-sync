@@ -2,7 +2,7 @@ import path from "node:path";
 
 export const DEFAULT_CLI_NAME = "propai";
 
-const KNOWN_CLI_NAMES = new Set([DEFAULT_CLI_NAME, "PropAi Sync", "PropAiSync"]);
+const KNOWN_CLI_NAMES = new Set([DEFAULT_CLI_NAME]);
 const CLI_PREFIX_RE = /^(?:((?:pnpm|npm|bunx|npx)\s+))?(propai|PropAi Sync|PropAiSync)\b/;
 
 export function resolveCliName(argv: string[] = process.argv): string {
@@ -28,4 +28,3 @@ export function replaceCliName(command: string, cliName = resolveCliName()): str
     return `${runner ?? ""}${cliName}`;
   });
 }
-

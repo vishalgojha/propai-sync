@@ -479,13 +479,13 @@ async function readContainerConfigHash(containerName: string): Promise<string | 
 
 function formatSandboxRecreateHint(params: { scope: SandboxConfig["scope"]; sessionKey: string }) {
   if (params.scope === "session") {
-    return formatCliCommand(`PropAi Sync sandbox recreate --session ${params.sessionKey}`);
+    return formatCliCommand(`propai sandbox recreate --session ${params.sessionKey}`);
   }
   if (params.scope === "agent") {
     const agentId = resolveSandboxAgentId(params.sessionKey) ?? "main";
-    return formatCliCommand(`PropAi Sync sandbox recreate --agent ${agentId}`);
+    return formatCliCommand(`propai sandbox recreate --agent ${agentId}`);
   }
-  return formatCliCommand("PropAi Sync sandbox recreate --all");
+  return formatCliCommand("propai sandbox recreate --all");
 }
 
 export async function ensureSandboxContainer(params: {
@@ -564,6 +564,7 @@ export async function ensureSandboxContainer(params: {
   });
   return containerName;
 }
+
 
 
 

@@ -50,13 +50,13 @@ function collectImplicitHeartbeatDirectPolicyWarnings(cfg: PropAiSyncConfig): st
 
 export async function noteSecurityWarnings(cfg: PropAiSyncConfig) {
   const warnings: string[] = [];
-  const auditHint = `- Run: ${formatCliCommand("PropAi Sync security audit --deep")}`;
+  const auditHint = `- Run: ${formatCliCommand("propai security audit --deep")}`;
 
   if (cfg.approvals?.exec?.enabled === false) {
     warnings.push(
       "- Note: approvals.exec.enabled=false disables approval forwarding only.",
       "  Host exec gating still comes from ~/.propai/exec-approvals.json.",
-      `  Check local policy with: ${formatCliCommand("PropAi Sync approvals get --gateway")}`,
+      `  Check local policy with: ${formatCliCommand("propai approvals get --gateway")}`,
     );
   }
 
@@ -107,11 +107,11 @@ export async function noteSecurityWarnings(cfg: PropAiSyncConfig) {
       const authFixLines =
         resolvedAuth.mode === "password"
           ? [
-              `  Fix: ${formatCliCommand("PropAi Sync configure")} to set a password`,
-              `  Or switch to token: ${formatCliCommand("PropAi Sync config set gateway.auth.mode token")}`,
+              `  Fix: ${formatCliCommand("propai configure")} to set a password`,
+              `  Or switch to token: ${formatCliCommand("propai config set gateway.auth.mode token")}`,
             ]
           : [
-              `  Fix: ${formatCliCommand("PropAi Sync doctor --fix")} to generate a token`,
+              `  Fix: ${formatCliCommand("propai doctor --fix")} to generate a token`,
               `  Or set token directly: ${formatCliCommand(
                 "PropAi Sync config set gateway.auth.mode token",
               )}`,
@@ -119,7 +119,7 @@ export async function noteSecurityWarnings(cfg: PropAiSyncConfig) {
       warnings.push(
         `- CRITICAL: Gateway bound to ${bindDescriptor} without authentication.`,
         `  Anyone on your network (or internet if port-forwarded) can fully control your agent.`,
-        `  Fix: ${formatCliCommand("PropAi Sync config set gateway.bind loopback")}`,
+        `  Fix: ${formatCliCommand("propai config set gateway.bind loopback")}`,
         ...saferRemoteAccessLines,
         ...authFixLines,
       );
@@ -179,7 +179,7 @@ export async function noteSecurityWarnings(cfg: PropAiSyncConfig) {
     if (dmScope === "main" && isMultiUserDm) {
       warnings.push(
         `- ${params.label} DMs: multiple senders share the main session; run: ` +
-          formatCliCommand('PropAi Sync config set session.dmScope "per-channel-peer"') +
+          formatCliCommand('propai config set session.dmScope "per-channel-peer"') +
           ' (or "per-account-channel-peer" for multi-account channels) to isolate sessions.',
       );
     }
@@ -231,6 +231,7 @@ export async function noteSecurityWarnings(cfg: PropAiSyncConfig) {
   lines.push(auditHint);
   note(lines.join("\n"), "Security");
 }
+
 
 
 

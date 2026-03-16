@@ -15,8 +15,8 @@ export function resolveChannelDefaultAccountId<ResolvedAccount>(params: {
 }
 
 export function formatPairingApproveHint(channelId: string): string {
-  const listCmd = formatCliCommand(`PropAi Sync pairing list ${channelId}`);
-  const approveCmd = formatCliCommand(`PropAi Sync pairing approve ${channelId} <code>`);
+  const listCmd = formatCliCommand(`propai pairing list ${channelId}`);
+  const approveCmd = formatCliCommand(`propai pairing approve ${channelId} <code>`);
   return `Approve via: ${listCmd} / ${approveCmd}`;
 }
 
@@ -56,5 +56,6 @@ export function buildAccountScopedDmSecurityPolicy(params: {
     normalizeEntry: params.normalizeEntry,
   };
 }
+
 
 

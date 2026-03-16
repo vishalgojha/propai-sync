@@ -315,7 +315,7 @@ export async function resolveApiKeyForProvider(params: {
     [
       `No API key found for provider "${provider}".`,
       `Auth store: ${authStorePath} (agentDir: ${resolvedAgentDir}).`,
-      `Configure auth for this agent (${formatCliCommand("PropAi Sync agents add <id>")}) or copy auth-profiles.json from the main agentDir.`,
+      `Configure auth for this agent (${formatCliCommand("propai agents add <id>")}) or copy auth-profiles.json from the main agentDir.`,
     ].join(" "),
   );
 }
@@ -439,5 +439,6 @@ export function requireApiKey(auth: ResolvedProviderAuth, provider: string): str
   }
   throw new Error(`No API key resolved for provider "${provider}" (auth mode: ${auth.mode}).`);
 }
+
 
 

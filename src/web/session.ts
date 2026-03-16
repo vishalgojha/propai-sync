@@ -136,7 +136,7 @@ export async function createWaSocket(
           if (status === DisconnectReason.loggedOut) {
             console.error(
               danger(
-                `WhatsApp session logged out. Run: ${formatCliCommand("PropAi Sync channels login")}`,
+                `WhatsApp session logged out. Run: ${formatCliCommand("propai channels login")}`,
               ),
             );
           }
@@ -310,4 +310,5 @@ export function formatError(err: unknown): string {
 export function newConnectionId() {
   return randomUUID();
 }
+
 

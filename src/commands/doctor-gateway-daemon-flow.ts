@@ -251,7 +251,7 @@ export async function maybeRepairGatewayDaemon(params: {
   if (process.platform === "darwin") {
     const label = resolveGatewayLaunchAgentLabel(process.env.propai_PROFILE);
     note(
-      `LaunchAgent loaded; stopping requires "${formatCliCommand("PropAi Sync gateway stop")}" or launchctl bootout gui/$UID/${label}.`,
+      `LaunchAgent loaded; stopping requires "${formatCliCommand("propai gateway stop")}" or launchctl bootout gui/$UID/${label}.`,
       "Gateway",
     );
   }
@@ -286,6 +286,7 @@ export async function maybeRepairGatewayDaemon(params: {
     }
   }
 }
+
 
 
 

@@ -66,7 +66,7 @@ export function formatUpdateAvailableHint(update: UpdateCheckResult): string | n
     details.push(`npm ${availability.latestVersion}`);
   }
   const suffix = details.length > 0 ? ` (${details.join(" · ")})` : "";
-  return `Update available${suffix}. Run: ${formatCliCommand("PropAi Sync update")}`;
+  return `Update available${suffix}. Run: ${formatCliCommand("propai update")}`;
 }
 
 export function formatUpdateOneLiner(update: UpdateCheckResult): string {
@@ -131,6 +131,7 @@ export function formatUpdateOneLiner(update: UpdateCheckResult): string {
   }
   return `Update: ${parts.join(" · ")}`;
 }
+
 
 
 

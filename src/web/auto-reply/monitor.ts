@@ -396,7 +396,7 @@ export async function monitorWebChannel(
 
     if (loggedOut) {
       runtime.error(
-        `WhatsApp session logged out. Run \`${formatCliCommand("PropAi Sync channels login --channel web")}\` to relink.`,
+        `WhatsApp session logged out. Run \`${formatCliCommand("propai channels login --channel web")}\` to relink.`,
       );
       await closeListener();
       break;
@@ -412,7 +412,7 @@ export async function monitorWebChannel(
         "web reconnect: non-retryable close status; stopping monitor",
       );
       runtime.error(
-        `WhatsApp Web connection closed (status ${statusCode}: session conflict). Resolve conflicting WhatsApp Web sessions, then relink with \`${formatCliCommand("PropAi Sync channels login --channel web")}\`. Stopping web monitoring.`,
+        `WhatsApp Web connection closed (status ${statusCode}: session conflict). Resolve conflicting WhatsApp Web sessions, then relink with \`${formatCliCommand("propai channels login --channel web")}\`. Stopping web monitoring.`,
       );
       await closeListener();
       break;
@@ -467,4 +467,5 @@ export async function monitorWebChannel(
 
   process.removeListener("SIGINT", handleSigint);
 }
+
 

@@ -330,7 +330,7 @@ export async function runConfigureWizard(
       }
       if (!snapshot.valid) {
         outro(
-          `Config invalid. Run \`${formatCliCommand("PropAi Sync doctor")}\` to repair it, then re-run configure.`,
+          `Config invalid. Run \`${formatCliCommand("propai doctor")}\` to repair it, then re-run configure.`,
         );
         runtime.exit(1);
         return;
@@ -703,6 +703,7 @@ export async function runConfigureWizard(
     throw err;
   }
 }
+
 
 
 

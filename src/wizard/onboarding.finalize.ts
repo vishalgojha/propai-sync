@@ -358,10 +358,10 @@ export async function finalizeOnboardingWizard(
       [
         "Gateway token: shared auth for the Gateway + Control UI.",
         "Stored in: ~/.propai/propai.json (gateway.auth.token) or PROPAI_GATEWAY_TOKEN.",
-        `View token: ${formatCliCommand("PropAi Sync config get gateway.auth.token")}`,
-        `Generate token: ${formatCliCommand("PropAi Sync doctor --generate-gateway-token")}`,
+        `View token: ${formatCliCommand("propai config get gateway.auth.token")}`,
+        `Generate token: ${formatCliCommand("propai doctor --generate-gateway-token")}`,
         "Web UI keeps dashboard URL tokens in memory for the current tab and strips them from the URL after load.",
-        `Open the dashboard anytime: ${formatCliCommand("PropAi Sync dashboard --no-open")}`,
+        `Open the dashboard anytime: ${formatCliCommand("propai dashboard --no-open")}`,
         "If prompted: paste the token into Control UI settings (or use the tokenized dashboard URL).",
       ].join("\n"),
       "Token",
@@ -420,7 +420,7 @@ export async function finalizeOnboardingWizard(
       );
     } else {
       await prompter.note(
-        `When you're ready: ${formatCliCommand("PropAi Sync dashboard --no-open")}`,
+        `When you're ready: ${formatCliCommand("propai dashboard --no-open")}`,
         "Later",
       );
     }
@@ -515,7 +515,7 @@ export async function finalizeOnboardingWizard(
         [
           `Provider ${label} is selected but no API key was found.`,
           "web_search will not work until a key is added.",
-          `  ${formatCliCommand("PropAi Sync configure --section web")}`,
+          `  ${formatCliCommand("propai configure --section web")}`,
           "",
           `Get your key at: ${entry?.signupUrl ?? "https://docs.propai.ai/tools/web"}`,
           "Docs: https://docs.propai.ai/tools/web",
@@ -526,7 +526,7 @@ export async function finalizeOnboardingWizard(
       await prompter.note(
         [
           `Web search (${label}) is configured but disabled.`,
-          `Re-enable: ${formatCliCommand("PropAi Sync configure --section web")}`,
+          `Re-enable: ${formatCliCommand("propai configure --section web")}`,
           "",
           "Docs: https://docs.propai.ai/tools/web",
         ].join("\n"),
@@ -553,7 +553,7 @@ export async function finalizeOnboardingWizard(
       await prompter.note(
         [
           "Web search was skipped. You can enable it later:",
-          `  ${formatCliCommand("PropAi Sync configure --section web")}`,
+          `  ${formatCliCommand("propai configure --section web")}`,
           "",
           "Docs: https://docs.propai.ai/tools/web",
         ].join("\n"),
@@ -577,6 +577,7 @@ export async function finalizeOnboardingWizard(
 
   return { launchedTui };
 }
+
 
 
 

@@ -194,10 +194,10 @@ async function noteChannelPrimer(
   await prompter.note(
     [
       "DM security: default is pairing; unknown DMs get a pairing code.",
-      `Approve with: ${formatCliCommand("PropAi Sync pairing approve <channel> <code>")}`,
+      `Approve with: ${formatCliCommand("propai pairing approve <channel> <code>")}`,
       'Public DMs require dmPolicy="open" + allowFrom=["*"].',
       "Multi-user DMs: run: " +
-        formatCliCommand('PropAi Sync config set session.dmScope "per-channel-peer"') +
+        formatCliCommand('propai config set session.dmScope "per-channel-peer"') +
         ' (or "per-account-channel-peer" for multi-account channels) to isolate sessions.',
       `Docs: ${formatDocsLink("/channels/pairing", "channels/pairing")}`,
       "",
@@ -249,11 +249,11 @@ async function maybeConfigureDmPolicies(params: {
     await prompter.note(
       [
         "Default: pairing (unknown DMs get a pairing code).",
-        `Approve: ${formatCliCommand(`PropAi Sync pairing approve ${policy.channel} <code>`)}`,
+        `Approve: ${formatCliCommand(`propai pairing approve ${policy.channel} <code>`)}`,
         `Allowlist DMs: ${policy.policyKey}="allowlist" + ${policy.allowFromKey} entries.`,
         `Public DMs: ${policy.policyKey}="open" + ${policy.allowFromKey} includes "*".`,
         "Multi-user DMs: run: " +
-          formatCliCommand('PropAi Sync config set session.dmScope "per-channel-peer"') +
+          formatCliCommand('propai config set session.dmScope "per-channel-peer"') +
           ' (or "per-account-channel-peer" for multi-account channels) to isolate sessions.',
         `Docs: ${formatDocsLink("/channels/pairing", "channels/pairing")}`,
       ].join("\n"),
@@ -482,7 +482,7 @@ export async function setupChannels(
         await prompter.note(
           `${channel} plugin not available (continuing with onboarding). If the channel still doesn't work after setup, run \`${formatCliCommand(
             "PropAi Sync plugins list",
-          )}\` and \`${formatCliCommand("PropAi Sync plugins enable " + channel)}\`, then restart the gateway.`,
+          )}\` and \`${formatCliCommand("propai plugins enable " + channel)}\`, then restart the gateway.`,
           "Channel setup",
         );
         await refreshStatus(channel);
@@ -691,7 +691,7 @@ export async function setupChannels(
         {
           value: "__skip__",
           label: "Skip for now",
-          hint: `You can add channels later via \`${formatCliCommand("PropAi Sync channels add")}\``,
+          hint: `You can add channels later via \`${formatCliCommand("propai channels add")}\``,
         },
       ],
       initialValue: quickstartDefault,
@@ -748,5 +748,6 @@ export async function setupChannels(
 
   return next;
 }
+
 
 

@@ -163,10 +163,10 @@ export async function docsSearchCommand(queryParts: string[], runtime: RuntimeEn
     const docs = formatDocsLink("/", "docs.propai.ai");
     if (isRich()) {
       runtime.log(`${theme.muted("Docs:")} ${docs}`);
-      runtime.log(`${theme.muted("Search:")} ${formatCliCommand('PropAi Sync docs "your query"')}`);
+      runtime.log(`${theme.muted("Search:")} ${formatCliCommand('propai docs "your query"')}`);
     } else {
       runtime.log("Docs: https://docs.propai.ai/");
-      runtime.log(`Search: ${formatCliCommand('PropAi Sync docs "your query"')}`);
+      runtime.log(`Search: ${formatCliCommand('propai docs "your query"')}`);
     }
     return;
   }
@@ -193,6 +193,7 @@ export async function docsSearchCommand(queryParts: string[], runtime: RuntimeEn
   const markdown = buildMarkdown(query, results);
   await renderMarkdown(markdown, runtime);
 }
+
 
 
 

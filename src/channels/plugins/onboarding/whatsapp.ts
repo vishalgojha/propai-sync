@@ -337,7 +337,7 @@ export const whatsappOnboardingAdapter: ChannelOnboardingAdapter = {
       }
     } else if (!linked) {
       await prompter.note(
-        `Run \`${formatCliCommand("PropAi Sync channels login")}\` later to link WhatsApp.`,
+        `Run \`${formatCliCommand("propai channels login")}\` later to link WhatsApp.`,
         "WhatsApp",
       );
     }
@@ -352,5 +352,6 @@ export const whatsappOnboardingAdapter: ChannelOnboardingAdapter = {
     options?.onWhatsAppAccountId?.(accountId);
   },
 };
+
 
 

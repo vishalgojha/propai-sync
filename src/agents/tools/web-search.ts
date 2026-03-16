@@ -565,7 +565,7 @@ function missingSearchKeyPayload(provider: (typeof SEARCH_PROVIDERS)[number]) {
   if (provider === "brave") {
     return {
       error: "missing_brave_api_key",
-      message: `web_search (brave) needs a Brave Search API key. Run \`${formatCliCommand("PropAi Sync configure --section web")}\` to store it, or set BRAVE_API_KEY in the Gateway environment.`,
+      message: `web_search (brave) needs a Brave Search API key. Run \`${formatCliCommand("propai configure --section web")}\` to store it, or set BRAVE_API_KEY in the Gateway environment.`,
       docs: "https://docs.propai.ai/tools/web",
     };
   }
@@ -2220,6 +2220,7 @@ export const __testing = {
   resolveBraveMode,
   mapBraveLlmContextResults,
 } as const;
+
 
 
 

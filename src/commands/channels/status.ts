@@ -200,7 +200,7 @@ export function formatGatewayChannelsStatusLines(payload: Record<string, unknown
         `- ${issue.channel} ${issue.accountId}: ${issue.message}${issue.fix ? ` (${issue.fix})` : ""}`,
       );
     }
-    lines.push(`- Run: ${formatCliCommand("PropAi Sync doctor")}`);
+    lines.push(`- Run: ${formatCliCommand("propai doctor")}`);
     lines.push("");
   }
   lines.push(
@@ -336,5 +336,6 @@ export async function channelsStatusCommand(
     );
   }
 }
+
 
 

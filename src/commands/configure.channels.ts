@@ -25,7 +25,7 @@ export async function removeChannelConfigWizard(
       note(
         [
           "No channel config found in propai.json.",
-          `Tip: \`${formatCliCommand("PropAi Sync channels status")}\` shows what is configured and enabled.`,
+          `Tip: \`${formatCliCommand("propai channels status")}\` shows what is configured and enabled.`,
         ].join("\n"),
         "Remove channel",
       );
@@ -80,6 +80,7 @@ export async function removeChannelConfigWizard(
     );
   }
 }
+
 
 
 

@@ -192,7 +192,7 @@ export async function setupSkills(
         runtime.log(result.stdout.trim());
       }
       runtime.log(
-        `Tip: run \`${formatCliCommand("PropAi Sync doctor")}\` to review skills + requirements.`,
+        `Tip: run \`${formatCliCommand("propai doctor")}\` to review skills + requirements.`,
       );
       runtime.log("Docs: https://docs.propai.ai/skills");
     }
@@ -220,6 +220,7 @@ export async function setupSkills(
 
   return next;
 }
+
 
 
 

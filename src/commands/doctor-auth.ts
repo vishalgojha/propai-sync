@@ -130,7 +130,7 @@ export async function maybeRemoveDeprecatedCliAuthProfiles(
   const lines = ["Deprecated external CLI auth profiles detected (no longer supported):"];
   if (deprecated.has(CLAUDE_CLI_PROFILE_ID)) {
     lines.push(
-      `- ${CLAUDE_CLI_PROFILE_ID} (Anthropic): use setup-token → ${formatCliCommand("PropAi Sync models auth setup-token")}`,
+      `- ${CLAUDE_CLI_PROFILE_ID} (Anthropic): use setup-token → ${formatCliCommand("propai models auth setup-token")}`,
     );
   }
   if (deprecated.has(CODEX_CLI_PROFILE_ID)) {
@@ -228,16 +228,16 @@ function formatAuthIssueHint(issue: AuthIssue): string | null {
     return "Invalid token expires metadata. Set a future Unix ms timestamp or remove expires.";
   }
   if (issue.provider === "anthropic" && issue.profileId === CLAUDE_CLI_PROFILE_ID) {
-    return `Deprecated profile. Use ${formatCliCommand("PropAi Sync models auth setup-token")} or ${formatCliCommand(
+    return `Deprecated profile. Use ${formatCliCommand("propai models auth setup-token")} or ${formatCliCommand(
       "PropAi Sync configure",
     )}.`;
   }
   if (issue.provider === "openai-codex" && issue.profileId === CODEX_CLI_PROFILE_ID) {
     return `Deprecated profile. Use ${formatCliCommand(
       "PropAi Sync models auth login --provider openai-codex",
-    )} or ${formatCliCommand("PropAi Sync configure")}.`;
+    )} or ${formatCliCommand("propai configure")}.`;
   }
-  return `Re-auth via \`${formatCliCommand("PropAi Sync configure")}\` or \`${formatCliCommand("PropAi Sync onboard")}\`.`;
+  return `Re-auth via \`${formatCliCommand("propai configure")}\` or \`${formatCliCommand("propai onboard")}\`.`;
 }
 
 function formatAuthIssueLine(issue: AuthIssue): string {
@@ -355,5 +355,6 @@ export async function noteAuthProfileHealth(params: {
     );
   }
 }
+
 
 

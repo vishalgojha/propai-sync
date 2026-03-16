@@ -42,8 +42,9 @@ export function formatAuthDoctorHint(params: {
     }`,
     `- auth store oauth profiles: ${storeOauthProfiles || "(none)"}`,
     `- suggested profile: ${suggested}`,
-    `Fix: run "${formatCliCommand("PropAi Sync doctor --yes")}"`,
+    `Fix: run "${formatCliCommand("propai doctor --yes")}"`,
   ].join("\n");
 }
+
 
 

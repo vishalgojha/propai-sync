@@ -27,7 +27,7 @@ export function buildPortHints(listeners: PortListener[], port: number): string[
   const hints: string[] = [];
   if (kinds.has("gateway")) {
     hints.push(
-      `Gateway already running locally. Stop it (${formatCliCommand("PropAi Sync gateway stop")}) or use a different port.`,
+      `Gateway already running locally. Stop it (${formatCliCommand("propai gateway stop")}) or use a different port.`,
     );
   }
   if (kinds.has("ssh")) {
@@ -67,4 +67,5 @@ export function formatPortDiagnostics(diagnostics: PortUsage): string[] {
   }
   return lines;
 }
+
 

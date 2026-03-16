@@ -147,7 +147,7 @@ export async function maybeRepairLegacyCronStore(params: {
     [
       `Legacy cron job storage detected at ${shortenHomePath(storePath)}.`,
       ...previewLines,
-      `Repair with ${formatCliCommand("PropAi Sync doctor --fix")} to normalize the store before the next scheduler run.`,
+      `Repair with ${formatCliCommand("propai doctor --fix")} to normalize the store before the next scheduler run.`,
     ].join("\n"),
     "Cron",
   );
@@ -181,5 +181,6 @@ export async function maybeRepairLegacyCronStore(params: {
     note(notifyMigration.warnings.join("\n"), "Doctor warnings");
   }
 }
+
 
 

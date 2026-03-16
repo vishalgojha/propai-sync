@@ -7,7 +7,7 @@ describe("parseCliProfileArgs", () => {
   it("leaves gateway --dev for subcommands", () => {
     const res = parseCliProfileArgs([
       "node",
-      "PropAi Sync",
+      "propai",
       "gateway",
       "--dev",
       "--allow-unconfigured",
@@ -16,35 +16,35 @@ describe("parseCliProfileArgs", () => {
       throw new Error(res.error);
     }
     expect(res.profile).toBeNull();
-    expect(res.argv).toEqual(["node", "PropAi Sync", "gateway", "--dev", "--allow-unconfigured"]);
+    expect(res.argv).toEqual(["node", "propai", "gateway", "--dev", "--allow-unconfigured"]);
   });
 
   it("still accepts global --dev before subcommand", () => {
-    const res = parseCliProfileArgs(["node", "PropAi Sync", "--dev", "gateway"]);
+    const res = parseCliProfileArgs(["node", "propai", "--dev", "gateway"]);
     if (!res.ok) {
       throw new Error(res.error);
     }
     expect(res.profile).toBe("dev");
-    expect(res.argv).toEqual(["node", "PropAi Sync", "gateway"]);
+    expect(res.argv).toEqual(["node", "propai", "gateway"]);
   });
 
   it("parses --profile value and strips it", () => {
-    const res = parseCliProfileArgs(["node", "PropAi Sync", "--profile", "work", "status"]);
+    const res = parseCliProfileArgs(["node", "propai", "--profile", "work", "status"]);
     if (!res.ok) {
       throw new Error(res.error);
     }
     expect(res.profile).toBe("work");
-    expect(res.argv).toEqual(["node", "PropAi Sync", "status"]);
+    expect(res.argv).toEqual(["node", "propai", "status"]);
   });
 
   it("rejects missing profile value", () => {
-    const res = parseCliProfileArgs(["node", "PropAi Sync", "--profile"]);
+    const res = parseCliProfileArgs(["node", "propai", "--profile"]);
     expect(res.ok).toBe(false);
   });
 
   it.each([
-    ["--dev first", ["node", "PropAi Sync", "--dev", "--profile", "work", "status"]],
-    ["--profile first", ["node", "PropAi Sync", "--profile", "work", "--dev", "status"]],
+    ["--dev first", ["node", "propai", "--dev", "--profile", "work", "status"]],
+    ["--profile first", ["node", "propai", "--profile", "work", "--dev", "status"]],
   ])("rejects combining --dev with --profile (%s)", (_name, argv) => {
     const res = parseCliProfileArgs(argv);
     expect(res.ok).toBe(false);
@@ -154,8 +154,8 @@ describe("formatCliCommand", () => {
     );
   });
 
-  it("handles command with no args after PropAi Sync", () => {
-    expect(formatCliCommand("PropAi Sync", { PROPAI_PROFILE: "test" })).toBe(
+  it("handles command with no args after legacy name", () => {
+    expect(formatCliCommand("propai", { PROPAI_PROFILE: "test" })).toBe(
       "propai --profile test",
     );
   });
@@ -166,7 +166,3 @@ describe("formatCliCommand", () => {
     );
   });
 });
-
-
-
-

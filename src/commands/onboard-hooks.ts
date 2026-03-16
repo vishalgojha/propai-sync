@@ -74,15 +74,16 @@ export async function setupInternalHooks(
       `Enabled ${selected.length} hook${selected.length > 1 ? "s" : ""}: ${selected.join(", ")}`,
       "",
       "You can manage hooks later with:",
-      `  ${formatCliCommand("PropAi Sync hooks list")}`,
-      `  ${formatCliCommand("PropAi Sync hooks enable <name>")}`,
-      `  ${formatCliCommand("PropAi Sync hooks disable <name>")}`,
+      `  ${formatCliCommand("propai hooks list")}`,
+      `  ${formatCliCommand("propai hooks enable <name>")}`,
+      `  ${formatCliCommand("propai hooks disable <name>")}`,
     ].join("\n"),
     "Hooks Configured",
   );
 
   return next;
 }
+
 
 
 

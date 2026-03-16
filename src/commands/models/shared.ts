@@ -155,7 +155,7 @@ export function resolveKnownAgentId(params: {
   const knownAgents = listAgentIds(params.cfg);
   if (!knownAgents.includes(agentId)) {
     throw new Error(
-      `Unknown agent id "${raw}". Use "${formatCliCommand("PropAi Sync agents list")}" to see configured agents.`,
+      `Unknown agent id "${raw}". Use "${formatCliCommand("propai agents list")}" to see configured agents.`,
     );
   }
   return agentId;
@@ -221,5 +221,6 @@ export { DEFAULT_MODEL, DEFAULT_PROVIDER };
  * For providers with hierarchical model IDs (e.g., OpenRouter), the model ID may include
  * sub-providers (e.g., "moonshotai/kimi-k2"), resulting in a key like "openrouter/moonshotai/kimi-k2".
  */
+
 
 

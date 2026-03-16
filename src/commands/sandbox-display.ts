@@ -94,7 +94,7 @@ export function displaySummary(
   if (mismatchCount > 0) {
     runtime.log(`\n⚠️  ${mismatchCount} container(s) with image mismatch detected.`);
     runtime.log(
-      `   Run '${formatCliCommand("PropAi Sync sandbox recreate --all")}' to update all containers.`,
+      `   Run '${formatCliCommand("propai sandbox recreate --all")}' to update all containers.`,
     );
   }
 }
@@ -134,4 +134,5 @@ export function displayRecreateResult(
     runtime.log("\nContainers will be automatically recreated when the agent is next used.");
   }
 }
+
 

@@ -312,7 +312,7 @@ export async function startGatewayServer(
         ? formatConfigIssueLines(configSnapshot.issues, "", { normalizeRoot: true }).join("\n")
         : "Unknown validation issue.";
     throw new Error(
-      `Invalid config at ${configSnapshot.path}.\n${issues}\nRun "${formatCliCommand("PropAi Sync doctor")}" to repair, then retry.`,
+      `Invalid config at ${configSnapshot.path}.\n${issues}\nRun "${formatCliCommand("propai doctor")}" to repair, then retry.`,
     );
   }
 
@@ -1063,6 +1063,7 @@ export async function startGatewayServer(
     },
   };
 }
+
 
 
 

@@ -47,10 +47,11 @@ export async function runNonInteractiveOnboardingRemote(params: {
     runtime.log(`Remote gateway: ${remoteUrl}`);
     runtime.log(`Auth: ${payload.auth}`);
     runtime.log(
-      `Tip: run \`${formatCliCommand("PropAi Sync configure --section web")}\` to store your Brave API key for web_search. Docs: https://docs.propai.ai/tools/web`,
+      `Tip: run \`${formatCliCommand("propai configure --section web")}\` to store your Brave API key for web_search. Docs: https://docs.propai.ai/tools/web`,
     );
   }
 }
+
 
 
 

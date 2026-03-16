@@ -32,7 +32,7 @@ vi.mock("../../infra/git-commit.js", () => ({
 }));
 
 vi.mock("../cli-name.js", () => ({
-  resolveCliName: () => "PropAi Sync",
+  resolveCliName: () => "propai",
   replaceCliName: (cmd: string) => cmd,
 }));
 
@@ -91,7 +91,7 @@ describe("configureProgramHelp", () => {
   }
 
   it("adds root help hint and marks commands with subcommands", () => {
-    process.argv = ["node", "PropAi Sync", "--help"];
+    process.argv = ["node", "propai", "--help"];
     const program = makeProgramWithCommands();
     configureProgramHelp(program, testProgramContext);
 
@@ -103,7 +103,7 @@ describe("configureProgramHelp", () => {
   });
 
   it("includes banner and docs/examples in root help output", () => {
-    process.argv = ["node", "PropAi Sync", "--help"];
+    process.argv = ["node", "propai", "--help"];
     const program = makeProgramWithCommands();
     configureProgramHelp(program, testProgramContext);
 
@@ -114,7 +114,7 @@ describe("configureProgramHelp", () => {
   });
 
   it("prints version and exits immediately when version flags are present", () => {
-    process.argv = ["node", "PropAi Sync", "--version"];
+    process.argv = ["node", "propai", "--version"];
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const exitSpy = vi.spyOn(process, "exit").mockImplementation(((code?: number) => {
       throw new Error(`exit:${code ?? ""}`);
@@ -130,7 +130,7 @@ describe("configureProgramHelp", () => {
   });
 
   it("prints version and exits immediately without commit metadata", () => {
-    process.argv = ["node", "PropAi Sync", "--version"];
+    process.argv = ["node", "propai", "--version"];
     resolveCommitHashMock.mockReturnValue(null);
 
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -147,6 +147,3 @@ describe("configureProgramHelp", () => {
     exitSpy.mockRestore();
   });
 });
-
-
-

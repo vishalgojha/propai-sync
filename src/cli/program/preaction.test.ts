@@ -25,7 +25,7 @@ vi.mock("../banner.js", () => ({
 }));
 
 vi.mock("../cli-name.js", () => ({
-  resolveCliName: () => "PropAi Sync",
+  resolveCliName: () => "propai",
 }));
 
 vi.mock("./config-guard.js", () => ({
@@ -252,5 +252,4 @@ describe("registerPreActionHooks", () => {
     preActionHook = hooks?.[0] ?? null;
   });
 });
-
 

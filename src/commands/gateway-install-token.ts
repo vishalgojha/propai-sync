@@ -27,7 +27,7 @@ export type GatewayInstallTokenResolution = {
 function formatAmbiguousGatewayAuthModeReason(): string {
   return [
     "gateway.auth.token and gateway.auth.password are both configured while gateway.auth.mode is unset.",
-    `Set ${formatCliCommand("PropAi Sync config set gateway.auth.mode token")} or ${formatCliCommand("PropAi Sync config set gateway.auth.mode password")}.`,
+    `Set ${formatCliCommand("propai config set gateway.auth.mode token")} or ${formatCliCommand("propai config set gateway.auth.mode password")}.`,
   ].join(" ");
 }
 
@@ -145,5 +145,6 @@ export async function resolveGatewayInstallToken(
     warnings,
   };
 }
+
 
 

@@ -82,7 +82,7 @@ export async function responseBodyViaPlaywright(opts: {
       cleanup();
       reject(
         new Error(
-          `Response not found for url pattern "${pattern}". Run '${formatCliCommand("PropAi Sync browser requests")}' to inspect recent network activity.`,
+          `Response not found for url pattern "${pattern}". Run '${formatCliCommand("propai browser requests")}' to inspect recent network activity.`,
         ),
       );
     }, timeout);
@@ -121,4 +121,5 @@ export async function responseBodyViaPlaywright(opts: {
     truncated: bodyText.length > maxChars ? true : undefined,
   };
 }
+
 

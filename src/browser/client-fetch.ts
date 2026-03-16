@@ -135,7 +135,7 @@ export function resolveBrowserRateLimitMessage(url: string): string {
 function resolveBrowserFetchOperatorHint(url: string): string {
   const isLocal = !isAbsoluteHttp(url);
   return isLocal
-    ? `Restart the PropAi Sync gateway (PropAiSync.app menubar, or \`${formatCliCommand("PropAi Sync gateway")}\`).`
+    ? `Restart the PropAi Sync gateway (PropAiSync.app menubar, or \`${formatCliCommand("propai gateway")}\`).`
     : "If this is a sandboxed session, ensure the sandbox browser is running.";
 }
 
@@ -343,6 +343,7 @@ export async function fetchBrowserJson<T>(
 export const __test = {
   withLoopbackBrowserAuth: withLoopbackBrowserAuthImpl,
 };
+
 
 
 

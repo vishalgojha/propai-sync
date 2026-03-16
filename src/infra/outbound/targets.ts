@@ -178,7 +178,7 @@ export function resolveOutboundTarget(params: {
     return {
       ok: false,
       error: new Error(
-        `Delivering to WebChat is not supported via \`${formatCliCommand("PropAi Sync agent")}\`; use WhatsApp/Telegram or run with --deliver=false.`,
+        `Delivering to WebChat is not supported via \`${formatCliCommand("propai agent")}\`; use WhatsApp/Telegram or run with --deliver=false.`,
       ),
     };
   }
@@ -500,4 +500,5 @@ export function resolveHeartbeatSenderContext(params: {
 
   return { sender, provider, allowFrom };
 }
+
 

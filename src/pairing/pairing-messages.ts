@@ -15,7 +15,8 @@ export function buildPairingReply(params: {
     `Pairing code: ${code}`,
     "",
     "Ask the bot owner to approve with:",
-    formatCliCommand(`PropAi Sync pairing approve ${channel} ${code}`),
+    formatCliCommand(`propai pairing approve ${channel} ${code}`),
   ].join("\n");
 }
+
 

@@ -13,11 +13,12 @@ export async function requireValidConfigSnapshot(
         ? formatConfigIssueLines(snapshot.issues, "-").join("\n")
         : "Unknown validation issue.";
     runtime.error(`Config invalid:\n${issues}`);
-    runtime.error(`Fix the config or run ${formatCliCommand("PropAi Sync doctor")}.`);
+    runtime.error(`Fix the config or run ${formatCliCommand("propai doctor")}.`);
     runtime.exit(1);
     return null;
   }
   return snapshot.config;
 }
+
 
 

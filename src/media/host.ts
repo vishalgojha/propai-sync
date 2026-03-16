@@ -37,7 +37,7 @@ export async function ensureMediaHosted(
   if (needsServerStart && !opts.startServer) {
     await fs.rm(saved.path).catch(() => {});
     throw new Error(
-      `Media hosting requires the webhook/Funnel server. Start \`${formatCliCommand("PropAi Sync webhook")}\`/\`${formatCliCommand("PropAi Sync up")}\` or re-run with --serve-media.`,
+      `Media hosting requires the webhook/Funnel server. Start \`${formatCliCommand("propai webhook")}\`/\`${formatCliCommand("propai up")}\` or re-run with --serve-media.`,
     );
   }
   if (needsServerStart && opts.startServer) {
@@ -66,4 +66,5 @@ async function isPortFree(port: number) {
     throw err;
   }
 }
+
 
