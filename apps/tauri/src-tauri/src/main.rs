@@ -1,10 +1,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod gateway_ipc;
+
 use PROPAI_desktop::gateway::{
   gateway_status, start_gateway, stop_gateway, DesktopGatewayError, DesktopGatewayStartRequest,
   DesktopGatewayState,
 };
-use PROPAI_desktop::gateway_ipc::{
+use crate::gateway_ipc::{
   agent_identity_get, agents_files_get, agents_files_list, agents_files_set, agents_list,
   channels_logout, channels_nostr_profile_import, channels_status, chat_abort, chat_send,
   config_apply, config_get, config_schema, config_set, connect, cron_add, cron_list, cron_remove,

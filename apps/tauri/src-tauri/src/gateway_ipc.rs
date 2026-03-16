@@ -23,12 +23,12 @@ struct GatewayIpcInner {
   connected: bool,
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 struct GatewayFrameEvent {
   data: String,
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 struct GatewayCloseEvent {
   code: u16,
   reason: String,
