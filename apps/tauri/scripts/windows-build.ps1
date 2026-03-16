@@ -6,7 +6,7 @@ function Write-Step([string]$Message) {
 }
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")
-$installer = Join-Path $repoRoot "apps\tauri\src-tauri\target\release\bundle\nsis\PROPAI_0.1.0_x64-setup.exe"
+$nsisDir = Join-Path $repoRoot "apps\tauri\src-tauri\target\release\bundle\nsis"
 
 Write-Step ("Repo root: " + $repoRoot)
 
@@ -35,13 +35,18 @@ if (-not $hasSigningKey) {
   pnpm -C (Join-Path $repoRoot "apps\tauri") build:verbose
 }
 
-if (Test-Path $installer) {
-  Write-Step ("Installer ready: " + $installer)
-  Write-Step "Run it to install/update the app."
-  exit 0
+if (Test-Path $nsisDir) {
+  $installer = Get-ChildItem -Path $nsisDir -Filter "*_x64-setup.exe" -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+  if ($installer) {
+    Write-Step ("Installer ready: " + $installer.FullName)
+    Write-Step "Run it to install/update the app."
+    exit 0
+  }
 }
 
-throw ("Build finished but installer not found at: " + $installer)
+throw ("Build finished but installer not found under: " + $nsisDir)
 
 
 
