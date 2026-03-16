@@ -7,7 +7,8 @@
     "build": "node scripts/run-tauri.mjs build",
     "build:verbose": "node scripts/run-tauri.mjs build --verbose",
     "icon": "node scripts/run-tauri.mjs icon",
-    "prepare-bundle": "node scripts/prepare-bundle.mjs"
+    "prepare-bundle": "node scripts/prepare-bundle.mjs",
+    "issue-activation-key": "node scripts/issue-activation-key.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0"
@@ -16,5 +17,3 @@
     "@tauri-apps/cli": "^2.0.0"
   }
 }
-
-

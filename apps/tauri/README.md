@@ -44,6 +44,17 @@ pnpm --dir apps/tauri icon -- -i path/to/icon.png
 
 This writes updated icons into `apps/tauri/src-tauri/icons/`. Commit those files after updating.
 
+## Activation keys
+
+From repo root:
+
+```bash
+LICENSE_ADMIN_KEY=... pnpm --dir apps/tauri issue-activation-key -- --plan pro --max-devices 2
+```
+
+Defaults to the local licensing service at `http://localhost:8787`. Override with
+`--api-url` or `LICENSE_API_URL`.
+
 ### Windows notes
 
 - Run `pnpm desktop:build` from Windows (PowerShell/CMD), not from WSL.
