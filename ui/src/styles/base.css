@@ -1,58 +1,58 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
 
 :root {
-  /* Background - Warmer dark with depth */
-  --bg: #12141a;
-  --bg-accent: #14161d;
-  --bg-elevated: #1a1d25;
-  --bg-hover: #262a35;
-  --bg-muted: #262a35;
+  /* Background - Jet black with subtle depth */
+  --bg: #050505;
+  --bg-accent: #0b0d0e;
+  --bg-elevated: #101417;
+  --bg-hover: #181d21;
+  --bg-muted: #181d21;
 
-  /* Card / Surface - More contrast between levels */
-  --card: #181b22;
-  --card-foreground: #f4f4f5;
-  --card-highlight: rgba(255, 255, 255, 0.05);
-  --popover: #181b22;
-  --popover-foreground: #f4f4f5;
+  /* Card / Surface - Crisp blacks with glow contrast */
+  --card: #0b0d0f;
+  --card-foreground: #f5f7f6;
+  --card-highlight: rgba(255, 255, 255, 0.04);
+  --popover: #0b0d0f;
+  --popover-foreground: #f5f7f6;
 
   /* Panel */
-  --panel: #12141a;
-  --panel-strong: #1a1d25;
-  --panel-hover: #262a35;
-  --chrome: rgba(18, 20, 26, 0.95);
-  --chrome-strong: rgba(18, 20, 26, 0.98);
+  --panel: #050505;
+  --panel-strong: #0f1214;
+  --panel-hover: #161b1e;
+  --chrome: rgba(5, 5, 5, 0.95);
+  --chrome-strong: rgba(5, 5, 5, 0.98);
 
   /* Text - Slightly warmer */
-  --text: #e4e4e7;
-  --text-strong: #fafafa;
-  --chat-text: #e4e4e7;
-  --muted: #71717a;
-  --muted-strong: #52525b;
-  --muted-foreground: #71717a;
+  --text: #e9edf0;
+  --text-strong: #ffffff;
+  --chat-text: #e9edf0;
+  --muted: #8e98a3;
+  --muted-strong: #6b7380;
+  --muted-foreground: #8e98a3;
 
   /* Border - Subtle but defined */
-  --border: #27272a;
-  --border-strong: #3f3f46;
-  --border-hover: #52525b;
-  --input: #27272a;
-  --ring: #ff5c5c;
+  --border: #1f252a;
+  --border-strong: #2e363d;
+  --border-hover: #3b454f;
+  --input: #1f252a;
+  --ring: #38f2b0;
 
-  /* Accent - Punchy signature red */
-  --accent: #ff5c5c;
-  --accent-hover: #ff7070;
-  --accent-muted: #ff5c5c;
-  --accent-subtle: rgba(255, 92, 92, 0.15);
-  --accent-foreground: #fafafa;
-  --accent-glow: rgba(255, 92, 92, 0.25);
-  --primary: #ff5c5c;
-  --primary-foreground: #ffffff;
+  /* Accent - Mint */
+  --accent: #38f2b0;
+  --accent-hover: #55f6bf;
+  --accent-muted: #38f2b0;
+  --accent-subtle: rgba(56, 242, 176, 0.15);
+  --accent-foreground: #04120b;
+  --accent-glow: rgba(56, 242, 176, 0.25);
+  --primary: #38f2b0;
+  --primary-foreground: #04120b;
 
-  /* Secondary - Teal accent for variety */
-  --secondary: #1e2028;
-  --secondary-foreground: #f4f4f5;
-  --accent-2: #14b8a6;
-  --accent-2-muted: rgba(20, 184, 166, 0.7);
-  --accent-2-subtle: rgba(20, 184, 166, 0.15);
+  /* Secondary - Deep black-green */
+  --secondary: #101417;
+  --secondary-foreground: #f5f7f6;
+  --accent-2: #0bd48f;
+  --accent-2-muted: rgba(11, 212, 143, 0.7);
+  --accent-2-subtle: rgba(11, 212, 143, 0.15);
 
   /* Semantic - More saturated */
   --ok: #22c55e;
@@ -69,12 +69,12 @@
   --info: #3b82f6;
 
   /* Focus - With glow */
-  --focus: rgba(255, 92, 92, 0.25);
+  --focus: rgba(56, 242, 176, 0.25);
   --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring);
   --focus-glow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring), 0 0 20px var(--accent-glow);
 
   /* Grid */
-  --grid-line: rgba(255, 255, 255, 0.04);
+  --grid-line: rgba(255, 255, 255, 0.03);
 
   /* Theme transition */
   --theme-switch-x: 50%;
@@ -189,37 +189,37 @@
 }
 
 :root[data-brand="propai"] {
-  --accent: #3b82f6;
-  --accent-hover: #60a5fa;
-  --accent-muted: #3b82f6;
-  --accent-subtle: rgba(59, 130, 246, 0.16);
-  --accent-foreground: #ffffff;
-  --accent-glow: rgba(59, 130, 246, 0.25);
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --ring: #60a5fa;
-  --focus: rgba(59, 130, 246, 0.25);
-  --accent-2: #38bdf8;
-  --accent-2-muted: rgba(56, 189, 248, 0.75);
-  --accent-2-subtle: rgba(56, 189, 248, 0.15);
-  --info: #3b82f6;
+  --accent: #38f2b0;
+  --accent-hover: #55f6bf;
+  --accent-muted: #38f2b0;
+  --accent-subtle: rgba(56, 242, 176, 0.16);
+  --accent-foreground: #04120b;
+  --accent-glow: rgba(56, 242, 176, 0.25);
+  --primary: #38f2b0;
+  --primary-foreground: #04120b;
+  --ring: #55f6bf;
+  --focus: rgba(56, 242, 176, 0.25);
+  --accent-2: #0bd48f;
+  --accent-2-muted: rgba(11, 212, 143, 0.75);
+  --accent-2-subtle: rgba(11, 212, 143, 0.15);
+  --info: #38f2b0;
 }
 
 :root[data-brand="propai"][data-theme="light"] {
-  --accent: #2563eb;
-  --accent-hover: #3b82f6;
-  --accent-muted: #2563eb;
-  --accent-subtle: rgba(37, 99, 235, 0.15);
-  --accent-foreground: #ffffff;
-  --accent-glow: rgba(37, 99, 235, 0.18);
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --ring: #60a5fa;
-  --focus: rgba(37, 99, 235, 0.2);
-  --accent-2: #0ea5e9;
-  --accent-2-muted: rgba(14, 165, 233, 0.7);
-  --accent-2-subtle: rgba(14, 165, 233, 0.12);
-  --info: #2563eb;
+  --accent: #18d892;
+  --accent-hover: #38f2b0;
+  --accent-muted: #18d892;
+  --accent-subtle: rgba(24, 216, 146, 0.15);
+  --accent-foreground: #04120b;
+  --accent-glow: rgba(24, 216, 146, 0.18);
+  --primary: #18d892;
+  --primary-foreground: #04120b;
+  --ring: #55f6bf;
+  --focus: rgba(24, 216, 146, 0.2);
+  --accent-2: #0bd48f;
+  --accent-2-muted: rgba(11, 212, 143, 0.7);
+  --accent-2-subtle: rgba(11, 212, 143, 0.12);
+  --info: #18d892;
 }
 
 * {
@@ -235,10 +235,17 @@ body {
   margin: 0;
   font: 400 14px/1.55 var(--font-body);
   letter-spacing: -0.02em;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle at 18% 0%, rgba(56, 242, 176, 0.1), transparent 48%),
+    radial-gradient(circle at 82% 12%, rgba(12, 22, 18, 0.75), transparent 55%);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-theme="light"] body {
+  background-image: none;
+  background-color: var(--bg);
 }
 
 /* Theme transition */

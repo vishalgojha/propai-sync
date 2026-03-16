@@ -150,9 +150,18 @@
 .brand-title {
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.02em;
   line-height: 1.1;
   color: var(--text-strong);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.brand-title__sync {
+  color: #38f2b0;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .brand-sub {

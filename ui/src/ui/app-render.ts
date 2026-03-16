@@ -295,10 +295,13 @@ export function renderApp(state: AppViewState) {
           </button>
           <div class="brand">
             <div class="brand-logo">
-              <img src=${basePath ? `${basePath}/favicon.svg` : "/favicon.svg"} alt="PropAi" />
+              <img src=${basePath ? `${basePath}/favicon.svg` : "/favicon.svg"} alt="PropAi Sync" />
             </div>
             <div class="brand-text">
-              <div class="brand-title">PROPAI</div>
+              <div class="brand-title">
+                <span>PropAi</span>
+                <span class="brand-title__sync">Sync</span>
+              </div>
               <div class="brand-sub">Control Console</div>
             </div>
           </div>
