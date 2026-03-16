@@ -1,3 +1,10 @@
+<img width="893" height="125" alt="ascii-art-text (1)" src="https://github.com/user-attachments/assets/0d5a9684-9d8b-4d0b-818f-d346bba68080" />
+
+
+
+
+
+
 # PropAi Sync — Personal AI Assistant
 
 PropAi Sync is a personal AI assistant you run on your own devices. It answers you on the channels you already use — **WhatsApp** and **Telegram** — and is built to feel local, fast, and always‑on.
