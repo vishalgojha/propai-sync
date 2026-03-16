@@ -2,7 +2,7 @@
 
 mod gateway_ipc;
 
-use PROPAI_desktop::gateway::{
+use propai_desktop::gateway::{
   gateway_status, start_gateway, stop_gateway, DesktopGatewayError, DesktopGatewayStartRequest,
   DesktopGatewayState,
 };
@@ -92,7 +92,7 @@ fn propai_start_gateway(
   state: tauri::State<'_, DesktopGatewayState>,
   app: tauri::AppHandle,
   req: DesktopGatewayStartRequest,
-) -> Result<PROPAI_desktop::gateway::DesktopGatewayStartResponse, String> {
+) -> Result<propai_desktop::gateway::DesktopGatewayStartResponse, String> {
   let resource_root = app.path().resource_dir().ok();
   let app_data_dir = app.path().app_local_data_dir().ok();
   let log_dir = app_data_dir
@@ -111,7 +111,7 @@ fn propai_restart_gateway(
   state: tauri::State<'_, DesktopGatewayState>,
   app: tauri::AppHandle,
   req: DesktopGatewayStartRequest,
-) -> Result<PROPAI_desktop::gateway::DesktopGatewayStartResponse, String> {
+) -> Result<propai_desktop::gateway::DesktopGatewayStartResponse, String> {
   match stop_gateway(&state) {
     Ok(()) | Err(DesktopGatewayError::NotRunning) => {}
     Err(err) => return Err(err.to_string()),
@@ -127,7 +127,7 @@ fn propai_restart_gateway(
 #[tauri::command]
 fn propai_gateway_status(
   state: tauri::State<'_, DesktopGatewayState>,
-) -> PROPAI_desktop::gateway::DesktopGatewayStatusResponse {
+) -> propai_desktop::gateway::DesktopGatewayStatusResponse {
   gateway_status(&state)
 }
 

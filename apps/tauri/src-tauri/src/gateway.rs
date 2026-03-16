@@ -229,15 +229,15 @@ fn ensure_parent_dir(path: &Path) {
 }
 
 fn resolve_bundled_resource_base(resource_root: &Path) -> Option<PathBuf> {
-  let direct_PropAiSync = resource_root.join("propai").join("propai.mjs");
-  if direct_PropAiSync.is_file() {
+  let direct_propai_sync = resource_root.join("propai").join("propai.mjs");
+  if direct_propai_sync.is_file() {
     return Some(resource_root.to_path_buf());
   }
-  let nested_PropAiSync = resource_root
+  let nested_propai_sync = resource_root
     .join("resources")
     .join("propai")
     .join("propai.mjs");
-  if nested_PropAiSync.is_file() {
+  if nested_propai_sync.is_file() {
     return Some(resource_root.join("resources"));
   }
   None
@@ -445,11 +445,11 @@ fn ensure_desktop_runtime(resource_base: &Path, app_data_dir: &Path) -> Result<P
   let _ = fs::remove_dir_all(&runtime_root);
   fs::create_dir_all(&runtime_root).map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
 
-  let resource_PropAiSync = resource_base.join("propai");
-  if !resource_PropAiSync.join("propai.mjs").is_file() {
+  let resource_propai_sync = resource_base.join("propai");
+  if !resource_propai_sync.join("propai.mjs").is_file() {
     return Err(DesktopGatewayError::MissingResources);
   }
-  copy_dir_recursive(&resource_PropAiSync, &runtime_root)
+  copy_dir_recursive(&resource_propai_sync, &runtime_root)
     .map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
 
   let node_modules_zip = runtime_root.join("node_modules.zip");

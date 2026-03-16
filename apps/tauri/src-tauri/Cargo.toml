@@ -6,7 +6,7 @@ authors = ["PropAi Sync Contributors"]
 edition = "2021"
 
 [lib]
-name = "PROPAI_desktop"
+name = "propai_desktop"
 path = "src/lib.rs"
 
 [[bin]]
