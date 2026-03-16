@@ -4,13 +4,16 @@ This is a minimal Tauri desktop wrapper around the existing PropAi Sync control 
 
 ## Dev
 
-Prereqs:
-- Rust toolchain
-- Node + pnpm (see root `package.json` engines)
+Prereqs (ordered):
+1. Node 22+ (see root `package.json` engines)
+2. pnpm (via Corepack: `corepack enable`)
+3. Rust toolchain (stable; Windows needs the MSVC toolchain)
+4. Tauri system dependencies for your OS (per Tauri docs)
 
 From repo root:
 
 ```bash
+pnpm install
 pnpm --dir apps/tauri dev
 ```
 
@@ -26,6 +29,10 @@ From repo root:
 pnpm install
 pnpm desktop:build
 ```
+
+Notes:
+- The build pipeline automatically runs the root `pnpm build` and UI build to stage a self-contained runtime.
+- If you only changed UI or backend code, you still just run `pnpm desktop:build`.
 
 ### Windows notes
 
