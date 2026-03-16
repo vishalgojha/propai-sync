@@ -43,9 +43,12 @@ export function renderLanding(props: LandingProps) {
       <div class="landing__content">
         <section class="landing__hero">
           <div class="landing__brand">
-            <span class="landing__brand-mark">PS</span>
+            <span class="landing__brand-mark">S</span>
             <div>
-              <div class="landing__brand-name">PropAI Sync</div>
+              <div class="landing__brand-name">
+                <span>PropAI</span>
+                <span class="landing__brand-sync">Sync</span>
+              </div>
               <div class="landing__brand-tag">AI ops for realtors</div>
             </div>
           </div>
