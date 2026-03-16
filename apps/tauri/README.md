@@ -55,6 +55,8 @@ LICENSE_ADMIN_KEY=... pnpm --dir apps/tauri issue-activation-key -- --plan pro -
 Defaults to the local licensing service at `http://localhost:8787`. Override with
 `--api-url` or `LICENSE_API_URL`.
 
+Builds automatically skip updater artifacts when `TAURI_SIGNING_PRIVATE_KEY` is not set.
+
 ### Windows notes
 
 - Run `pnpm desktop:build` from Windows (PowerShell/CMD), not from WSL.
@@ -75,7 +77,6 @@ The desktop app can auto-check for updates on launch (release builds only). Conf
 - `PROPAI_TAURI_UPDATE_PUBKEY` (the public key used to validate update signatures)
 
 These map directly to the Tauri updater plugin configuration; the updater requires signed artifacts. See the Tauri updater docs for the update feed format and signing steps.
-
 
 
 
