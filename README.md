@@ -19,6 +19,8 @@ propai onboard --install-daemon
 
 The wizard installs the Gateway daemon (launchd/systemd user service) so it stays running.
 
+Building from source? Run `pnpm install` then `pnpm build` before using the packaged `propai` CLI.
+
 ## Quick start (TL;DR)
 
 Runtime: **Node ≥22**.
