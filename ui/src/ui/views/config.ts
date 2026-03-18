@@ -284,18 +284,18 @@ const sidebarIcons = {
 
 // Section definitions
 const SECTIONS: Array<{ key: string; label: string }> = [
-  { key: "env", label: "Environment" },
+  { key: "env", label: "Workspace" },
   { key: "update", label: "Updates" },
-  { key: "agents", label: "Agents" },
-  { key: "auth", label: "Authentication" },
-  { key: "channels", label: "Channels" },
+  { key: "agents", label: "Assistants" },
+  { key: "auth", label: "Sign-in" },
+  { key: "channels", label: "WhatsApp & Apps" },
   { key: "messages", label: "Messages" },
-  { key: "commands", label: "Commands" },
-  { key: "hooks", label: "Hooks" },
-  { key: "skills", label: "Skills" },
+  { key: "commands", label: "Actions" },
+  { key: "hooks", label: "Website Links" },
+  { key: "skills", label: "Add-ons" },
   { key: "tools", label: "Tools" },
-  { key: "gateway", label: "Gateway" },
-  { key: "wizard", label: "Setup Wizard" },
+  { key: "gateway", label: "Connection" },
+  { key: "wizard", label: "Setup" },
 ];
 
 type SubsectionEntry = {
@@ -576,7 +576,7 @@ export function renderConfig(props: ConfigProps) {
             @click=${() => props.onSectionChange(null)}
           >
             <span class="config-nav__icon">${sidebarIcons.all}</span>
-            <span class="config-nav__label">All Settings</span>
+            <span class="config-nav__label">All settings</span>
           </button>
           ${allSections.map(
             (section) => html`
@@ -601,13 +601,13 @@ export function renderConfig(props: ConfigProps) {
               ?disabled=${props.schemaLoading || !props.schema}
               @click=${() => props.onFormModeChange("form")}
             >
-              Form
+              Guided
             </button>
             <button
               class="config-mode-toggle__btn ${props.formMode === "raw" ? "active" : ""}"
               @click=${() => props.onFormModeChange("raw")}
             >
-              Raw
+              Advanced
             </button>
           </div>
         </div>
@@ -624,13 +624,13 @@ export function renderConfig(props: ConfigProps) {
                   <span class="config-changes-badge"
                     >${
                       props.formMode === "raw"
-                        ? "Unsaved changes"
+                        ? "Changes not saved yet"
                         : `${diff.length} unsaved change${diff.length !== 1 ? "s" : ""}`
                     }</span
                   >
                 `
                 : html`
-                    <span class="config-status muted">No changes</span>
+                    <span class="config-status muted">Up to date</span>
                   `
             }
           </div>
@@ -654,7 +654,7 @@ export function renderConfig(props: ConfigProps) {
               ?disabled=${!canApply}
               @click=${props.onApply}
             >
-              ${props.applying ? "Applying…" : "Apply"}
+              ${props.applying ? "Saving…" : "Save & use"}
             </button>
             <button
               class="btn btn--sm"
@@ -668,7 +668,7 @@ export function renderConfig(props: ConfigProps) {
         ${
           props.licenseLocked
             ? html`<div class="callout warn" style="margin-top: 12px;">
-              License required to apply changes and edit sensitive fields.
+              Trial access is required to save changes and edit sensitive settings.
             </div>`
             : nothing
         }
@@ -776,7 +776,7 @@ export function renderConfig(props: ConfigProps) {
                     ? html`
                         <div class="config-loading">
                           <div class="config-loading__spinner"></div>
-                          <span>Loading schema…</span>
+                          <span>Loading settings…</span>
                         </div>
                       `
                     : renderConfigForm({
@@ -796,7 +796,7 @@ export function renderConfig(props: ConfigProps) {
                   formUnsafe
                     ? html`
                         <div class="callout danger" style="margin-top: 12px">
-                          Form view can't safely edit some fields. Use Raw to avoid losing config entries.
+                          Some advanced fields are only available in Advanced mode.
                         </div>
                       `
                     : nothing
@@ -804,7 +804,7 @@ export function renderConfig(props: ConfigProps) {
               `
               : html`
                 <label class="field config-raw-field">
-                  <span>Raw JSON5</span>
+                  <span>Advanced settings text</span>
                   <textarea
                     .value=${props.raw}
                     ?disabled=${props.licenseLocked}

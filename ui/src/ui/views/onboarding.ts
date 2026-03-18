@@ -164,27 +164,27 @@ export function renderOnboardingWizard(props: OnboardingWizardProps) {
     {
       id: "openai-codex",
       eyebrow: "Recommended",
-      title: "Fast cloud setup",
-      summary: "Finish desktop setup quickly, then pair your phone right after.",
-      detail: "Best first-run path if you want the smoothest setup.",
-      actionLabel: "Use cloud setup",
+      title: "Fast guided setup",
+      summary: "Get started quickly, then connect WhatsApp right after.",
+      detail: "Best first-run option if you want the easiest setup.",
+      actionLabel: "Use guided setup",
       tone: "accent",
     },
     {
       id: "ollama",
       eyebrow: "Private",
-      title: "On-device setup",
-      summary: "Keep the AI brain on this computer and avoid an API key.",
-      detail: "Requires Ollama on this machine before setup can continue.",
+      title: "Private local setup",
+      summary: "Keep everything on this computer and avoid extra online setup.",
+      detail: "Requires Ollama on this computer before setup can continue.",
       actionLabel: allowOllamaChoice ? "Use local setup" : "Install Ollama first",
     },
     {
       id: "none",
       eyebrow: "Advanced",
       title: "Choose everything yourself",
-      summary: "Pick the exact provider, auth flow, and desktop behavior manually.",
+      summary: "Pick the exact setup options yourself.",
       detail: "Best if you already know which model stack you want.",
-      actionLabel: "Open advanced setup",
+      actionLabel: "More setup options",
     },
   ];
   const advancedOpen = !["openai-codex", "ollama", "none"].includes(props.presetId);
@@ -193,23 +193,22 @@ export function renderOnboardingWizard(props: OnboardingWizardProps) {
     <div class="page onboarding">
       <div class="onboarding__hero">
         <div class="onboarding__eyebrow">PropAi Sync</div>
-        <div class="onboarding__title">Install once. Pair your phone next.</div>
+        <div class="onboarding__title">Get your real estate assistant ready.</div>
         <div class="onboarding__subtitle">
-          Desktop comes first. Mobile pairing comes right after setup. Choose how PropAi should
-          think, finish the desktop wizard, then connect your phone.
+          Finish desktop setup, activate your trial, and connect WhatsApp so your team can work from one place.
         </div>
         <div class="onboarding__status-strip">
           <div class="onboarding__status-pill ok">
             <span class="onboarding__status-dot"></span>
-            Desktop app ready
+            Desktop ready
           </div>
           <div class="onboarding__status-pill ${props.connected ? "ok" : "warn"}">
             <span class="onboarding__status-dot"></span>
-            ${props.connected ? "Gateway online" : "Gateway connecting"}
+            ${props.connected ? "Setup ready" : "Setup in progress"}
           </div>
           <div class="onboarding__status-pill">
             <span class="onboarding__status-dot"></span>
-            Mobile pairing next
+            WhatsApp comes next
           </div>
         </div>
       </div>
@@ -217,23 +216,23 @@ export function renderOnboardingWizard(props: OnboardingWizardProps) {
       <div class="onboarding-journey">
         <div class="onboarding-stage onboarding-stage--done">
           <div class="onboarding-stage__index">01</div>
-          <div class="onboarding-stage__title">Desktop installed</div>
+          <div class="onboarding-stage__title">Desktop is ready</div>
           <div class="onboarding-stage__copy">
-            You are inside the desktop app already. Nothing technical to configure by hand first.
+            You are already inside the app. No technical setup is needed to get started.
           </div>
         </div>
         <div class="onboarding-stage onboarding-stage--active">
           <div class="onboarding-stage__index">02</div>
-          <div class="onboarding-stage__title">Choose your setup path</div>
+          <div class="onboarding-stage__title">Choose how you want to start</div>
           <div class="onboarding-stage__copy">
-            Pick the fastest cloud path, a private local path, or open the advanced setup.
+            Pick the setup that fits your business and continue in a few guided steps.
           </div>
         </div>
         <div class="onboarding-stage">
           <div class="onboarding-stage__index">03</div>
-          <div class="onboarding-stage__title">Pair your phone</div>
+          <div class="onboarding-stage__title">Connect WhatsApp</div>
           <div class="onboarding-stage__copy">
-            Once desktop setup finishes, the next step is connecting the mobile app.
+            Once setup is complete, connect WhatsApp so conversations and follow-ups stay in one place.
           </div>
         </div>
       </div>
@@ -242,12 +241,10 @@ export function renderOnboardingWizard(props: OnboardingWizardProps) {
       ${showLicenseGate
         ? html`
             <div class="card onboarding-card onboarding-card--status">
-              <div class="muted">Activate desktop</div>
-              <div class="onboarding-card__status">Unlock setup before choosing a path</div>
+              <div class="muted">Activate your desktop</div>
+              <div class="onboarding-card__status">Start your trial and continue setup</div>
               <div class="onboarding-card__intro mt">
-                This first-run screen is real, but setup paths stay locked until this desktop is
-                activated. Enter your activation key here, then continue with cloud, local, or
-                advanced setup.
+                Your desktop needs an activation key before setup can continue. Start your trial here, then continue with the setup that fits your team.
               </div>
             </div>
 
@@ -270,7 +267,7 @@ export function renderOnboardingWizard(props: OnboardingWizardProps) {
 
             <div class="actions mt onboarding-actions">
               <button class="btn" ?disabled=${props.busy || props.licenseBusy} @click=${props.onExitSetup}>
-                Skip for now
+                Set up later
               </button>
             </div>
           `
@@ -353,13 +350,12 @@ export function renderOnboardingWizard(props: OnboardingWizardProps) {
             </div>
 
             <details class="card onboarding-card onboarding-advanced" ?open=${advancedOpen}>
-              <summary>Advanced setup options</summary>
+              <summary>More setup options</summary>
               <div class="onboarding-card__intro">
-                Need a specific provider, auth method, or model stack? Choose it here without
-                leaving the desktop app.
+                Need more control? Choose a specific setup path here without leaving the desktop app.
               </div>
               <label class="field mt">
-                <span>Provider preset</span>
+                <span>Setup style</span>
                 <select
                   .value=${props.presetId}
                   ?disabled=${props.busy || Boolean(props.sessionId)}
@@ -394,14 +390,14 @@ export function renderOnboardingWizard(props: OnboardingWizardProps) {
                   @change=${(e: Event) =>
                     props.onAutoAdvanceChange((e.target as HTMLInputElement).checked)}
                 />
-                <span class="ml">Auto-fill matching preset steps for me</span>
+                <span class="ml">Fill in the matching setup steps for me</span>
               </label>
               <div class="actions mt onboarding-actions">
                 <button class="btn primary" ?disabled=${!canStart} @click=${props.onStart}>
-                  Start advanced setup
+                  Start setup
                 </button>
                 <button class="btn" ?disabled=${props.busy} @click=${props.onExitSetup}>
-                  Skip for now
+                  Set up later
                 </button>
               </div>
             </details>
@@ -416,7 +412,7 @@ export function renderOnboardingWizard(props: OnboardingWizardProps) {
                   <div class="muted">Desktop setup</div>
                   <div class="onboarding-card__status">${activeStepLabel}</div>
                   <div class="onboarding-card__intro mt">
-                    Finish this step on desktop. Mobile pairing comes immediately after setup.
+                    Finish this step here first. WhatsApp connection comes right after setup.
                   </div>
                 </div>
                 <button class="btn" ?disabled=${props.busy} @click=${props.onCancel}>

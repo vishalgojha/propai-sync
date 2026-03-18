@@ -20,7 +20,7 @@ export type LicensePanelProps = {
 
 function renderStatus(props: LicensePanelProps) {
   if (props.busy) {
-    return html`<div class="muted">Checking activation...</div>`;
+    return html`<div class="muted">Checking your trial...</div>`;
   }
   if (props.status === "active") {
     const plan = props.entitlement?.plan ? props.entitlement.plan.toUpperCase() : null;
@@ -28,7 +28,7 @@ function renderStatus(props: LicensePanelProps) {
       ? new Date(props.entitlement.expiresAt).toLocaleDateString()
       : null;
     return html`<div class="callout ok">
-      ${plan ? `${plan} active` : "License active"}${ends ? ` until ${ends}` : ""}
+      ${plan ? `${plan} active` : "Trial active"}${ends ? ` until ${ends}` : ""}
     </div>`;
   }
   if (props.status === "grace") {
@@ -36,17 +36,17 @@ function renderStatus(props: LicensePanelProps) {
       ? new Date(props.entitlement.graceUntil).toLocaleDateString()
       : null;
     return html`<div class="callout warn">
-      Offline grace mode${graceUntil ? ` until ${graceUntil}` : ""}.
+      Offline access mode${graceUntil ? ` until ${graceUntil}` : ""}.
     </div>`;
   }
   if (props.status === "expired") {
-    return html`<div class="callout warn">License expired.</div>`;
+    return html`<div class="callout warn">Trial expired.</div>`;
   }
   if (props.status === "pending") {
-    return html`<div class="callout warn">Activation key generated. Waiting for admin approval.</div>`;
+    return html`<div class="callout warn">Trial request sent. Waiting for admin approval.</div>`;
   }
   if (props.status === "invalid") {
-    return html`<div class="callout warn">Activation key invalid.</div>`;
+    return html`<div class="callout warn">We could not activate this key.</div>`;
   }
   return nothing;
 }
@@ -58,9 +58,9 @@ export function renderLicensePanel(props: LicensePanelProps) {
       : null;
   return html`
     <section class="card">
-      <div class="card-title">Activation</div>
+      <div class="card-title">Trial Access</div>
       <div class="card-sub">
-        Activate this desktop to unlock chat, setup, and configuration.
+        Activate this desktop to unlock setup, conversations, and daily work.
       </div>
       <label class="field" style="margin-top: 12px;">
         <span>Activation key</span>
@@ -75,16 +75,16 @@ export function renderLicensePanel(props: LicensePanelProps) {
       </label>
       <div class="row" style="gap: 8px; justify-content: flex-end; margin-top: 8px;">
         <button class="btn" ?disabled=${props.busy} @click=${props.onRequest}>
-          ${props.busy ? "Working..." : "Generate key"}
+          ${props.busy ? "Working..." : "Request trial"}
         </button>
         <button class="btn primary" ?disabled=${props.busy} @click=${props.onSubmit}>
-          ${props.busy ? "Checking..." : "Activate desktop"}
+          ${props.busy ? "Checking..." : "Activate trial"}
         </button>
       </div>
       ${renderStatus(props)}
       ${props.entitlement?.activationId
         ? html`<div class="muted" style="margin-top: 10px;">
-            ${props.entitlement.plan ? `${props.entitlement.plan} plan` : "Licensed"}
+            ${props.entitlement.plan ? `${props.entitlement.plan} plan` : "Active"}
             ${seats ? html`<span> · ${seats}</span>` : nothing}
           </div>`
         : nothing}
@@ -93,7 +93,7 @@ export function renderLicensePanel(props: LicensePanelProps) {
       <details style="margin-top: 10px;">
         <summary>Admin approval</summary>
         <div class="muted" style="margin-top: 8px;">
-          Admin can approve the current key here. The key stays unusable until approval.
+          An admin can approve the current key here. It stays inactive until approval.
         </div>
         <label class="field" style="margin-top: 8px;">
           <span>Admin key</span>
@@ -108,14 +108,14 @@ export function renderLicensePanel(props: LicensePanelProps) {
         </label>
         <div class="row" style="gap: 8px; justify-content: flex-end; margin-top: 8px;">
           <button class="btn" ?disabled=${props.busy} @click=${props.onApprove}>
-            ${props.busy ? "Working..." : "Approve key"}
+            ${props.busy ? "Working..." : "Approve trial"}
           </button>
         </div>
       </details>
       <details style="margin-top: 10px;">
-        <summary>Advanced</summary>
+        <summary>More options</summary>
         <label class="field" style="margin-top: 8px;">
-          <span>License API</span>
+          <span>Licensing service</span>
           <input
             type="text"
             placeholder="https://license.propai.ai"

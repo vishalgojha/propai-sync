@@ -56,8 +56,8 @@ export function renderNodes(props: NodesProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Nodes</div>
-          <div class="card-sub">Paired devices and live links.</div>
+          <div class="card-title">Connected Devices</div>
+          <div class="card-sub">Devices linked to this workspace.</div>
         </div>
         <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
           ${props.loading ? "Loading…" : "Refresh"}
@@ -67,7 +67,7 @@ export function renderNodes(props: NodesProps) {
         ${
           props.nodes.length === 0
             ? html`
-                <div class="muted">No nodes found.</div>
+                <div class="muted">No connected devices found.</div>
               `
             : props.nodes.map((n) => renderNode(n))
         }
@@ -84,8 +84,8 @@ function renderDevices(props: NodesProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Devices</div>
-          <div class="card-sub">Pairing requests + role tokens.</div>
+          <div class="card-title">Phone Access</div>
+          <div class="card-sub">Connection requests and access passes.</div>
         </div>
         <button class="btn" ?disabled=${props.devicesLoading} @click=${props.onDevicesRefresh}>
           ${props.devicesLoading ? "Loading…" : "Refresh"}
@@ -100,7 +100,7 @@ function renderDevices(props: NodesProps) {
         ${
           pending.length > 0
             ? html`
-              <div class="muted" style="margin-bottom: 8px;">Pending</div>
+              <div class="muted" style="margin-bottom: 8px;">Waiting for approval</div>
               ${pending.map((req) => renderPendingDevice(req, props))}
             `
             : nothing
@@ -108,7 +108,7 @@ function renderDevices(props: NodesProps) {
         ${
           paired.length > 0
             ? html`
-              <div class="muted" style="margin-top: 12px; margin-bottom: 8px;">Paired</div>
+              <div class="muted" style="margin-top: 12px; margin-bottom: 8px;">Connected</div>
               ${paired.map((device) => renderPairedDevice(device, props))}
             `
             : nothing
@@ -116,7 +116,7 @@ function renderDevices(props: NodesProps) {
         ${
           pending.length === 0 && paired.length === 0
             ? html`
-                <div class="muted">No paired devices.</div>
+                <div class="muted">No connected phones yet.</div>
               `
             : nothing
         }
@@ -128,8 +128,8 @@ function renderDevices(props: NodesProps) {
 function renderPendingDevice(req: PendingDevice, props: NodesProps) {
   const name = req.displayName?.trim() || req.deviceId;
   const age = typeof req.ts === "number" ? formatRelativeTimestamp(req.ts) : "n/a";
-  const role = req.role?.trim() ? `role: ${req.role}` : "role: -";
-  const repair = req.isRepair ? " · repair" : "";
+  const role = req.role?.trim() ? `access level: ${req.role}` : "access level: -";
+  const repair = req.isRepair ? " · reconnect request" : "";
   const ip = req.remoteIp ? ` · ${req.remoteIp}` : "";
   return html`
     <div class="list-item">
@@ -142,12 +142,8 @@ function renderPendingDevice(req: PendingDevice, props: NodesProps) {
       </div>
       <div class="list-meta">
         <div class="row" style="justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn--sm primary" @click=${() => props.onDeviceApprove(req.requestId)}>
-            Approve
-          </button>
-          <button class="btn btn--sm" @click=${() => props.onDeviceReject(req.requestId)}>
-            Reject
-          </button>
+          <button class="btn btn--sm primary" @click=${() => props.onDeviceApprove(req.requestId)}>Allow</button>
+          <button class="btn btn--sm" @click=${() => props.onDeviceReject(req.requestId)}>Deny</button>
         </div>
       </div>
     </div>
@@ -157,8 +153,8 @@ function renderPendingDevice(req: PendingDevice, props: NodesProps) {
 function renderPairedDevice(device: PairedDevice, props: NodesProps) {
   const name = device.displayName?.trim() || device.deviceId;
   const ip = device.remoteIp ? ` · ${device.remoteIp}` : "";
-  const roles = `roles: ${formatList(device.roles)}`;
-  const scopes = `scopes: ${formatList(device.scopes)}`;
+  const roles = `access: ${formatList(device.roles)}`;
+  const scopes = `permissions: ${formatList(device.scopes)}`;
   const tokens = Array.isArray(device.tokens) ? device.tokens : [];
   return html`
     <div class="list-item">
@@ -169,10 +165,10 @@ function renderPairedDevice(device: PairedDevice, props: NodesProps) {
         ${
           tokens.length === 0
             ? html`
-                <div class="muted" style="margin-top: 6px">Tokens: none</div>
+                <div class="muted" style="margin-top: 6px">Access passes: none</div>
               `
             : html`
-              <div class="muted" style="margin-top: 10px;">Tokens</div>
+              <div class="muted" style="margin-top: 10px;">Access passes</div>
               <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
                 ${tokens.map((token) => renderTokenRow(device.deviceId, token, props))}
               </div>
@@ -184,8 +180,8 @@ function renderPairedDevice(device: PairedDevice, props: NodesProps) {
 }
 
 function renderTokenRow(deviceId: string, token: DeviceTokenSummary, props: NodesProps) {
-  const status = token.revokedAtMs ? "revoked" : "active";
-  const scopes = `scopes: ${formatList(token.scopes)}`;
+  const status = token.revokedAtMs ? "turned off" : "active";
+  const scopes = `permissions: ${formatList(token.scopes)}`;
   const when = formatRelativeTimestamp(
     token.rotatedAtMs ?? token.createdAtMs ?? token.lastUsedAtMs ?? null,
   );
@@ -196,9 +192,7 @@ function renderTokenRow(deviceId: string, token: DeviceTokenSummary, props: Node
         <button
           class="btn btn--sm"
           @click=${() => props.onDeviceRotate(deviceId, token.role, token.scopes)}
-        >
-          Rotate
-        </button>
+        >Refresh</button>
         ${
           token.revokedAtMs
             ? nothing
@@ -206,9 +200,7 @@ function renderTokenRow(deviceId: string, token: DeviceTokenSummary, props: Node
               <button
                 class="btn btn--sm danger"
                 @click=${() => props.onDeviceRevoke(deviceId, token.role)}
-              >
-                Revoke
-              </button>
+              >Turn off</button>
             `
         }
       </div>
@@ -272,9 +264,9 @@ function renderBindings(state: BindingState) {
     <section class="card">
       <div class="row" style="justify-content: space-between; align-items: center;">
         <div>
-          <div class="card-title">Exec node binding</div>
+          <div class="card-title">Task routing</div>
           <div class="card-sub">
-            Pin agents to a specific node when using <span class="mono">exec host=node</span>.
+            Choose which connected device should handle advanced tasks.
           </div>
         </div>
         <button
@@ -290,7 +282,7 @@ function renderBindings(state: BindingState) {
         state.formMode === "raw"
           ? html`
               <div class="callout warn" style="margin-top: 12px">
-                Switch the Config tab to <strong>Form</strong> mode to edit bindings here.
+                Switch Settings to <strong>Guided</strong> mode to edit this here.
               </div>
             `
           : nothing
@@ -299,21 +291,21 @@ function renderBindings(state: BindingState) {
       ${
         !state.ready
           ? html`<div class="row" style="margin-top: 12px; gap: 12px;">
-            <div class="muted">Load config to edit bindings.</div>
+            <div class="muted">Load settings to edit task routing.</div>
             <button class="btn" ?disabled=${state.configLoading} @click=${state.onLoadConfig}>
-              ${state.configLoading ? "Loading…" : "Load config"}
+              ${state.configLoading ? "Loading…" : "Load settings"}
             </button>
           </div>`
           : html`
             <div class="list" style="margin-top: 16px;">
               <div class="list-item">
                 <div class="list-main">
-                  <div class="list-title">Default binding</div>
-                  <div class="list-sub">Used when agents do not override a node binding.</div>
+                  <div class="list-title">Default device</div>
+                  <div class="list-sub">Used when an assistant does not have its own device choice.</div>
                 </div>
                 <div class="list-meta">
                   <label class="field">
-                    <span>Node</span>
+                    <span>Device</span>
                     <select
                       ?disabled=${state.disabled || !supportsBinding}
                       @change=${(event: Event) => {
@@ -322,7 +314,7 @@ function renderBindings(state: BindingState) {
                         state.onBindDefault(value ? value : null);
                       }}
                     >
-                      <option value="" ?selected=${defaultValue === ""}>Any node</option>
+                      <option value="" ?selected=${defaultValue === ""}>Any device</option>
                       ${state.nodes.map(
                         (node) =>
                           html`<option
@@ -337,7 +329,7 @@ function renderBindings(state: BindingState) {
                   ${
                     !supportsBinding
                       ? html`
-                          <div class="muted">No nodes with system.run available.</div>
+                          <div class="muted">No available devices can run advanced tasks right now.</div>
                         `
                       : nothing
                   }
@@ -347,7 +339,7 @@ function renderBindings(state: BindingState) {
               ${
                 state.agents.length === 0
                   ? html`
-                      <div class="muted">No agents found.</div>
+                      <div class="muted">No assistants found.</div>
                     `
                   : state.agents.map((agent) => renderAgentBinding(agent, state))
               }
@@ -367,17 +359,17 @@ function renderAgentBinding(agent: BindingAgent, state: BindingState) {
       <div class="list-main">
         <div class="list-title">${label}</div>
         <div class="list-sub">
-          ${agent.isDefault ? "default agent" : "agent"} ·
+          ${agent.isDefault ? "main assistant" : "assistant"} ·
           ${
             bindingValue === "__default__"
-              ? `uses default (${state.defaultBinding ?? "any"})`
-              : `override: ${agent.binding}`
+              ? `uses default device (${state.defaultBinding ?? "any"})`
+              : `device override: ${agent.binding}`
           }
         </div>
       </div>
       <div class="list-meta">
         <label class="field">
-          <span>Binding</span>
+          <span>Device</span>
           <select
             ?disabled=${state.disabled || !supportsBinding}
             @change=${(event: Event) => {
@@ -386,9 +378,7 @@ function renderAgentBinding(agent: BindingAgent, state: BindingState) {
               state.onBindAgent(agent.index, value === "__default__" ? null : value);
             }}
           >
-            <option value="__default__" ?selected=${bindingValue === "__default__"}>
-              Use default
-            </option>
+            <option value="__default__" ?selected=${bindingValue === "__default__"}>Use default device</option>
             ${state.nodes.map(
               (node) =>
                 html`<option
@@ -472,7 +462,7 @@ function renderNode(node: Record<string, unknown>) {
           ${typeof node.version === "string" ? ` · ${node.version}` : ""}
         </div>
         <div class="chip-row" style="margin-top: 6px;">
-          <span class="chip">${paired ? "paired" : "unpaired"}</span>
+          <span class="chip">${paired ? "connected" : "not connected"}</span>
           <span class="chip ${connected ? "chip-ok" : "chip-warn"}">
             ${connected ? "connected" : "offline"}
           </span>

@@ -38,8 +38,8 @@ export function renderDebug(props: DebugProps) {
       <div class="card">
         <div class="row" style="justify-content: space-between;">
           <div>
-            <div class="card-title">Snapshots</div>
-            <div class="card-sub">Status, health, and heartbeat data.</div>
+            <div class="card-title">Support Snapshot</div>
+            <div class="card-sub">Connection and health details for support use.</div>
           </div>
           <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
             ${props.loading ? "Refreshing…" : "Refresh"}
@@ -70,8 +70,8 @@ export function renderDebug(props: DebugProps) {
       </div>
 
       <div class="card">
-        <div class="card-title">Manual RPC</div>
-        <div class="card-sub">Send a raw gateway method with JSON params.</div>
+        <div class="card-title">Advanced support call</div>
+        <div class="card-sub">For support use only. Send an advanced system call with settings text.</div>
         <div class="stack" style="margin-top: 16px;">
           <label class="field">
             <span>Method</span>
@@ -90,7 +90,7 @@ export function renderDebug(props: DebugProps) {
             </select>
           </label>
           <label class="field">
-            <span>Params (JSON)</span>
+            <span>Settings text</span>
             <textarea
               .value=${props.callParams}
               @input=${(e: Event) =>
@@ -100,7 +100,7 @@ export function renderDebug(props: DebugProps) {
           </label>
         </div>
         <div class="row" style="margin-top: 12px;">
-          <button class="btn primary" @click=${props.onCall}>Call</button>
+          <button class="btn primary" @click=${props.onCall}>Run</button>
         </div>
         ${
           props.callError
@@ -119,7 +119,7 @@ export function renderDebug(props: DebugProps) {
 
     <section class="card" style="margin-top: 18px;">
       <div class="card-title">Models</div>
-      <div class="card-sub">Catalog from models.list.</div>
+      <div class="card-sub">Available models reported by the system.</div>
       <pre class="code-block" style="margin-top: 12px;">${JSON.stringify(
         props.models ?? [],
         null,
@@ -129,11 +129,11 @@ export function renderDebug(props: DebugProps) {
 
     <section class="card" style="margin-top: 18px;">
       <div class="card-title">Event Log</div>
-      <div class="card-sub">Latest gateway events.</div>
+      <div class="card-sub">Latest system events.</div>
       ${
         props.eventLog.length === 0
           ? html`
-              <div class="muted" style="margin-top: 12px">No events yet.</div>
+              <div class="muted" style="margin-top: 12px">No recent events yet.</div>
             `
           : html`
             <div class="list debug-event-log" style="margin-top: 12px;">

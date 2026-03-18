@@ -315,7 +315,7 @@ export function renderApp(state: AppViewState) {
                 <span>PropAi</span>
                 <span class="brand-title__sync">Sync</span>
               </div>
-              <div class="brand-sub">Control Console</div>
+              <div class="brand-sub">Real Estate Assistant</div>
             </div>
           </div>
         </div>
