@@ -8,7 +8,7 @@ import {
   useMultiFileAuthState,
 } from "@whiskeysockets/baileys";
 import qrcode from "qrcode-terminal";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { danger, success } from "../globals.js";
 import { getChildLogger, toPinoLikeLogger } from "../logging.js";
 import { ensureDir, resolveUserPath } from "../utils.js";
@@ -310,5 +310,6 @@ export function formatError(err: unknown): string {
 export function newConnectionId() {
   return randomUUID();
 }
+
 
 

@@ -8,14 +8,17 @@ title: "Hooks"
 
 # Hooks
 
-Hooks provide an extensible event-driven system for automating actions in response to agent commands and events. Hooks are automatically discovered from directories and can be managed via CLI commands, similar to how skills work in propai.
+Hooks provide an extensible event-driven system for automating actions in response to agent commands and events. Hooks are automatically discovered from directories and can be managed in the Control Console Config tab, similar to how skills work in propai.
+
+Note: The `propai` CLI hook commands are no longer documented. Use the Control
+Console → **Config** tab or edit `~/.propai/propai.json` directly.
 
 ## Getting Oriented
 
 Hooks are small scripts that run when something happens. There are two kinds:
 
 - **Hooks** (this page): run inside the Gateway when agent events fire, like `/new`, `/reset`, `/stop`, or lifecycle events.
-- **Webhooks**: external HTTP webhooks that let other systems trigger work in propai. See [Webhook Hooks](/automation/webhook) or use `propai webhooks` for Gmail helper commands.
+- **Webhooks**: external HTTP webhooks that let other systems trigger work in propai. See [Webhook Hooks](/automation/webhook) for the Gmail helper flow.
 
 Hooks can also be bundled inside plugins; see [Plugins](/tools/plugin#plugin-hooks).
 
@@ -26,7 +29,7 @@ Common uses:
 - Trigger follow-up automation when a session starts or ends
 - Write files into the agent workspace or call external APIs when events fire
 
-If you can write a small TypeScript function, you can write a hook. Hooks are discovered automatically, and you enable or disable them via the CLI.
+If you can write a small TypeScript function, you can write a hook. Hooks are discovered automatically, and you enable or disable them in the Control Console Config tab.
 
 ## Overview
 
@@ -48,33 +51,12 @@ propai ships with four bundled hooks that are automatically discovered:
 - **📝 command-logger**: Logs all command events to `~/.propai/logs/commands.log`
 - **🚀 boot-md**: Runs `BOOT.md` when the gateway starts (requires internal hooks enabled)
 
-List available hooks:
-
-```bash
-propai hooks list
-```
-
-Enable a hook:
-
-```bash
-propai hooks enable session-memory
-```
-
-Check hook status:
-
-```bash
-propai hooks check
-```
-
-Get detailed information:
-
-```bash
-propai hooks info session-memory
-```
+Manage hooks in the Control Console → **Config** tab (keys `hooks.*`). For
+automated workflows, edit `~/.propai/propai.json` and restart the gateway.
 
 ### Onboarding
 
-During onboarding (`propai onboard`), you'll be prompted to enable recommended hooks. The wizard automatically discovers eligible hooks and presents them for selection.
+During onboarding, you'll be prompted to enable recommended hooks. The wizard automatically discovers eligible hooks and presents them for selection.
 
 ## Hook Discovery
 
@@ -97,11 +79,9 @@ my-hook/
 ## Hook Packs (npm/archives)
 
 Hook packs are standard npm packages that export one or more hooks via `propai.hooks` in
-`package.json`. Install them with:
-
-```bash
-propai hooks install <path-or-spec>
-```
+`package.json`. Install them by placing the package directory under
+`~/.propai/hooks/` and restarting the gateway. Manage and enable hooks in the
+Control Console → **Config** tab (keys `hooks.*`).
 
 Npm specs are registry-only (package name + optional exact version or dist-tag).
 Git/URL/file specs and semver ranges are rejected.
@@ -127,7 +107,7 @@ Hook packs can ship dependencies; they will be installed under `~/.propai/hooks/
 Each `propai.hooks` entry must stay inside the package directory after symlink
 resolution; entries that escape are rejected.
 
-Security note: `propai hooks install` installs dependencies with `npm install --ignore-scripts`
+Security note: Hook installs run with `npm install --ignore-scripts`
 (no lifecycle scripts). Keep hook pack dependency trees "pure JS/TS" and avoid packages that rely
 on `postinstall` builds.
 
@@ -141,7 +121,7 @@ The `HOOK.md` file contains metadata in YAML frontmatter plus Markdown documenta
 ---
 name: my-hook
 description: "Short description of what this hook does"
-homepage: https://docs.propai.ai/automation/hooks#my-hook
+homepage: https://docs.propai.live/automation/hooks#my-hook
 metadata:
   { "propai": { "emoji": "🔗", "events": ["command:new"], "requires": { "bins": ["node"] } } }
 ---
@@ -169,7 +149,7 @@ No configuration needed.
 
 The `metadata.propai` object supports:
 
-- **`emoji`**: Display emoji for CLI (e.g., `"💾"`)
+- **`emoji`**: Display emoji in UI/logs (e.g., `"💾"`)
 - **`events`**: Array of events to listen for (e.g., `["command:new", "command:reset"]`)
 - **`export`**: Named export to use (defaults to `"default"`)
 - **`homepage`**: Documentation URL
@@ -424,18 +404,7 @@ export default handler;
 
 ### 5. Enable and Test
 
-```bash
-# Verify hook is discovered
-propai hooks list
-
-# Enable it
-propai hooks enable my-hook
-
-# Restart your gateway process (menu bar app restart on macOS, or restart your dev process)
-
-# Trigger the event
-# Send /new via your messaging channel
-```
+Use the Control Console → **Config** tab to enable hooks (keys `hooks.*`) and review eligible hooks.
 
 ## Configuration
 
@@ -519,53 +488,11 @@ Note: `module` must be a workspace-relative path. Absolute paths and traversal o
 
 **Migration**: Use the new discovery-based system for new hooks. Legacy handlers are loaded after directory-based hooks.
 
-## CLI Commands
+## Managing hooks
 
-### List Hooks
-
-```bash
-# List all hooks
-propai hooks list
-
-# Show only eligible hooks
-propai hooks list --eligible
-
-# Verbose output (show missing requirements)
-propai hooks list --verbose
-
-# JSON output
-propai hooks list --json
-```
-
-### Hook Information
-
-```bash
-# Show detailed info about a hook
-propai hooks info session-memory
-
-# JSON output
-propai hooks info session-memory --json
-```
-
-### Check Eligibility
-
-```bash
-# Show eligibility summary
-propai hooks check
-
-# JSON output
-propai hooks check --json
-```
-
-### Enable/Disable
-
-```bash
-# Enable a hook
-propai hooks enable session-memory
-
-# Disable a hook
-propai hooks disable command-logger
-```
+Use the Control Console → **Config** tab to enable hooks (keys `hooks.*`) and review
+eligible hooks. For automated workflows, edit `~/.propai/propai.json` and restart
+the gateway.
 
 ## Bundled hook reference
 
@@ -604,9 +531,7 @@ Saves session context to memory when you issue `/new`.
 
 **Enable**:
 
-```bash
-propai hooks enable session-memory
-```
+Use the Control Console → **Config** tab to enable hooks (keys `hooks.*`) and review eligible hooks.
 
 ### bootstrap-extra-files
 
@@ -645,9 +570,7 @@ Injects additional bootstrap files (for example monorepo-local `AGENTS.md` / `TO
 
 **Enable**:
 
-```bash
-propai hooks enable bootstrap-extra-files
-```
+Use the Control Console → **Config** tab to enable hooks (keys `hooks.*`) and review eligible hooks.
 
 ### command-logger
 
@@ -687,9 +610,7 @@ grep '"action":"new"' ~/.propai/logs/commands.log | jq .
 
 **Enable**:
 
-```bash
-propai hooks enable command-logger
-```
+Use the Control Console → **Config** tab to enable hooks (keys `hooks.*`) and review eligible hooks.
 
 ### boot-md
 
@@ -708,9 +629,7 @@ Internal hooks must be enabled for this to run.
 
 **Enable**:
 
-```bash
-propai hooks enable boot-md
-```
+Use the Control Console → **Config** tab to enable hooks (keys `hooks.*`) and review eligible hooks.
 
 ## Best Practices
 
@@ -792,9 +711,7 @@ Registered hook: boot-md -> gateway:startup
 
 List all discovered hooks:
 
-```bash
-propai hooks list --verbose
-```
+Use the Control Console → **Config** tab to enable hooks (keys `hooks.*`) and review eligible hooks.
 
 ### Check Registration
 
@@ -811,9 +728,7 @@ const handler: HookHandler = async (event) => {
 
 Check why a hook isn't eligible:
 
-```bash
-propai hooks info my-hook
-```
+Use the Control Console → **Config** tab to enable hooks (keys `hooks.*`) and review eligible hooks.
 
 Look for missing requirements in the output.
 
@@ -865,7 +780,6 @@ test("my handler works", async () => {
 - **`src/hooks/config.ts`**: Eligibility checking
 - **`src/hooks/hooks-status.ts`**: Status reporting
 - **`src/hooks/loader.ts`**: Dynamic module loader
-- **`src/cli/hooks-cli.ts`**: CLI commands
 - **`src/gateway/server-startup.ts`**: Loads hooks at gateway start
 - **`src/auto-reply/reply/commands-core.ts`**: Triggers command events
 
@@ -919,19 +833,11 @@ Session reset
    # Should have YAML frontmatter with name and metadata
    ```
 
-3. List all discovered hooks:
-
-   ```bash
-   propai hooks list
-   ```
+3. List all discovered hooks in the Control Console Config tab.
 
 ### Hook Not Eligible
 
-Check requirements:
-
-```bash
-propai hooks info my-hook
-```
+Check requirements in the Control Console Config tab.
 
 Look for missing:
 
@@ -942,12 +848,7 @@ Look for missing:
 
 ### Hook Not Executing
 
-1. Verify hook is enabled:
-
-   ```bash
-   propai hooks list
-   # Should show ✓ next to enabled hooks
-   ```
+1. Verify the hook is enabled in the Control Console Config tab.
 
 2. Restart your gateway process so hooks reload.
 
@@ -1026,27 +927,26 @@ node -e "import('./path/to/handler.ts').then(console.log)"
    }
    ```
 
-4. Verify and restart your gateway process:
-
-   ```bash
-   propai hooks list
-   # Should show: 🎯 my-hook ✓
-   ```
+4. Verify and restart your gateway process.
 
 **Benefits of migration**:
 
 - Automatic discovery
-- CLI management
+- Control Console management
 - Eligibility checking
 - Better documentation
 - Consistent structure
 
 ## See Also
 
-- [CLI Reference: hooks](/cli/hooks)
 - [Bundled Hooks README](https://github.com/propai/propai/tree/main/src/hooks/bundled)
 - [Webhook Hooks](/automation/webhook)
 - [Configuration](/gateway/configuration#hooks)
+
+
+
+
+
 
 
 

@@ -1,9 +1,9 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { PortListener, PortListenerKind, PortUsage } from "./ports-types.js";
 
 export function classifyPortListener(listener: PortListener, port: number): PortListenerKind {
   const raw = `${listener.commandLine ?? ""} ${listener.command ?? ""}`.trim().toLowerCase();
-  if (raw.includes("PropAi Sync")) {
+  if (/(propai sync|propaisync|dist[\\/](entry|index)\.js|src[\\/](entry|index)\.ts)/.test(raw)) {
     return "gateway";
   }
   if (raw.includes("ssh")) {
@@ -67,5 +67,6 @@ export function formatPortDiagnostics(diagnostics: PortUsage): string[] {
   }
   return lines;
 }
+
 
 

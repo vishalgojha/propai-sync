@@ -1,6 +1,6 @@
 import { resolveDefaultAgentId } from "../agents/agent-scope.js";
-import type { CliDeps } from "../cli/deps.js";
-import { createOutboundSendDeps } from "../cli/outbound-send-deps.js";
+import type { CliDeps } from "../core/deps.js";
+import { createOutboundSendDeps } from "../core/outbound-send-deps.js";
 import { loadConfig } from "../config/config.js";
 import {
   canonicalizeMainSessionAlias,
@@ -503,5 +503,6 @@ export function buildGatewayCronService(params: {
 
   return { cron, storePath, cronEnabled };
 }
+
 
 

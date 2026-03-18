@@ -1,7 +1,7 @@
 import { countActiveDescendantRuns } from "../../agents/subagent-registry.js";
 import { SILENT_REPLY_TOKEN } from "../../auto-reply/tokens.js";
 import type { ReplyPayload } from "../../auto-reply/types.js";
-import { createOutboundSendDeps, type CliDeps } from "../../cli/outbound-send-deps.js";
+import { createOutboundSendDeps, type CliDeps } from "../../core/outbound-send-deps.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import { callGateway } from "../../gateway/call.js";
 import { sleepWithAbort } from "../../infra/backoff.js";
@@ -476,4 +476,5 @@ export async function dispatchCronDelivery(
     deliveryPayloads,
   };
 }
+
 

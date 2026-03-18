@@ -1,5 +1,5 @@
 import { listAgentIds, resolveAgentWorkspaceDir } from "../../../agents/agent-scope.js";
-import { createDefaultDeps } from "../../../cli/deps.js";
+import { createDefaultDeps } from "../../../core/deps.js";
 import { runBootOnce } from "../../../gateway/boot.js";
 import { createSubsystemLogger } from "../../../logging/subsystem.js";
 import type { HookHandler } from "../../hooks.js";
@@ -42,3 +42,4 @@ const runBootChecklist: HookHandler = async (event) => {
 };
 
 export default runBootChecklist;
+

@@ -1,6 +1,6 @@
-import { resolveCommandSecretRefsViaGateway } from "../cli/command-secret-gateway.js";
-import { getStatusCommandSecretTargetIds } from "../cli/command-secret-targets.js";
-import { withProgress } from "../cli/progress.js";
+import { resolveCommandSecretRefsViaGateway } from "../core/command-secret-gateway.js";
+import { getStatusCommandSecretTargetIds } from "../core/command-secret-targets.js";
+import { withProgress } from "../core/progress.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { readBestEffortConfig } from "../config/config.js";
 import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
@@ -400,5 +400,6 @@ export async function scanStatus(
     },
   );
 }
+
 
 

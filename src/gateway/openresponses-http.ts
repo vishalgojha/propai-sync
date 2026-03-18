@@ -9,7 +9,7 @@
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { ClientToolDefinition } from "../agents/pi-embedded-runner/run/params.js";
-import { createDefaultDeps } from "../cli/deps.js";
+import { createDefaultDeps } from "../core/deps.js";
 import { agentCommandFromIngress } from "../commands/agent.js";
 import type { ImageContent } from "../commands/agent/types.js";
 import type { GatewayHttpResponsesConfig } from "../config/types.gateway.js";
@@ -844,5 +844,6 @@ export async function handleOpenResponsesHttpRequest(
 
   return true;
 }
+
 
 

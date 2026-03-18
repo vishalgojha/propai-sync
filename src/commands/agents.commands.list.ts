@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { listRouteBindings } from "../config/bindings.js";
 import type { AgentRouteBinding } from "../config/types.js";
 import { normalizeAgentId } from "../routing/session-key.js";
@@ -133,5 +133,6 @@ export async function agentsListCommand(
   );
   runtime.log(lines.join("\n"));
 }
+
 
 

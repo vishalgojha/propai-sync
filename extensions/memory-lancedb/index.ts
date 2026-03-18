@@ -494,52 +494,6 @@ const memoryPlugin = {
     );
 
     // ========================================================================
-    // CLI Commands
-    // ========================================================================
-
-    api.registerCli(
-      ({ program }) => {
-        const memory = program.command("ltm").description("LanceDB memory plugin commands");
-
-        memory
-          .command("list")
-          .description("List memories")
-          .action(async () => {
-            const count = await db.count();
-            console.log(`Total memories: ${count}`);
-          });
-
-        memory
-          .command("search")
-          .description("Search memories")
-          .argument("<query>", "Search query")
-          .option("--limit <n>", "Max results", "5")
-          .action(async (query, opts) => {
-            const vector = await embeddings.embed(query);
-            const results = await db.search(vector, parseInt(opts.limit), 0.3);
-            // Strip vectors for output
-            const output = results.map((r) => ({
-              id: r.entry.id,
-              text: r.entry.text,
-              category: r.entry.category,
-              importance: r.entry.importance,
-              score: r.score,
-            }));
-            console.log(JSON.stringify(output, null, 2));
-          });
-
-        memory
-          .command("stats")
-          .description("Show memory statistics")
-          .action(async () => {
-            const count = await db.count();
-            console.log(`Total memories: ${count}`);
-          });
-      },
-      { commands: ["ltm"] },
-    );
-
-    // ========================================================================
     // Lifecycle Hooks
     // ========================================================================
 

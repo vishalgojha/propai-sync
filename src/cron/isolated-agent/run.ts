@@ -37,7 +37,7 @@ import {
   normalizeVerboseLevel,
   supportsXHighThinking,
 } from "../../auto-reply/thinking.js";
-import type { CliDeps } from "../../cli/outbound-send-deps.js";
+import type { CliDeps } from "../../core/outbound-send-deps.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import {
   resolveSessionTranscriptPath,
@@ -877,6 +877,7 @@ export async function runCronIsolatedAgentTurn(params: {
 
   return resolveRunOutcome({ delivered, deliveryAttempted });
 }
+
 
 
 

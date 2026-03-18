@@ -1,5 +1,5 @@
 import { Type } from "@sinclair/typebox";
-import { formatCliCommand } from "../../cli/command-format.js";
+import { formatCliCommand } from "../../core/command-format.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import { normalizeResolvedSecretInputString } from "../../config/types.secrets.js";
 import { logVerbose } from "../../globals.js";
@@ -2220,6 +2220,7 @@ export const __testing = {
   resolveBraveMode,
   mapBraveLlmContextResults,
 } as const;
+
 
 
 

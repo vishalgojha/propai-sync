@@ -37,12 +37,12 @@ x-i18n:
     <Tabs>
       <Tab title="macOS/Linux">
         ```bash
-        curl -fsSL https://propai.ai/install.sh | bash
+        curl -fsSL https://propai.live/install.sh | bash
         ```
       </Tab>
       <Tab title="Windows (PowerShell)">
         ```powershell
-        iwr -useb https://propai.ai/install.ps1 | iex
+        iwr -useb https://propai.live/install.ps1 | iex
         ```
       </Tab>
     </Tabs>
@@ -123,5 +123,6 @@ Control UIが読み込まれれば、Gatewayは使用可能な状態です。
 - DMの安全性と承認：[ペアリング](/channels/pairing)
 - さらにチャンネルを接続：[チャンネル](/channels)
 - 高度なワークフローとソースからのビルド：[セットアップ](/start/setup)
+
 
 

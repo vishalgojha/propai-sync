@@ -2,6 +2,7 @@
 
 mod gateway_ipc;
 
+use serde::Serialize;
 use propai_desktop::gateway::{
   gateway_status, start_gateway, stop_gateway, DesktopGatewayError, DesktopGatewayStartRequest,
   DesktopGatewayState,
@@ -12,12 +13,17 @@ use crate::gateway_ipc::{
   config_apply, config_get, config_schema, config_set, connect, cron_add, cron_list, cron_remove,
   cron_run, cron_runs, cron_status, cron_update, device_pair_approve, device_pair_reject,
   device_token_revoke, exec_approval_resolve, gateway_ipc_start, gateway_ipc_stop, get_avatar,
-  get_control_ui_config, health, last_heartbeat, license_verify, logs_tail, models_list,
-  node_list, rpc_call, sessions_compact, sessions_delete, sessions_list, sessions_patch,
-  sessions_usage, sessions_usage_logs, sessions_usage_timeseries, skills_install, skills_status,
-  skills_update, status, system_presence, tools_catalog, update_channels_nostr_profile,
-  update_run, usage_cost, wizard_cancel, wizard_next, wizard_start, GatewayIpcState,
+  get_control_ui_config, health, last_heartbeat, license_activate, license_admin_approve,
+  license_deactivate, license_refresh, license_request, license_verify, logs_tail, models_list,
+  node_list, rpc_call,
+  sessions_compact, sessions_delete, sessions_list, sessions_patch, sessions_usage,
+  sessions_usage_logs, sessions_usage_timeseries, skills_install, skills_status, skills_update,
+  status, system_presence, tools_catalog, update_channels_nostr_profile, update_run, usage_cost,
+  wizard_cancel, wizard_next, wizard_start, GatewayIpcState,
 };
+use std::path::PathBuf;
+use std::process::Command;
+use std::time::Duration;
 use tauri::{Emitter, Manager, Url};
 #[cfg(desktop)]
 use tauri_plugin_updater::UpdaterExt;
@@ -26,6 +32,75 @@ const MENU_ID_SETUP: &str = "PropAiSync.menu.setup";
 const MENU_ID_GATEWAY_RESTART: &str = "PropAiSync.menu.gateway-restart";
 const EVENT_ONBOARDING_OPEN: &str = "PropAi Sync:onboarding-open";
 const EVENT_GATEWAY_RESTART: &str = "PropAi Sync:gateway-restart";
+
+#[derive(Serialize)]
+struct OllamaStatus {
+  installed: bool,
+  running: bool,
+}
+
+fn candidate_ollama_paths() -> Vec<PathBuf> {
+  let mut paths = Vec::new();
+  #[cfg(target_os = "windows")]
+  {
+    paths.push(PathBuf::from(r"C:\Program Files\Ollama\ollama.exe"));
+    paths.push(PathBuf::from(r"C:\Program Files (x86)\Ollama\ollama.exe"));
+    if let Ok(local_app_data) = std::env::var("LOCALAPPDATA") {
+      paths.push(
+        PathBuf::from(local_app_data)
+          .join("Programs")
+          .join("Ollama")
+          .join("ollama.exe"),
+      );
+    }
+  }
+  #[cfg(target_os = "macos")]
+  {
+    paths.push(PathBuf::from("/Applications/Ollama.app/Contents/MacOS/ollama"));
+    paths.push(PathBuf::from("/usr/local/bin/ollama"));
+    paths.push(PathBuf::from("/opt/homebrew/bin/ollama"));
+  }
+  #[cfg(target_os = "linux")]
+  {
+    paths.push(PathBuf::from("/usr/bin/ollama"));
+    paths.push(PathBuf::from("/usr/local/bin/ollama"));
+  }
+  paths
+}
+
+fn is_ollama_installed() -> bool {
+  if let Ok(output) = Command::new("ollama").arg("--version").output() {
+    if output.status.success() {
+      return true;
+    }
+  }
+  candidate_ollama_paths().into_iter().any(|path| path.exists())
+}
+
+async fn is_ollama_running() -> bool {
+  let client = match reqwest::Client::builder()
+    .timeout(Duration::from_millis(800))
+    .build()
+  {
+    Ok(client) => client,
+    Err(_) => return false,
+  };
+  match client
+    .get("http://127.0.0.1:11434/api/tags")
+    .send()
+    .await
+  {
+    Ok(response) => response.status().is_success(),
+    Err(_) => false,
+  }
+}
+
+#[tauri::command]
+async fn ollama_status() -> OllamaStatus {
+  let running = is_ollama_running().await;
+  let installed = if running { true } else { is_ollama_installed() };
+  OllamaStatus { installed, running }
+}
 
 #[cfg(desktop)]
 async fn run_auto_update(app: tauri::AppHandle) {
@@ -173,6 +248,11 @@ fn main() {
       get_avatar,
       update_channels_nostr_profile,
       channels_nostr_profile_import,
+      license_activate,
+      license_admin_approve,
+      license_deactivate,
+      license_refresh,
+      license_request,
       license_verify,
       rpc_call,
       agent_identity_get,
@@ -218,6 +298,7 @@ fn main() {
       status,
       system_presence,
       tools_catalog,
+      ollama_status,
       update_run,
       usage_cost,
       wizard_cancel,
@@ -257,8 +338,5 @@ fn main() {
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
-
-
-
 
 

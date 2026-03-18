@@ -2,8 +2,8 @@ import { hasControlCommand } from "../../auto-reply/command-detection.js";
 import { resolveInboundDebounceMs } from "../../auto-reply/inbound-debounce.js";
 import { getReplyFromConfig } from "../../auto-reply/reply.js";
 import { DEFAULT_GROUP_HISTORY_LIMIT } from "../../auto-reply/reply/history.js";
-import { formatCliCommand } from "../../cli/command-format.js";
-import { waitForever } from "../../cli/wait.js";
+import { formatCliCommand } from "../../core/command-format.js";
+import { waitForever } from "../../core/wait.js";
 import { loadConfig } from "../../config/config.js";
 import { createConnectedChannelStatusPatch } from "../../gateway/channel-status-patches.js";
 import { logVerbose } from "../../globals.js";
@@ -467,5 +467,6 @@ export async function monitorWebChannel(
 
   process.removeListener("SIGINT", handleSigint);
 }
+
 
 

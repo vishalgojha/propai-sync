@@ -1,4 +1,4 @@
-import { parseByteSize } from "../cli/parse-bytes.js";
+import { parseByteSize } from "../core/parse-bytes.js";
 
 /**
  * Parse an optional byte-size value from config.
@@ -27,3 +27,4 @@ export function parseNonNegativeByteSize(value: unknown): number | null {
 export function isValidNonNegativeByteSizeString(value: string): boolean {
   return parseNonNegativeByteSize(value) !== null;
 }
+

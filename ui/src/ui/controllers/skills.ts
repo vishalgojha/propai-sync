@@ -10,6 +10,7 @@ export type SkillsState = {
   skillsBusyKey: string | null;
   skillEdits: Record<string, string>;
   skillMessages: SkillMessageMap;
+  licenseGateActive: boolean;
 };
 
 export type SkillMessage = {
@@ -98,6 +99,13 @@ export async function updateSkillEnabled(state: SkillsState, skillKey: string, e
 
 export async function saveSkillApiKey(state: SkillsState, skillKey: string) {
   if (!state.client || !state.connected) {
+    return;
+  }
+  if (state.licenseGateActive) {
+    setSkillMessage(state, skillKey, {
+      kind: "error",
+      message: "License required to save API keys.",
+    });
     return;
   }
   state.skillsBusyKey = skillKey;

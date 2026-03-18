@@ -1202,9 +1202,10 @@ Commit the updated `.secrets.baseline` once it reflects the intended state.
 
 Found a vulnerability in propai? Please report responsibly:
 
-1. Email: [security@propai.ai](mailto:security@propai.ai)
+1. Email: [security@propai.live](mailto:security@propai.live)
 2. Don't post publicly until fixed
 3. We'll credit you (unless you prefer anonymity)
+
 
 
 

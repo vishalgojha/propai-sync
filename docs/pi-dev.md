@@ -76,8 +76,9 @@ If you only want to reset sessions, delete `agents/<agentId>/sessions/` and `age
 
 ## References
 
-- [https://docs.propai.ai/testing](https://docs.propai.ai/testing)
-- [https://docs.propai.ai/start/getting-started](https://docs.propai.ai/start/getting-started)
+- [https://docs.propai.live/testing](https://docs.propai.live/testing)
+- [https://docs.propai.live/start/getting-started](https://docs.propai.live/start/getting-started)
+
 
 
 

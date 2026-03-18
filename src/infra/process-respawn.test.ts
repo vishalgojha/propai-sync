@@ -160,7 +160,7 @@ describe("restartGatewayProcessWithFreshPid", () => {
     clearSupervisorHints();
     setPlatform("linux");
     process.execArgv = ["--import", "tsx"];
-    process.argv = ["/usr/local/bin/node", "/repo/dist/index.js", "gateway", "run"];
+    process.argv = ["/usr/local/bin/node", "/repo/dist/entry.js"];
     spawnMock.mockReturnValue({ pid: 4242, unref: vi.fn() });
 
     const result = restartGatewayProcessWithFreshPid();
@@ -168,7 +168,7 @@ describe("restartGatewayProcessWithFreshPid", () => {
     expect(result).toEqual({ mode: "spawned", pid: 4242 });
     expect(spawnMock).toHaveBeenCalledWith(
       process.execPath,
-      ["--import", "tsx", "/repo/dist/index.js", "gateway", "run"],
+      ["--import", "tsx", "/repo/dist/entry.js"],
       expect.objectContaining({
         detached: true,
         stdio: "inherit",

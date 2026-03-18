@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../../cli/command-format.js";
+import { formatCliCommand } from "../../core/command-format.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import { resolveGatewayPort, writeConfigFile } from "../../config/config.js";
 import { logConfigUpdated } from "../../config/logging.js";
@@ -136,6 +136,7 @@ export async function runNonInteractiveOnboardingLocal(params: {
     );
   }
 }
+
 
 
 

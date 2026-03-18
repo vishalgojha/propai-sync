@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../../cli/command-format.js";
+import { formatCliCommand } from "../../core/command-format.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import { canonicalizeMainSessionAlias, resolveAgentMainSessionKey } from "../../config/sessions.js";
 import { resolveSessionAgentId } from "../agent-scope.js";
@@ -136,6 +136,7 @@ export function formatSandboxToolPolicyBlockedMessage(params: {
 
   return lines.join("\n");
 }
+
 
 
 

@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import {
   resolveGatewayLaunchAgentLabel,
   resolveGatewaySystemdServiceName,
@@ -54,10 +54,10 @@ export function buildGatewayRuntimeHints(
     hints.push(
       `LaunchAgent label cached but plist missing. Clear with: launchctl bootout gui/$UID/${label}`,
     );
-    hints.push(`Then reinstall: ${formatCliCommand("propai gateway install", env)}`);
+    hints.push(`Then reinstall: ${formatCliCommand("propai gateway install")}`);
   }
   if (runtime.missingUnit) {
-    hints.push(`Service not installed. Run: ${formatCliCommand("propai gateway install", env)}`);
+    hints.push(`Service not installed. Run: ${formatCliCommand("propai gateway install")}`);
     if (fileLog) {
       hints.push(`File logs: ${fileLog}`);
     }
@@ -79,6 +79,7 @@ export function buildGatewayRuntimeHints(
   }
   return hints;
 }
+
 
 
 

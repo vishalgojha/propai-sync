@@ -75,7 +75,7 @@ Historical note:
 - [ ] `PROPAI_INSTALL_SMOKE_SKIP_NONROOT=1 pnpm test:install:smoke` (Docker install smoke test, fast path; required before release)
   - If the immediate previous npm release is known broken, set `PROPAI_INSTALL_SMOKE_PREVIOUS=<last-good-version>` or `PROPAI_INSTALL_SMOKE_SKIP_PREVIOUS=1` for the preinstall step.
 - [ ] (Optional) Full installer smoke (adds non-root + CLI coverage): `pnpm test:install:smoke`
-- [ ] (Optional) Installer E2E (Docker, runs `curl -fsSL https://propai.ai/install.sh | bash`, onboards, then runs real tool calls):
+- [ ] (Optional) Installer E2E (Docker, runs `curl -fsSL https://propai.live/install.sh | bash`, onboards, then runs real tool calls):
   - `pnpm test:install:e2e:openai` (requires `OPENAI_API_KEY`)
   - `pnpm test:install:e2e:anthropic` (requires `ANTHROPIC_API_KEY`)
   - `pnpm test:install:e2e` (requires both keys; runs both providers)
@@ -149,6 +149,7 @@ Current npm plugin list (update as needed):
 
 Release notes must also call out **new optional bundled plugins** that are **not
 on by default** (example: `tlon`).
+
 
 
 

@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { readConfigFileSnapshot } from "../config/config.js";
 import { assertSupportedRuntime } from "../infra/runtime-guard.js";
 import type { RuntimeEnv } from "../runtime.js";
@@ -94,6 +94,7 @@ export async function onboardCommand(opts: OnboardOptions, runtime: RuntimeEnv =
 }
 
 export type { OnboardOptions } from "./onboard-types.js";
+
 
 
 

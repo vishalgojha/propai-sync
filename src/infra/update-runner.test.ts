@@ -43,7 +43,9 @@ describe("runGatewayUpdate", () => {
   beforeEach(async () => {
     tempDir = path.join(fixtureRoot, `case-${caseId++}`);
     await fs.mkdir(tempDir, { recursive: true });
-    await fs.writeFile(path.join(tempDir, "propai.mjs"), "export {};\n", "utf-8");
+    const doctorRunnerDir = path.join(tempDir, "dist", "infra");
+    await fs.mkdir(doctorRunnerDir, { recursive: true });
+    await fs.writeFile(path.join(doctorRunnerDir, "doctor-runner.js"), "export {};\n", "utf-8");
   });
 
   afterEach(async () => {
@@ -59,7 +61,12 @@ describe("runGatewayUpdate", () => {
     const calls: string[] = [];
     let uiBuildCount = 0;
     const doctorNodePath = await resolveStableNodePath(process.execPath);
-    const doctorKey = `${doctorNodePath} ${path.join(tempDir, "propai.mjs")} doctor --non-interactive --fix`;
+    const doctorKey = `${doctorNodePath} ${path.join(
+      tempDir,
+      "dist",
+      "infra",
+      "doctor-runner.js",
+    )}`;
 
     const runCommand = async (argv: string[]) => {
       const key = argv.join(" ");
@@ -295,7 +302,7 @@ describe("runGatewayUpdate", () => {
       "pnpm install": { stdout: "" },
       "pnpm build": { stdout: "" },
       "pnpm ui:build": { stdout: "" },
-      [`${doctorNodePath} ${path.join(tempDir, "propai.mjs")} doctor --non-interactive --fix`]: {
+      [`${doctorNodePath} ${path.join(tempDir, "dist", "infra", "doctor-runner.js")}`]: {
         stdout: "",
       },
     });
@@ -522,9 +529,9 @@ describe("runGatewayUpdate", () => {
     expect(calls.some((call) => call.includes("status --porcelain"))).toBe(false);
   });
 
-  it("fails with a clear reason when propai.mjs is missing", async () => {
+  it("fails with a clear reason when doctor runner is missing", async () => {
     await setupGitCheckout({ packageManager: "pnpm@8.0.0" });
-    await fs.rm(path.join(tempDir, "propai.mjs"), { force: true });
+    await fs.rm(path.join(tempDir, "dist", "infra", "doctor-runner.js"), { force: true });
 
     const stableTag = "v1.0.1-1";
     const { runner } = createRunner({
@@ -538,7 +545,7 @@ describe("runGatewayUpdate", () => {
 
     expect(result.status).toBe("error");
     expect(result.reason).toBe("doctor-entry-missing");
-    expect(result.steps.at(-1)?.name).toBe("PropAi Sync doctor entry");
+    expect(result.steps.at(-1)?.name).toBe("PropAi Sync doctor runner entry");
   });
 
   it("repairs UI assets when doctor run removes control-ui files", async () => {

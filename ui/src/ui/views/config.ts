@@ -23,6 +23,7 @@ export type ConfigProps = {
   searchQuery: string;
   activeSection: string | null;
   activeSubsection: string | null;
+  licenseLocked: boolean;
   onRawChange: (next: string) => void;
   onFormModeChange: (mode: "form" | "raw") => void;
   onFormPatch: (path: Array<string | number>, value: unknown) => void;
@@ -459,6 +460,7 @@ export function renderConfig(props: ConfigProps) {
     props.connected &&
     !props.applying &&
     !props.updating &&
+    !props.licenseLocked &&
     hasChanges &&
     (props.formMode === "raw" ? true : canSaveForm);
   const canUpdate = props.connected && !props.applying && !props.updating;
@@ -663,6 +665,13 @@ export function renderConfig(props: ConfigProps) {
             </button>
           </div>
         </div>
+        ${
+          props.licenseLocked
+            ? html`<div class="callout warn" style="margin-top: 12px;">
+              License required to apply changes and edit sensitive fields.
+            </div>`
+            : nothing
+        }
 
         <!-- Diff panel (form mode only - raw mode doesn't have granular diff) -->
         ${
@@ -776,6 +785,7 @@ export function renderConfig(props: ConfigProps) {
                         value: props.formValue,
                         disabled: props.loading || !props.formValue,
                         unsupportedPaths: analysis.unsupportedPaths,
+                        licenseLocked: props.licenseLocked,
                         onPatch: props.onFormPatch,
                         searchQuery: props.searchQuery,
                         activeSection: props.activeSection,
@@ -797,6 +807,7 @@ export function renderConfig(props: ConfigProps) {
                   <span>Raw JSON5</span>
                   <textarea
                     .value=${props.raw}
+                    ?disabled=${props.licenseLocked}
                     @input=${(e: Event) =>
                       props.onRawChange((e.target as HTMLTextAreaElement).value)}
                   ></textarea>

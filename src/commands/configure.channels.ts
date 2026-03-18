@@ -1,5 +1,5 @@
 import { getChannelPlugin, listChannelPlugins } from "../channels/plugins/index.js";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { CONFIG_PATH } from "../config/config.js";
 import type { RuntimeEnv } from "../runtime.js";
@@ -80,6 +80,7 @@ export async function removeChannelConfigWizard(
     );
   }
 }
+
 
 
 

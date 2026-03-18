@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../../cli/command-format.js";
+import { formatCliCommand } from "../../core/command-format.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import { normalizeProviderId } from "../model-selection.js";
 import { listProfilesForProvider } from "./profiles.js";
@@ -45,6 +45,7 @@ export function formatAuthDoctorHint(params: {
     `Fix: run "${formatCliCommand("propai doctor --yes")}"`,
   ].join("\n");
 }
+
 
 
 

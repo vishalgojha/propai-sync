@@ -1,5 +1,5 @@
-import type { CliDeps } from "../cli/deps.js";
-import { createOutboundSendDeps } from "../cli/outbound-send-deps.js";
+import type { CliDeps } from "../core/deps.js";
+import { createOutboundSendDeps } from "../core/outbound-send-deps.js";
 import type { CronFailureDestinationConfig } from "../config/types.cron.js";
 import type { PropAiSyncConfig } from "../config/types.js";
 import { formatErrorMessage } from "../infra/errors.js";
@@ -299,5 +299,6 @@ export async function sendFailureNotificationAnnounce(
     clearTimeout(timeout);
   }
 }
+
 
 

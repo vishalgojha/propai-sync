@@ -5,8 +5,15 @@ function Write-Step([string]$Message) {
   Write-Host ("[propai-desktop] " + $Message)
 }
 
+function Invoke-Checked([scriptblock]$Action, [string]$FailureMessage) {
+  & $Action
+  if ($LASTEXITCODE -ne 0) {
+    throw $FailureMessage
+  }
+}
+
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")
-$nsisDir = Join-Path $repoRoot "apps\tauri\src-tauri\target\release\bundle\nsis"
+$msiDir = Join-Path $repoRoot "apps\tauri\src-tauri\target\release\bundle\msi"
 
 Write-Step ("Repo root: " + $repoRoot)
 
@@ -14,9 +21,9 @@ $signingKey = $env:TAURI_SIGNING_PRIVATE_KEY
 $hasSigningKey = $signingKey -and $signingKey.Trim()
 
 Write-Step "Installing desktop app deps..."
-pnpm -C (Join-Path $repoRoot "apps\tauri") install
+Invoke-Checked { pnpm -C (Join-Path $repoRoot "apps\tauri") install } "Desktop dependency install failed."
 
-Write-Step "Building desktop installer (this can take a while)..."
+Write-Step "Building desktop MSI (this can take a while)..."
 if (-not $hasSigningKey) {
   Write-Step "No TAURI_SIGNING_PRIVATE_KEY found; skipping updater artifacts + code signing."
   $overrideConfig = @'
@@ -30,23 +37,25 @@ if (-not $hasSigningKey) {
   if ($env:TAURI_SIGNING_PUBLIC_KEY) {
     Remove-Item Env:TAURI_SIGNING_PUBLIC_KEY -ErrorAction SilentlyContinue
   }
-  pnpm -C (Join-Path $repoRoot "apps\tauri") build:verbose -- --no-sign --config $overridePath
+  Invoke-Checked {
+    pnpm -C (Join-Path $repoRoot "apps\tauri") build:verbose -- --no-sign --config $overridePath
+  } "Desktop MSI build failed."
 } else {
-  pnpm -C (Join-Path $repoRoot "apps\tauri") build:verbose
+  Invoke-Checked { pnpm -C (Join-Path $repoRoot "apps\tauri") build:verbose } "Desktop MSI build failed."
 }
 
-if (Test-Path $nsisDir) {
-  $installer = Get-ChildItem -Path $nsisDir -Filter "*_x64-setup.exe" -ErrorAction SilentlyContinue |
+if (Test-Path $msiDir) {
+  $installer = Get-ChildItem -Path $msiDir -Filter "*.msi" -ErrorAction SilentlyContinue |
     Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
   if ($installer) {
-    Write-Step ("Installer ready: " + $installer.FullName)
+    Write-Step ("MSI ready: " + $installer.FullName)
     Write-Step "Run it to install/update the app."
     exit 0
   }
 }
 
-throw ("Build finished but installer not found under: " + $nsisDir)
+throw ("Build finished but MSI not found under: " + $msiDir)
 
 
 

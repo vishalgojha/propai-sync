@@ -200,16 +200,21 @@ else
 fi
 
 if [[ "$RUN_SETUP" == true ]]; then
+  echo "Starting gateway in the foreground for setup. Open Control UI at:"
+  echo "  http://127.0.0.1:${HOST_GATEWAY_PORT}/"
   exec podman run --pull="$PODMAN_PULL" --rm -it \
     --init \
     "${USERNS_ARGS[@]}" "${RUN_USER_ARGS[@]}" \
     -e HOME=/home/node -e TERM=xterm-256color -e BROWSER=echo \
     -e PROPAI_GATEWAY_TOKEN="$PROPAI_GATEWAY_TOKEN" \
+    -e PROPAI_GATEWAY_BIND="$GATEWAY_BIND" \
+    -e PROPAI_GATEWAY_PORT=18789 \
+    -e PROPAI_GATEWAY_ALLOW_UNCONFIGURED=1 \
     -v "$CONFIG_DIR:/home/node/.propai:rw${SELINUX_MOUNT_OPTS}" \
     -v "$WORKSPACE_DIR:/home/node/.propai/workspace:rw${SELINUX_MOUNT_OPTS}" \
     "${ENV_FILE_ARGS[@]}" \
     "$PROPAI_IMAGE" \
-    node dist/index.js onboard "$@"
+    node dist/entry.js
 fi
 
 podman run --pull="$PODMAN_PULL" -d --replace \
@@ -218,13 +223,16 @@ podman run --pull="$PODMAN_PULL" -d --replace \
   "${USERNS_ARGS[@]}" "${RUN_USER_ARGS[@]}" \
   -e HOME=/home/node -e TERM=xterm-256color \
   -e PROPAI_GATEWAY_TOKEN="$PROPAI_GATEWAY_TOKEN" \
+  -e PROPAI_GATEWAY_BIND="$GATEWAY_BIND" \
+  -e PROPAI_GATEWAY_PORT=18789 \
+  -e PROPAI_GATEWAY_ALLOW_UNCONFIGURED=1 \
   "${ENV_FILE_ARGS[@]}" \
   -v "$CONFIG_DIR:/home/node/.propai:rw${SELINUX_MOUNT_OPTS}" \
   -v "$WORKSPACE_DIR:/home/node/.propai/workspace:rw${SELINUX_MOUNT_OPTS}" \
   -p "${HOST_GATEWAY_PORT}:18789" \
   -p "${HOST_BRIDGE_PORT}:18790" \
   "$PROPAI_IMAGE" \
-  node dist/index.js gateway --bind "$GATEWAY_BIND" --port 18789
+  node dist/entry.js
 
 echo "Container $CONTAINER_NAME started. Dashboard: http://127.0.0.1:${HOST_GATEWAY_PORT}/"
 echo "Logs: podman logs -f $CONTAINER_NAME"

@@ -1,5 +1,5 @@
-// Lobster palette tokens for CLI/UI theming. "lobster seam" == use this palette.
-// Keep in sync with docs/cli/index.md (CLI palette section).
+// Lobster palette tokens for UI theming. "lobster seam" == use this palette.
+// Keep in sync with the palette docs.
 export const LOBSTER_PALETTE = {
   accent: "#FF5A2D",
   accentBright: "#FF7A3D",

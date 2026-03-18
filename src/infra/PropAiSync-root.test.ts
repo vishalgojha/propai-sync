@@ -117,7 +117,7 @@ describe("resolvePropAiSyncPackageRoot", () => {
     const project = fx("symlink-scenario");
     const bin = path.join(project, "bin", "propai");
     const realPkg = path.join(project, "real-pkg");
-    state.realpaths.set(abs(bin), abs(path.join(realPkg, "propai.mjs")));
+    state.realpaths.set(abs(bin), abs(path.join(realPkg, "dist", "entry.js")));
     setFile(path.join(realPkg, "package.json"), JSON.stringify({ name: "propai" }));
 
     expect(resolvePropAiSyncPackageRootSync({ argv1: bin })).toBe(realPkg);

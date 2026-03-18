@@ -293,6 +293,14 @@ export async function promptAndConfigureOllama(params: {
 }): Promise<{ config: PropAiSyncConfig; defaultModelId: string }> {
   const { prompter } = params;
 
+  await prompter.note(
+    [
+      "Ollama runs AI models locally on this machine.",
+      "Install and start Ollama before continuing.",
+    ].join("\n"),
+    "Ollama",
+  );
+
   // 1. Prompt base URL
   const baseUrlRaw = await prompter.text({
     message: "Ollama base URL",

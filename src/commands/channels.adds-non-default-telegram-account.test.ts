@@ -173,57 +173,6 @@ describe("channels command", () => {
     expect(next.channels?.telegram?.accounts?.alerts?.botToken).toBe("alerts-token");
   });
 
-  it("adds a default slack account with tokens", async () => {
-    configMocks.readConfigFileSnapshot.mockResolvedValue({ ...baseConfigSnapshot });
-    await channelsAddCommand(
-      {
-        channel: "slack",
-        account: "default",
-        botToken: "xoxb-1",
-        appToken: "xapp-1",
-      },
-      runtime,
-      { hasFlags: true },
-    );
-
-    const next = getWrittenConfig<{
-      channels?: {
-        slack?: { enabled?: boolean; botToken?: string; appToken?: string };
-      };
-    }>();
-    expect(next.channels?.slack?.enabled).toBe(true);
-    expect(next.channels?.slack?.botToken).toBe("xoxb-1");
-    expect(next.channels?.slack?.appToken).toBe("xapp-1");
-  });
-
-  it("deletes a non-default discord account", async () => {
-    configMocks.readConfigFileSnapshot.mockResolvedValue({
-      ...baseConfigSnapshot,
-      config: {
-        channels: {
-          discord: {
-            accounts: {
-              default: { token: "d0" },
-              work: { token: "d1" },
-            },
-          },
-        },
-      },
-    });
-
-    await channelsRemoveCommand({ channel: "discord", account: "work", delete: true }, runtime, {
-      hasFlags: true,
-    });
-
-    const next = getWrittenConfig<{
-      channels?: {
-        discord?: { accounts?: Record<string, { token?: string }> };
-      };
-    }>();
-    expect(next.channels?.discord?.accounts?.work).toBeUndefined();
-    expect(next.channels?.discord?.accounts?.default?.token).toBe("d0");
-  });
-
   it("adds a named WhatsApp account", async () => {
     configMocks.readConfigFileSnapshot.mockResolvedValue({ ...baseConfigSnapshot });
     await channelsAddCommand(
@@ -240,57 +189,20 @@ describe("channels command", () => {
     expect(next.channels?.whatsapp?.accounts?.family?.name).toBe("Family Phone");
   });
 
-  it("adds a second signal account with a distinct name", async () => {
-    configMocks.readConfigFileSnapshot.mockResolvedValue({
-      ...baseConfigSnapshot,
-      config: {
-        channels: {
-          signal: {
-            accounts: {
-              default: { account: "+15555550111", name: "Primary" },
-            },
-          },
-        },
-      },
-    });
-
-    await channelsAddCommand(
-      {
-        channel: "signal",
-        account: "lab",
-        name: "Lab",
-        signalNumber: "+15555550123",
-      },
-      runtime,
-      { hasFlags: true },
-    );
-
-    const next = getWrittenConfig<{
-      channels?: {
-        signal?: {
-          accounts?: Record<string, { account?: string; name?: string }>;
-        };
-      };
-    }>();
-    expect(next.channels?.signal?.accounts?.lab?.account).toBe("+15555550123");
-    expect(next.channels?.signal?.accounts?.lab?.name).toBe("Lab");
-    expect(next.channels?.signal?.accounts?.default?.name).toBe("Primary");
-  });
-
   it("disables a default provider account when remove has no delete flag", async () => {
     configMocks.readConfigFileSnapshot.mockResolvedValue({
       ...baseConfigSnapshot,
       config: {
-        channels: { discord: { token: "d0", enabled: true } },
+        channels: { telegram: { botToken: "t0", enabled: true } },
       },
     });
 
-    await runRemoveWithConfirm({ channel: "discord", account: "default" });
+    await runRemoveWithConfirm({ channel: "telegram", account: "default" });
 
     const next = getWrittenConfig<{
-      channels?: { discord?: { enabled?: boolean } };
+      channels?: { telegram?: { enabled?: boolean } };
     }>();
-    expect(next.channels?.discord?.enabled).toBe(false);
+    expect(next.channels?.telegram?.enabled).toBe(false);
   });
 
   it("includes external auth profiles in JSON output", async () => {
@@ -372,29 +284,29 @@ describe("channels command", () => {
       ...baseConfigSnapshot,
       config: {
         channels: {
-          discord: {
+          telegram: {
             name: "Primary Bot",
-            token: "d0",
+            botToken: "t0",
           },
         },
       },
     });
 
-    await channelsAddCommand({ channel: "discord", account: "work", token: "d1" }, runtime, {
+    await channelsAddCommand({ channel: "telegram", account: "work", token: "t1" }, runtime, {
       hasFlags: true,
     });
 
     const next = getWrittenConfig<{
       channels?: {
-        discord?: {
+        telegram?: {
           name?: string;
-          accounts?: Record<string, { name?: string; token?: string }>;
+          accounts?: Record<string, { name?: string; botToken?: string }>;
         };
       };
     }>();
-    expect(next.channels?.discord?.name).toBeUndefined();
-    expect(next.channels?.discord?.accounts?.default?.name).toBe("Primary Bot");
-    expect(next.channels?.discord?.accounts?.work?.token).toBe("d1");
+    expect(next.channels?.telegram?.name).toBeUndefined();
+    expect(next.channels?.telegram?.accounts?.default?.name).toBe("Primary Bot");
+    expect(next.channels?.telegram?.accounts?.work?.botToken).toBe("t1");
   });
 
   it("formats gateway channel status lines in registry order", () => {
@@ -413,47 +325,6 @@ describe("channels command", () => {
   });
 
   it.each([
-    {
-      name: "surfaces Discord privileged intent issues in channels status output",
-      channelAccounts: {
-        discord: [
-          {
-            accountId: "default",
-            enabled: true,
-            configured: true,
-            application: { intents: { messageContent: "disabled" } },
-          },
-        ],
-      },
-      patterns: [
-        /Warnings:/,
-        /Message Content Intent is disabled/i,
-        /Run: (?:PropAi Sync|PropAi Sync)( --profile isolated)? doctor/,
-      ],
-    },
-    {
-      name: "surfaces Discord permission audit issues in channels status output",
-      channelAccounts: {
-        discord: [
-          {
-            accountId: "default",
-            enabled: true,
-            configured: true,
-            audit: {
-              unresolvedChannels: 1,
-              channels: [
-                {
-                  channelId: "111",
-                  ok: false,
-                  missing: ["ViewChannel", "SendMessages"],
-                },
-              ],
-            },
-          },
-        ],
-      },
-      patterns: [/Warnings:/, /permission audit/i, /Channel 111/i],
-    },
     {
       name: "surfaces Telegram privacy-mode hints when allowUnmentionedGroups is enabled",
       channelAccounts: {
@@ -569,16 +440,16 @@ describe("channels command", () => {
       ...baseConfigSnapshot,
       config: {
         channels: {
-          discord: {
+          whatsapp: {
             accounts: {
-              default: { token: "d0" },
+              default: { name: "Primary" },
             },
           },
         },
       },
     });
 
-    await channelsRemoveCommand({ channel: "discord", account: "default", delete: true }, runtime, {
+    await channelsRemoveCommand({ channel: "whatsapp", account: "default", delete: true }, runtime, {
       hasFlags: true,
     });
 

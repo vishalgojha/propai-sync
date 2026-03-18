@@ -2,10 +2,10 @@ import {
   CHANNEL_MESSAGE_ACTION_NAMES,
   type ChannelMessageActionName,
 } from "../channels/plugins/types.js";
-import { resolveCommandSecretRefsViaGateway } from "../cli/command-secret-gateway.js";
-import { getChannelsCommandSecretTargetIds } from "../cli/command-secret-targets.js";
-import { createOutboundSendDeps, type CliDeps } from "../cli/outbound-send-deps.js";
-import { withProgress } from "../cli/progress.js";
+import { resolveCommandSecretRefsViaGateway } from "../core/command-secret-gateway.js";
+import { getChannelsCommandSecretTargetIds } from "../core/command-secret-targets.js";
+import { createOutboundSendDeps, type CliDeps } from "../core/outbound-send-deps.js";
+import { withProgress } from "../core/progress.js";
 import { loadConfig } from "../config/config.js";
 import type { OutboundSendDeps } from "../infra/outbound/deliver.js";
 import { runMessageAction } from "../infra/outbound/message-action-runner.js";
@@ -75,3 +75,4 @@ export async function messageCommand(
     runtime.log(line);
   }
 }
+

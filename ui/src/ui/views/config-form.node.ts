@@ -329,12 +329,14 @@ export function renderNode(params: {
   hints: ConfigUiHints;
   unsupported: Set<string>;
   disabled: boolean;
+  licenseLocked?: boolean;
   showLabel?: boolean;
   searchCriteria?: ConfigSearchCriteria;
   onPatch: (path: Array<string | number>, value: unknown) => void;
 }): TemplateResult | typeof nothing {
   const { schema, value, path, hints, unsupported, disabled, onPatch } = params;
   const showLabel = params.showLabel ?? true;
+  const licenseLocked = params.licenseLocked ?? false;
   const type = schemaType(schema);
   const { label, help, tags } = resolveFieldMeta(path, schema, hints);
   const key = pathKey(path);
@@ -437,6 +439,7 @@ export function renderNode(params: {
         return renderTextInput({
           ...params,
           inputType: hasNumber && !hasString ? "number" : "text",
+          licenseLocked,
         });
       }
     }
@@ -517,7 +520,7 @@ export function renderNode(params: {
 
   // String
   if (type === "string") {
-    return renderTextInput({ ...params, inputType: "text" });
+    return renderTextInput({ ...params, inputType: "text", licenseLocked });
   }
 
   // Fallback
@@ -535,6 +538,7 @@ function renderTextInput(params: {
   path: Array<string | number>;
   hints: ConfigUiHints;
   disabled: boolean;
+  licenseLocked?: boolean;
   showLabel?: boolean;
   searchCriteria?: ConfigSearchCriteria;
   inputType: "text" | "number";
@@ -544,8 +548,10 @@ function renderTextInput(params: {
   const showLabel = params.showLabel ?? true;
   const hint = hintForPath(path, hints);
   const { label, help, tags } = resolveFieldMeta(path, schema, hints);
+  const licenseLocked = params.licenseLocked ?? false;
   const isSensitive =
     (hint?.sensitive ?? false) && !/^\$\{[^}]*\}$/.test(String(value ?? "").trim());
+  const isSensitiveLocked = licenseLocked && isSensitive;
   const placeholder =
     hint?.placeholder ??
     // oxlint-disable typescript/no-base-to-string
@@ -555,11 +561,15 @@ function renderTextInput(params: {
         ? `Default: ${String(schema.default)}`
         : "");
   const displayValue = value ?? "";
+  const inputDisabled = disabled || isSensitiveLocked;
 
   return html`
     <div class="cfg-field">
       ${showLabel ? html`<label class="cfg-field__label">${label}</label>` : nothing}
       ${help ? html`<div class="cfg-field__help">${help}</div>` : nothing}
+      ${isSensitiveLocked
+        ? html`<div class="cfg-field__help">License required to edit secrets.</div>`
+        : nothing}
       ${renderTags(tags)}
       <div class="cfg-input-wrap">
         <input
@@ -567,7 +577,7 @@ function renderTextInput(params: {
           class="cfg-input"
           placeholder=${placeholder}
           .value=${displayValue == null ? "" : String(displayValue)}
-          ?disabled=${disabled}
+          ?disabled=${inputDisabled}
           @input=${(e: Event) => {
             const raw = (e.target as HTMLInputElement).value;
             if (inputType === "number") {
@@ -596,7 +606,7 @@ function renderTextInput(params: {
             type="button"
             class="cfg-input__reset"
             title="Reset to default"
-            ?disabled=${disabled}
+            ?disabled=${inputDisabled}
             @click=${() => onPatch(path, schema.default)}
           >↺</button>
         `
@@ -709,11 +719,13 @@ function renderObject(params: {
   hints: ConfigUiHints;
   unsupported: Set<string>;
   disabled: boolean;
+  licenseLocked?: boolean;
   showLabel?: boolean;
   searchCriteria?: ConfigSearchCriteria;
   onPatch: (path: Array<string | number>, value: unknown) => void;
 }): TemplateResult {
   const { schema, value, path, hints, unsupported, disabled, onPatch, searchCriteria } = params;
+  const licenseLocked = params.licenseLocked ?? false;
   const showLabel = params.showLabel ?? true;
   const { label, help, tags } = resolveFieldMeta(path, schema, hints);
   const selfMatched =
@@ -753,6 +765,7 @@ function renderObject(params: {
         hints,
         unsupported,
         disabled,
+        licenseLocked,
         searchCriteria: childSearchCriteria,
         onPatch,
       }),
@@ -766,6 +779,7 @@ function renderObject(params: {
             hints,
             unsupported,
             disabled,
+            licenseLocked,
             reservedKeys: reserved,
             searchCriteria: childSearchCriteria,
             onPatch,
@@ -816,11 +830,13 @@ function renderArray(params: {
   hints: ConfigUiHints;
   unsupported: Set<string>;
   disabled: boolean;
+  licenseLocked?: boolean;
   showLabel?: boolean;
   searchCriteria?: ConfigSearchCriteria;
   onPatch: (path: Array<string | number>, value: unknown) => void;
 }): TemplateResult {
   const { schema, value, path, hints, unsupported, disabled, onPatch, searchCriteria } = params;
+  const licenseLocked = params.licenseLocked ?? false;
   const showLabel = params.showLabel ?? true;
   const { label, help, tags } = resolveFieldMeta(path, schema, hints);
   const selfMatched =
@@ -898,6 +914,7 @@ function renderArray(params: {
                   hints,
                   unsupported,
                   disabled,
+                  licenseLocked,
                   searchCriteria: childSearchCriteria,
                   showLabel: false,
                   onPatch,
@@ -920,6 +937,7 @@ function renderMapField(params: {
   hints: ConfigUiHints;
   unsupported: Set<string>;
   disabled: boolean;
+  licenseLocked?: boolean;
   reservedKeys: Set<string>;
   searchCriteria?: ConfigSearchCriteria;
   onPatch: (path: Array<string | number>, value: unknown) => void;
@@ -931,6 +949,7 @@ function renderMapField(params: {
     hints,
     unsupported,
     disabled,
+    licenseLocked,
     reservedKeys,
     onPatch,
     searchCriteria,
@@ -1056,6 +1075,7 @@ function renderMapField(params: {
                           hints,
                           unsupported,
                           disabled,
+                          licenseLocked,
                           searchCriteria,
                           showLabel: false,
                           onPatch,

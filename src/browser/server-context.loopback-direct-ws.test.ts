@@ -39,9 +39,9 @@ describe("browser server-context loopback direct WebSocket profiles", () => {
       color: "#FF4500",
     };
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const PropAi Sync = ctx.forProfile("PropAi Sync");
+    const propaiProfile = ctx.forProfile("PropAi Sync");
 
-    const opened = await PropAiSync.openTab("http://127.0.0.1:8080");
+    const opened = await propaiProfile.openTab("http://127.0.0.1:8080");
     expect(opened.targetId).toBe("CREATED");
     expect(createTargetViaCdp).toHaveBeenCalledWith({
       cdpUrl: "ws://127.0.0.1:18800/devtools/browser/SESSION?token=abc",
@@ -83,10 +83,10 @@ describe("browser server-context loopback direct WebSocket profiles", () => {
       color: "#FF4500",
     };
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const PropAi Sync = ctx.forProfile("PropAi Sync");
+    const propaiProfile = ctx.forProfile("PropAi Sync");
 
-    await PropAiSync.focusTab("T1");
-    await PropAiSync.closeTab("T1");
+    await propaiProfile.focusTab("T1");
+    await propaiProfile.closeTab("T1");
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://127.0.0.1:18800/json/activate/T1?token=abc",
@@ -131,13 +131,13 @@ describe("browser server-context loopback direct WebSocket profiles", () => {
       color: "#FF4500",
     };
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const PropAi Sync = ctx.forProfile("PropAi Sync");
+    const propaiProfile = ctx.forProfile("PropAi Sync");
 
-    const tabs = await PropAiSync.listTabs();
+    const tabs = await propaiProfile.listTabs();
     expect(tabs.map((tab) => tab.targetId)).toEqual(["T2"]);
 
-    await PropAiSync.focusTab("T2");
-    await PropAiSync.closeTab("T2");
+    await propaiProfile.focusTab("T2");
+    await propaiProfile.closeTab("T2");
   });
 });
 

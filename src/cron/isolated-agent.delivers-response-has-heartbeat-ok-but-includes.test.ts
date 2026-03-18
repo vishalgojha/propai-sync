@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { withTempHome as withTempHomeBase } from "../../test/helpers/temp-home.js";
 import { runEmbeddedPiAgent } from "../agents/pi-embedded.js";
 import { runSubagentAnnounceFlow } from "../agents/subagent-announce.js";
-import type { CliDeps } from "../cli/deps.js";
+import type { CliDeps } from "../core/deps.js";
 import { callGateway } from "../gateway/call.js";
 import { runCronIsolatedAgentTurn } from "./isolated-agent.js";
 import { makeCfg, makeJob, writeSessionStore } from "./isolated-agent.test-harness.js";
@@ -23,15 +23,11 @@ async function createTelegramDeliveryFixture(home: string): Promise<{
     lastTo: "123",
   });
   const deps: CliDeps = {
-    sendMessageSlack: vi.fn(),
     sendMessageWhatsApp: vi.fn(),
     sendMessageTelegram: vi.fn().mockResolvedValue({
       messageId: "t1",
       chatId: "123",
     }),
-    sendMessageDiscord: vi.fn(),
-    sendMessageSignal: vi.fn(),
-    sendMessageIMessage: vi.fn(),
   };
   return { storePath, deps };
 }
@@ -262,5 +258,6 @@ describe("runCronIsolatedAgentTurn", () => {
     });
   });
 });
+
 
 

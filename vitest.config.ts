@@ -127,7 +127,6 @@ export default defineConfig({
         "src/channel-web.ts",
         "src/extensionAPI.ts",
         "src/logging.ts",
-        "src/cli/**",
         "src/commands/**",
         "src/daemon/**",
         "src/hooks/**",

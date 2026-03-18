@@ -135,6 +135,24 @@ function buildStartDirs(opts: UpdateRunnerOptions): string[] {
   return Array.from(new Set(dirs));
 }
 
+async function resolveDoctorRunnerEntry(root: string): Promise<string | null> {
+  const candidates = [
+    path.join(root, "dist", "infra", "doctor-runner.js"),
+    path.join(root, "dist", "infra", "doctor-runner.mjs"),
+  ];
+  for (const candidate of candidates) {
+    // eslint-disable-next-line no-await-in-loop
+    const exists = await fs
+      .stat(candidate)
+      .then(() => true)
+      .catch(() => false);
+    if (exists) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
 async function readBranchName(
   runCommand: CommandRunner,
   root: string,
@@ -740,19 +758,15 @@ export async function runGatewayUpdate(opts: UpdateRunnerOptions = {}): Promise<
       };
     }
 
-    const doctorEntry = path.join(gitRoot, "propai.mjs");
-    const doctorEntryExists = await fs
-      .stat(doctorEntry)
-      .then(() => true)
-      .catch(() => false);
-    if (!doctorEntryExists) {
+    const doctorEntry = await resolveDoctorRunnerEntry(gitRoot);
+    if (!doctorEntry) {
       steps.push({
-        name: "PropAi Sync doctor entry",
-        command: `verify ${doctorEntry}`,
+        name: "PropAi Sync doctor runner entry",
+        command: `verify ${path.join(gitRoot, "dist", "infra", "doctor-runner.[js|mjs]")}`,
         cwd: gitRoot,
         durationMs: 0,
         exitCode: 1,
-        stderrTail: `missing ${doctorEntry}`,
+        stderrTail: "missing doctor-runner entry",
       });
       return {
         status: "error",
@@ -768,7 +782,7 @@ export async function runGatewayUpdate(opts: UpdateRunnerOptions = {}): Promise<
     // Use --fix so that doctor auto-strips unknown config keys introduced by
     // schema changes between versions, preventing a startup validation crash.
     const doctorNodePath = await resolveStableNodePath(process.execPath);
-    const doctorArgv = [doctorNodePath, doctorEntry, "doctor", "--non-interactive", "--fix"];
+    const doctorArgv = [doctorNodePath, doctorEntry];
     const doctorStep = await runStep(
       step("PropAi Sync doctor", doctorArgv, gitRoot, { PROPAI_UPDATE_IN_PROGRESS: "1" }),
     );

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { normalizeChannelId } from "../channels/plugins/index.js";
-import { createOutboundSendDeps } from "../cli/outbound-send-deps.js";
+import { createOutboundSendDeps } from "../core/outbound-send-deps.js";
 import { agentCommandFromIngress } from "../commands/agent.js";
 import { loadConfig } from "../config/config.js";
 import { updateSessionStore } from "../config/sessions.js";
@@ -607,3 +607,4 @@ export const handleNodeEvent = async (ctx: NodeEventContext, nodeId: string, evt
       return;
   }
 };
+

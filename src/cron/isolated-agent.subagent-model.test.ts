@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { withTempHome as withTempHomeHelper } from "../../test/helpers/temp-home.js";
 import { loadModelCatalog } from "../agents/model-catalog.js";
 import { runEmbeddedPiAgent } from "../agents/pi-embedded.js";
-import type { CliDeps } from "../cli/deps.js";
+import type { CliDeps } from "../core/deps.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { runCronIsolatedAgentTurn } from "./isolated-agent.js";
 import type { CronJob } from "./types.js";
@@ -58,10 +58,6 @@ function makeDeps(): CliDeps {
   return {
     sendMessageWhatsApp: vi.fn(),
     sendMessageTelegram: vi.fn(),
-    sendMessageDiscord: vi.fn(),
-    sendMessageSlack: vi.fn(),
-    sendMessageSignal: vi.fn(),
-    sendMessageIMessage: vi.fn(),
   };
 }
 
@@ -193,6 +189,7 @@ describe("runCronIsolatedAgentTurn: subagent model resolution (#11461)", () => {
     });
   });
 });
+
 
 
 

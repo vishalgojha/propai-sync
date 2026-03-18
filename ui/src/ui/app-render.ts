@@ -91,7 +91,7 @@ import { renderOverview } from "./views/overview.ts";
 import { renderSessions } from "./views/sessions.ts";
 import { renderSkills } from "./views/skills.ts";
 import { renderOnboardingWizard } from "./views/onboarding.ts";
-import { renderLanding } from "./views/landing.ts";
+import { renderLicensePanel } from "./views/license-panel.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
 const AVATAR_HTTP_RE = /^https?:\/\//i;
@@ -154,6 +154,7 @@ export function renderApp(state: AppViewState) {
     (typeof state.hello?.server?.version === "string" && state.hello.server.version.trim()) ||
     state.updateAvailable?.currentVersion ||
     t("common.na");
+  const isTauri = isTauriRuntime();
   const availableUpdate =
     state.updateAvailable &&
     state.updateAvailable.latestVersion !== state.updateAvailable.currentVersion
@@ -163,7 +164,12 @@ export function renderApp(state: AppViewState) {
   const presenceCount = state.presenceEntries.length;
   const sessionsCount = state.sessionsResult?.count ?? null;
   const cronNext = state.cronStatus?.nextWakeAtMs ?? null;
-  const chatDisabledReason = state.connected ? null : t("chat.disconnected");
+  const licenseLocked = state.licenseGateActive;
+  const chatDisabledReason = licenseLocked
+    ? "License required to send messages."
+    : state.connected
+      ? null
+      : t("chat.disconnected");
   const isChat = state.tab === "chat";
   const chatFocus = isChat && (state.settings.chatFocusMode || state.onboarding);
   const showThinking = state.onboarding ? false : state.settings.chatShowThinking;
@@ -235,19 +241,6 @@ export function renderApp(state: AppViewState) {
     state.cronForm.deliveryMode === "webhook"
       ? rawDeliveryToSuggestions.filter((value) => isHttpUrl(value))
       : rawDeliveryToSuggestions;
-  if (state.licenseGateActive) {
-    return renderLanding({
-      token: state.licenseToken,
-      apiUrl: state.licenseApiUrl,
-      busy: state.licenseBusy,
-      status: state.licenseStatus,
-      entitlement: state.licenseEntitlement,
-      error: state.licenseError,
-      onTokenChange: (value) => state.handleLicenseTokenInput(value),
-      onApiUrlChange: (value) => state.handleLicenseApiInput(value),
-      onSubmit: () => void state.submitLicenseToken(),
-    });
-  }
   if (state.onboarding) {
     return html`
       <div class="shell shell--onboarding">
@@ -264,6 +257,26 @@ export function renderApp(state: AppViewState) {
             draft: state.onboardingWizardDraft,
             presetId: state.onboardingWizardPresetId,
             autoAdvance: state.onboardingWizardAutoAdvance,
+            isTauri,
+            licenseLocked,
+            licenseToken: state.licenseToken,
+            licenseApiUrl: state.licenseApiUrl,
+            licenseAdminKey: state.licenseAdminKey,
+            licenseStatus: state.licenseStatus,
+            licenseEntitlement: state.licenseEntitlement,
+            licenseError: state.licenseError,
+            licenseNotice: state.licenseNotice,
+            licenseBusy: state.licenseBusy,
+            ollamaStatus: state.ollamaStatus,
+            ollamaStatusLoading: state.ollamaStatusLoading,
+            onLicenseTokenChange: (value) => state.handleLicenseTokenInput(value),
+            onLicenseApiUrlChange: (value) => state.handleLicenseApiInput(value),
+            onLicenseAdminKeyChange: (value) => state.handleLicenseAdminKeyInput(value),
+            onLicenseSubmit: () => void state.submitLicenseToken(),
+            onLicenseRequest: () => void state.handleLicenseRequest(),
+            onLicenseApprove: () => void state.handleLicenseApprove(),
+            onOllamaDownload: () => state.handleOllamaDownload(),
+            onOllamaRecheck: () => state.handleOllamaRecheck(),
             onPresetChange: (value) => state.handleOnboardingPresetChange(value),
             onAutoAdvanceChange: (value) => state.handleOnboardingAutoAdvanceChange(value),
             onStart: () => void state.startOnboardingWizard(),
@@ -379,6 +392,26 @@ export function renderApp(state: AppViewState) {
             </div>`
             : nothing
         }
+        ${
+          licenseLocked
+            ? renderLicensePanel({
+                token: state.licenseToken,
+                apiUrl: state.licenseApiUrl,
+                adminKey: state.licenseAdminKey,
+                busy: state.licenseBusy,
+                status: state.licenseStatus,
+                entitlement: state.licenseEntitlement,
+                error: state.licenseError,
+                notice: state.licenseNotice,
+                onTokenChange: (value) => state.handleLicenseTokenInput(value),
+                onApiUrlChange: (value) => state.handleLicenseApiInput(value),
+                onAdminKeyChange: (value) => state.handleLicenseAdminKeyInput(value),
+                onSubmit: () => void state.submitLicenseToken(),
+                onRequest: () => void state.handleLicenseRequest(),
+                onApprove: () => void state.handleLicenseApprove(),
+              })
+            : nothing
+        }
         <section class="content-header">
           <div>
             ${state.tab === "usage" ? nothing : html`<div class="page-title">${titleForTab(state.tab)}</div>`}
@@ -404,6 +437,7 @@ export function renderApp(state: AppViewState) {
                 cronEnabled: state.cronStatus?.enabled ?? null,
                 cronNext,
                 lastChannelsRefresh: state.channelsLastSuccess,
+                licenseLocked,
                 onSettingsChange: (next) => state.applySettings(next),
                 onPasswordChange: (next) => (state.password = next),
                 onSessionKeyChange: (next) => {
@@ -419,7 +453,7 @@ export function renderApp(state: AppViewState) {
                 },
                 onConnect: () => state.connect(),
                 onRefresh: () => state.loadOverview(),
-                onRestartGateway: isTauriRuntime() ? () => state.restartDesktopGateway() : undefined,
+                onRestartGateway: isTauri ? () => state.restartDesktopGateway() : undefined,
               })
             : nothing
         }
@@ -519,6 +553,7 @@ export function renderApp(state: AppViewState) {
                 jobsSortDir: state.cronJobsSortDir,
                 error: state.cronError,
                 busy: state.cronBusy,
+                licenseLocked,
                 form: state.cronForm,
                 fieldErrors: state.cronFieldErrors,
                 canSubmit: !hasCronFormErrors(state.cronFieldErrors),
@@ -635,6 +670,7 @@ export function renderApp(state: AppViewState) {
                 toolsCatalogError: state.toolsCatalogError,
                 toolsCatalogResult: state.toolsCatalogResult,
                 skillsFilter: state.skillsFilter,
+                licenseLocked,
                 onRefresh: async () => {
                   await loadAgents(state);
                   const nextSelected =
@@ -909,6 +945,7 @@ export function renderApp(state: AppViewState) {
                 edits: state.skillEdits,
                 messages: state.skillMessages,
                 busyKey: state.skillsBusyKey,
+                licenseLocked,
                 onFilterChange: (next) => (state.skillsFilter = next),
                 onRefresh: () => loadSkills(state, { clearMessages: true }),
                 onToggle: (key, enabled) => updateSkillEnabled(state, key, enabled),
@@ -1037,7 +1074,7 @@ export function renderApp(state: AppViewState) {
                 draft: state.chatMessage,
                 queue: state.chatQueue,
                 connected: state.connected,
-                canSend: state.connected,
+                canSend: state.connected && !licenseLocked,
                 disabledReason: chatDisabledReason,
                 error: state.lastError,
                 sessions: state.sessionsResult,
@@ -1101,6 +1138,7 @@ export function renderApp(state: AppViewState) {
                 searchQuery: state.configSearchQuery,
                 activeSection: state.configActiveSection,
                 activeSubsection: state.configActiveSubsection,
+                licenseLocked,
                 onRawChange: (next) => {
                   state.configRaw = next;
                 },
@@ -1170,10 +1208,3 @@ export function renderApp(state: AppViewState) {
     </div>
   `;
 }
-
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { CliDeps } from "../../cli/deps.js";
+import type { CliDeps } from "../../core/deps.js";
 import { loadConfig } from "../../config/config.js";
 import { resolveMainSessionKeyFromConfig } from "../../config/sessions.js";
 import { runCronIsolatedAgentTurn } from "../../cron/isolated-agent.js";
@@ -112,3 +112,4 @@ export function createGatewayHooksRequestHandler(params: {
     dispatchWakeHook,
   });
 }
+

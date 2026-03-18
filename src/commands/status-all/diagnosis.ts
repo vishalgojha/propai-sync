@@ -1,4 +1,4 @@
-import type { ProgressReporter } from "../../cli/progress.js";
+import type { ProgressReporter } from "../../core/progress.js";
 import { formatConfigIssueLine } from "../../config/issue-format.js";
 import { resolveGatewayLogPaths } from "../../daemon/launchd.js";
 import { formatPortDiagnostics } from "../../infra/ports.js";
@@ -246,5 +246,6 @@ export async function appendStatusAllDiagnosis(params: {
   lines.push("Troubleshooting: https://docs.propai.ai/troubleshooting");
   lines.push("");
 }
+
 
 

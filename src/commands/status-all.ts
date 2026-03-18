@@ -1,8 +1,8 @@
 import { buildWorkspaceSkillStatus } from "../agents/skills-status.js";
-import { formatCliCommand } from "../cli/command-format.js";
-import { resolveCommandSecretRefsViaGateway } from "../cli/command-secret-gateway.js";
-import { getStatusCommandSecretTargetIds } from "../cli/command-secret-targets.js";
-import { withProgress } from "../cli/progress.js";
+import { formatCliCommand } from "../core/command-format.js";
+import { resolveCommandSecretRefsViaGateway } from "../core/command-secret-gateway.js";
+import { getStatusCommandSecretTargetIds } from "../core/command-secret-targets.js";
+import { withProgress } from "../core/progress.js";
 import {
   readBestEffortConfig,
   readConfigFileSnapshot,
@@ -363,6 +363,7 @@ export async function statusAllCommand(
     progress.tick();
   });
 }
+
 
 
 

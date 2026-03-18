@@ -3,7 +3,7 @@
  */
 
 import type { SandboxBrowserInfo, SandboxContainerInfo } from "../agents/sandbox.js";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { formatDurationCompact } from "../infra/format-time/format-duration.ts";
 import type { RuntimeEnv } from "../runtime.js";
 import { formatImageMatch, formatSimpleStatus, formatStatus } from "./sandbox-formatters.js";
@@ -134,5 +134,6 @@ export function displayRecreateResult(
     runtime.log("\nContainers will be automatically recreated when the agent is next used.");
   }
 }
+
 
 

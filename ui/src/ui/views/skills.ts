@@ -17,6 +17,7 @@ export type SkillsProps = {
   edits: Record<string, string>;
   busyKey: string | null;
   messages: SkillMessageMap;
+  licenseLocked: boolean;
   onFilterChange: (next: string) => void;
   onRefresh: () => void;
   onToggle: (skillKey: string, enabled: boolean) => void;
@@ -95,6 +96,7 @@ export function renderSkills(props: SkillsProps) {
 
 function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
   const busy = props.busyKey === skill.skillKey;
+  const licenseLocked = props.licenseLocked;
   const apiKey = props.edits[skill.skillKey] ?? "";
   const message = props.messages[skill.skillKey] ?? null;
   const canInstall = skill.install.length > 0 && skill.missing.bins.length > 0;
@@ -171,6 +173,7 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
                 <input
                   type="password"
                   .value=${apiKey}
+                  ?disabled=${licenseLocked || busy}
                   @input=${(e: Event) =>
                     props.onEdit(skill.skillKey, (e.target as HTMLInputElement).value)}
                 />
@@ -178,11 +181,18 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
               <button
                 class="btn primary"
                 style="margin-top: 8px;"
-                ?disabled=${busy}
+                ?disabled=${busy || licenseLocked}
                 @click=${() => props.onSaveKey(skill.skillKey)}
               >
                 Save key
               </button>
+              ${
+                licenseLocked
+                  ? html`<div class="muted" style="margin-top: 6px;">
+                      License required to save API keys.
+                    </div>`
+                  : nothing
+              }
             `
             : nothing
         }

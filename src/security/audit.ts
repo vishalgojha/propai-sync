@@ -5,7 +5,7 @@ import { execDockerRaw } from "../agents/sandbox/docker.js";
 import { resolveBrowserConfig, resolveProfile } from "../browser/config.js";
 import { resolveBrowserControlAuth } from "../browser/control-auth.js";
 import { listChannelPlugins } from "../channels/plugins/index.js";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { ConfigFileSnapshot, PropAiSyncConfig } from "../config/config.js";
 import { resolveConfigPath, resolveStateDir } from "../config/paths.js";
 import { hasConfiguredSecretInput } from "../config/types.secrets.js";
@@ -1200,5 +1200,6 @@ export async function runSecurityAudit(opts: SecurityAuditOptions): Promise<Secu
   const summary = countBySeverity(findings);
   return { ts: Date.now(), summary, findings, deep };
 }
+
 
 

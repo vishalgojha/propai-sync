@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createDefaultDeps } from "../cli/deps.js";
+import { createDefaultDeps } from "../core/deps.js";
 import { agentCommandFromIngress } from "../commands/agent.js";
 import type { ImageContent } from "../commands/agent/types.js";
 import type { GatewayHttpChatCompletionsConfig } from "../config/types.gateway.js";
@@ -610,5 +610,6 @@ export async function handleOpenAiHttpRequest(
 
   return true;
 }
+
 
 

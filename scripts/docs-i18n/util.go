@@ -10,13 +10,45 @@ import (
 )
 
 const (
-	workflowVersion = 15
-	providerName    = "pi"
-	modelVersion    = "claude-opus-4-6"
+	workflowVersion     = 15
+	defaultProviderName = "anthropic"
+	defaultModelVersion = "claude-opus-4-6"
+	defaultMetaProvider = "pi"
 )
 
-func cacheNamespace() string {
-	return fmt.Sprintf("wf=%d|provider=%s|model=%s", workflowVersion, providerName, modelVersion)
+func normalizeProviderModel(provider, model string) (string, string) {
+	provider = strings.TrimSpace(provider)
+	model = strings.TrimSpace(model)
+	if provider == "" && strings.Contains(model, "/") {
+		parts := strings.SplitN(model, "/", 2)
+		if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+			provider = parts[0]
+			model = parts[1]
+		}
+	}
+	if provider == "" {
+		provider = defaultProviderName
+	}
+	if model == "" {
+		model = defaultModelVersion
+	}
+	return provider, model
+}
+
+func metadataProvider(provider string) string {
+	provider = strings.TrimSpace(provider)
+	if provider == "" || provider == defaultProviderName {
+		return defaultMetaProvider
+	}
+	return provider
+}
+
+func cacheNamespaceFor(provider, model string) string {
+	metaProvider := metadataProvider(provider)
+	if model == "" {
+		model = defaultModelVersion
+	}
+	return fmt.Sprintf("wf=%d|provider=%s|model=%s", workflowVersion, metaProvider, model)
 }
 
 func cacheKey(namespace, srcLang, tgtLang, segmentID, textHash string) string {

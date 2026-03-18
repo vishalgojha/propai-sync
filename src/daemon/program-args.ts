@@ -12,7 +12,7 @@ type GatewayRuntimePreference = "auto" | "node" | "bun";
 async function resolveCliEntrypointPathForService(): Promise<string> {
   const argv1 = process.argv[1];
   if (!argv1) {
-    throw new Error("Unable to resolve CLI entrypoint path");
+    throw new Error("Unable to resolve runtime entrypoint path");
   }
 
   const normalized = path.resolve(argv1);
@@ -49,7 +49,7 @@ async function resolveCliEntrypointPathForService(): Promise<string> {
   }
 
   throw new Error(
-    `Cannot find built CLI at ${distCandidates.join(" or ")}. Run "pnpm build" first, or use dev mode.`,
+    `Cannot find built runtime entrypoint at ${distCandidates.join(" or ")}. Run "pnpm build" first, or use dev mode.`,
   );
 }
 
@@ -123,7 +123,7 @@ function resolveRepoRootForDev(): string {
   const parts = normalized.split(path.sep);
   const srcIndex = parts.lastIndexOf("src");
   if (srcIndex === -1) {
-    throw new Error("Dev mode requires running from repo (src/index.ts)");
+    throw new Error("Dev mode requires running from repo (src/entry.ts)");
   }
   return parts.slice(0, srcIndex).join(path.sep);
 }
@@ -178,7 +178,7 @@ async function resolveCliProgramArguments(params: {
   if (runtime === "bun") {
     if (params.dev) {
       const repoRoot = resolveRepoRootForDev();
-      const devCliPath = path.join(repoRoot, "src", "index.ts");
+      const devCliPath = path.join(repoRoot, "src", "entry.ts");
       await fs.access(devCliPath);
       const bunPath = isBunRuntime(execPath) ? execPath : await resolveBunPath();
       return {
@@ -211,7 +211,7 @@ async function resolveCliProgramArguments(params: {
 
   // Dev mode: use bun to run TypeScript directly
   const repoRoot = resolveRepoRootForDev();
-  const devCliPath = path.join(repoRoot, "src", "index.ts");
+  const devCliPath = path.join(repoRoot, "src", "entry.ts");
   await fs.access(devCliPath);
 
   // If already running under bun, use current execPath
@@ -236,9 +236,8 @@ export async function resolveGatewayProgramArguments(params: {
   runtime?: GatewayRuntimePreference;
   nodePath?: string;
 }): Promise<GatewayProgramArgs> {
-  const gatewayArgs = ["gateway", "--port", String(params.port)];
   return resolveCliProgramArguments({
-    args: gatewayArgs,
+    args: [],
     dev: params.dev,
     runtime: params.runtime,
     nodePath: params.nodePath,

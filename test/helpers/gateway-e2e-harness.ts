@@ -125,38 +125,29 @@ export async function spawnGatewayInstance(name: string): Promise<GatewayInstanc
   let child: ChildProcessWithoutNullStreams | null = null;
 
   try {
-    child = spawn(
-      "node",
-      [
-        "dist/index.js",
-        "gateway",
-        "--port",
-        String(port),
-        "--bind",
-        "loopback",
-        "--allow-unconfigured",
-      ],
-      {
-        cwd: process.cwd(),
-        env: {
-          ...process.env,
-          HOME: homeDir,
-          PROPAI_CONFIG_PATH: configPath,
-          PROPAI_STATE_DIR: stateDir,
-          PROPAI_GATEWAY_TOKEN: "",
-          PROPAI_GATEWAY_PASSWORD: "",
-          PROPAI_SKIP_CHANNELS: "1",
-          PROPAI_SKIP_PROVIDERS: "1",
-          PROPAI_SKIP_GMAIL_WATCHER: "1",
-          PROPAI_SKIP_CRON: "1",
-          PROPAI_SKIP_BROWSER_CONTROL_SERVER: "1",
-          PROPAI_SKIP_CANVAS_HOST: "1",
-          PROPAI_TEST_MINIMAL_GATEWAY: "1",
-          VITEST: "1",
-        },
-        stdio: ["ignore", "pipe", "pipe"],
+    child = spawn("node", ["dist/entry.js"], {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        HOME: homeDir,
+        PROPAI_CONFIG_PATH: configPath,
+        PROPAI_STATE_DIR: stateDir,
+        PROPAI_GATEWAY_PORT: String(port),
+        PROPAI_GATEWAY_BIND: "loopback",
+        PROPAI_GATEWAY_ALLOW_UNCONFIGURED: "1",
+        PROPAI_GATEWAY_TOKEN: "",
+        PROPAI_GATEWAY_PASSWORD: "",
+        PROPAI_SKIP_CHANNELS: "1",
+        PROPAI_SKIP_PROVIDERS: "1",
+        PROPAI_SKIP_GMAIL_WATCHER: "1",
+        PROPAI_SKIP_CRON: "1",
+        PROPAI_SKIP_BROWSER_CONTROL_SERVER: "1",
+        PROPAI_SKIP_CANVAS_HOST: "1",
+        PROPAI_TEST_MINIMAL_GATEWAY: "1",
+        VITEST: "1",
       },
-    );
+      stdio: ["ignore", "pipe", "pipe"],
+    });
 
     child.stdout?.setEncoding("utf8");
     child.stderr?.setEncoding("utf8");

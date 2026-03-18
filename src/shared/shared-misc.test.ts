@@ -68,7 +68,7 @@ describe("shared/frontmatter", () => {
 
   test("resolvePropAiSyncManifestBlock parses JSON5 metadata and picks PropAi Sync block", () => {
     const frontmatter = {
-      metadata: "{ "PropAi Sync": { foo: 1, bar: 'baz' } }",
+      metadata: `{ "PropAi Sync": { foo: 1, bar: "baz" } }`,
     };
     expect(resolvePropAiSyncManifestBlock({ frontmatter })).toEqual({ foo: 1, bar: "baz" });
   });

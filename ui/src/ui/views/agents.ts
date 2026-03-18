@@ -67,6 +67,7 @@ export type AgentsProps = {
   toolsCatalogError: string | null;
   toolsCatalogResult: ToolsCatalogResult | null;
   skillsFilter: string;
+  licenseLocked: boolean;
   onRefresh: () => void;
   onSelectAgent: (agentId: string) => void;
   onSelectPanel: (panel: AgentsPanel) => void;
@@ -180,12 +181,13 @@ export function renderAgents(props: AgentsProps) {
                         configLoading: props.configLoading,
                         configSaving: props.configSaving,
                         configDirty: props.configDirty,
-                        onConfigReload: props.onConfigReload,
-                        onConfigSave: props.onConfigSave,
-                        onModelChange: props.onModelChange,
-                        onModelFallbacksChange: props.onModelFallbacksChange,
-                      })
-                    : nothing
+                      onConfigReload: props.onConfigReload,
+                      onConfigSave: props.onConfigSave,
+                      onModelChange: props.onModelChange,
+                      onModelFallbacksChange: props.onModelFallbacksChange,
+                      licenseLocked: props.licenseLocked,
+                    })
+                  : nothing
                 }
                 ${
                   props.activePanel === "files"
@@ -359,6 +361,7 @@ function renderAgentOverview(params: {
   onConfigSave: () => void;
   onModelChange: (agentId: string, modelId: string | null) => void;
   onModelFallbacksChange: (agentId: string, fallbacks: string[]) => void;
+  licenseLocked: boolean;
 }) {
   const {
     agent,
@@ -411,6 +414,8 @@ function renderAgentOverview(params: {
       ? "Unavailable"
       : "";
   const isDefault = Boolean(params.defaultId && agent.id === params.defaultId);
+  const disableModelEdit =
+    params.licenseLocked || !configForm || configLoading || configSaving;
 
   return html`
     <section class="card">
@@ -451,7 +456,7 @@ function renderAgentOverview(params: {
             <span>Primary model${isDefault ? " (default)" : ""}</span>
             <select
               .value=${effectivePrimary ?? ""}
-              ?disabled=${!configForm || configLoading || configSaving}
+              ?disabled=${disableModelEdit}
               @change=${(e: Event) =>
                 onModelChange(agent.id, (e.target as HTMLSelectElement).value || null)}
             >
@@ -471,7 +476,7 @@ function renderAgentOverview(params: {
             <span>Fallbacks (comma-separated)</span>
             <input
               .value=${fallbackText}
-              ?disabled=${!configForm || configLoading || configSaving}
+              ?disabled=${disableModelEdit}
               placeholder="provider/model, provider/model"
               @input=${(e: Event) =>
                 onModelFallbacksChange(
@@ -481,6 +486,13 @@ function renderAgentOverview(params: {
             />
           </label>
         </div>
+        ${
+          params.licenseLocked
+            ? html`<div class="muted" style="margin-top: 8px;">
+                License required to change models.
+              </div>`
+            : nothing
+        }
         <div class="row" style="justify-content: flex-end; gap: 8px;">
           <button class="btn btn--sm" ?disabled=${configLoading} @click=${onConfigReload}>
             Reload Config

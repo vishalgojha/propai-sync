@@ -246,8 +246,8 @@ describe("browser server-context listKnownProfileNames", () => {
         "PropAi Sync": { cdpPort: 18800, color: "#FF4500" },
       },
     });
-    const PropAi Sync = resolveProfile(resolved, "PropAi Sync");
-    if (!PropAi Sync) {
+    const propaiProfile = resolveProfile(resolved, "PropAi Sync");
+    if (!propaiProfile) {
       throw new Error("expected PropAi Sync profile");
     }
 
@@ -259,7 +259,7 @@ describe("browser server-context listKnownProfileNames", () => {
         [
           "stale-removed",
           {
-            profile: { ...propai, name: "stale-removed" },
+            profile: { ...propaiProfile, name: "stale-removed" },
             running: null,
           },
         ],

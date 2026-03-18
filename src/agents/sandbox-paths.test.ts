@@ -30,7 +30,7 @@ function makeTmpProbePath(prefix: string): string {
 
 async function withOutsideHardlinkInPropAiSyncTmp<T>(
   params: {
-    PropAiSyncTmpDir: string;
+    propaiTmpDir: string;
     hardlinkPrefix: string;
     symlinkPrefix?: string;
   },
@@ -221,7 +221,7 @@ describe("resolveSandboxedMediaSource", () => {
     }
     await withOutsideHardlinkInPropAiSyncTmp(
       {
-        PropAiSyncTmpDir,
+        propaiTmpDir: PropAiSyncTmpDir,
         hardlinkPrefix: "sandbox-media-hardlink",
       },
       async ({ hardlinkPath }) => {
@@ -238,7 +238,7 @@ describe("resolveSandboxedMediaSource", () => {
     }
     await withOutsideHardlinkInPropAiSyncTmp(
       {
-        PropAiSyncTmpDir,
+        propaiTmpDir: PropAiSyncTmpDir,
         hardlinkPrefix: "sandbox-media-hardlink-target",
         symlinkPrefix: "sandbox-media-hardlink-symlink",
       },

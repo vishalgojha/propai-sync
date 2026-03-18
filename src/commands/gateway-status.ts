@@ -1,4 +1,4 @@
-import { withProgress } from "../cli/progress.js";
+import { withProgress } from "../core/progress.js";
 import { readBestEffortConfig, resolveGatewayPort } from "../config/config.js";
 import { probeGateway } from "../gateway/probe.js";
 import { discoverGatewayBeacons } from "../infra/bonjour-discovery.js";
@@ -428,3 +428,4 @@ async function resolveSshTarget(
     identity ?? config.identityFiles.find((entry) => entry.trim().length > 0)?.trim() ?? undefined;
   return { target, identity: identityFile };
 }
+

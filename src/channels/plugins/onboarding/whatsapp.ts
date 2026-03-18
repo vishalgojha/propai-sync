@@ -1,6 +1,6 @@
 import path from "node:path";
 import { loginWeb } from "../../../channel-web.js";
-import { formatCliCommand } from "../../../cli/command-format.js";
+import { formatCliCommand } from "../../../core/command-format.js";
 import type { PropAiSyncConfig } from "../../../config/config.js";
 import { mergeWhatsAppConfig } from "../../../config/merge-config.js";
 import type { DmPolicy } from "../../../config/types.js";
@@ -352,6 +352,7 @@ export const whatsappOnboardingAdapter: ChannelOnboardingAdapter = {
     options?.onWhatsAppAccountId?.(accountId);
   },
 };
+
 
 
 

@@ -5,10 +5,10 @@ enum CommandResolver {
     private static let helperName = "PropAi Sync"
 
     static func gatewayEntrypoint(in root: URL) -> String? {
-        let distEntry = root.appendingPathComponent("dist/index.js").path
+        let distEntry = root.appendingPathComponent("dist/entry.js").path
         if FileManager().isReadableFile(atPath: distEntry) { return distEntry }
-        let PropAiSyncEntry = root.appendingPathComponent("propai.mjs").path
-        if FileManager().isReadableFile(atPath: PropAiSyncEntry) { return PropAiSyncEntry }
+        let distEntryMjs = root.appendingPathComponent("dist/entry.mjs").path
+        if FileManager().isReadableFile(atPath: distEntryMjs) { return distEntryMjs }
         let binEntry = root.appendingPathComponent("bin/PropAiSync.js").path
         if FileManager().isReadableFile(atPath: binEntry) { return binEntry }
         return nil
@@ -210,7 +210,8 @@ enum CommandResolver {
     static func nodeCliPath() -> String? {
         let root = self.projectRoot()
         let candidates = [
-            root.appendingPathComponent("propai.mjs").path,
+            root.appendingPathComponent("dist/entry.js").path,
+            root.appendingPathComponent("dist/entry.mjs").path,
             root.appendingPathComponent("bin/PropAiSync.js").path,
         ]
         for candidate in candidates where FileManager().isReadableFile(atPath: candidate) {
@@ -276,7 +277,7 @@ enum CommandResolver {
         switch runtimeResult {
         case .success:
             let missingEntry = """
-            PropAi Sync entrypoint missing (looked for dist/index.js or propai.mjs); run pnpm build.
+            PropAi Sync entrypoint missing (looked for dist/entry.js); run pnpm build.
             """
             return self.errorCommand(with: missingEntry)
         case let .failure(error):
@@ -361,35 +362,22 @@ enum CommandResolver {
         CLI="";
         \(cliSection)
         \(projectSection)
-        if command -v PropAi Sync >/dev/null 2>&1; then
-          CLI="$(command -v PropAi Sync)"
-          PropAi Sync \(quotedArgs);
-        elif [ -n "${PRJ:-}" ] && [ -f "$PRJ/dist/index.js" ]; then
+        if [ -n "${PRJ:-}" ] && [ -f "$PRJ/dist/entry.js" ]; then
           if command -v node >/dev/null 2>&1; then
-            CLI="node $PRJ/dist/index.js"
-            node "$PRJ/dist/index.js" \(quotedArgs);
+            CLI="node $PRJ/dist/entry.js"
+            node "$PRJ/dist/entry.js" \(quotedArgs);
           else
             echo "Node >=22 required on remote host"; exit 127;
           fi
-        elif [ -n "${PRJ:-}" ] && [ -f "$PRJ/propai.mjs" ]; then
+        elif [ -n "${PRJ:-}" ] && [ -f "$PRJ/dist/entry.mjs" ]; then
           if command -v node >/dev/null 2>&1; then
-            CLI="node $PRJ/propai.mjs"
-            node "$PRJ/propai.mjs" \(quotedArgs);
+            CLI="node $PRJ/dist/entry.mjs"
+            node "$PRJ/dist/entry.mjs" \(quotedArgs);
           else
             echo "Node >=22 required on remote host"; exit 127;
           fi
-        elif [ -n "${PRJ:-}" ] && [ -f "$PRJ/bin/PropAiSync.js" ]; then
-          if command -v node >/dev/null 2>&1; then
-            CLI="node $PRJ/bin/PropAiSync.js"
-            node "$PRJ/bin/PropAiSync.js" \(quotedArgs);
-          else
-            echo "Node >=22 required on remote host"; exit 127;
-          fi
-        elif command -v pnpm >/dev/null 2>&1; then
-          CLI="pnpm --silent PropAi Sync"
-          pnpm --silent PropAi Sync \(quotedArgs);
         else
-          echo "PropAi Sync CLI missing on remote host"; exit 127;
+          echo "PropAi Sync runtime missing on remote host"; exit 127;
         fi
         """
         let options: [String] = [

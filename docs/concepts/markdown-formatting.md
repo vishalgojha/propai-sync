@@ -41,7 +41,7 @@ stay consistent across channels.
 Input Markdown:
 
 ```markdown
-Hello **world** — see [docs](https://docs.propai.ai).
+Hello **world** — see [docs](https://docs.propai.live).
 ```
 
 IR (schematic):
@@ -50,7 +50,7 @@ IR (schematic):
 {
   "text": "Hello world — see docs.",
   "styles": [{ "start": 6, "end": 11, "style": "bold" }],
-  "links": [{ "start": 19, "end": 23, "href": "https://docs.propai.ai" }]
+  "links": [{ "start": 19, "end": 23, "href": "https://docs.propai.live" }]
 }
 ```
 
@@ -128,6 +128,7 @@ SPOILER style ranges. Other channels treat them as plain text.
 - Signal style ranges depend on UTF-16 offsets; do not use code point offsets.
 - Preserve trailing newlines for fenced code blocks so closing markers land on
   their own line.
+
 
 
 

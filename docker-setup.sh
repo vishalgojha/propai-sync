@@ -98,35 +98,85 @@ read_env_gateway_token() {
   fi
 }
 
-ensure_control_ui_allowed_origins() {
-  if [[ "${PROPAI_GATEWAY_BIND}" == "loopback" ]]; then
-    return 0
+config_set_string() {
+  local key="$1"
+  local value="$2"
+  local config_path="$PROPAI_CONFIG_DIR/propai.json"
+
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$config_path" "$key" "$value" <<'PY'
+import json
+import os
+import sys
+
+path = sys.argv[1]
+key = sys.argv[2]
+value = sys.argv[3]
+
+try:
+    with open(path, "r", encoding="utf-8") as f:
+        cfg = json.load(f)
+except Exception:
+    cfg = {}
+
+cursor = cfg
+parts = key.split(".")
+for part in parts[:-1]:
+    child = cursor.get(part)
+    if not isinstance(child, dict):
+        child = {}
+        cursor[part] = child
+    cursor = child
+
+cursor[parts[-1]] = value
+os.makedirs(os.path.dirname(path), exist_ok=True)
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(cfg, f, indent=2)
+    f.write("\n")
+PY
+    return $?
   fi
 
-  local allowed_origin_json
-  local current_allowed_origins
-  allowed_origin_json="$(printf '["http://127.0.0.1:%s"]' "$PROPAI_GATEWAY_PORT")"
-  current_allowed_origins="$(
-    docker compose "${COMPOSE_ARGS[@]}" run --rm propai-cli \
-      config get gateway.controlUi.allowedOrigins 2>/dev/null || true
-  )"
-  current_allowed_origins="${current_allowed_origins//$'\r'/}"
+  if command -v node >/dev/null 2>&1; then
+    node - "$config_path" "$key" "$value" <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
 
-  if [[ -n "$current_allowed_origins" && "$current_allowed_origins" != "null" && "$current_allowed_origins" != "[]" ]]; then
-    echo "Control UI allowlist already configured; leaving gateway.controlUi.allowedOrigins unchanged."
-    return 0
+const configPath = process.argv[2];
+const key = process.argv[3];
+const value = process.argv[4];
+let cfg = {};
+try {
+  cfg = JSON.parse(fs.readFileSync(configPath, "utf8"));
+} catch {
+  cfg = {};
+}
+let cursor = cfg;
+const parts = key.split(".");
+for (const part of parts.slice(0, -1)) {
+  if (!cursor[part] || typeof cursor[part] !== "object") {
+    cursor[part] = {};
+  }
+  cursor = cursor[part];
+}
+cursor[parts[parts.length - 1]] = value;
+fs.mkdirSync(path.dirname(configPath), { recursive: true });
+fs.writeFileSync(configPath, `${JSON.stringify(cfg, null, 2)}\n`);
+NODE
+    return $?
   fi
 
-  docker compose "${COMPOSE_ARGS[@]}" run --rm propai-cli \
-    config set gateway.controlUi.allowedOrigins "$allowed_origin_json" --strict-json >/dev/null
-  echo "Set gateway.controlUi.allowedOrigins to $allowed_origin_json for non-loopback bind."
+  echo "WARNING: Cannot update $key (no python3/node)." >&2
+  return 1
 }
 
 sync_gateway_mode_and_bind() {
-  docker compose "${COMPOSE_ARGS[@]}" run --rm propai-cli \
-    config set gateway.mode local >/dev/null
-  docker compose "${COMPOSE_ARGS[@]}" run --rm propai-cli \
-    config set gateway.bind "$PROPAI_GATEWAY_BIND" >/dev/null
+  if ! config_set_string "gateway.mode" "local"; then
+    echo "WARNING: Failed to set gateway.mode" >&2
+  fi
+  if ! config_set_string "gateway.bind" "$PROPAI_GATEWAY_BIND"; then
+    echo "WARNING: Failed to set gateway.bind" >&2
+  fi
   echo "Pinned gateway.mode=local and gateway.bind=$PROPAI_GATEWAY_BIND for Docker setup."
 }
 
@@ -289,22 +339,6 @@ YAML
     printf '      - %s\n' "$mount" >>"$EXTRA_COMPOSE_FILE"
   done
 
-  cat >>"$EXTRA_COMPOSE_FILE" <<'YAML'
-  propai-cli:
-    volumes:
-YAML
-
-  if [[ -n "$home_volume" ]]; then
-    printf '      - %s\n' "$gateway_home_mount" >>"$EXTRA_COMPOSE_FILE"
-    printf '      - %s\n' "$gateway_config_mount" >>"$EXTRA_COMPOSE_FILE"
-    printf '      - %s\n' "$gateway_workspace_mount" >>"$EXTRA_COMPOSE_FILE"
-  fi
-
-  for mount in "$@"; do
-    validate_mount_spec "$mount"
-    printf '      - %s\n' "$mount" >>"$EXTRA_COMPOSE_FILE"
-  done
-
   if [[ -n "$home_volume" && "$home_volume" != *"/"* ]]; then
     validate_named_volume "$home_volume"
     cat >>"$EXTRA_COMPOSE_FILE" <<YAML
@@ -439,42 +473,36 @@ echo "==> Fixing data-directory permissions"
 # ownership of all user project files on Linux hosts.
 # After fixing the config dir, only the PropAi Sync metadata subdirectory
 # (.propai/) inside the workspace gets chowned, not the user's project files.
-docker compose "${COMPOSE_ARGS[@]}" run --rm --user root --entrypoint sh propai-cli -c \
+docker compose "${COMPOSE_ARGS[@]}" run --rm --user root --entrypoint sh propai-gateway -c \
   'find /home/node/.propai -xdev -exec chown node:node {} +; \
    [ -d /home/node/.propai/workspace/.propai ] && chown -R node:node /home/node/.propai/workspace/.propai || true'
 
 echo ""
-echo "==> Onboarding (interactive)"
+echo "==> Onboarding"
 echo "Docker setup pins Gateway mode to local."
 echo "Gateway runtime bind comes from PROPAI_GATEWAY_BIND (default: lan)."
 echo "Current runtime bind: $PROPAI_GATEWAY_BIND"
 echo "Gateway token: $PROPAI_GATEWAY_TOKEN"
 echo "Tailscale exposure: Off (use host-level tailnet/Tailscale setup separately)."
 echo "Install Gateway daemon: No (managed by Docker Compose)"
-echo ""
-docker compose "${COMPOSE_ARGS[@]}" run --rm propai-cli onboard --mode local --no-install-daemon
 
 echo ""
 echo "==> Docker gateway defaults"
 sync_gateway_mode_and_bind
 
 echo ""
-echo "==> Control UI origin allowlist"
-ensure_control_ui_allowed_origins
-
-echo ""
 echo "==> Provider setup (optional)"
-echo "WhatsApp (QR):"
-echo "  ${COMPOSE_HINT} run --rm propai-cli channels login"
-echo "Telegram (bot token):"
-echo "  ${COMPOSE_HINT} run --rm propai-cli channels add --channel telegram --token <token>"
-echo "Discord (bot token):"
-echo "  ${COMPOSE_HINT} run --rm propai-cli channels add --channel discord --token <token>"
+echo "Use the Control UI to link channels and providers."
 echo "Docs: https://docs.propai.ai/channels"
 
 echo ""
 echo "==> Starting gateway"
 docker compose "${COMPOSE_ARGS[@]}" up -d propai-gateway
+
+echo ""
+echo "==> Control UI"
+echo "Open: http://127.0.0.1:${PROPAI_GATEWAY_PORT}"
+echo "Token: $PROPAI_GATEWAY_TOKEN"
 
 # --- Sandbox setup (opt-in via PROPAI_SANDBOX=1) ---
 if [[ -n "$SANDBOX_ENABLED" ]]; then
@@ -536,18 +564,15 @@ fi
 if [[ -n "$SANDBOX_ENABLED" ]]; then
   # Enable sandbox in PropAi Sync config.
   sandbox_config_ok=true
-  if ! docker compose "${COMPOSE_ARGS[@]}" run --rm --no-deps propai-cli \
-    config set agents.defaults.sandbox.mode "non-main" >/dev/null; then
+  if ! config_set_string "agents.defaults.sandbox.mode" "non-main"; then
     echo "WARNING: Failed to set agents.defaults.sandbox.mode" >&2
     sandbox_config_ok=false
   fi
-  if ! docker compose "${COMPOSE_ARGS[@]}" run --rm --no-deps propai-cli \
-    config set agents.defaults.sandbox.scope "agent" >/dev/null; then
+  if ! config_set_string "agents.defaults.sandbox.scope" "agent"; then
     echo "WARNING: Failed to set agents.defaults.sandbox.scope" >&2
     sandbox_config_ok=false
   fi
-  if ! docker compose "${COMPOSE_ARGS[@]}" run --rm --no-deps propai-cli \
-    config set agents.defaults.sandbox.workspaceAccess "none" >/dev/null; then
+  if ! config_set_string "agents.defaults.sandbox.workspaceAccess" "none"; then
     echo "WARNING: Failed to set agents.defaults.sandbox.workspaceAccess" >&2
     sandbox_config_ok=false
   fi
@@ -560,8 +585,7 @@ if [[ -n "$SANDBOX_ENABLED" ]]; then
   else
     echo "WARNING: Sandbox config was partially applied. Check errors above." >&2
     echo "  Skipping gateway restart to avoid exposing Docker socket without a full sandbox policy." >&2
-    if ! docker compose "${BASE_COMPOSE_ARGS[@]}" run --rm --no-deps propai-cli \
-      config set agents.defaults.sandbox.mode "off" >/dev/null; then
+    if ! config_set_string "agents.defaults.sandbox.mode" "off"; then
       echo "WARNING: Failed to roll back agents.defaults.sandbox.mode to off" >&2
     else
       echo "Sandbox mode rolled back to off due to partial sandbox config failure."
@@ -576,8 +600,7 @@ else
   # Keep reruns deterministic: if sandbox is not active for this run, reset
   # persisted sandbox mode so future execs do not require docker.sock by stale
   # config alone.
-  if ! docker compose "${COMPOSE_ARGS[@]}" run --rm propai-cli \
-    config set agents.defaults.sandbox.mode "off" >/dev/null; then
+  if ! config_set_string "agents.defaults.sandbox.mode" "off"; then
     echo "WARNING: Failed to reset agents.defaults.sandbox.mode to off" >&2
   fi
   if [[ -f "$ROOT_DIR/docker-compose.sandbox.yml" ]]; then
@@ -594,7 +617,7 @@ echo "Token: $PROPAI_GATEWAY_TOKEN"
 echo ""
 echo "Commands:"
 echo "  ${COMPOSE_HINT} logs -f propai-gateway"
-echo "  ${COMPOSE_HINT} exec propai-gateway node dist/index.js health --token \"$PROPAI_GATEWAY_TOKEN\""
+echo "  curl -fsS http://127.0.0.1:${PROPAI_GATEWAY_PORT}/healthz"
 
 
 

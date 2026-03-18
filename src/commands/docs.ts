@@ -1,5 +1,5 @@
 import { hasBinary } from "../agents/skills.js";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { runCommandWithTimeout } from "../process/exec.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { formatDocsLink } from "../terminal/links.js";
@@ -193,6 +193,7 @@ export async function docsSearchCommand(queryParts: string[], runtime: RuntimeEn
   const markdown = buildMarkdown(query, results);
   await renderMarkdown(markdown, runtime);
 }
+
 
 
 

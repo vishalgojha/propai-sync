@@ -8,16 +8,16 @@ title: "Updating"
 
 # Updating
 
-propai is moving fast (pre “1.0”). Treat updates like shipping infra: update → run checks → restart (or use `propai update`, which restarts) → verify.
+propai is moving fast (pre “1.0”). Treat updates like shipping infra: update →
+run checks → restart → verify.
 
 ## Recommended: re-run the website installer (upgrade in place)
 
 The **preferred** update path is to re-run the installer from the website. It
-detects existing installs, upgrades in place, and runs `propai doctor` when
-needed.
+detects existing installs and upgrades in place.
 
 ```bash
-curl -fsSL https://propai.ai/install.sh | bash
+curl -fsSL https://propai.live/install.sh | bash
 ```
 
 Notes:
@@ -26,7 +26,7 @@ Notes:
 - For **source installs**, use:
 
   ```bash
-  curl -fsSL https://propai.ai/install.sh | bash -s -- --install-method git --no-onboard
+  curl -fsSL https://propai.live/install.sh | bash -s -- --install-method git --no-onboard
   ```
 
   The installer will `git pull --rebase` **only** if the repo is clean.
@@ -57,15 +57,8 @@ pnpm add -g propai@latest
 
 We do **not** recommend Bun for the Gateway runtime (WhatsApp/Telegram bugs).
 
-To switch update channels (git + npm installs):
-
-```bash
-propai update --channel beta
-propai update --channel dev
-propai update --channel stable
-```
-
-Use `--tag <dist-tag|version>` for a one-off install tag/version.
+To switch update channels, set `update.channel` in config and use the Control
+Console **Update & Restart** action (or re-run the installer script).
 
 See [Development channels](/install/development-channels) for channel semantics and release notes.
 
@@ -93,46 +86,20 @@ Behavior:
 
 - `stable`: when a new version is seen, propai waits `stableDelayHours` and then applies a deterministic per-install jitter in `stableJitterHours` (spread rollout).
 - `beta`: checks on `betaCheckIntervalHours` cadence (default: hourly) and applies when an update is available.
-- `dev`: no automatic apply; use manual `propai update`.
+- `dev`: no automatic apply; use a manual update.
 
-Use `propai update --dry-run` to preview update actions before enabling automation.
-
-Then:
-
-```bash
-propai doctor
-propai gateway restart
-propai health
-```
+After an update, verify in Control Console → **Overview** and **Logs**.
 
 Notes:
 
-- If your Gateway runs as a service, `propai gateway restart` is preferred over killing PIDs.
+- If your Gateway runs as a service, restart it via the service manager instead of killing PIDs.
 - If you’re pinned to a specific version, see “Rollback / pinning” below.
-
-## Update (`propai update`)
-
-For **source installs** (git checkout), prefer:
-
-```bash
-propai update
-```
-
-It runs a safe-ish update flow:
-
-- Requires a clean worktree.
-- Switches to the selected channel (tag or branch).
-- Fetches + rebases against the configured upstream (dev channel).
-- Installs deps, builds, builds the Control UI, and runs `propai doctor`.
-- Restarts the gateway by default (use `--no-restart` to skip).
-
-If you installed via **npm/pnpm** (no git metadata), `propai update` will try to update via your package manager. If it can’t detect the install, use “Update (global install)” instead.
 
 ## Update (Control UI / RPC)
 
 The Control UI has **Update & Restart** (RPC: `update.run`). It:
 
-1. Runs the same source-update flow as `propai update` (git checkout only).
+1. Runs the same source-update flow as a manual source update (git checkout only).
 2. Writes a restart sentinel with a structured report (stdout/stderr tail).
 3. Restarts the gateway and pings the last active session with the report.
 
@@ -142,12 +109,6 @@ If the rebase fails, the gateway aborts and restarts without applying the update
 
 From the repo checkout:
 
-Preferred:
-
-```bash
-propai update
-```
-
 Manual (equivalent-ish):
 
 ```bash
@@ -155,51 +116,30 @@ git pull
 pnpm install
 pnpm build
 pnpm ui:build # auto-installs UI deps on first run
-propai doctor
-propai health
 ```
 
 Notes:
 
 - `pnpm build` matters when you run the packaged `propai` binary ([`propai.mjs`](https://github.com/propai/propai/blob/main/propai.mjs)) or use Node to run `dist/`.
-- If you run from a repo checkout without a global install, use `pnpm propai ...` for CLI commands.
-- If you run directly from TypeScript (`pnpm propai ...`), a rebuild is usually unnecessary, but **config migrations still apply** → run doctor.
-- Switching between global and git installs is easy: install the other flavor, then run `propai doctor` so the gateway service entrypoint is rewritten to the current install.
+- If you run directly from TypeScript, a rebuild is usually unnecessary, but config migrations still apply.
+- Switching between global and git installs is easy: install the other flavor, then restart the Gateway so the service entrypoint is rewritten to the current install.
 
-## Always Run: `propai doctor`
+## Post-update checks
 
-Doctor is the “safe update” command. It’s intentionally boring: repair + migrate + warn.
+After updating, verify:
 
-Note: if you’re on a **source install** (git checkout), `propai doctor` will offer to run `propai update` first.
-
-Typical things it does:
-
-- Migrate deprecated config keys / legacy config file locations.
-- Audit DM policies and warn on risky “open” settings.
-- Check Gateway health and can offer to restart.
-- Detect and migrate older gateway services (launchd/systemd; legacy schtasks) to current propai services.
-- On Linux, ensure systemd user lingering (so the Gateway survives logout).
-
-Details: [Doctor](/gateway/doctor)
+- Control Console → **Overview** shows Gateway + RPC as healthy.
+- Control Console → **Logs** shows no startup errors.
+- Control Console → **Config** has no validation warnings.
 
 ## Start / stop / restart the Gateway
-
-CLI (works regardless of OS):
-
-```bash
-propai gateway status
-propai gateway stop
-propai gateway restart
-propai gateway --port 18789
-propai logs --follow
-```
 
 If you’re supervised:
 
 - macOS launchd (app-bundled LaunchAgent): `launchctl kickstart -k gui/$UID/ai.propai.gateway` (use `ai.propai.<profile>`; legacy `com.propai.*` still works)
 - Linux systemd user service: `systemctl --user restart propai-gateway[-<profile>].service`
 - Windows (WSL2): `systemctl --user restart propai-gateway[-<profile>].service`
-  - `launchctl`/`systemctl` only work if the service is installed; otherwise run `propai gateway install`.
+  - `launchctl`/`systemctl` only work if the service is installed.
 
 Runbook + exact service labels: [Gateway runbook](/gateway)
 
@@ -221,10 +161,8 @@ Tip: to see the current published version, run `npm view propai version`.
 
 Then restart + re-run doctor:
 
-```bash
-propai doctor
-propai gateway restart
-```
+Restart the Gateway using your service manager and confirm health in Control
+Console → **Overview**.
 
 ### Pin (source) by date
 
@@ -240,7 +178,6 @@ Then reinstall deps + restart:
 ```bash
 pnpm install
 pnpm build
-propai gateway restart
 ```
 
 If you want to go back to latest later:
@@ -252,9 +189,11 @@ git pull
 
 ## If you’re stuck
 
-- Run `propai doctor` again and read the output carefully (it often tells you the fix).
+- Re-run the post-update checks above and read the output carefully.
+- Check Control Console → **Logs** for error details.
 - Check: [Troubleshooting](/gateway/troubleshooting)
 - Ask in Discord: [https://discord.gg/clawd](https://discord.gg/clawd)
+
 
 
 

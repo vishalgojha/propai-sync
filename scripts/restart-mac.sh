@@ -95,10 +95,6 @@ for arg in "$@"; do
       log "Env:"
       log "  PROPAI_GATEWAY_WAIT_SECONDS=0  Wait time before gateway port check (unsigned only)"
       log ""
-      log "Unsigned recovery:"
-      log "  node propai.mjs daemon install --force --runtime node"
-      log "  node propai.mjs daemon restart"
-      log ""
       log "Reset unsigned overrides:"
       log "  rm ~/.propai/disable-launchagent"
       log ""
@@ -217,26 +213,7 @@ fi
 # When unsigned, ensure the gateway LaunchAgent targets the repo CLI (before the app launches).
 # This reduces noisy "could not connect" errors during app startup.
 if [ "$NO_SIGN" -eq 1 ] && [ "$ATTACH_ONLY" -ne 1 ]; then
-  run_step "install gateway launch agent (unsigned)" bash -lc "cd '${ROOT_DIR}' && node propai.mjs daemon install --force --runtime node"
-  run_step "restart gateway daemon (unsigned)" bash -lc "cd '${ROOT_DIR}' && node propai.mjs daemon restart"
-  if [[ "${GATEWAY_WAIT_SECONDS}" -gt 0 ]]; then
-    run_step "wait for gateway (unsigned)" sleep "${GATEWAY_WAIT_SECONDS}"
-  fi
-  GATEWAY_PORT="$(
-    node -e '
-      const fs = require("node:fs");
-      const path = require("node:path");
-      try {
-        const raw = fs.readFileSync(path.join(process.env.HOME, ".propai", "propai.json"), "utf8");
-        const cfg = JSON.parse(raw);
-        const port = cfg && cfg.gateway && typeof cfg.gateway.port === "number" ? cfg.gateway.port : 18789;
-        process.stdout.write(String(port));
-      } catch {
-        process.stdout.write("18789");
-      }
-    '
-  )"
-  run_step "verify gateway port ${GATEWAY_PORT} (unsigned)" bash -lc "lsof -iTCP:${GATEWAY_PORT} -sTCP:LISTEN | head -n 5 || true"
+  log "==> Unsigned build: launch agent install skipped (gateway managed by the app)."
 fi
 
 ATTACH_ONLY_ARGS=()
@@ -265,7 +242,7 @@ else
 fi
 
 if [ "$NO_SIGN" -eq 1 ] && [ "$ATTACH_ONLY" -ne 1 ]; then
-  run_step "show gateway launch agent args (unsigned)" bash -lc "/usr/bin/plutil -p '${HOME}/Library/LaunchAgents/ai.propai.gateway.plist' | head -n 40 || true"
+  log "==> Unsigned build: gateway launch agent is not used."
 fi
 
 

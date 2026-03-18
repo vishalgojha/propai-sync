@@ -15,7 +15,7 @@ vi.mock("../../gateway/call.js", () => ({
 
 describe("gateway tool defaults", () => {
   const envSnapshot = {
-    "PropAi Sync": process.env.propai_GATEWAY_TOKEN,
+    propai: process.env.propai_GATEWAY_TOKEN,
     clawdbot: process.env.CLAWDBOT_GATEWAY_TOKEN,
   };
 

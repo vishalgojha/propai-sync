@@ -301,7 +301,7 @@ describe("spawnAndCollect", () => {
       command: process.execPath,
       args: [
         "-e",
-        "process.stdout.write(JSON.stringify({openai:process.env.OPENAI_API_KEY,github:process.env.GITHUB_TOKEN,hf:process.env.HF_TOKEN,"PropAi Sync":process.env.propai_API_KEY,shell:process.env.propai_SHELL}))",
+        "process.stdout.write(JSON.stringify({openai:process.env.OPENAI_API_KEY,github:process.env.GITHUB_TOKEN,hf:process.env.HF_TOKEN,propai:process.env.propai_API_KEY,shell:process.env.propai_SHELL}))",
       ],
       cwd: process.cwd(),
       stripProviderAuthEnvVars: true,
@@ -314,7 +314,7 @@ describe("spawnAndCollect", () => {
       openai?: string;
       github?: string;
       hf?: string;
-      PropAi Sync?: string;
+      propai?: string;
       shell?: string;
     };
     expect(parsed.openai).toBeUndefined();
@@ -333,7 +333,7 @@ describe("spawnAndCollect", () => {
       command: process.execPath,
       args: [
         "-e",
-        "process.stdout.write(JSON.stringify({openai:process.env.OpenAI_Api_Key,github:process.env.Github_Token,"PropAi Sync":process.env.propai_API_KEY,shell:process.env.propai_SHELL}))",
+        "process.stdout.write(JSON.stringify({openai:process.env.OpenAI_Api_Key,github:process.env.Github_Token,propai:process.env.propai_API_KEY,shell:process.env.propai_SHELL}))",
       ],
       cwd: process.cwd(),
       stripProviderAuthEnvVars: true,
@@ -345,7 +345,7 @@ describe("spawnAndCollect", () => {
     const parsed = JSON.parse(result.stdout) as {
       openai?: string;
       github?: string;
-      PropAi Sync?: string;
+      propai?: string;
       shell?: string;
     };
     expect(parsed.openai).toBeUndefined();
@@ -364,7 +364,7 @@ describe("spawnAndCollect", () => {
       command: process.execPath,
       args: [
         "-e",
-        "process.stdout.write(JSON.stringify({openai:process.env.OPENAI_API_KEY,github:process.env.GITHUB_TOKEN,hf:process.env.HF_TOKEN,"PropAi Sync":process.env.propai_API_KEY,shell:process.env.propai_SHELL}))",
+        "process.stdout.write(JSON.stringify({openai:process.env.OPENAI_API_KEY,github:process.env.GITHUB_TOKEN,hf:process.env.HF_TOKEN,propai:process.env.propai_API_KEY,shell:process.env.propai_SHELL}))",
       ],
       cwd: process.cwd(),
     });
@@ -376,7 +376,7 @@ describe("spawnAndCollect", () => {
       openai?: string;
       github?: string;
       hf?: string;
-      PropAi Sync?: string;
+      propai?: string;
       shell?: string;
     };
     expect(parsed.openai).toBe("openai-secret");

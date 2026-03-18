@@ -1,8 +1,8 @@
 ---
-summary: "Poll sending via gateway + CLI"
+summary: "Poll sending via gateway + tool calls"
 read_when:
   - Adding or modifying poll support
-  - Debugging poll sends from the CLI or gateway
+  - Debugging poll sends from the gateway or tool calls
 title: "Polls"
 ---
 
@@ -15,40 +15,8 @@ title: "Polls"
 - Discord
 - MS Teams (Adaptive Cards)
 
-## CLI
-
-```bash
-# Telegram
-propai message poll --channel telegram --target 123456789 \
-  --poll-question "Ship it?" --poll-option "Yes" --poll-option "No"
-propai message poll --channel telegram --target -1001234567890:topic:42 \
-  --poll-question "Pick a time" --poll-option "10am" --poll-option "2pm" \
-  --poll-duration-seconds 300
-
-# WhatsApp
-propai message poll --target +15555550123 \
-  --poll-question "Lunch today?" --poll-option "Yes" --poll-option "No" --poll-option "Maybe"
-propai message poll --target 123456789@g.us \
-  --poll-question "Meeting time?" --poll-option "10am" --poll-option "2pm" --poll-option "4pm" --poll-multi
-
-# Discord
-propai message poll --channel discord --target channel:123456789 \
-  --poll-question "Snack?" --poll-option "Pizza" --poll-option "Sushi"
-propai message poll --channel discord --target channel:123456789 \
-  --poll-question "Plan?" --poll-option "A" --poll-option "B" --poll-duration-hours 48
-
-# MS Teams
-propai message poll --channel msteams --target conversation:19:abc@thread.tacv2 \
-  --poll-question "Lunch?" --poll-option "Pizza" --poll-option "Sushi"
-```
-
-Options:
-
-- `--channel`: `whatsapp` (default), `telegram`, `discord`, or `msteams`
-- `--poll-multi`: allow selecting multiple options
-- `--poll-duration-hours`: Discord-only (defaults to 24 when omitted)
-- `--poll-duration-seconds`: Telegram-only (5-600 seconds)
-- `--poll-anonymous` / `--poll-public`: Telegram-only poll visibility
+Note: CLI poll commands are no longer documented. Use the Gateway RPC method or
+the agent tool below.
 
 ## Gateway RPC
 

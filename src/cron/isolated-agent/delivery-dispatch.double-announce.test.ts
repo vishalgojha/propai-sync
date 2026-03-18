@@ -30,7 +30,7 @@ vi.mock("../../infra/outbound/session-context.js", () => ({
   buildOutboundSessionContext: vi.fn().mockReturnValue({}),
 }));
 
-vi.mock("../../cli/outbound-send-deps.js", () => ({
+vi.mock("../../core/outbound-send-deps.js", () => ({
   createOutboundSendDeps: vi.fn().mockReturnValue({}),
 }));
 
@@ -373,5 +373,6 @@ describe("dispatchCronDelivery — double-announce guard", () => {
     }
   });
 });
+
 
 

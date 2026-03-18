@@ -23,6 +23,7 @@ export type OverviewProps = {
   cronEnabled: boolean | null;
   cronNext: number | null;
   lastChannelsRefresh: number | null;
+  licenseLocked: boolean;
   onSettingsChange: (next: UiSettings) => void;
   onPasswordChange: (next: string) => void;
   onSessionKeyChange: (next: string) => void;
@@ -45,6 +46,7 @@ export function renderOverview(props: OverviewProps) {
     : t("common.na");
   const authMode = snapshot?.authMode;
   const isTrustedProxy = authMode === "trusted-proxy";
+  const disableSecrets = props.licenseLocked;
 
   const pairingHint = (() => {
     if (!shouldShowPairingHint(props.connected, props.lastError, props.lastErrorCode)) {
@@ -226,6 +228,7 @@ export function renderOverview(props: OverviewProps) {
                   <span>${t("overview.access.token")}</span>
                   <input
                     .value=${props.settings.token}
+                    ?disabled=${disableSecrets}
                     @input=${(e: Event) => {
                       const v = (e.target as HTMLInputElement).value;
                       props.onSettingsChange({ ...props.settings, token: v });
@@ -238,6 +241,7 @@ export function renderOverview(props: OverviewProps) {
                   <input
                     type="password"
                     .value=${props.password}
+                    ?disabled=${disableSecrets}
                     @input=${(e: Event) => {
                       const v = (e.target as HTMLInputElement).value;
                       props.onPasswordChange(v);
@@ -246,6 +250,13 @@ export function renderOverview(props: OverviewProps) {
                   />
                 </label>
               `
+          }
+          ${
+            props.licenseLocked && !isTrustedProxy
+              ? html`<div class="muted" style="grid-column: 1 / -1;">
+                  License required to edit access credentials.
+                </div>`
+              : nothing
           }
           <label class="field">
             <span>${t("overview.access.sessionKey")}</span>

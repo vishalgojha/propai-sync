@@ -16,11 +16,10 @@ export function isGatewayArgv(args: string[], opts?: { allowGatewayBinary?: bool
   }
 
   const entryCandidates = [
-    "dist/index.js",
     "dist/entry.js",
-    "propai.mjs",
+    "dist/entry.mjs",
     "scripts/run-node.mjs",
-    "src/index.ts",
+    "src/entry.ts",
   ];
   if (normalized.some((arg) => entryCandidates.some((entry) => arg.endsWith(entry)))) {
     return true;

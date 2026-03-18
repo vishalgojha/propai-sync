@@ -119,7 +119,7 @@ In just 3 hours:
 - GitHub renamed: `github.com/propai/propai` ✅
 - X handle `@propai` secured with GOLD CHECKMARK 💰
 - npm packages released under new name
-- Docs migrated to `docs.propai.ai`
+- Docs migrated to `docs.propai.live`
 - 200K+ views on announcement in 90 minutes
 
 **The Heroes:**
@@ -217,6 +217,7 @@ _"The claw is the law."_
 — ELU, during The Final Form migration, January 30, 2026
 
 🦞💙
+
 
 
 

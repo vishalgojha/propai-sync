@@ -83,7 +83,7 @@ per-job offset in a 0-5 minute window.
 - **Exact timing required**: "Send this at 9:00 AM every Monday" (not "sometime around 9").
 - **Standalone tasks**: Tasks that don't need conversational context.
 - **Different model/thinking**: Heavy analysis that warrants a more powerful model.
-- **One-shot reminders**: "Remind me in 20 minutes" with `--at`.
+- **One-shot reminders**: "Remind me in 20 minutes" with a one-shot `at` schedule.
 - **Noisy/frequent tasks**: Tasks that would clutter main session history.
 - **External triggers**: Tasks that should run independently of whether the agent is otherwise active.
 
@@ -101,34 +101,30 @@ per-job offset in a 0-5 minute window.
 
 ### Cron example: Daily morning briefing
 
-```bash
-propai cron add \
-  --name "Morning briefing" \
-  --cron "0 7 * * *" \
-  --tz "America/New_York" \
-  --session isolated \
-  --message "Generate today's briefing: weather, calendar, top emails, news summary." \
-  --model opus \
-  --announce \
-  --channel whatsapp \
-  --to "+15551234567"
-```
+Use the **Control Console → Cron** tab to create a job with:
+
+- Name: `Morning briefing`
+- Schedule: `0 7 * * *` (timezone `America/New_York`)
+- Session: `isolated`
+- Message: `Generate today's briefing: weather, calendar, top emails, news summary.`
+- Model: `opus`
+- Delivery: `announce`
+- Channel target: WhatsApp → `+15551234567`
 
 This runs at exactly 7:00 AM New York time, uses Opus for quality, and announces a summary directly to WhatsApp.
 
 ### Cron example: One-shot reminder
 
-```bash
-propai cron add \
-  --name "Meeting reminder" \
-  --at "20m" \
-  --session main \
-  --system-event "Reminder: standup meeting starts in 10 minutes." \
-  --wake now \
-  --delete-after-run
-```
+Use the **Control Console → Cron** tab to create a one-shot job with:
 
-See [Cron jobs](/automation/cron-jobs) for full CLI reference.
+- Name: `Meeting reminder`
+- Run at: `20m`
+- Session: `main`
+- System event: `Reminder: standup meeting starts in 10 minutes.`
+- Wake: `now`
+- Delete after run: `true`
+
+See [Cron jobs](/automation/cron-jobs) for full configuration reference.
 
 ## Decision Flowchart
 
@@ -176,16 +172,11 @@ The most efficient setup uses **both**:
 
 **Cron jobs** (precise timing):
 
-```bash
-# Daily morning briefing at 7am
-propai cron add --name "Morning brief" --cron "0 7 * * *" --session isolated --message "..." --announce
+In the **Control Console → Cron** tab, add:
 
-# Weekly project review on Mondays at 9am
-propai cron add --name "Weekly review" --cron "0 9 * * 1" --session isolated --message "..." --model opus
-
-# One-shot reminder
-propai cron add --name "Call back" --at "2h" --session main --system-event "Call back the client" --wake now
-```
+- Daily morning briefing at 7am (isolated, announce)
+- Weekly project review on Mondays at 9am (isolated, model override)
+- One-shot reminder (`at: 2h`, main session)
 
 ## Lobster: Deterministic workflows with approvals
 
@@ -229,40 +220,38 @@ Both heartbeat and cron can interact with the main session, but differently:
 
 ### When to use main session cron
 
-Use `--session main` with `--system-event` when you want:
+Use a **main-session** cron job with a system event when you want:
 
 - The reminder/event to appear in main session context
 - The agent to handle it during the next heartbeat with full context
 - No separate isolated run
 
-```bash
-propai cron add \
-  --name "Check project" \
-  --every "4h" \
-  --session main \
-  --system-event "Time for a project health check" \
-  --wake now
-```
+Set up a cron job with:
+
+- Name: `Check project`
+- Every: `4h`
+- Session: `main`
+- System event: `Time for a project health check`
+- Wake: `now`
 
 ### When to use isolated cron
 
-Use `--session isolated` when you want:
+Use an **isolated** cron job when you want:
 
 - A clean slate without prior context
 - Different model or thinking settings
 - Announce summaries directly to a channel
 - History that doesn't clutter main session
 
-```bash
-propai cron add \
-  --name "Deep analysis" \
-  --cron "0 6 * * 0" \
-  --session isolated \
-  --message "Weekly codebase analysis..." \
-  --model opus \
-  --thinking high \
-  --announce
-```
+Set up a cron job with:
+
+- Name: `Deep analysis`
+- Schedule: `0 6 * * 0`
+- Session: `isolated`
+- Message: `Weekly codebase analysis...`
+- Model: `opus`
+- Thinking: `high`
+- Delivery: `announce`
 
 ## Cost Considerations
 
@@ -282,7 +271,7 @@ propai cron add \
 ## Related
 
 - [Heartbeat](/gateway/heartbeat) - full heartbeat configuration
-- [Cron jobs](/automation/cron-jobs) - full cron CLI and API reference
-- [System](/cli/system) - system events + heartbeat controls
+- [Cron jobs](/automation/cron-jobs) - full cron configuration reference
+- [Heartbeat](/gateway/heartbeat) - system events + heartbeat controls
 
 

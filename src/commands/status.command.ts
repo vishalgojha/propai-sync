@@ -1,5 +1,5 @@
-import { formatCliCommand } from "../cli/command-format.js";
-import { withProgress } from "../cli/progress.js";
+import { formatCliCommand } from "../core/command-format.js";
+import { withProgress } from "../core/progress.js";
 import { resolveGatewayPort } from "../config/config.js";
 import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
 import { info } from "../globals.js";
@@ -683,6 +683,7 @@ export async function statusCommand(
     runtime.log(`  Fix reachability first: ${formatCliCommand("propai gateway probe")}`);
   }
 }
+
 
 
 

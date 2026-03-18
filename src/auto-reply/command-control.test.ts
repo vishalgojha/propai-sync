@@ -8,9 +8,9 @@ import { listChatCommands } from "./commands-registry.js";
 import { parseActivationCommand } from "./group-activation.js";
 import { parseSendPolicyCommand } from "./send-policy.js";
 import type { MsgContext } from "./templating.js";
-import { installDiscordRegistryHooks } from "./test-helpers/command-auth-registry-fixture.js";
+import { installTelegramRegistryHooks } from "./test-helpers/command-auth-registry-fixture.js";
 
-installDiscordRegistryHooks();
+installTelegramRegistryHooks();
 
 describe("resolveCommandAuthorization", () => {
   function resolveWhatsAppAuthorization(params: {
@@ -128,9 +128,9 @@ describe("resolveCommandAuthorization", () => {
     setActivePluginRegistry(
       createTestRegistry([
         {
-          pluginId: "discord",
+          pluginId: "telegram",
           plugin: createOutboundTestPlugin({
-            id: "discord",
+            id: "telegram",
             outbound: { deliveryMode: "direct" },
           }),
           source: "test",
@@ -138,15 +138,15 @@ describe("resolveCommandAuthorization", () => {
       ]),
     );
     const cfg = {
-      channels: { discord: {} },
+      channels: { telegram: {} },
     } as PropAiSyncConfig;
 
     const ctx = {
-      Provider: "discord",
-      Surface: "discord",
-      From: "discord:123",
+      Provider: "telegram",
+      Surface: "telegram",
+      From: "telegram:123",
       SenderId: "123",
-      OwnerAllowFrom: ["discord:123"],
+      OwnerAllowFrom: ["telegram:123"],
     } as MsgContext;
 
     const auth = resolveCommandAuthorization({
@@ -200,11 +200,11 @@ describe("resolveCommandAuthorization", () => {
       } as MsgContext;
     }
 
-    function makeDiscordContext(senderId: string, fromOverride?: string): MsgContext {
+    function makeTelegramContext(senderId: string, fromOverride?: string): MsgContext {
       return {
-        Provider: "discord",
-        Surface: "discord",
-        From: fromOverride ?? `discord:${senderId}`,
+        Provider: "telegram",
+        Surface: "telegram",
+        From: fromOverride ?? `telegram:${senderId}`,
         SenderId: senderId,
       } as MsgContext;
     }
@@ -333,17 +333,17 @@ describe("resolveCommandAuthorization", () => {
       const cfg = {
         commands: {
           allowFrom: {
-            discord: ["channel:123456789012345678"],
+            telegram: ["channel:123456789012345678"],
           },
         },
       } as PropAiSyncConfig;
 
       const auth = resolveCommandAuthorization({
         ctx: {
-          Provider: "discord",
-          Surface: "discord",
+          Provider: "telegram",
+          Surface: "telegram",
           ChatType: "channel",
-          From: "discord:channel:123456789012345678",
+          From: "telegram:channel:123456789012345678",
           SenderId: "999999999999999999",
         } as MsgContext,
         cfg,
@@ -357,17 +357,17 @@ describe("resolveCommandAuthorization", () => {
       const cfg = {
         commands: {
           allowFrom: {
-            discord: ["123456789012345678"],
+            telegram: ["123456789012345678"],
           },
         },
       } as PropAiSyncConfig;
 
       const auth = resolveCommandAuthorization({
         ctx: {
-          Provider: "discord",
-          Surface: "discord",
+          Provider: "telegram",
+          Surface: "telegram",
           ChatType: "direct",
-          From: "discord:123456789012345678",
+          From: "telegram:123456789012345678",
           SenderId: " ",
           SenderE164: " ",
         } as MsgContext,
@@ -402,46 +402,22 @@ describe("resolveCommandAuthorization", () => {
       expect(auth.isAuthorizedSender).toBe(false);
     });
 
-    it("normalizes Discord commands.allowFrom prefixes and mentions", () => {
+    it("normalizes provider-prefixed allowFrom entries", () => {
       const cfg = {
         commands: {
           allowFrom: {
-            discord: ["user:123", "<@!456>", "pk:member-1"],
+            telegram: ["user:123"],
           },
         },
       } as PropAiSyncConfig;
 
       const userAuth = resolveCommandAuthorization({
-        ctx: makeDiscordContext("123"),
+        ctx: makeTelegramContext("123"),
         cfg,
         commandAuthorized: false,
       });
 
       expect(userAuth.isAuthorizedSender).toBe(true);
-
-      const mentionAuth = resolveCommandAuthorization({
-        ctx: makeDiscordContext("456"),
-        cfg,
-        commandAuthorized: false,
-      });
-
-      expect(mentionAuth.isAuthorizedSender).toBe(true);
-
-      const pkAuth = resolveCommandAuthorization({
-        ctx: makeDiscordContext("member-1", "discord:999"),
-        cfg,
-        commandAuthorized: false,
-      });
-
-      expect(pkAuth.isAuthorizedSender).toBe(true);
-
-      const deniedAuth = resolveCommandAuthorization({
-        ctx: makeDiscordContext("other"),
-        cfg,
-        commandAuthorized: false,
-      });
-
-      expect(deniedAuth.isAuthorizedSender).toBe(false);
     });
   });
 

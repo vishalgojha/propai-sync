@@ -253,12 +253,12 @@ metadata:
     expect(frontmatter.name).toBe("session-memory");
     expect(frontmatter.metadata).toBeDefined();
 
-    const PropAi Sync = resolvePropAiSyncMetadata(frontmatter);
-    expect(PropAi Sync).toBeDefined();
-    expect(PropAi Sync?.emoji).toBe("💾");
-    expect(PropAi Sync?.events).toEqual(["command:new", "command:reset"]);
-    expect(PropAi Sync?.requires?.config).toEqual(["workspace.dir"]);
-    expect(PropAi Sync?.install?.[0].kind).toBe("bundled");
+    const propaiMetadata = resolvePropAiSyncMetadata(frontmatter);
+    expect(propaiMetadata).toBeDefined();
+    expect(propaiMetadata?.emoji).toBe("💾");
+    expect(propaiMetadata?.events).toEqual(["command:new", "command:reset"]);
+    expect(propaiMetadata?.requires?.config).toEqual(["workspace.dir"]);
+    expect(propaiMetadata?.install?.[0].kind).toBe("bundled");
   });
 
   it("parses YAML metadata map", () => {
@@ -272,9 +272,9 @@ metadata:
 ---
 `;
     const frontmatter = parseFrontmatter(content);
-    const PropAi Sync = resolvePropAiSyncMetadata(frontmatter);
-    expect(PropAi Sync?.emoji).toBe("disk");
-    expect(PropAi Sync?.events).toEqual(["command:new"]);
+    const propaiMetadata = resolvePropAiSyncMetadata(frontmatter);
+    expect(propaiMetadata?.emoji).toBe("disk");
+    expect(propaiMetadata?.events).toEqual(["command:new"]);
   });
 });
 

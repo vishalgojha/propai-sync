@@ -11,32 +11,19 @@ title: "Automation Troubleshooting"
 
 Use this page for scheduler and delivery issues (`cron` + `heartbeat`).
 
-## Command ladder
+## Control Console ladder
 
-```bash
-propai status
-propai gateway status
-propai logs --follow
-propai doctor
-propai channels status --probe
-```
+Start in the Control Console:
 
-Then run automation checks:
-
-```bash
-propai cron status
-propai cron list
-propai system heartbeat last
-```
+- **Overview**: gateway health and connection status.
+- **Logs**: scheduler + delivery logs.
+- **Channels**: channel connectivity probes.
+- **Cron**: job list, status, and recent runs.
 
 ## Cron not firing
 
-```bash
-propai cron status
-propai cron list
-propai cron runs --id <jobId> --limit 20
-propai logs --follow
-```
+Use **Cron** to confirm the scheduler is enabled and the job is listed. Then
+inspect **Logs** for the job’s last run and any errors.
 
 Good output looks like:
 
@@ -52,12 +39,8 @@ Common signatures:
 
 ## Cron fired but no delivery
 
-```bash
-propai cron runs --id <jobId> --limit 20
-propai cron list
-propai channels status --probe
-propai logs --follow
-```
+Use **Cron** to inspect recent runs and delivery settings, **Channels** to
+confirm connectivity, and **Logs** for delivery errors.
 
 Good output looks like:
 
@@ -73,12 +56,8 @@ Common signatures:
 
 ## Heartbeat suppressed or skipped
 
-```bash
-propai system heartbeat last
-propai logs --follow
-propai config get agents.defaults.heartbeat
-propai channels status --probe
-```
+Use **Logs** to locate heartbeat events, **Config** to verify
+`agents.defaults.heartbeat`, and **Channels** to confirm delivery targets.
 
 Good output looks like:
 
@@ -94,18 +73,14 @@ Common signatures:
 
 ## Timezone and activeHours gotchas
 
-```bash
-propai config get agents.defaults.heartbeat.activeHours
-propai config get agents.defaults.heartbeat.activeHours.timezone
-propai config get agents.defaults.userTimezone || echo "agents.defaults.userTimezone not set"
-propai cron list
-propai logs --follow
-```
+Use **Config** to review `agents.defaults.heartbeat.*` and `agents.defaults.userTimezone`,
+and **Cron** to confirm schedules/timezones. Use **Logs** to verify actual run
+times.
 
 Quick rules:
 
 - `Config path not found: agents.defaults.userTimezone` means the key is unset; heartbeat falls back to host timezone (or `activeHours.timezone` if set).
-- Cron without `--tz` uses gateway host timezone.
+- Cron without an explicit timezone uses the gateway host timezone.
 - Heartbeat `activeHours` uses configured timezone resolution (`user`, `local`, or explicit IANA tz).
 - ISO timestamps without timezone are treated as UTC for cron `at` schedules.
 

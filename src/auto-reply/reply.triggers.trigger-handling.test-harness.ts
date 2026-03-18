@@ -110,7 +110,7 @@ type TempHomeEnvSnapshot = {
   userProfile: string | undefined;
   homeDrive: string | undefined;
   homePath: string | undefined;
-  PropAiSyncHome: string | undefined;
+  propaiHome: string | undefined;
   stateDir: string | undefined;
 };
 
@@ -123,7 +123,7 @@ function snapshotTempHomeEnv(): TempHomeEnvSnapshot {
     userProfile: process.env.USERPROFILE,
     homeDrive: process.env.HOMEDRIVE,
     homePath: process.env.HOMEPATH,
-    PropAiSyncHome: process.env.propai_HOME,
+    propaiHome: process.env.propai_HOME,
     stateDir: process.env.propai_STATE_DIR,
   };
 }

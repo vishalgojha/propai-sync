@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../../agents/agent-scope.js";
 import type { ChannelPluginCatalogEntry } from "../../channels/plugins/catalog.js";
-import { resolveBundledInstallPlanForCatalogEntry } from "../../cli/plugin-install-plan.js";
+import { resolveBundledInstallPlanForCatalogEntry } from "../../core/plugin-install-plan.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import {
@@ -236,5 +236,6 @@ export function reloadOnboardingPluginRegistry(params: {
     logger: createPluginLoaderLogger(log),
   });
 }
+
 
 

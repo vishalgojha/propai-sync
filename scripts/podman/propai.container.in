@@ -15,10 +15,13 @@ Volume={{PROPAI_HOME}}/.propai:/home/node/.propai:Z
 EnvironmentFile={{PROPAI_HOME}}/.propai/.env
 Environment=HOME=/home/node
 Environment=TERM=xterm-256color
+Environment=PROPAI_GATEWAY_BIND=lan
+Environment=PROPAI_GATEWAY_PORT=18789
+Environment=PROPAI_GATEWAY_ALLOW_UNCONFIGURED=1
 PublishPort=18789:18789
 PublishPort=18790:18790
 Pull=never
-Exec=node dist/index.js gateway --bind lan --port 18789
+Exec=node dist/entry.js
 
 [Service]
 TimeoutStartSec=300

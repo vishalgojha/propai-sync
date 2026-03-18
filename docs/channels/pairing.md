@@ -29,12 +29,11 @@ Pairing codes:
 - **Expire after 1 hour**. The bot only sends the pairing message when a new request is created (roughly once per hour per sender).
 - Pending DM pairing requests are capped at **3 per channel** by default; additional requests are ignored until one expires or is approved.
 
-### Approve a sender
+### Allow a sender
 
-```bash
-propai pairing list telegram
-propai pairing approve telegram <CODE>
-```
+Add the sender to the channel allowlist in config (for example
+`channels.telegram.allowFrom` or `channels.whatsapp.allowFrom`), or switch
+`dmPolicy` to `allowlist`/`open` for that channel.
 
 Supported channels: `telegram`, `whatsapp`, `signal`, `imessage`, `discord`, `slack`, `feishu`.
 
@@ -78,11 +77,7 @@ Treat the setup code like a password while it is valid.
 
 ### Approve a node device
 
-```bash
-propai devices list
-propai devices approve <requestId>
-propai devices reject <requestId>
-```
+Use Control Console → **Nodes** to approve or reject device pairing requests.
 
 ### Node pairing state storage
 
@@ -93,13 +88,13 @@ Stored under `~/.propai/devices/`:
 
 ### Notes
 
-- The legacy `node.pair.*` API (CLI: `propai nodes pending/approve`) is a
-  separate gateway-owned pairing store. WS nodes still require device pairing.
+- The legacy `node.pair.*` API is a separate gateway-owned pairing store. WS
+  nodes still require device pairing.
 
 ## Related docs
 
 - Security model + prompt injection: [Security](/gateway/security)
-- Updating safely (run doctor): [Updating](/install/updating)
+- Updating safely: [Updating](/install/updating)
 - Channel configs:
   - Telegram: [Telegram](/channels/telegram)
   - WhatsApp: [WhatsApp](/channels/whatsapp)

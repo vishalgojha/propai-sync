@@ -1,7 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { CliDeps } from "../cli/deps.js";
+import type { CliDeps } from "../core/deps.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { SsrFBlockedError } from "../infra/net/ssrf.js";
 
@@ -140,5 +140,6 @@ describe("buildGatewayCronService", () => {
     }
   });
 });
+
 
 

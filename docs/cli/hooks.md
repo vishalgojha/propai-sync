@@ -90,7 +90,7 @@ Details:
   Source: propai-bundled
   Path: /path/to/propai/hooks/bundled/session-memory/HOOK.md
   Handler: /path/to/propai/hooks/bundled/session-memory/handler.ts
-  Homepage: https://docs.propai.ai/automation/hooks#session-memory
+  Homepage: https://docs.propai.live/automation/hooks#session-memory
   Events: command:new
 
 Requirements:
@@ -316,6 +316,7 @@ propai hooks enable boot-md
 ```
 
 **See:** [boot-md documentation](/automation/hooks#boot-md)
+
 
 
 

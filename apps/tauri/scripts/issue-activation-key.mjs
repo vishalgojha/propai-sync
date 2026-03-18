@@ -7,7 +7,11 @@ const getArg = (flag) => {
   if (idx === -1) {
     return null;
   }
-  return args[idx + 1] ?? null;
+  const value = args[idx + 1] ?? null;
+  if (typeof value !== "string") {
+    return value;
+  }
+  return value.replace(/^"(.*)"$/s, "$1").replace(/^'(.*)'$/s, "$1");
 };
 
 const apiUrl = getArg("--api-url") ?? process.env.LICENSE_API_URL ?? DEFAULT_API_URL;
@@ -34,14 +38,24 @@ const payload = {
   maxDevices,
 };
 
-const response = await fetch(`${apiUrl.replace(/\/+$/, "")}/v1/admin/licenses`, {
-  method: "POST",
-  headers: {
-    "content-type": "application/json",
-    "x-admin-key": adminKey,
-  },
-  body: JSON.stringify(payload),
-});
+let response;
+try {
+  response = await fetch(`${apiUrl.replace(/\/+$/, "")}/v1/admin/licenses`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-admin-key": adminKey,
+    },
+    body: JSON.stringify(payload),
+  });
+} catch (error) {
+  const details =
+    error instanceof Error && error.message ? error.message : String(error);
+  console.error(
+    `Failed to reach licensing service at ${apiUrl}. Start the licensing service first. (${details})`,
+  );
+  process.exit(1);
+}
 
 if (!response.ok) {
   const text = await response.text();

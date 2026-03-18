@@ -58,6 +58,7 @@ function createProps(overrides: Partial<CronProps> = {}): CronProps {
     timezoneSuggestions: [],
     deliveryToSuggestions: [],
     accountSuggestions: [],
+    licenseLocked: false,
     onFormChange: () => undefined,
     onRefresh: () => undefined,
     onAdd: () => undefined,

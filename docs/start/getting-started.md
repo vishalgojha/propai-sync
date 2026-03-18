@@ -32,7 +32,7 @@ Check your Node version with `node --version` if you are unsure.
     <Tabs>
       <Tab title="macOS/Linux">
         ```bash
-        curl -fsSL https://propai.ai/install.sh | bash
+        curl -fsSL https://propai.live/install.sh | bash
         ```
         <img
   src="/assets/install-script.svg"
@@ -42,7 +42,7 @@ Check your Node version with `node --version` if you are unsure.
       </Tab>
       <Tab title="Windows (PowerShell)">
         ```powershell
-        iwr -useb https://propai.ai/install.ps1 | iex
+        iwr -useb https://propai.live/install.ps1 | iex
         ```
       </Tab>
     </Tabs>
@@ -133,6 +133,7 @@ Full environment variable reference: [Environment vars](/help/environment).
 - DM safety and approvals: [Pairing](/channels/pairing)
 - Connect more channels: [Channels](/channels)
 - Advanced workflows and from source: [Setup](/start/setup)
+
 
 
 

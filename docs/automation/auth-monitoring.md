@@ -8,40 +8,25 @@ title: "Auth Monitoring"
 
 # Auth monitoring
 
-propai exposes OAuth expiry health via `propai models status`. Use that for
-automation and alerting; scripts are optional extras for phone workflows.
+propai exposes OAuth expiry health in its auth profile store. Use the Control
+Console to review configured providers and watch gateway logs for expiry
+warnings. For automation, read the auth profile store directly and alert when
+tokens are missing or past expiry.
 
-## Preferred: CLI check (portable)
+## Manual check (recommended)
 
-```bash
-propai models status --check
-```
+1. Open the Control Console.
+2. Go to **Config → Authentication** to see configured auth profiles and
+   provider keys.
+3. Check **Logs** for expiry warnings during startup or provider probes.
 
-Exit codes:
+## Automation options
 
-- `0`: OK
-- `1`: expired or missing credentials
-- `2`: expiring soon (within 24h)
-
-This works in cron/systemd and requires no extra scripts.
-
-## Optional scripts (ops / phone workflows)
-
-These live under `scripts/` and are **optional**. They assume SSH access to the
-gateway host and are tuned for systemd + Termux.
-
-- `scripts/claude-auth-status.sh` now uses `propai models status --json` as the
-  source of truth (falling back to direct file reads if the CLI is unavailable),
-  so keep `propai` on `PATH` for timers.
-- `scripts/auth-monitor.sh`: cron/systemd timer target; sends alerts (ntfy or phone).
-- `scripts/systemd/propai-auth-monitor.{service,timer}`: systemd user timer.
-- `scripts/claude-auth-status.sh`: Claude Code + propai auth checker (full/json/simple).
-- `scripts/mobile-reauth.sh`: guided re‑auth flow over SSH.
-- `scripts/termux-quick-auth.sh`: one‑tap widget status + open auth URL.
-- `scripts/termux-auth-widget.sh`: full guided widget flow.
-- `scripts/termux-sync-widget.sh`: sync Claude Code creds → propai.
-
-If you don’t need phone automation or systemd timers, skip these scripts.
+- Read `~/.propai/credentials/` and `~/.propai/propai.json` on the gateway host.
+- Alert when an OAuth profile is missing or a stored expiry timestamp has
+  passed.
+- Keep phone/ops scripts, but update them to read the auth profile store instead
+  of calling the removed CLI.
 
 
 

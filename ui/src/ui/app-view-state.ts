@@ -54,12 +54,16 @@ export type AppViewState = {
   onboardingWizardDraft: unknown;
   onboardingWizardPresetId: OnboardingWizardPresetId;
   onboardingWizardAutoAdvance: boolean;
+  ollamaStatus: { installed: boolean; running: boolean } | null;
+  ollamaStatusLoading: boolean;
   licenseGateActive: boolean;
   licenseStatus: LicenseStatus;
   licenseToken: string;
   licenseApiUrl: string;
+  licenseAdminKey: string;
   licenseBusy: boolean;
   licenseError: string | null;
+  licenseNotice: string | null;
   licenseEntitlement: LicenseEntitlement | null;
   basePath: string;
   connected: boolean;
@@ -394,8 +398,6 @@ export type AppViewState = {
     handleCloseSidebar: () => void;
     handleSplitRatioChange: (ratio: number) => void;
   };
-
-
 
 
 

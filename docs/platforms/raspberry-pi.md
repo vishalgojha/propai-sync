@@ -112,7 +112,7 @@ sudo sysctl -p
 ### Option A: Standard Install (Recommended)
 
 ```bash
-curl -fsSL https://propai.ai/install.sh | bash
+curl -fsSL https://propai.live/install.sh | bash
 ```
 
 ### Option B: Hackable Install (For tinkering)
@@ -410,6 +410,7 @@ echo 'wireless-power off' | sudo tee -a /etc/network/interfaces
 - [Hetzner guide](/install/hetzner) — Docker setup
 - [Tailscale](/gateway/tailscale) — remote access
 - [Nodes](/nodes) — pair your laptop/phone with the Pi gateway
+
 
 
 

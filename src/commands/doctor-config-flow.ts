@@ -6,9 +6,9 @@ import {
   normalizeTelegramAllowFromEntry,
 } from "../channels/telegram/allow-from.js";
 import { fetchTelegramChatId } from "../channels/telegram/api.js";
-import { formatCliCommand } from "../cli/command-format.js";
-import { resolveCommandSecretRefsViaGateway } from "../cli/command-secret-gateway.js";
-import { getChannelsCommandSecretTargetIds } from "../cli/command-secret-targets.js";
+import { formatCliCommand } from "../core/command-format.js";
+import { resolveCommandSecretRefsViaGateway } from "../core/command-secret-gateway.js";
+import { getChannelsCommandSecretTargetIds } from "../core/command-secret-targets.js";
 import { listRouteBindings } from "../config/bindings.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { CONFIG_PATH, migrateLegacyConfig, readConfigFileSnapshot } from "../config/config.js";
@@ -1506,5 +1506,6 @@ export async function loadAndMaybeMigrateDoctorConfig(params: {
     sourceConfigValid: snapshot.valid,
   };
 }
+
 
 

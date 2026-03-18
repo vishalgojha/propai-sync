@@ -2,21 +2,21 @@ import { describe, expect, it } from "vitest";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { resolveCommandAuthorization } from "./command-auth.js";
 import type { MsgContext } from "./templating.js";
-import { installDiscordRegistryHooks } from "./test-helpers/command-auth-registry-fixture.js";
+import { installTelegramRegistryHooks } from "./test-helpers/command-auth-registry-fixture.js";
 
-installDiscordRegistryHooks();
+installTelegramRegistryHooks();
 
 describe("senderIsOwner only reflects explicit owner authorization", () => {
   it("does not treat direct-message senders as owners when no ownerAllowFrom is configured", () => {
     const cfg = {
-      channels: { discord: {} },
+      channels: { telegram: {} },
     } as PropAiSyncConfig;
 
     const ctx = {
-      Provider: "discord",
-      Surface: "discord",
+      Provider: "telegram",
+      Surface: "telegram",
       ChatType: "direct",
-      From: "discord:123",
+      From: "telegram:123",
       SenderId: "123",
     } as MsgContext;
 
@@ -32,14 +32,14 @@ describe("senderIsOwner only reflects explicit owner authorization", () => {
 
   it("does not treat group-chat senders as owners when no ownerAllowFrom is configured", () => {
     const cfg = {
-      channels: { discord: {} },
+      channels: { telegram: {} },
     } as PropAiSyncConfig;
 
     const ctx = {
-      Provider: "discord",
-      Surface: "discord",
+      Provider: "telegram",
+      Surface: "telegram",
       ChatType: "group",
-      From: "discord:123",
+      From: "telegram:123",
       SenderId: "123",
     } as MsgContext;
 
@@ -55,14 +55,14 @@ describe("senderIsOwner only reflects explicit owner authorization", () => {
 
   it("senderIsOwner is false when ownerAllowFrom is configured and sender does not match", () => {
     const cfg = {
-      channels: { discord: {} },
+      channels: { telegram: {} },
       commands: { ownerAllowFrom: ["456"] },
     } as PropAiSyncConfig;
 
     const ctx = {
-      Provider: "discord",
-      Surface: "discord",
-      From: "discord:789",
+      Provider: "telegram",
+      Surface: "telegram",
+      From: "telegram:789",
       SenderId: "789",
     } as MsgContext;
 
@@ -77,14 +77,14 @@ describe("senderIsOwner only reflects explicit owner authorization", () => {
 
   it("senderIsOwner is true when ownerAllowFrom matches sender", () => {
     const cfg = {
-      channels: { discord: {} },
+      channels: { telegram: {} },
       commands: { ownerAllowFrom: ["456"] },
     } as PropAiSyncConfig;
 
     const ctx = {
-      Provider: "discord",
-      Surface: "discord",
-      From: "discord:456",
+      Provider: "telegram",
+      Surface: "telegram",
+      From: "telegram:456",
       SenderId: "456",
     } as MsgContext;
 
@@ -99,14 +99,14 @@ describe("senderIsOwner only reflects explicit owner authorization", () => {
 
   it("senderIsOwner is true when ownerAllowFrom is wildcard (*)", () => {
     const cfg = {
-      channels: { discord: {} },
+      channels: { telegram: {} },
       commands: { ownerAllowFrom: ["*"] },
     } as PropAiSyncConfig;
 
     const ctx = {
-      Provider: "discord",
-      Surface: "discord",
-      From: "discord:anyone",
+      Provider: "telegram",
+      Surface: "telegram",
+      From: "telegram:anyone",
       SenderId: "anyone",
     } as MsgContext;
 

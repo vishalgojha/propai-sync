@@ -8,10 +8,10 @@ import {
   buildReadOnlySourceChannelAccountSnapshot,
 } from "../../channels/plugins/status.js";
 import type { ChannelAccountSnapshot } from "../../channels/plugins/types.js";
-import { formatCliCommand } from "../../cli/command-format.js";
-import { resolveCommandSecretRefsViaGateway } from "../../cli/command-secret-gateway.js";
-import { getChannelsCommandSecretTargetIds } from "../../cli/command-secret-targets.js";
-import { withProgress } from "../../cli/progress.js";
+import { formatCliCommand } from "../../core/command-format.js";
+import { resolveCommandSecretRefsViaGateway } from "../../core/command-secret-gateway.js";
+import { getChannelsCommandSecretTargetIds } from "../../core/command-secret-targets.js";
+import { withProgress } from "../../core/progress.js";
 import { type PropAiSyncConfig, readConfigFileSnapshot } from "../../config/config.js";
 import { callGateway } from "../../gateway/call.js";
 import { collectChannelStatusIssues } from "../../infra/channels-status-issues.js";
@@ -336,6 +336,7 @@ export async function channelsStatusCommand(
     );
   }
 }
+
 
 
 

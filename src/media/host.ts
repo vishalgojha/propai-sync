@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { ensurePortAvailable, PortInUseError } from "../infra/ports.js";
 import { getTailnetHostname } from "../infra/tailscale.js";
 import { logInfo } from "../logger.js";
@@ -66,5 +66,6 @@ async function isPortFree(port: number) {
     throw err;
   }
 }
+
 
 

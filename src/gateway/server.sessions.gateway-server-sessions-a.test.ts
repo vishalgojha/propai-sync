@@ -39,9 +39,6 @@ const subagentLifecycleHookState = vi.hoisted(() => ({
   hasSubagentEndedHook: true,
 }));
 
-const threadBindingMocks = vi.hoisted(() => ({
-  unbindThreadBindingsBySessionKey: vi.fn((_params?: unknown) => []),
-}));
 const acpRuntimeMocks = vi.hoisted(() => ({
   cancel: vi.fn(async () => {}),
   close: vi.fn(async () => {}),
@@ -99,15 +96,6 @@ vi.mock("../plugins/hook-runner-global.js", async (importOriginal) => {
         hookName === "subagent_ended" && subagentLifecycleHookState.hasSubagentEndedHook,
       runSubagentEnded: subagentLifecycleHookMocks.runSubagentEnded,
     })),
-  };
-});
-
-vi.mock("../discord/monitor/thread-bindings.js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../discord/monitor/thread-bindings.js")>();
-  return {
-    ...actual,
-    unbindThreadBindingsBySessionKey: (params: unknown) =>
-      threadBindingMocks.unbindThreadBindingsBySessionKey(params),
   };
 });
 
@@ -220,7 +208,6 @@ describe("gateway server sessions", () => {
     sessionHookMocks.triggerInternalHook.mockClear();
     subagentLifecycleHookMocks.runSubagentEnded.mockClear();
     subagentLifecycleHookState.hasSubagentEndedHook = true;
-    threadBindingMocks.unbindThreadBindingsBySessionKey.mockClear();
     acpRuntimeMocks.cancel.mockClear();
     acpRuntimeMocks.close.mockClear();
     acpRuntimeMocks.getAcpRuntimeBackend.mockReset();
@@ -791,13 +778,6 @@ describe("gateway server sessions", () => {
         childSessionKey: "agent:main:discord:group:dev",
       },
     );
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledTimes(1);
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledWith({
-      targetSessionKey: "agent:main:discord:group:dev",
-      targetKind: "acp",
-      reason: "session-delete",
-      sendFarewell: true,
-    });
 
     ws.close();
   });
@@ -881,7 +861,6 @@ describe("gateway server sessions", () => {
     expect(deleted.ok).toBe(true);
     expect(deleted.payload?.deleted).toBe(false);
     expect(subagentLifecycleHookMocks.runSubagentEnded).not.toHaveBeenCalled();
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).not.toHaveBeenCalled();
 
     ws.close();
   });
@@ -914,13 +893,6 @@ describe("gateway server sessions", () => {
       reason: "session-delete",
       outcome: "deleted",
     });
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledTimes(1);
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledWith({
-      targetSessionKey: "agent:main:subagent:worker",
-      targetKind: "subagent",
-      reason: "session-delete",
-      sendFarewell: true,
-    });
 
     ws.close();
   });
@@ -945,13 +917,6 @@ describe("gateway server sessions", () => {
     expect(deleted.ok).toBe(true);
     expect(deleted.payload?.deleted).toBe(true);
     expect(subagentLifecycleHookMocks.runSubagentEnded).not.toHaveBeenCalled();
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledTimes(1);
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledWith({
-      targetSessionKey: "agent:main:subagent:worker",
-      targetKind: "subagent",
-      reason: "session-delete",
-      sendFarewell: true,
-    });
 
     ws.close();
   });
@@ -975,13 +940,6 @@ describe("gateway server sessions", () => {
     });
     expect(deleted.ok).toBe(true);
     expect(subagentLifecycleHookMocks.runSubagentEnded).not.toHaveBeenCalled();
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledTimes(1);
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledWith({
-      targetSessionKey: "agent:main:subagent:worker",
-      targetKind: "subagent",
-      reason: "session-delete",
-      sendFarewell: true,
-    });
 
     ws.close();
   });
@@ -1032,13 +990,6 @@ describe("gateway server sessions", () => {
         childSessionKey: "agent:main:main",
       },
     );
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledTimes(1);
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledWith({
-      targetSessionKey: "agent:main:main",
-      targetKind: "acp",
-      reason: "session-reset",
-      sendFarewell: true,
-    });
 
     ws.close();
   });
@@ -1114,7 +1065,6 @@ describe("gateway server sessions", () => {
 
     expect(reset.ok).toBe(true);
     expect(subagentLifecycleHookMocks.runSubagentEnded).not.toHaveBeenCalled();
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).not.toHaveBeenCalled();
 
     ws.close();
   });
@@ -1152,13 +1102,6 @@ describe("gateway server sessions", () => {
       reason: "session-reset",
       outcome: "reset",
     });
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledTimes(1);
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledWith({
-      targetSessionKey: "agent:main:subagent:worker",
-      targetKind: "subagent",
-      reason: "session-reset",
-      sendFarewell: true,
-    });
 
     ws.close();
   });
@@ -1182,13 +1125,6 @@ describe("gateway server sessions", () => {
     });
     expect(reset.ok).toBe(true);
     expect(subagentLifecycleHookMocks.runSubagentEnded).not.toHaveBeenCalled();
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledTimes(1);
-    expect(threadBindingMocks.unbindThreadBindingsBySessionKey).toHaveBeenCalledWith({
-      targetSessionKey: "agent:main:main",
-      targetKind: "acp",
-      reason: "session-reset",
-      sendFarewell: true,
-    });
 
     ws.close();
   });

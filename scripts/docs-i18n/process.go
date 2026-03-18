@@ -44,7 +44,9 @@ func processFile(ctx context.Context, translator *PiTranslator, tm *TranslationM
 		return false, err
 	}
 
-	namespace := cacheNamespace()
+	namespace := cacheNamespaceFor(translator.provider, translator.model)
+	metaProvider := metadataProvider(translator.provider)
+	model := translator.model
 	for i := range segments {
 		seg := &segments[i]
 		seg.CacheKey = cacheKey(namespace, srcLang, tgtLang, seg.SegmentID, seg.TextHash)
@@ -64,8 +66,8 @@ func processFile(ctx context.Context, translator *PiTranslator, tm *TranslationM
 			TextHash:   seg.TextHash,
 			Text:       seg.Text,
 			Translated: translated,
-			Provider:   providerName,
-			Model:      modelVersion,
+			Provider:   metaProvider,
+			Model:      model,
 			SrcLang:    srcLang,
 			TgtLang:    tgtLang,
 			UpdatedAt:  time.Now().UTC().Format(time.RFC3339),
@@ -74,7 +76,7 @@ func processFile(ctx context.Context, translator *PiTranslator, tm *TranslationM
 	}
 
 	translatedBody := applyTranslations(body, segments)
-	updatedFront, err := encodeFrontMatter(frontData, relPath, content)
+	updatedFront, err := encodeFrontMatter(frontData, relPath, content, metaProvider, model)
 	if err != nil {
 		return false, err
 	}
@@ -114,15 +116,15 @@ func splitFrontMatter(content string) (string, string) {
 	return front, body
 }
 
-func encodeFrontMatter(frontData map[string]any, relPath string, source []byte) (string, error) {
+func encodeFrontMatter(frontData map[string]any, relPath string, source []byte, provider, model string) (string, error) {
 	if frontData == nil {
 		frontData = map[string]any{}
 	}
 	frontData["x-i18n"] = map[string]any{
 		"source_path":  relPath,
 		"source_hash":  hashBytes(source),
-		"provider":     providerName,
-		"model":        modelVersion,
+		"provider":     provider,
+		"model":        model,
 		"workflow":     workflowVersion,
 		"generated_at": time.Now().UTC().Format(time.RFC3339),
 	}
@@ -174,7 +176,9 @@ func translateSnippet(ctx context.Context, translator *PiTranslator, tm *Transla
 	if strings.TrimSpace(textValue) == "" {
 		return textValue, nil
 	}
-	namespace := cacheNamespace()
+	namespace := cacheNamespaceFor(translator.provider, translator.model)
+	metaProvider := metadataProvider(translator.provider)
+	model := translator.model
 	textHash := hashText(textValue)
 	ck := cacheKey(namespace, srcLang, tgtLang, segmentID, textHash)
 	if entry, ok := tm.Get(ck); ok {
@@ -191,8 +195,8 @@ func translateSnippet(ctx context.Context, translator *PiTranslator, tm *Transla
 		TextHash:   textHash,
 		Text:       textValue,
 		Translated: translated,
-		Provider:   providerName,
-		Model:      modelVersion,
+		Provider:   metaProvider,
+		Model:      model,
 		SrcLang:    srcLang,
 		TgtLang:    tgtLang,
 		UpdatedAt:  time.Now().UTC().Format(time.RFC3339),

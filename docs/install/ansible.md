@@ -63,7 +63,7 @@ sudo -i -u propai
 The post-install script will guide you through:
 
 1. **Onboarding wizard**: Configure propai settings
-2. **Provider login**: Connect WhatsApp/Telegram/Discord/Signal
+2. **Channel linking**: Connect WhatsApp/Telegram/Discord/Signal in Control Console
 3. **Gateway testing**: Verify the installation
 4. **Tailscale setup**: Connect to your VPN mesh
 
@@ -79,9 +79,7 @@ sudo journalctl -u propai -f
 # Restart gateway
 sudo systemctl restart propai
 
-# Provider login (run as propai user)
-sudo -i -u propai
-propai channels login
+# Channel linking: use Control Console → Channels
 ```
 
 ## Security Architecture
@@ -189,8 +187,9 @@ Make sure you're running as the `propai` user:
 
 ```bash
 sudo -i -u propai
-propai channels login
 ```
+
+Then use Control Console → **Channels** to link the provider.
 
 ## Advanced Configuration
 

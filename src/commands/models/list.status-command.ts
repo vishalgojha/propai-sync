@@ -23,8 +23,8 @@ import {
   resolveDefaultModelForAgent,
   resolveModelRefFromString,
 } from "../../agents/model-selection.js";
-import { formatCliCommand } from "../../cli/command-format.js";
-import { withProgressTotals } from "../../cli/progress.js";
+import { formatCliCommand } from "../../core/command-format.js";
+import { withProgressTotals } from "../../core/progress.js";
 import { createConfigIO } from "../../config/config.js";
 import {
   resolveAgentModelFallbackValues,
@@ -685,6 +685,7 @@ export async function modelsStatusCommand(
     runtime.exit(checkStatus);
   }
 }
+
 
 
 

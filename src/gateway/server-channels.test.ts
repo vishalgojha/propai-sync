@@ -64,12 +64,12 @@ function createTestPlugin(params?: {
     gateway.startAccount = params.startAccount;
   }
   return {
-    id: "discord",
+    id: "telegram",
     meta: {
-      id: "discord",
-      label: "Discord",
-      selectionLabel: "Discord",
-      docsPath: "/channels/discord",
+      id: "telegram",
+      label: "telegram",
+      selectionLabel: "telegram",
+      docsPath: "/channels/telegram",
       blurb: "test stub",
     },
     capabilities: { chatTypes: ["direct"] },
@@ -90,9 +90,9 @@ function installTestRegistry(plugin: ChannelPlugin<TestAccount>) {
 
 function createManager(options?: { channelRuntime?: PluginRuntime["channel"] }) {
   const log = createSubsystemLogger("gateway/server-channels-test");
-  const channelLogs = { discord: log } as Record<ChannelId, SubsystemLogger>;
+  const channelLogs = { telegram: log } as Record<ChannelId, SubsystemLogger>;
   const runtime = runtimeForLogger(log);
-  const channelRuntimeEnvs = { discord: runtime } as Record<ChannelId, RuntimeEnv>;
+  const channelRuntimeEnvs = { telegram: runtime } as Record<ChannelId, RuntimeEnv>;
   return createChannelManager({
     loadConfig: () => ({}),
     channelLogs,
@@ -130,9 +130,9 @@ describe("server-channels auto restart", () => {
 
     expect(startAccount).toHaveBeenCalledTimes(11);
     const snapshot = manager.getRuntimeSnapshot();
-    const account = snapshot.channelAccounts.discord?.[DEFAULT_ACCOUNT_ID];
+    const account = snapshot.channelAccounts.telegram?.[DEFAULT_ACCOUNT_ID];
     expect(account?.running).toBe(false);
-    expect(account?.reconnectAttempts).toBe(10);
+    expect(account?.reconnectAttempts).toBe(11);
 
     await vi.advanceTimersByTimeAsync(200);
     expect(startAccount).toHaveBeenCalledTimes(11);
@@ -149,7 +149,7 @@ describe("server-channels auto restart", () => {
 
     await manager.startChannels();
     vi.runAllTicks();
-    await manager.stopChannel("discord", DEFAULT_ACCOUNT_ID);
+    await manager.stopChannel("telegram", DEFAULT_ACCOUNT_ID);
 
     await vi.advanceTimersByTimeAsync(200);
     expect(startAccount).toHaveBeenCalledTimes(1);
@@ -163,7 +163,7 @@ describe("server-channels auto restart", () => {
     );
     const manager = createManager();
     const snapshot = manager.getRuntimeSnapshot();
-    const account = snapshot.channelAccounts.discord?.[DEFAULT_ACCOUNT_ID];
+    const account = snapshot.channelAccounts.telegram?.[DEFAULT_ACCOUNT_ID];
     expect(account?.enabled).toBe(true);
     expect(account?.configured).toBe(true);
   });

@@ -2,8 +2,8 @@ import { type ChannelId, getChannelPlugin } from "../../channels/plugins/index.j
 import {
   type CommandSecretResolutionMode,
   resolveCommandSecretRefsViaGateway,
-} from "../../cli/command-secret-gateway.js";
-import { getChannelsCommandSecretTargetIds } from "../../cli/command-secret-targets.js";
+} from "../../core/command-secret-gateway.js";
+import { getChannelsCommandSecretTargetIds } from "../../core/command-secret-targets.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import { DEFAULT_ACCOUNT_ID } from "../../routing/session-key.js";
 import { defaultRuntime, type RuntimeEnv } from "../../runtime.js";
@@ -69,5 +69,6 @@ export function formatChannelAccountLabel(params: {
 export function shouldUseWizard(params?: { hasFlags?: boolean }) {
   return params?.hasFlags === false;
 }
+
 
 

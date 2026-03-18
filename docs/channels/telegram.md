@@ -47,18 +47,16 @@ Status: production-ready for bot DMs + groups via grammY. Long polling is the de
 ```
 
     Env fallback: `TELEGRAM_BOT_TOKEN=...` (default account only).
-    Telegram does **not** use `propai channels login telegram`; configure token in config/env, then start gateway.
+    Telegram does **not** require a QR login; configure the token in config/env,
+    then start the Gateway.
 
   </Step>
 
-  <Step title="Start gateway and approve first DM">
+  <Step title="Start the Gateway and allow the first DM">
 
-```bash
-propai gateway
-propai pairing list telegram
-propai pairing approve telegram <CODE>
-```
-
+    Start the Gateway process (service, app, or container). When your bot sends
+    a pairing code, add the sender ID to `channels.telegram.allowFrom` (or switch
+    `dmPolicy` to `allowlist`/`open`) and restart the Gateway if needed.
     Pairing codes expire after 1 hour.
 
   </Step>
@@ -116,8 +114,8 @@ Token resolution order is account-aware. In practice, config values win over env
     `channels.telegram.allowFrom` accepts numeric Telegram user IDs. `telegram:` / `tg:` prefixes are accepted and normalized.
     `dmPolicy: "allowlist"` with empty `allowFrom` blocks all DMs and is rejected by config validation.
     The onboarding wizard accepts `@username` input and resolves it to numeric IDs.
-    If you upgraded and your config contains `@username` allowlist entries, run `propai doctor --fix` to resolve them (best-effort; requires a Telegram bot token).
-    If you previously relied on pairing-store allowlist files, `propai doctor --fix` can recover entries into `channels.telegram.allowFrom` in allowlist flows (for example when `dmPolicy: "allowlist"` has no explicit IDs yet).
+    If you upgraded and your config contains `@username` allowlist entries, replace them with numeric IDs (see below).
+    If you previously relied on pairing-store allowlist files, copy the sender IDs into `channels.telegram.allowFrom` in config so access policy stays explicit.
 
     For one-owner bots, prefer `dmPolicy: "allowlist"` with explicit numeric `allowFrom` IDs to keep access policy durable in config (instead of depending on previous pairing approvals).
 
@@ -126,8 +124,8 @@ Token resolution order is account-aware. In practice, config values win over env
     Safer (no third-party bot):
 
     1. DM your bot.
-    2. Run `propai logs --follow`.
-    3. Read `from.id`.
+    2. Open Control Console → **Logs**.
+    3. Read `from.id` from the inbound message log entry.
 
     Official Bot API method:
 
@@ -239,7 +237,7 @@ curl "https://api.telegram.org/bot<bot_token>/getUpdates"
     Getting the group chat ID:
 
     - forward a group message to `@userinfobot` / `@getidsbot`
-    - or read `chat.id` from `propai logs --follow`
+    - or read `chat.id` in Control Console → **Logs**
     - or inspect Bot API `getUpdates`
 
   </Tab>
@@ -746,7 +744,7 @@ curl "https://api.telegram.org/bot<bot_token>/getUpdates"
 
   </Accordion>
 
-  <Accordion title="Limits, retry, and CLI targets">
+  <Accordion title="Limits, retry, and delivery targets">
     - `channels.telegram.textChunkLimit` default is 4000.
     - `channels.telegram.chunkMode="newline"` prefers paragraph boundaries (blank lines) before length splitting.
     - `channels.telegram.mediaMaxMb` (default 100) caps inbound and outbound Telegram media size.
@@ -755,31 +753,18 @@ curl "https://api.telegram.org/bot<bot_token>/getUpdates"
     - DM history controls:
       - `channels.telegram.dmHistoryLimit`
       - `channels.telegram.dms["<user_id>"].historyLimit`
-    - `channels.telegram.retry` config applies to Telegram send helpers (CLI/tools/actions) for recoverable outbound API errors.
+    - `channels.telegram.retry` config applies to Telegram send helpers (tools/actions) for recoverable outbound API errors.
 
-    CLI send target can be numeric chat ID or username:
+    Delivery targets can be numeric chat IDs or usernames (`@name`). For forum
+    topics, use `threadId` or a `:topic:` target string (`-100...:topic:<id>`).
 
-```bash
-propai message send --channel telegram --target 123456789 --message "hi"
-propai message send --channel telegram --target @name --message "hi"
-```
+    Telegram-only poll fields:
 
-    Telegram polls use `propai message poll` and support forum topics:
+    - `durationSeconds` (5-600)
+    - `isAnonymous` (true/false)
+    - `threadId` for forum topics (or use a `:topic:` target)
 
-```bash
-propai message poll --channel telegram --target 123456789 \
-  --poll-question "Ship it?" --poll-option "Yes" --poll-option "No"
-propai message poll --channel telegram --target -1001234567890:topic:42 \
-  --poll-question "Pick a time" --poll-option "10am" --poll-option "2pm" \
-  --poll-duration-seconds 300 --poll-public
-```
-
-    Telegram-only poll flags:
-
-    - `--poll-duration-seconds` (5-600)
-    - `--poll-anonymous`
-    - `--poll-public`
-    - `--thread-id` for forum topics (or use a `:topic:` target)
+    For poll payloads and examples, see [Polls](/automation/poll).
 
     Action gating:
 
@@ -825,8 +810,8 @@ propai message poll --channel telegram --target -1001234567890:topic:42 \
     - If `requireMention=false`, Telegram privacy mode must allow full visibility.
       - BotFather: `/setprivacy` -> Disable
       - then remove + re-add bot to group
-    - `propai channels status` warns when config expects unmentioned group messages.
-    - `propai channels status --probe` can check explicit numeric group IDs; wildcard `"*"` cannot be membership-probed.
+    - Control Console → **Channels** highlights when config expects unmentioned group messages.
+    - Use Control Console → **Channels** for channel status; wildcard `"*"` groups cannot be membership-probed.
     - quick session test: `/activation always`.
 
   </Accordion>
@@ -835,7 +820,7 @@ propai message poll --channel telegram --target -1001234567890:topic:42 \
 
     - when `channels.telegram.groups` exists, group must be listed (or include `"*"`)
     - verify bot membership in group
-    - review logs: `propai logs --follow` for skip reasons
+    - review Control Console → **Logs** for skip reasons
 
   </Accordion>
 
@@ -894,14 +879,14 @@ Primary reference:
 - `channels.telegram.botToken`: bot token (BotFather).
 - `channels.telegram.tokenFile`: read token from a regular file path. Symlinks are rejected.
 - `channels.telegram.dmPolicy`: `pairing | allowlist | open | disabled` (default: pairing).
-- `channels.telegram.allowFrom`: DM allowlist (numeric Telegram user IDs). `allowlist` requires at least one sender ID. `open` requires `"*"`. `propai doctor --fix` can resolve legacy `@username` entries to IDs and can recover allowlist entries from pairing-store files in allowlist migration flows.
+- `channels.telegram.allowFrom`: DM allowlist (numeric Telegram user IDs). `allowlist` requires at least one sender ID. `open` requires `"*"`. Replace legacy `@username` entries with numeric IDs and keep allowlists explicit in config.
 - `channels.telegram.actions.poll`: enable or disable Telegram poll creation (default: enabled; still requires `sendMessage`).
-- `channels.telegram.defaultTo`: default Telegram target used by CLI `--deliver` when no explicit `--reply-to` is provided.
+- `channels.telegram.defaultTo`: default Telegram target used when no explicit reply target is provided.
 - `channels.telegram.groupPolicy`: `open | allowlist | disabled` (default: allowlist).
-- `channels.telegram.groupAllowFrom`: group sender allowlist (numeric Telegram user IDs). `propai doctor --fix` can resolve legacy `@username` entries to IDs. Non-numeric entries are ignored at auth time. Group auth does not use DM pairing-store fallback (`2026.2.25+`).
+- `channels.telegram.groupAllowFrom`: group sender allowlist (numeric Telegram user IDs). Replace legacy `@username` entries with numeric IDs. Non-numeric entries are ignored at auth time. Group auth does not use DM pairing-store fallback (`2026.2.25+`).
 - Multi-account precedence:
   - When two or more account IDs are configured, set `channels.telegram.defaultAccount` (or include `channels.telegram.accounts.default`) to make default routing explicit.
-  - If neither is set, propai falls back to the first normalized account ID and `propai doctor` warns.
+  - If neither is set, propai falls back to the first normalized account ID and logs a warning.
   - `channels.telegram.accounts.default.allowFrom` and `channels.telegram.accounts.default.groupAllowFrom` apply only to the `default` account.
   - Named accounts inherit `channels.telegram.allowFrom` and `channels.telegram.groupAllowFrom` when account-level values are unset.
   - Named accounts do not inherit `channels.telegram.accounts.default.allowFrom` / `groupAllowFrom`.

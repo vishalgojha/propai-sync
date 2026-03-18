@@ -33,6 +33,8 @@ func main() {
 		tmPath     = flag.String("tm", "", "translation memory path")
 		mode       = flag.String("mode", "segment", "translation mode (segment|doc)")
 		thinking   = flag.String("thinking", "high", "thinking level (low|high)")
+		provider   = flag.String("provider", "", "translation provider (e.g., anthropic, openai, openrouter)")
+		model      = flag.String("model", "", "translation model (e.g., claude-opus-4-6, gpt-4o)")
 		overwrite  = flag.Bool("overwrite", false, "overwrite existing translations")
 		maxFiles   = flag.Int("max", 0, "max files to process (0 = all)")
 		parallel   = flag.Int("parallel", 1, "parallel workers for doc mode")
@@ -58,7 +60,9 @@ func main() {
 		fatal(err)
 	}
 
-	translator, err := NewPiTranslator(*sourceLang, *targetLang, glossary, *thinking)
+	resolvedProvider, resolvedModel := normalizeProviderModel(*provider, *model)
+
+	translator, err := NewPiTranslator(*sourceLang, *targetLang, glossary, *thinking, resolvedProvider, resolvedModel)
 	if err != nil {
 		fatal(err)
 	}
@@ -96,11 +100,22 @@ func main() {
 		*parallel = 1
 	}
 
-	log.Printf("docs-i18n: mode=%s total=%d pending=%d pre_skipped=%d overwrite=%t thinking=%s parallel=%d", *mode, totalFiles, len(ordered), preSkipped, *overwrite, *thinking, *parallel)
+	log.Printf(
+		"docs-i18n: mode=%s total=%d pending=%d pre_skipped=%d overwrite=%t thinking=%s provider=%s model=%s parallel=%d",
+		*mode,
+		totalFiles,
+		len(ordered),
+		preSkipped,
+		*overwrite,
+		*thinking,
+		resolvedProvider,
+		resolvedModel,
+		*parallel,
+	)
 	switch *mode {
 	case "doc":
 		if *parallel > 1 {
-			proc, skip, err := runDocParallel(context.Background(), ordered, resolvedDocsRoot, *sourceLang, *targetLang, *overwrite, *parallel, glossary, *thinking)
+			proc, skip, err := runDocParallel(context.Background(), ordered, resolvedDocsRoot, *sourceLang, *targetLang, *overwrite, *parallel, glossary, *thinking, resolvedProvider, resolvedModel)
 			if err != nil {
 				fatal(err)
 			}
@@ -156,7 +171,7 @@ func runDocSequential(ctx context.Context, ordered []string, translator *PiTrans
 	return processed, skipped, nil
 }
 
-func runDocParallel(ctx context.Context, ordered []string, docsRoot, srcLang, tgtLang string, overwrite bool, parallel int, glossary []GlossaryEntry, thinking string) (int, int, error) {
+func runDocParallel(ctx context.Context, ordered []string, docsRoot, srcLang, tgtLang string, overwrite bool, parallel int, glossary []GlossaryEntry, thinking, provider, model string) (int, int, error) {
 	jobs := make(chan docJob)
 	results := make(chan docResult, len(ordered))
 	ctx, cancel := context.WithCancel(ctx)
@@ -167,7 +182,7 @@ func runDocParallel(ctx context.Context, ordered []string, docsRoot, srcLang, tg
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-			translator, err := NewPiTranslator(srcLang, tgtLang, glossary, thinking)
+			translator, err := NewPiTranslator(srcLang, tgtLang, glossary, thinking, provider, model)
 			if err != nil {
 				results <- docResult{err: err}
 				return

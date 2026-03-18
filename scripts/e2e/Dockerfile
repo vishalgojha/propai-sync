@@ -16,7 +16,7 @@ COPY patches ./patches
 RUN --mount=type=cache,id=PropAiSync-pnpm-store,target=/root/.local/share/pnpm/store,sharing=locked \
     pnpm install --frozen-lockfile
 
-COPY tsconfig.json tsconfig.plugin-sdk.dts.json tsdown.config.ts vitest.config.ts vitest.e2e.config.ts propai.mjs ./
+COPY tsconfig.json tsconfig.plugin-sdk.dts.json tsdown.config.ts vitest.config.ts vitest.e2e.config.ts ./
 COPY src ./src
 COPY test ./test
 COPY scripts ./scripts

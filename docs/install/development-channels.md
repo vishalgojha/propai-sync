@@ -23,11 +23,8 @@ without changing the version number — dist-tags are the source of truth for np
 
 Git checkout:
 
-```bash
-propai update --channel stable
-propai update --channel beta
-propai update --channel dev
-```
+Set `update.channel` in config and use the Control Console **Update & Restart**
+action, or check out the desired tag/branch manually.
 
 - `stable`/`beta` check out the latest matching tag (often the same tag).
 - `dev` switches to `main` and rebases on the upstream.
@@ -35,14 +32,14 @@ propai update --channel dev
 npm/pnpm global install:
 
 ```bash
-propai update --channel stable
-propai update --channel beta
-propai update --channel dev
+npm i -g propai@latest
+npm i -g propai@beta
+npm i -g propai@dev
 ```
 
 This updates via the corresponding npm dist-tag (`latest`, `beta`, `dev`).
 
-When you **explicitly** switch channels with `--channel`, propai also aligns
+When you **explicitly** switch channels, propai also aligns
 the install method:
 
 - `dev` ensures a git checkout (default `~/propai`, override with `PROPAI_GIT_DIR`),
@@ -53,7 +50,7 @@ Tip: if you want stable + dev in parallel, keep two clones and point your gatewa
 
 ## Plugins and channels
 
-When you switch channels with `propai update`, propai also syncs plugin sources:
+When you switch channels, propai also syncs plugin sources:
 
 - `dev` prefers bundled plugins from the git checkout.
 - `stable` and `beta` restore npm-installed plugin packages.

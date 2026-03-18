@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { SILENT_REPLY_TOKEN } from "../auto-reply/tokens.js";
-import type { CliDeps } from "../cli/deps.js";
+import type { CliDeps } from "../core/deps.js";
 import { agentCommand } from "../commands/agent.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import {
@@ -201,5 +201,6 @@ export async function runBootOnce(params: {
   ].filter((part): part is string => Boolean(part));
   return { status: "failed", reason: reasonParts.join("; ") };
 }
+
 
 

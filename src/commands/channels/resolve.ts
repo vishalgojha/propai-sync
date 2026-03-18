@@ -1,7 +1,7 @@
 import { getChannelPlugin } from "../../channels/plugins/index.js";
 import type { ChannelResolveKind, ChannelResolveResult } from "../../channels/plugins/types.js";
-import { resolveCommandSecretRefsViaGateway } from "../../cli/command-secret-gateway.js";
-import { getChannelsCommandSecretTargetIds } from "../../cli/command-secret-targets.js";
+import { resolveCommandSecretRefsViaGateway } from "../../core/command-secret-gateway.js";
+import { getChannelsCommandSecretTargetIds } from "../../core/command-secret-targets.js";
 import { loadConfig } from "../../config/config.js";
 import { danger } from "../../globals.js";
 import { resolveMessageChannelSelection } from "../../infra/outbound/channel-selection.js";
@@ -154,3 +154,4 @@ export async function channelsResolveCommand(opts: ChannelsResolveOptions, runti
     }
   }
 }
+

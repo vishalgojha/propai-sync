@@ -53,9 +53,7 @@ spec:
           imagePullPolicy: IfNotPresent
           command:
             - node
-            - /app/dist/index.js
-            - gateway
-            - run
+            - /app/dist/entry.js
           ports:
             - name: gateway
               containerPort: 18789
@@ -67,6 +65,12 @@ spec:
               value: /home/node/.propai
             - name: NODE_ENV
               value: production
+            - name: PROPAI_GATEWAY_BIND
+              value: lan
+            - name: PROPAI_GATEWAY_PORT
+              value: "18789"
+            - name: PROPAI_GATEWAY_ALLOW_UNCONFIGURED
+              value: "1"
             - name: PROPAI_GATEWAY_TOKEN
               valueFrom:
                 secretKeyRef:

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import {
   type PropAiSyncConfig,
   CONFIG_PATH,
@@ -371,6 +371,7 @@ async function startGmailWatch(
     defaultRuntime.error(message);
   }
 }
+
 
 
 

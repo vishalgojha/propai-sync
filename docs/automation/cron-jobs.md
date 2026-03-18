@@ -19,6 +19,9 @@ cron is the mechanism.
 
 Troubleshooting: [/automation/troubleshooting](/automation/troubleshooting)
 
+Note: This guide no longer includes `propai` CLI examples. Use the Control Console
+→ **Cron** tab for interactive setup, or the Gateway `cron.*` APIs for automation.
+
 ## TL;DR
 
 - Cron runs **inside the Gateway** (not inside the model).
@@ -29,39 +32,17 @@ Troubleshooting: [/automation/troubleshooting](/automation/troubleshooting)
 - Wakeups are first-class: a job can request “wake now” vs “next heartbeat”.
 - Webhook posting is per job via `delivery.mode = "webhook"` + `delivery.to = "<url>"`.
 - Legacy fallback remains for stored jobs with `notify: true` when `cron.webhook` is set, migrate those jobs to webhook delivery mode.
-- For upgrades, `propai doctor --fix` can normalize legacy cron store fields before the scheduler touches them.
+- For upgrades, normalize legacy cron store fields before the scheduler touches them.
 
 ## Quick start (actionable)
 
-Create a one-shot reminder, verify it exists, and run it immediately:
-
-```bash
-propai cron add \
-  --name "Reminder" \
-  --at "2026-02-01T16:00:00Z" \
-  --session main \
-  --system-event "Reminder: check the cron docs draft" \
-  --wake now \
-  --delete-after-run
-
-propai cron list
-propai cron run <job-id>
-propai cron runs --id <job-id>
-```
-
-Schedule a recurring isolated job with delivery:
-
-```bash
-propai cron add \
-  --name "Morning brief" \
-  --cron "0 7 * * *" \
-  --tz "America/Los_Angeles" \
-  --session isolated \
-  --message "Summarize overnight updates." \
-  --announce \
-  --channel slack \
-  --to "channel:C1234567890"
-```
+1. In Control Console → **Cron**, create a one-shot reminder with
+   `schedule.kind = "at"` and a UTC ISO timestamp.
+2. Verify it appears in the Cron list, then run it once from the Cron tab.
+3. For a recurring isolated job with delivery, set
+   `schedule.kind = "every"` or `"cron"`, `sessionTarget = "isolated"`, and
+   `delivery.mode = "announce"` or `"webhook"`.
+4. For automation, call the Gateway `cron.*` APIs.
 
 ## Tool-call equivalents (Gateway cron tool)
 
@@ -71,15 +52,15 @@ For the canonical JSON shapes and examples, see [JSON schema for tool calls](/au
 
 Cron jobs are persisted on the Gateway host at `~/.propai/cron/jobs.json` by default.
 The Gateway loads the file into memory and writes it back on changes, so manual edits
-are only safe when the Gateway is stopped. Prefer `propai cron add/edit` or the cron
-tool call API for changes.
+are only safe when the Gateway is stopped. Prefer the Control Console → Cron tab or
+the Gateway `cron.*` APIs for changes.
 
 ## Beginner-friendly overview
 
 Think of a cron job as: **when** to run + **what** to do.
 
 1. **Choose a schedule**
-   - One-shot reminder → `schedule.kind = "at"` (CLI: `--at`)
+   - One-shot reminder → `schedule.kind = "at"`
    - Repeating job → `schedule.kind = "every"` or `schedule.kind = "cron"`
    - If your ISO timestamp omits a timezone, it is treated as **UTC**.
 
@@ -106,7 +87,7 @@ A cron job is a stored record with:
 - optional **agent binding** (`agentId`): run the job under a specific agent; if
   missing or unknown, the gateway falls back to the default agent.
 
-Jobs are identified by a stable `jobId` (used by CLI/Gateway APIs).
+Jobs are identified by a stable `jobId` (used by the Control Console and Gateway APIs).
 In agent tool calls, `jobId` is canonical; legacy `id` is accepted for compatibility.
 One-shot jobs auto-delete after success by default; set `deleteAfterRun: false` to keep them.
 
@@ -127,10 +108,8 @@ top-of-hour expressions (for example `0 * * * *`, `0 */2 * * *`). Fixed-hour
 expressions such as `0 7 * * *` remain exact.
 
 For any cron schedule, you can set an explicit stagger window with `schedule.staggerMs`
-(`0` keeps exact timing). CLI shortcuts:
-
-- `--stagger 30s` (or `1m`, `5m`) to set an explicit stagger window.
-- `--exact` to force `staggerMs = 0`.
+(`0` keeps exact timing). Set `schedule.staggerMs` for an explicit stagger window or
+use `0` to force exact timing.
 
 ### Main vs isolated execution
 
@@ -243,7 +222,7 @@ Isolated jobs (`agentTurn`) can set `lightContext: true` to run with lightweight
 
 - Use this for scheduled chores that do not need workspace bootstrap file injection.
 - In practice, the embedded runtime runs with `bootstrapContextMode: "lightweight"`, which keeps cron bootstrap context empty on purpose.
-- CLI equivalents: `propai cron add --light-context ...` and `propai cron edit --light-context`.
+- Use the Cron job editor in the Control Console to toggle light context.
 
 ### Delivery (channel + target)
 
@@ -281,7 +260,7 @@ Prefixed targets like `telegram:...` / `telegram:group:...` are also accepted:
 ## JSON schema for tool calls
 
 Use these shapes when calling Gateway `cron.*` tools directly (agent tool calls or RPC).
-CLI flags accept human durations like `20m`, but tool calls should use an ISO 8601 string
+The Control Console accepts human durations like `20m`, but API calls should use an ISO 8601 string
 for `schedule.at` and milliseconds for `schedule.everyMs`.
 
 ### cron.add params
@@ -476,7 +455,7 @@ What to do:
 - keep `cron.sessionRetention` as short as your debugging/audit needs allow
 - keep run logs bounded with moderate `runLog.maxBytes` and `runLog.keepLines`
 - move noisy background jobs to isolated mode with delivery rules that avoid unnecessary chatter
-- review growth periodically with `propai cron runs` and adjust retention before logs become large
+- review growth periodically in the Control Console → Cron runs view and adjust retention before logs become large
 
 ### Customize examples
 
@@ -522,140 +501,25 @@ Tune for high-volume cron usage (example):
 }
 ```
 
-## CLI quickstart
+## Control Console quickstart
 
-One-shot reminder (UTC ISO, auto-delete after success):
+Use the Control Console → **Cron** tab to add/edit/run jobs. Typical flows:
 
-```bash
-propai cron add \
-  --name "Send reminder" \
-  --at "2026-01-12T18:00:00Z" \
-  --session main \
-  --system-event "Reminder: submit expense report." \
-  --wake now \
-  --delete-after-run
-```
+- One-shot reminder (UTC ISO, auto-delete after success).
+- Main-session reminder (wake immediately).
+- Recurring isolated job (announce to WhatsApp / Telegram topic).
+- Staggered recurring job (`schedule.staggerMs`).
+- Model + thinking overrides per job.
+- Manual run + run history.
+- Immediate system event (no job required).
 
-One-shot reminder (main session, wake immediately):
-
-```bash
-propai cron add \
-  --name "Calendar check" \
-  --at "20m" \
-  --session main \
-  --system-event "Next heartbeat: check calendar." \
-  --wake now
-```
-
-Recurring isolated job (announce to WhatsApp):
-
-```bash
-propai cron add \
-  --name "Morning status" \
-  --cron "0 7 * * *" \
-  --tz "America/Los_Angeles" \
-  --session isolated \
-  --message "Summarize inbox + calendar for today." \
-  --announce \
-  --channel whatsapp \
-  --to "+15551234567"
-```
-
-Recurring cron job with explicit 30-second stagger:
-
-```bash
-propai cron add \
-  --name "Minute watcher" \
-  --cron "0 * * * * *" \
-  --tz "UTC" \
-  --stagger 30s \
-  --session isolated \
-  --message "Run minute watcher checks." \
-  --announce
-```
-
-Recurring isolated job (deliver to a Telegram topic):
-
-```bash
-propai cron add \
-  --name "Nightly summary (topic)" \
-  --cron "0 22 * * *" \
-  --tz "America/Los_Angeles" \
-  --session isolated \
-  --message "Summarize today; send to the nightly topic." \
-  --announce \
-  --channel telegram \
-  --to "-1001234567890:topic:123"
-```
-
-Isolated job with model and thinking override:
-
-```bash
-propai cron add \
-  --name "Deep analysis" \
-  --cron "0 6 * * 1" \
-  --tz "America/Los_Angeles" \
-  --session isolated \
-  --message "Weekly deep analysis of project progress." \
-  --model "opus" \
-  --thinking high \
-  --announce \
-  --channel whatsapp \
-  --to "+15551234567"
-```
-
-Agent selection (multi-agent setups):
-
-```bash
-# Pin a job to agent "ops" (falls back to default if that agent is missing)
-propai cron add --name "Ops sweep" --cron "0 6 * * *" --session isolated --message "Check ops queue" --agent ops
-
-# Switch or clear the agent on an existing job
-propai cron edit <jobId> --agent ops
-propai cron edit <jobId> --clear-agent
-```
-
-Manual run (force is the default, use `--due` to only run when due):
-
-```bash
-propai cron run <jobId>
-propai cron run <jobId> --due
-```
-
-`cron.run` now acknowledges once the manual run is queued, not after the job finishes. Successful queue responses look like `{ ok: true, enqueued: true, runId }`. If the job is already running or `--due` finds nothing due, the response stays `{ ok: true, ran: false, reason }`. Use `propai cron runs --id <jobId>` or the `cron.runs` gateway method to inspect the eventual finished entry.
-
-Edit an existing job (patch fields):
-
-```bash
-propai cron edit <jobId> \
-  --message "Updated prompt" \
-  --model "opus" \
-  --thinking low
-```
-
-Force an existing cron job to run exactly on schedule (no stagger):
-
-```bash
-propai cron edit <jobId> --exact
-```
-
-Run history:
-
-```bash
-propai cron runs --id <jobId> --limit 50
-```
-
-Immediate system event without creating a job:
-
-```bash
-propai system event --mode now --text "Next heartbeat: check battery."
-```
+For automation, call the Gateway `cron.*` APIs.
 
 ## Gateway API surface
 
 - `cron.list`, `cron.status`, `cron.add`, `cron.update`, `cron.remove`
 - `cron.run` (force or due), `cron.runs`
-  For immediate system events without a job, use [`propai system event`](/cli/system).
+- For immediate system events without a job, use the Gateway `system-event` method.
 
 ## Troubleshooting
 
@@ -663,7 +527,7 @@ propai system event --mode now --text "Next heartbeat: check battery."
 
 - Check cron is enabled: `cron.enabled` and `PROPAI_SKIP_CRON`.
 - Check the Gateway is running continuously (cron runs inside the Gateway process).
-- For `cron` schedules: confirm timezone (`--tz`) vs the host timezone.
+- For `cron` schedules: confirm timezone vs the host timezone.
 
 ### A recurring job keeps delaying after failures
 
@@ -684,6 +548,7 @@ propai system event --mode now --text "Next heartbeat: check battery."
 - If the announce flow returns `false` (e.g. requester session is busy), the gateway retries up to 3 times with tracking via `announceRetryCount`.
 - Announces older than 5 minutes past `endedAt` are force-expired to prevent stale entries from looping indefinitely.
 - If you see repeated announce deliveries in logs, check the subagent registry for entries with high `announceRetryCount` values.
+
 
 
 

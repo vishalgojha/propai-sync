@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { type PropAiSyncConfig, readConfigFileSnapshot } from "../config/config.js";
 import { formatConfigIssueLines } from "../config/issue-format.js";
 import type { RuntimeEnv } from "../runtime.js";
@@ -19,6 +19,7 @@ export async function requireValidConfigSnapshot(
   }
   return snapshot.config;
 }
+
 
 
 

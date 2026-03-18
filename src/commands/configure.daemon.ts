@@ -1,4 +1,4 @@
-import { withProgress } from "../cli/progress.js";
+import { withProgress } from "../core/progress.js";
 import { loadConfig } from "../config/config.js";
 import { describeGatewayServiceRestart, resolveGatewayService } from "../daemon/service.js";
 import { isNonFatalSystemdInstallProbeError } from "../daemon/systemd.js";
@@ -160,3 +160,4 @@ export async function maybeInstallDaemon(params: {
     });
   }
 }
+

@@ -1,7 +1,7 @@
 import { listAgentIds } from "../agents/agent-scope.js";
-import { formatCliCommand } from "../cli/command-format.js";
-import type { CliDeps } from "../cli/deps.js";
-import { withProgress } from "../cli/progress.js";
+import { formatCliCommand } from "../core/command-format.js";
+import type { CliDeps } from "../core/deps.js";
+import { withProgress } from "../core/progress.js";
 import { loadConfig } from "../config/config.js";
 import { callGateway, randomIdempotencyKey } from "../gateway/call.js";
 import { normalizeAgentId } from "../routing/session-key.js";
@@ -194,5 +194,6 @@ export async function agentCliCommand(opts: AgentCliOpts, runtime: RuntimeEnv, d
     return await agentCommand(localOpts, runtime, deps);
   }
 }
+
 
 

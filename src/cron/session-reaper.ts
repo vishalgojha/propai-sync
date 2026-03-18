@@ -6,7 +6,7 @@
  * run records. The base session (`...:cron:<jobId>`) is kept as-is.
  */
 
-import { parseDurationMs } from "../cli/parse-duration.js";
+import { parseDurationMs } from "../core/parse-duration.js";
 import {
   archiveRemovedSessionTranscripts,
   loadSessionStore,
@@ -150,3 +150,4 @@ export async function sweepCronRunSessions(params: {
 export function resetReaperThrottle(): void {
   lastSweepAtMsByStore.clear();
 }
+

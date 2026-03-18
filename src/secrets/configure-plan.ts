@@ -85,7 +85,7 @@ export function buildConfigureCandidatesForScope(params: {
   const hasPathInAuthoredConfig = (pathSegments: string[]): boolean =>
     hasPath(authoredConfig, pathSegments);
 
-  const PropAiSyncCandidates = discoverConfigSecretTargets(params.config)
+  const propaiCandidates = discoverConfigSecretTargets(params.config)
     .filter((entry) => entry.entry.includeInConfigure)
     .map((entry) => {
       const resolved = resolveSecretInputRef({

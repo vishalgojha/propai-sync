@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Logger as TsLogger } from "tslog";
-import { getCommandPathWithRootOptions } from "../cli/argv.js";
 import type { PropAiSyncConfig } from "../config/types.js";
 import { resolvePreferredPropAiSyncTmpDir } from "../infra/tmp-propai-dir.js";
 import { readLoggingConfig } from "./config.js";
@@ -44,8 +43,8 @@ export type LogTransport = (logObj: LogTransportRecord) => void;
 const externalTransports = new Set<LogTransport>();
 
 function shouldSkipLoadConfigFallback(argv: string[] = process.argv): boolean {
-  const [primary, secondary] = getCommandPathWithRootOptions(argv, 2);
-  return primary === "config" && secondary === "validate";
+  void argv;
+  return false;
 }
 
 function attachExternalTransport(logger: TsLogger<LogObj>, transport: LogTransport): void {
@@ -345,6 +344,7 @@ function pruneOldRollingLogs(dir: string): void {
     // ignore missing dir or read errors
   }
 }
+
 
 
 

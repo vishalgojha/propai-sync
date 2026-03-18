@@ -13,7 +13,7 @@ import type { SandboxToolPolicy } from "../agents/sandbox/types.js";
 import { getBlockedBindReason } from "../agents/sandbox/validate-sandbox-security.js";
 import { resolveToolProfilePolicy } from "../agents/tool-policy.js";
 import { resolveBrowserConfig } from "../browser/config.js";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import {
   resolveAgentModelFallbackValues,
@@ -1347,6 +1347,7 @@ export function collectLikelyMultiUserSetupFindings(cfg: PropAiSyncConfig): Secu
 
   return findings;
 }
+
 
 
 

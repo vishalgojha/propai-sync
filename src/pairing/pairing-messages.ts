@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { PairingChannel } from "./pairing-store.js";
 
 export function buildPairingReply(params: {
@@ -18,5 +18,6 @@ export function buildPairingReply(params: {
     formatCliCommand(`propai pairing approve ${channel} ${code}`),
   ].join("\n");
 }
+
 
 

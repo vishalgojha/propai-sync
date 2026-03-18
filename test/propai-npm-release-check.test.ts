@@ -85,7 +85,6 @@ describe("collectReleasePackageMetadataErrors", () => {
         description: "Multi-channel AI gateway with extensible messaging integrations",
         license: "MIT",
         repository: { url: "git+https://github.com/propai/propai.git" },
-        bin: { propai: "propai.mjs" },
       }),
     ).toEqual([]);
   });

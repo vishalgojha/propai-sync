@@ -56,7 +56,9 @@ export async function handlePortError(
     if (details) {
       runtime.error(info("Port listener details:"));
       runtime.error(details);
-      if (/PropAiSync|src\/index\.ts|dist\/index\.js/.test(details)) {
+      if (
+        /propai sync|propaisync|src[\\/](entry|index)\.ts|dist[\\/](entry|index)\.js/i.test(details)
+      ) {
         runtime.error(
           warn(
             "It looks like another PropAi Sync instance is already running. Stop it or pick a different port.",

@@ -1,5 +1,5 @@
 ---
-summary: "Logging overview: file logs, console output, CLI tailing, and the Control UI"
+summary: "Logging overview: file logs, console output, and the Control UI"
 read_when:
   - You need a beginner-friendly overview of logging
   - You want to configure log levels or formats
@@ -37,46 +37,23 @@ You can override this in `~/.propai/propai.json`:
 
 ## How to read logs
 
-### CLI: live tail (recommended)
+### Control Console (recommended)
 
-Use the CLI to tail the gateway log file via RPC:
-
-```bash
-propai logs --follow
-```
-
-Output modes:
-
-- **TTY sessions**: pretty, colorized, structured log lines.
-- **Non-TTY sessions**: plain text.
-- `--json`: line-delimited JSON (one log event per line).
-- `--plain`: force plain text in TTY sessions.
-- `--no-color`: disable ANSI colors.
-
-In JSON mode, the CLI emits `type`-tagged objects:
-
-- `meta`: stream metadata (file, cursor, size)
-- `log`: parsed log entry
-- `notice`: truncation / rotation hints
-- `raw`: unparsed log line
-
-If the Gateway is unreachable, the CLI prints a short hint to run:
-
-```bash
-propai doctor
-```
-
-### Control UI (web)
-
-The Control UI’s **Logs** tab tails the same file using `logs.tail`.
+The Control Console’s **Logs** tab tails the same file using `logs.tail`.
 See [/web/control-ui](/web/control-ui) for how to open it.
 
-### Channel-only logs
+### Local file tail (optional)
 
-To filter channel activity (WhatsApp/Telegram/etc), use:
+If you have shell access to the gateway host, tail the log file directly:
 
 ```bash
-propai channels logs --channel whatsapp
+tail -f /tmp/propai/propai-YYYY-MM-DD.log
+```
+
+Filter for a subsystem or channel prefix:
+
+```bash
+rg "telegram|whatsapp|discord" /tmp/propai/propai-YYYY-MM-DD.log
 ```
 
 ## Log formats
@@ -118,9 +95,9 @@ All logging configuration lives under `logging` in `~/.propai/propai.json`.
 - `logging.level`: **file logs** (JSONL) level.
 - `logging.consoleLevel`: **console** verbosity level.
 
-You can override both via the **`PROPAI_LOG_LEVEL`** environment variable (e.g. `PROPAI_LOG_LEVEL=debug`). The env var takes precedence over the config file, so you can raise verbosity for a single run without editing `propai.json`. You can also pass the global CLI option **`--log-level <level>`** (for example, `propai --log-level debug gateway run`), which overrides the environment variable for that command.
-
-`--verbose` only affects console output; it does not change file log levels.
+You can override both via the **`PROPAI_LOG_LEVEL`** environment variable
+(e.g. `PROPAI_LOG_LEVEL=debug`). The env var takes precedence over the config
+file, so you can raise verbosity for a single run without editing `propai.json`.
 
 ### Console styles
 
@@ -346,7 +323,8 @@ Queues + sessions:
 
 ## Troubleshooting tips
 
-- **Gateway not reachable?** Run `propai doctor` first.
+- **Gateway not reachable?** Confirm the Gateway process is running and check
+  Control Console → **Overview** for RPC connectivity.
 - **Logs empty?** Check that the Gateway is running and writing to the file path
   in `logging.file`.
 - **Need more detail?** Set `logging.level` to `debug` or `trace` and retry.

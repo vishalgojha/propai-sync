@@ -8,7 +8,7 @@ import {
   formatChannelSelectionLine,
   listChatChannels,
 } from "../channels/registry.js";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { isChannelConfigured } from "../config/plugin-auto-enable.js";
 import type { DmPolicy } from "../config/types.js";
@@ -748,6 +748,7 @@ export async function setupChannels(
 
   return next;
 }
+
 
 
 

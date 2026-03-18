@@ -78,8 +78,8 @@ async function openManagedTabWithRunningProfile(params: {
   const state = makeState("PropAi Sync");
   seedRunningProfileState(state);
   const ctx = createBrowserRouteContext({ getState: () => state });
-  const PropAi Sync = ctx.forProfile("PropAi Sync");
-  return await PropAiSync.openTab(params.url ?? "http://127.0.0.1:3009");
+  const propaiProfile = ctx.forProfile("PropAi Sync");
+  return await propaiProfile.openTab(params.url ?? "http://127.0.0.1:3009");
 }
 
 describe("browser server-context tab selection state", () => {
@@ -110,9 +110,9 @@ describe("browser server-context tab selection state", () => {
     global.fetch = withFetchPreconnect(fetchMock);
     const state = makeState("PropAi Sync");
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const PropAi Sync = ctx.forProfile("PropAi Sync");
+    const propaiProfile = ctx.forProfile("PropAi Sync");
 
-    const opened = await PropAiSync.openTab("http://127.0.0.1:8080");
+    const opened = await propaiProfile.openTab("http://127.0.0.1:8080");
     expect(opened.targetId).toBe("CREATED");
     expect(state.profiles.get("PropAi Sync")?.lastTargetId).toBe("CREATED");
     expect(createTargetViaCdp).toHaveBeenCalledWith({
@@ -177,9 +177,9 @@ describe("browser server-context tab selection state", () => {
     const state = makeState("PropAi Sync");
     seedRunningProfileState(state);
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const PropAi Sync = ctx.forProfile("PropAi Sync");
+    const propaiProfile = ctx.forProfile("PropAi Sync");
 
-    const opened = await PropAiSync.openTab("http://127.0.0.1:3009");
+    const opened = await propaiProfile.openTab("http://127.0.0.1:3009");
     expect(opened.targetId).toBe("NEW");
   });
 
@@ -197,9 +197,9 @@ describe("browser server-context tab selection state", () => {
     const state = makeState("PropAi Sync");
     state.resolved.attachOnly = true;
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const PropAi Sync = ctx.forProfile("PropAi Sync");
+    const propaiProfile = ctx.forProfile("PropAi Sync");
 
-    const opened = await PropAiSync.openTab("http://127.0.0.1:3009");
+    const opened = await propaiProfile.openTab("http://127.0.0.1:3009");
     expect(opened.targetId).toBe("NEW");
     expect(fetchMock).not.toHaveBeenCalledWith(
       expect.stringContaining("/json/close/"),
@@ -238,9 +238,9 @@ describe("browser server-context tab selection state", () => {
     global.fetch = withFetchPreconnect(fetchMock);
     const state = makeState("PropAi Sync");
     const ctx = createBrowserRouteContext({ getState: () => state });
-    const PropAi Sync = ctx.forProfile("PropAi Sync");
+    const propaiProfile = ctx.forProfile("PropAi Sync");
 
-    await expect(PropAiSync.openTab("file:///etc/passwd")).rejects.toBeInstanceOf(
+    await expect(propaiProfile.openTab("file:///etc/passwd")).rejects.toBeInstanceOf(
       InvalidBrowserNavigationUrlError,
     );
     expect(fetchMock).not.toHaveBeenCalled();

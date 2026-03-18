@@ -1,6 +1,6 @@
 import { resolveSessionAgentId } from "../../agents/agent-scope.js";
 import { normalizeChannelId } from "../../channels/plugins/index.js";
-import { createOutboundSendDeps } from "../../cli/deps.js";
+import { createOutboundSendDeps } from "../../core/deps.js";
 import { loadConfig } from "../../config/config.js";
 import { resolveOutboundChannelPlugin } from "../../infra/outbound/channel-resolution.js";
 import { resolveMessageChannelSelection } from "../../infra/outbound/channel-selection.js";
@@ -479,3 +479,4 @@ export const sendHandlers: GatewayRequestHandlers = {
     }
   },
 };
+

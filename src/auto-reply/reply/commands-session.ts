@@ -1,4 +1,4 @@
-import { parseDurationMs } from "../../cli/parse-duration.js";
+import { parseDurationMs } from "../../core/parse-duration.js";
 import { isRestartEnabled } from "../../config/commands.js";
 import { formatThreadBindingDurationLabel } from "../../channels/thread-bindings-messages.js";
 import { logVerbose } from "../../globals.js";
@@ -522,5 +522,6 @@ export const handleRestartCommand: CommandHandler = async (params, allowTextComm
 };
 
 export { handleAbortTrigger, handleStopCommand };
+
 
 

@@ -3,7 +3,6 @@ import type {
   GatewayRequestHandlerOptions,
   PropAiSyncPluginApi,
 } from "propai/plugin-sdk/voice-call";
-import { registerVoiceCallCli } from "./src/cli.js";
 import {
   VoiceCallConfigSchema,
   resolveVoiceCallConfig,
@@ -495,17 +494,6 @@ const voiceCallPlugin = {
         }
       },
     });
-
-    api.registerCli(
-      ({ program }) =>
-        registerVoiceCallCli({
-          program,
-          config,
-          ensureRuntime,
-          logger: api.logger,
-        }),
-      { commands: ["voicecall"] },
-    );
 
     api.registerService({
       id: "voicecall",

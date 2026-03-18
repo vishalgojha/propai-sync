@@ -23,6 +23,7 @@ describe("run-node script", () => {
 
         await fs.mkdir(path.dirname(indexPath), { recursive: true });
         await fs.writeFile(indexPath, "<html>sentinel</html>\n", "utf-8");
+        await fs.writeFile(path.join(tmp, "dist", "entry.js"), "export {};\n", "utf-8");
 
         const nodeCalls: string[][] = [];
         const spawn = (cmd: string, args: string[]) => {
@@ -62,7 +63,7 @@ describe("run-node script", () => {
         expect(exitCode).toBe(0);
         await expect(fs.readFile(argsPath, "utf-8")).resolves.toContain("exec tsdown --no-clean");
         await expect(fs.readFile(indexPath, "utf-8")).resolves.toContain("sentinel");
-        expect(nodeCalls).toEqual([[process.execPath, "propai.mjs", "--version"]]);
+        expect(nodeCalls).toEqual([[process.execPath, path.join(tmp, "dist", "entry.js"), "--version"]]);
       });
     },
   );

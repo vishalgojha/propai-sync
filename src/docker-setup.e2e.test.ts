@@ -1,6 +1,5 @@
 import { spawnSync } from "node:child_process";
 import { chmod, copyFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -61,7 +60,7 @@ async function createDockerSetupSandbox(): Promise<DockerSetupSandbox> {
   await writeFile(dockerfilePath, "FROM scratch\n");
   await writeFile(
     composePath,
-    "services:\n  propai-gateway:\n    image: noop\n  propai-cli:\n    image: noop\n",
+    "services:\n  propai-gateway:\n    image: noop\n",
   );
   await writeDockerStub(binDir, logPath);
 
@@ -113,30 +112,6 @@ function runDockerSetup(
   });
 }
 
-async function withUnixSocket<T>(socketPath: string, run: () => Promise<T>): Promise<T> {
-  const server = createServer();
-  await new Promise<void>((resolve, reject) => {
-    const onError = (error: Error) => {
-      server.off("listening", onListening);
-      reject(error);
-    };
-    const onListening = () => {
-      server.off("error", onError);
-      resolve();
-    };
-    server.once("error", onError);
-    server.once("listening", onListening);
-    server.listen(socketPath);
-  });
-
-  try {
-    return await run();
-  } finally {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
-    await rm(socketPath, { force: true });
-  }
-}
-
 function resolveBashForCompatCheck(): string | null {
   for (const candidate of ["/bin/bash", "bash"]) {
     const probe = spawnSync(candidate, ["-c", "exit 0"], { encoding: "utf8" });
@@ -185,9 +160,12 @@ describe("docker-setup.sh", () => {
     expect(extraCompose).toContain("propai-home:");
     const log = await readFile(activeSandbox.logPath, "utf8");
     expect(log).toContain("--build-arg PROPAI_DOCKER_APT_PACKAGES=ffmpeg build-essential");
-    expect(log).toContain("run --rm propai-cli onboard --mode local --no-install-daemon");
-    expect(log).toContain("run --rm propai-cli config set gateway.mode local");
-    expect(log).toContain("run --rm propai-cli config set gateway.bind lan");
+
+    const cfg = JSON.parse(
+      await readFile(join(activeSandbox.rootDir, "config", "propai.json"), "utf8"),
+    );
+    expect(cfg.gateway?.mode).toBe("local");
+    expect(cfg.gateway?.bind).toBe("lan");
   });
 
   it("precreates config identity dir for CLI device auth writes", async () => {
@@ -224,9 +202,9 @@ describe("docker-setup.sh", () => {
     // Verify that a root-user chown step runs before onboarding.
     const log = await readFile(activeSandbox.logPath, "utf8");
     const chownIdx = log.indexOf("--user root");
-    const onboardIdx = log.indexOf("onboard");
+    const startIdx = log.indexOf("up -d propai-gateway");
     expect(chownIdx).toBeGreaterThanOrEqual(0);
-    expect(onboardIdx).toBeGreaterThan(chownIdx);
+    expect(startIdx).toBeGreaterThan(chownIdx);
   });
 
   it("reuses existing config token when PROPAI_GATEWAY_TOKEN is unset", async () => {
@@ -314,7 +292,11 @@ describe("docker-setup.sh", () => {
     const log = await readFile(activeSandbox.logPath, "utf8");
     expect(log).toContain("--build-arg PROPAI_INSTALL_DOCKER_CLI=");
     expect(log).not.toContain("--build-arg PROPAI_INSTALL_DOCKER_CLI=1");
-    expect(log).toContain("config set agents.defaults.sandbox.mode off");
+
+    const cfg = JSON.parse(
+      await readFile(join(activeSandbox.rootDir, "config", "propai.json"), "utf8"),
+    );
+    expect(cfg.agents?.defaults?.sandbox?.mode).toBe("off");
   });
 
   it("resets stale sandbox mode and overlay when sandbox is not active", async () => {
@@ -332,50 +314,11 @@ describe("docker-setup.sh", () => {
 
     expect(result.status).toBe(0);
     expect(result.stderr).toContain("Sandbox requires Docker CLI");
-    const log = await readFile(activeSandbox.logPath, "utf8");
-    expect(log).toContain("config set agents.defaults.sandbox.mode off");
+    const cfg = JSON.parse(
+      await readFile(join(activeSandbox.rootDir, "config", "propai.json"), "utf8"),
+    );
+    expect(cfg.agents?.defaults?.sandbox?.mode).toBe("off");
     await expect(stat(join(activeSandbox.rootDir, "docker-compose.sandbox.yml"))).rejects.toThrow();
-  });
-
-  it("skips sandbox gateway restart when sandbox config writes fail", async () => {
-    const activeSandbox = requireSandbox(sandbox);
-    await writeFile(activeSandbox.logPath, "");
-    const socketPath = join(activeSandbox.rootDir, "sandbox.sock");
-
-    await withUnixSocket(socketPath, async () => {
-      const result = runDockerSetup(activeSandbox, {
-        PROPAI_SANDBOX: "1",
-        PROPAI_DOCKER_SOCKET: socketPath,
-        DOCKER_STUB_FAIL_MATCH: "config set agents.defaults.sandbox.scope",
-      });
-
-      expect(result.status).toBe(0);
-      expect(result.stderr).toContain("Failed to set agents.defaults.sandbox.scope");
-      expect(result.stderr).toContain("Skipping gateway restart to avoid exposing Docker socket");
-
-      const log = await readFile(activeSandbox.logPath, "utf8");
-      const gatewayStarts = log
-        .split("\n")
-        .filter(
-          (line) =>
-            line.includes("compose") &&
-            line.includes(" up -d") &&
-            line.includes("propai-gateway"),
-        );
-      expect(gatewayStarts).toHaveLength(2);
-      expect(log).toContain(
-        "run --rm --no-deps propai-cli config set agents.defaults.sandbox.mode non-main",
-      );
-      expect(log).toContain("config set agents.defaults.sandbox.mode off");
-      const forceRecreateLine = log
-        .split("\n")
-        .find((line) => line.includes("up -d --force-recreate propai-gateway"));
-      expect(forceRecreateLine).toBeDefined();
-      expect(forceRecreateLine).not.toContain("docker-compose.sandbox.yml");
-      await expect(
-        stat(join(activeSandbox.rootDir, "docker-compose.sandbox.yml")),
-      ).rejects.toThrow();
-    });
   });
 
   it("rejects injected multiline PROPAI_EXTRA_MOUNTS values", async () => {
@@ -440,19 +383,13 @@ describe("docker-setup.sh", () => {
   it("keeps docker-compose gateway command in sync", async () => {
     const compose = await readFile(join(repoRoot, "docker-compose.yml"), "utf8");
     expect(compose).not.toContain("gateway-daemon");
-    expect(compose).toContain('"gateway"');
-  });
-
-  it("keeps docker-compose CLI network namespace settings in sync", async () => {
-    const compose = await readFile(join(repoRoot, "docker-compose.yml"), "utf8");
-    expect(compose).toContain('network_mode: "service:propai-gateway"');
-    expect(compose).toContain("depends_on:\n      - propai-gateway");
+    expect(compose).toContain('"dist/entry.js"');
   });
 
   it("keeps docker-compose gateway token env defaults aligned across services", async () => {
     const compose = await readFile(join(repoRoot, "docker-compose.yml"), "utf8");
     expect(compose.match(/PROPAI_GATEWAY_TOKEN: \$\{PROPAI_GATEWAY_TOKEN:-\}/g)).toHaveLength(
-      2,
+      1,
     );
   });
 });

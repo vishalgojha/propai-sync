@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ProgressReporter } from "../../cli/progress.js";
+import type { ProgressReporter } from "../../core/progress.js";
 import { buildStatusAllReportLines } from "./report-lines.js";
 
 const diagnosisSpy = vi.hoisted(() => vi.fn(async () => {}));
@@ -72,3 +72,4 @@ describe("buildStatusAllReportLines", () => {
     expect(output).toContain("ABSENT");
   });
 });
+

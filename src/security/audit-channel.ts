@@ -10,7 +10,7 @@ import {
   isNumericTelegramUserId,
   normalizeTelegramAllowFromEntry,
 } from "../channels/telegram/allow-from.js";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { resolveNativeSkillsEnabled } from "../config/commands.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { isDangerousNameMatchingEnabled } from "../config/dangerous-name-matching.js";
@@ -455,5 +455,6 @@ export async function collectChannelSecurityFindings(params: {
 
   return dedupeFindings(findings);
 }
+
 
 

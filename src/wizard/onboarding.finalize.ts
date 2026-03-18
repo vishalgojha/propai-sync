@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { DEFAULT_BOOTSTRAP_FILENAME } from "../agents/workspace.js";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import {
   buildGatewayInstallPlan,
   gatewayInstallErrorHint,
@@ -27,8 +27,6 @@ import { describeGatewayServiceRestart, resolveGatewayService } from "../daemon/
 import { isSystemdUserServiceAvailable } from "../daemon/systemd.js";
 import { ensureControlUiAssetsBuilt } from "../infra/control-ui-assets.js";
 import type { RuntimeEnv } from "../runtime.js";
-import { restoreTerminalState } from "../terminal/restore.js";
-import { runTui } from "../tui/tui.js";
 import { resolveUserPath } from "../utils.js";
 import { setupOnboardingShellCompletion } from "./onboarding.completion.js";
 import { resolveOnboardingSecretInputString } from "./onboarding.secret-input.js";
@@ -338,30 +336,16 @@ export async function finalizeOnboardingWizard(
   let controlUiOpened = false;
   let controlUiOpenHint: string | undefined;
   let seededInBackground = false;
-  let hatchChoice: "tui" | "web" | "later" | null = null;
+  let hatchChoice: "web" | "later" | null = null;
   let launchedTui = false;
 
   if (!opts.skipUi && gatewayProbe.ok) {
-    if (hasBootstrap) {
-      await prompter.note(
-        [
-          "This is the defining action that makes your agent you.",
-          "Please take your time.",
-          "The more you tell it, the better the experience will be.",
-          'We will send: "Wake up, my friend!"',
-        ].join("\n"),
-        "Start TUI (best option!)",
-      );
-    }
-
     await prompter.note(
       [
         "Gateway token: shared auth for the Gateway + Control UI.",
         "Stored in: ~/.propai/propai.json (gateway.auth.token) or PROPAI_GATEWAY_TOKEN.",
-        `View token: ${formatCliCommand("propai config get gateway.auth.token")}`,
-        `Generate token: ${formatCliCommand("propai doctor --generate-gateway-token")}`,
         "Web UI keeps dashboard URL tokens in memory for the current tab and strips them from the URL after load.",
-        `Open the dashboard anytime: ${formatCliCommand("propai dashboard --no-open")}`,
+        "Open the dashboard from the PropAi Sync app any time.",
         "If prompted: paste the token into Control UI settings (or use the tokenized dashboard URL).",
       ].join("\n"),
       "Token",
@@ -370,25 +354,13 @@ export async function finalizeOnboardingWizard(
     hatchChoice = await prompter.select({
       message: "How do you want to hatch your bot?",
       options: [
-        { value: "tui", label: "Hatch in TUI (recommended)" },
         { value: "web", label: "Open the Web UI" },
         { value: "later", label: "Do this later" },
       ],
-      initialValue: "tui",
+      initialValue: "web",
     });
 
-    if (hatchChoice === "tui") {
-      restoreTerminalState("pre-onboarding tui", { resumeStdinIfPaused: true });
-      await runTui({
-        url: links.wsUrl,
-        token: settings.authMode === "token" ? settings.gatewayToken : undefined,
-        password: settings.authMode === "password" ? resolvedGatewayPassword : "",
-        // Safety: onboarding TUI should not auto-deliver to lastProvider/lastTo.
-        deliver: false,
-        message: hasBootstrap ? "Wake up, my friend!" : undefined,
-      });
-      launchedTui = true;
-    } else if (hatchChoice === "web") {
+    if (hatchChoice === "web") {
       const browserSupport = await detectBrowserOpenSupport();
       if (browserSupport.ok) {
         controlUiOpened = await openUrl(authedUrl);
@@ -420,12 +392,12 @@ export async function finalizeOnboardingWizard(
       );
     } else {
       await prompter.note(
-        `When you're ready: ${formatCliCommand("propai dashboard --no-open")}`,
+        "When you're ready, open the dashboard from the PropAi Sync app.",
         "Later",
       );
     }
   } else if (opts.skipUi) {
-    await prompter.note("Skipping Control UI/TUI prompts.", "Control UI");
+    await prompter.note("Skipping Control UI prompts.", "Control UI");
   }
 
   await prompter.note(
@@ -577,6 +549,7 @@ export async function finalizeOnboardingWizard(
 
   return { launchedTui };
 }
+
 
 
 

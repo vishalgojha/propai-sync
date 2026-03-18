@@ -33,6 +33,7 @@ export type ConfigState = {
   configSearchQuery: string;
   configActiveSection: string | null;
   configActiveSubsection: string | null;
+  licenseGateActive: boolean;
   lastError: string | null;
 };
 
@@ -158,6 +159,10 @@ export async function saveConfig(state: ConfigState) {
 
 export async function applyConfig(state: ConfigState) {
   if (!state.client || !state.connected) {
+    return;
+  }
+  if (state.licenseGateActive) {
+    state.lastError = "License required to apply config.";
     return;
   }
   state.configApplying = true;

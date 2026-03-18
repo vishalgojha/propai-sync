@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { readConfigFileSnapshot } from "../config/config.js";
 import type { RuntimeEnv } from "../runtime.js";
@@ -35,6 +35,7 @@ export async function runNonInteractiveOnboarding(
 
   await runNonInteractiveOnboardingLocal({ opts, runtime, baseConfig });
 }
+
 
 
 

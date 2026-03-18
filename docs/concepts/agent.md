@@ -13,7 +13,7 @@ propai runs a single embedded agent runtime derived from **pi-mono**.
 
 propai uses a single agent workspace directory (`agents.defaults.workspace`) as the agent’s **only** working directory (`cwd`) for tools and context.
 
-Recommended: use `propai setup` to create `~/.propai/propai.json` if missing and initialize the workspace files.
+Recommended: use the desktop onboarding wizard (or the Control Console Config tab) to create `~/.propai/propai.json` if missing and initialize the workspace files.
 
 Full workspace layout + backup guide: [Agent workspace](/concepts/agent-workspace)
 
@@ -36,7 +36,7 @@ On the first turn of a new session, propai injects the contents of these files d
 
 Blank files are skipped. Large files are trimmed and truncated with a marker so prompts stay lean (read the file for full content).
 
-If a file is missing, propai injects a single “missing file” marker line (and `propai setup` will create a safe default template).
+If a file is missing, propai injects a single “missing file” marker line (and the onboarding wizard can create safe default templates).
 
 `BOOTSTRAP.md` is only created for a **brand new workspace** (no other bootstrap files present). If you delete it after completing the ritual, it should not be recreated on later restarts.
 

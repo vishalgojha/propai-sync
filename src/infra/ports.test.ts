@@ -52,7 +52,7 @@ describe("ports helpers", () => {
     };
 
     await handlePortError(
-      new PortInUseError(18789, "node dist/index.js PropAi Sync gateway"),
+      new PortInUseError(18789, "node dist/entry.js PropAi Sync"),
       18789,
       "gateway start",
       runtime,
@@ -69,7 +69,7 @@ describe("ports helpers", () => {
     expect(
       classifyPortListener(
         {
-          commandLine: "node /Users/me/Projects/propai/dist/entry.js gateway",
+          commandLine: "node /Users/me/Projects/propai/dist/entry.js",
         },
         18789,
       ),
@@ -135,7 +135,7 @@ describeUnix("inspectPortUsage", () => {
       if (command === "ps") {
         if (argv.includes("command=")) {
           return {
-            stdout: "node /tmp/propai/dist/index.js gateway --port 18789\n",
+            stdout: "node /tmp/propai/dist/entry.js\n",
             stderr: "",
             code: 0,
           };
@@ -163,7 +163,7 @@ describeUnix("inspectPortUsage", () => {
       expect(result.status).toBe("busy");
       expect(result.listeners.length).toBeGreaterThan(0);
       expect(result.listeners[0]?.pid).toBe(process.pid);
-      expect(result.listeners[0]?.commandLine).toContain("PropAi Sync");
+      expect(result.listeners[0]?.commandLine).toContain("dist/entry.js");
       expect(result.errors).toBeUndefined();
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));

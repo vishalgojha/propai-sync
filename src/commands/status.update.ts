@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { resolvePropAiSyncPackageRoot } from "../infra/propai-root.js";
 import {
   checkUpdateStatus,
@@ -131,6 +131,7 @@ export function formatUpdateOneLiner(update: UpdateCheckResult): string {
   }
   return `Update: ${parts.join(" · ")}`;
 }
+
 
 
 

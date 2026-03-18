@@ -49,7 +49,7 @@ beforeEach(() => {
 });
 
 describe("resolveConfiguredAcpBindingRecord", () => {
-  it("resolves discord channel ACP binding from top-level typed bindings", () => {
+  it("resolves telegram channel ACP binding from top-level typed bindings", () => {
     const cfg = {
       ...baseCfg,
       bindings: [
@@ -57,7 +57,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
           type: "acp",
           agentId: "codex",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "1478836151241412759" },
           },
@@ -70,19 +70,19 @@ describe("resolveConfiguredAcpBindingRecord", () => {
 
     const resolved = resolveConfiguredAcpBindingRecord({
       cfg,
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "1478836151241412759",
     });
 
-    expect(resolved?.spec.channel).toBe("discord");
+    expect(resolved?.spec.channel).toBe("telegram");
     expect(resolved?.spec.conversationId).toBe("1478836151241412759");
     expect(resolved?.spec.agentId).toBe("codex");
-    expect(resolved?.record.targetSessionKey).toContain("agent:codex:acp:binding:discord:default:");
+    expect(resolved?.record.targetSessionKey).toContain("agent:codex:acp:binding:telegram:default:");
     expect(resolved?.record.metadata?.source).toBe("config");
   });
 
-  it("falls back to parent discord channel when conversation is a thread id", () => {
+  it("falls back to parent telegram channel when conversation is a thread id", () => {
     const cfg = {
       ...baseCfg,
       bindings: [
@@ -90,7 +90,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
           type: "acp",
           agentId: "codex",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "channel-parent-1" },
           },
@@ -100,7 +100,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
 
     const resolved = resolveConfiguredAcpBindingRecord({
       cfg,
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "thread-123",
       parentConversationId: "channel-parent-1",
@@ -110,7 +110,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
     expect(resolved?.record.conversation.conversationId).toBe("channel-parent-1");
   });
 
-  it("prefers direct discord thread binding over parent channel fallback", () => {
+  it("prefers direct telegram thread binding over parent channel fallback", () => {
     const cfg = {
       ...baseCfg,
       bindings: [
@@ -118,7 +118,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
           type: "acp",
           agentId: "codex",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "channel-parent-1" },
           },
@@ -127,7 +127,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
           type: "acp",
           agentId: "claude",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "thread-123" },
           },
@@ -137,7 +137,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
 
     const resolved = resolveConfiguredAcpBindingRecord({
       cfg,
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "thread-123",
       parentConversationId: "channel-parent-1",
@@ -147,7 +147,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
     expect(resolved?.spec.agentId).toBe("claude");
   });
 
-  it("prefers exact account binding over wildcard for the same discord conversation", () => {
+  it("prefers exact account binding over wildcard for the same telegram conversation", () => {
     const cfg = {
       ...baseCfg,
       bindings: [
@@ -155,7 +155,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
           type: "acp",
           agentId: "codex",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "*",
             peer: { kind: "channel", id: "1478836151241412759" },
           },
@@ -164,7 +164,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
           type: "acp",
           agentId: "claude",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "1478836151241412759" },
           },
@@ -174,7 +174,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
 
     const resolved = resolveConfiguredAcpBindingRecord({
       cfg,
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "1478836151241412759",
     });
@@ -190,7 +190,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
           type: "acp",
           agentId: "codex",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "different-channel" },
           },
@@ -200,7 +200,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
 
     const resolved = resolveConfiguredAcpBindingRecord({
       cfg,
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "thread-123",
       parentConversationId: "channel-parent-1",
@@ -299,7 +299,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
           type: "acp",
           agentId: "coding",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "1478836151241412759" },
           },
@@ -309,7 +309,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
 
     const resolved = resolveConfiguredAcpBindingRecord({
       cfg,
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "1478836151241412759",
     });
@@ -323,7 +323,7 @@ describe("resolveConfiguredAcpBindingRecord", () => {
 });
 
 describe("resolveConfiguredAcpBindingSpecBySessionKey", () => {
-  it("maps a configured discord binding session key back to its spec", () => {
+  it("maps a configured telegram binding session key back to its spec", () => {
     const cfg = {
       ...baseCfg,
       bindings: [
@@ -331,7 +331,7 @@ describe("resolveConfiguredAcpBindingSpecBySessionKey", () => {
           type: "acp",
           agentId: "codex",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "1478836151241412759" },
           },
@@ -344,7 +344,7 @@ describe("resolveConfiguredAcpBindingSpecBySessionKey", () => {
 
     const resolved = resolveConfiguredAcpBindingRecord({
       cfg,
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "1478836151241412759",
     });
@@ -353,7 +353,7 @@ describe("resolveConfiguredAcpBindingSpecBySessionKey", () => {
       sessionKey: resolved?.record.targetSessionKey ?? "",
     });
 
-    expect(spec?.channel).toBe("discord");
+    expect(spec?.channel).toBe("telegram");
     expect(spec?.conversationId).toBe("1478836151241412759");
     expect(spec?.agentId).toBe("codex");
     expect(spec?.backend).toBe("acpx");
@@ -362,7 +362,7 @@ describe("resolveConfiguredAcpBindingSpecBySessionKey", () => {
   it("returns null for unknown session keys", () => {
     const spec = resolveConfiguredAcpBindingSpecBySessionKey({
       cfg: baseCfg,
-      sessionKey: "agent:main:acp:binding:discord:default:notfound",
+      sessionKey: "agent:main:acp:binding:telegram:default:notfound",
     });
     expect(spec).toBeNull();
   });
@@ -375,7 +375,7 @@ describe("resolveConfiguredAcpBindingSpecBySessionKey", () => {
           type: "acp",
           agentId: "codex",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "*",
             peer: { kind: "channel", id: "1478836151241412759" },
           },
@@ -387,7 +387,7 @@ describe("resolveConfiguredAcpBindingSpecBySessionKey", () => {
           type: "acp",
           agentId: "codex",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "1478836151241412759" },
           },
@@ -400,7 +400,7 @@ describe("resolveConfiguredAcpBindingSpecBySessionKey", () => {
 
     const resolved = resolveConfiguredAcpBindingRecord({
       cfg,
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "1478836151241412759",
     });
@@ -416,14 +416,14 @@ describe("resolveConfiguredAcpBindingSpecBySessionKey", () => {
 describe("buildConfiguredAcpSessionKey", () => {
   it("is deterministic for the same conversation binding", () => {
     const sessionKeyA = buildConfiguredAcpSessionKey({
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "1478836151241412759",
       agentId: "codex",
       mode: "persistent",
     });
     const sessionKeyB = buildConfiguredAcpSessionKey({
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "1478836151241412759",
       agentId: "codex",
@@ -436,7 +436,7 @@ describe("buildConfiguredAcpSessionKey", () => {
 describe("ensureConfiguredAcpBindingSession", () => {
   it("keeps an existing ready session when configured binding omits cwd", async () => {
     const spec = {
-      channel: "discord" as const,
+      channel: "telegram" as const,
       accountId: "default",
       conversationId: "1478836151241412759",
       agentId: "codex",
@@ -469,7 +469,7 @@ describe("ensureConfiguredAcpBindingSession", () => {
 
   it("reinitializes a ready session when binding config explicitly sets mismatched cwd", async () => {
     const spec = {
-      channel: "discord" as const,
+      channel: "telegram" as const,
       accountId: "default",
       conversationId: "1478836151241412759",
       agentId: "codex",
@@ -509,7 +509,7 @@ describe("ensureConfiguredAcpBindingSession", () => {
 
   it("initializes ACP session with runtime agent override when provided", async () => {
     const spec = {
-      channel: "discord" as const,
+      channel: "telegram" as const,
       accountId: "default",
       conversationId: "1478836151241412759",
       agentId: "coding",
@@ -541,7 +541,7 @@ describe("resetAcpSessionInPlace", () => {
           type: "acp",
           agentId: "claude",
           match: {
-            channel: "discord",
+            channel: "telegram",
             accountId: "default",
             peer: { kind: "channel", id: "1478844424791396446" },
           },
@@ -553,7 +553,7 @@ describe("resetAcpSessionInPlace", () => {
       ],
     } satisfies PropAiSyncConfig;
     const sessionKey = buildConfiguredAcpSessionKey({
-      channel: "discord",
+      channel: "telegram",
       accountId: "default",
       conversationId: "1478844424791396446",
       agentId: "claude",
@@ -580,7 +580,7 @@ describe("resetAcpSessionInPlace", () => {
   });
 
   it("does not clear ACP metadata before reinitialize succeeds", async () => {
-    const sessionKey = "agent:claude:acp:binding:discord:default:9373ab192b2317f4";
+    const sessionKey = "agent:claude:acp:binding:telegram:default:9373ab192b2317f4";
     sessionMetaMocks.readAcpSessionEntry.mockReturnValue({
       acp: {
         agent: "claude",
@@ -613,7 +613,7 @@ describe("resetAcpSessionInPlace", () => {
         list: [{ id: "main" }, { id: "coding" }],
       },
     } satisfies PropAiSyncConfig;
-    const sessionKey = "agent:coding:acp:binding:discord:default:9373ab192b2317f4";
+    const sessionKey = "agent:coding:acp:binding:telegram:default:9373ab192b2317f4";
     sessionMetaMocks.readAcpSessionEntry.mockReturnValue({
       acp: {
         agent: "codex",

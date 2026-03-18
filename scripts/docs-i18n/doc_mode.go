@@ -66,7 +66,8 @@ func processFileDoc(ctx context.Context, translator *PiTranslator, docsRoot, fil
 		return false, fmt.Errorf("frontmatter translation failed for %s: %w", relPath, err)
 	}
 
-	updatedFront, err := encodeFrontMatter(frontData, relPath, content)
+	metaProvider := metadataProvider(translator.provider)
+	updatedFront, err := encodeFrontMatter(frontData, relPath, content, metaProvider, translator.model)
 	if err != nil {
 		return false, err
 	}

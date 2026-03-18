@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { isTruthyEnvValue } from "../infra/env.js";
 import { runGatewayUpdate } from "../infra/update-runner.js";
 import { runCommandWithTimeout } from "../process/exec.js";
@@ -86,6 +86,7 @@ export async function maybeOfferUpdateBeforeDoctor(params: {
 
   return { updated: false };
 }
+
 
 
 

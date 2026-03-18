@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../../cli/command-format.js";
+import { formatCliCommand } from "../../core/command-format.js";
 import { SYSTEM_MARK, prefixSystemMessage } from "../../infra/system-message.js";
 import type { ElevatedLevel, ReasoningLevel } from "./directives.js";
 
@@ -80,5 +80,6 @@ export function formatElevatedUnavailableText(params: {
   }
   return lines.join("\n");
 }
+
 
 

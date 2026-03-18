@@ -1,200 +1,127 @@
-#!/usr/bin/env node
-import { spawn } from "node:child_process";
-import { enableCompileCache } from "node:module";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
-import { isRootHelpInvocation, isRootVersionInvocation } from "./cli/argv.js";
-import { applyCliProfileEnv, parseCliProfileArgs } from "./cli/profile.js";
-import { shouldSkipRespawnForArgv } from "./cli/respawn-policy.js";
-import { normalizeWindowsArgv } from "./cli/windows-argv.js";
-import { isTruthyEnvValue, normalizeEnv } from "./infra/env.js";
-import { isMainModule } from "./infra/is-main.js";
-import { ensurePropAiSyncExecMarkerOnProcess } from "./infra/propai-exec-env.js";
-import { installProcessWarningFilter } from "./infra/warning-filter.js";
-import { attachChildProcessBridge } from "./process/child-process-bridge.js";
+import type { GatewayAuthConfig, GatewayAuthMode, GatewayBindMode } from "./config/types.gateway.js";
+import { loadConfig } from "./config/config.js";
+import { resolveGatewayPort } from "./config/paths.js";
+import { startGatewayServer } from "./gateway/server.js";
+import { loadDotEnv } from "./infra/dotenv.js";
+import { normalizeEnv } from "./infra/env.js";
+import { readPropAiEnvValue } from "./infra/env-read.js";
+import { assertSupportedRuntime } from "./infra/runtime-guard.js";
+import { enableConsoleCapture } from "./logging.js";
+import { createSubsystemLogger } from "./logging/subsystem.js";
 
-const ENTRY_WRAPPER_PAIRS = [
-  { wrapperBasename: "propai.mjs", entryBasename: "entry.js" },
-  { wrapperBasename: "PropAiSync.js", entryBasename: "entry.js" },
-] as const;
+const log = createSubsystemLogger("gateway/entry");
 
-function shouldForceReadOnlyAuthStore(argv: string[]): boolean {
-  const tokens = argv.slice(2).filter((token) => token.length > 0 && !token.startsWith("-"));
-  for (let index = 0; index < tokens.length - 1; index += 1) {
-    if (tokens[index] === "secrets" && tokens[index + 1] === "audit") {
-      return true;
-    }
-  }
-  return false;
-}
+const GATEWAY_BIND_MODES: readonly GatewayBindMode[] = [
+  "auto",
+  "lan",
+  "loopback",
+  "custom",
+  "tailnet",
+];
 
-// Guard: only run entry-point logic when this file is the main module.
-// The bundler may import entry.js as a shared dependency when dist/index.js
-// is the actual entry point; without this guard the top-level code below
-// would call runCli a second time, starting a duplicate gateway that fails
-// on the lock / port and crashes the process.
-if (
-  !isMainModule({
-    currentFile: fileURLToPath(import.meta.url),
-    wrapperEntryPairs: [...ENTRY_WRAPPER_PAIRS],
-  })
-) {
-  // Imported as a dependency — skip all entry-point side effects.
-} else {
-  process.title = "PropAi Sync";
-  ensurePropAiSyncExecMarkerOnProcess();
-  installProcessWarningFilter();
-  normalizeEnv();
-  if (!isTruthyEnvValue(process.env.NODE_DISABLE_COMPILE_CACHE)) {
-    try {
-      enableCompileCache();
-    } catch {
-      // Best-effort only; never block startup.
-    }
-  }
+const GATEWAY_AUTH_MODES: readonly GatewayAuthMode[] = ["none", "token", "password", "trusted-proxy"];
 
-  if (shouldForceReadOnlyAuthStore(process.argv)) {
-    process.env.propai_AUTH_STORE_READONLY = "1";
-  }
-
-  if (process.argv.includes("--no-color")) {
-    process.env.NO_COLOR = "1";
-    process.env.FORCE_COLOR = "0";
-  }
-
-  const EXPERIMENTAL_WARNING_FLAG = "--disable-warning=ExperimentalWarning";
-
-  function hasExperimentalWarningSuppressed(): boolean {
-    const nodeOptions = process.env.NODE_OPTIONS ?? "";
-    if (nodeOptions.includes(EXPERIMENTAL_WARNING_FLAG) || nodeOptions.includes("--no-warnings")) {
-      return true;
-    }
-    for (const arg of process.execArgv) {
-      if (arg === EXPERIMENTAL_WARNING_FLAG || arg === "--no-warnings") {
-        return true;
-      }
-    }
+function parseBooleanFlag(value: string | undefined): boolean {
+  if (!value) {
     return false;
   }
-
-  function ensureExperimentalWarningSuppressed(): boolean {
-    if (shouldSkipRespawnForArgv(process.argv)) {
-      return false;
-    }
-    if (isTruthyEnvValue(process.env.propai_NO_RESPAWN)) {
-      return false;
-    }
-    if (isTruthyEnvValue(process.env.propai_NODE_OPTIONS_READY)) {
-      return false;
-    }
-    if (hasExperimentalWarningSuppressed()) {
-      return false;
-    }
-
-    // Respawn guard (and keep recursion bounded if something goes wrong).
-    process.env.propai_NODE_OPTIONS_READY = "1";
-    // Pass flag as a Node CLI option, not via NODE_OPTIONS (--disable-warning is disallowed in NODE_OPTIONS).
-    const child = spawn(
-      process.execPath,
-      [EXPERIMENTAL_WARNING_FLAG, ...process.execArgv, ...process.argv.slice(1)],
-      {
-        stdio: "inherit",
-        env: process.env,
-      },
-    );
-
-    attachChildProcessBridge(child);
-
-    child.once("exit", (code, signal) => {
-      if (signal) {
-        process.exitCode = 1;
-        return;
-      }
-      process.exit(code ?? 1);
-    });
-
-    child.once("error", (error) => {
-      console.error(
-        "[PropAi Sync] Failed to respawn CLI:",
-        error instanceof Error ? (error.stack ?? error.message) : error,
-      );
-      process.exit(1);
-    });
-
-    // Parent must not continue running the CLI.
-    return true;
-  }
-
-  function tryHandleRootVersionFastPath(argv: string[]): boolean {
-    if (!isRootVersionInvocation(argv)) {
-      return false;
-    }
-    Promise.all([import("./version.js"), import("./infra/git-commit.js")])
-      .then(([{ VERSION }, { resolveCommitHash }]) => {
-        const commit = resolveCommitHash({ moduleUrl: import.meta.url });
-        console.log(commit ? `PropAi Sync ${VERSION} (${commit})` : `PropAi Sync ${VERSION}`);
-        process.exit(0);
-      })
-      .catch((error) => {
-        console.error(
-          "[PropAi Sync] Failed to resolve version:",
-          error instanceof Error ? (error.stack ?? error.message) : error,
-        );
-        process.exitCode = 1;
-      });
-    return true;
-  }
-
-  function tryHandleRootHelpFastPath(argv: string[]): boolean {
-    if (!isRootHelpInvocation(argv)) {
-      return false;
-    }
-    import("./cli/program.js")
-      .then(({ buildProgram }) => {
-        buildProgram().outputHelp();
-      })
-      .catch((error) => {
-        console.error(
-          "[PropAi Sync] Failed to display help:",
-          error instanceof Error ? (error.stack ?? error.message) : error,
-        );
-        process.exitCode = 1;
-      });
-    return true;
-  }
-
-  process.argv = normalizeWindowsArgv(process.argv);
-
-  if (!ensureExperimentalWarningSuppressed()) {
-    const parsed = parseCliProfileArgs(process.argv);
-    if (!parsed.ok) {
-      // Keep it simple; Commander will handle rich help/errors after we strip flags.
-      console.error(`[PropAi Sync] ${parsed.error}`);
-      process.exit(2);
-    }
-
-    if (parsed.profile) {
-      applyCliProfileEnv({ profile: parsed.profile });
-      // Keep Commander and ad-hoc argv checks consistent.
-      process.argv = parsed.argv;
-    }
-
-    if (!tryHandleRootVersionFastPath(process.argv) && !tryHandleRootHelpFastPath(process.argv)) {
-      import("./cli/run-main.js")
-        .then(({ runCli }) => runCli(process.argv))
-        .catch((error) => {
-          console.error(
-            "[PropAi Sync] Failed to start CLI:",
-            error instanceof Error ? (error.stack ?? error.message) : error,
-          );
-          process.exitCode = 1;
-        });
-    }
-  }
+  const normalized = value.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes";
 }
 
+function parseGatewayBindMode(value: string | undefined): GatewayBindMode | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return GATEWAY_BIND_MODES.includes(trimmed as GatewayBindMode)
+    ? (trimmed as GatewayBindMode)
+    : undefined;
+}
 
+function parseGatewayAuthMode(value: string | undefined): GatewayAuthMode | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return GATEWAY_AUTH_MODES.includes(trimmed as GatewayAuthMode)
+    ? (trimmed as GatewayAuthMode)
+    : undefined;
+}
 
+function resolveGatewayAuthOverride(env: NodeJS.ProcessEnv): GatewayAuthConfig | undefined {
+  const token = readPropAiEnvValue(env, "GATEWAY_TOKEN")?.trim();
+  const password = readPropAiEnvValue(env, "GATEWAY_PASSWORD")?.trim();
+  const mode = parseGatewayAuthMode(readPropAiEnvValue(env, "GATEWAY_AUTH_MODE"));
 
+  if (!token && !password && !mode) {
+    return undefined;
+  }
 
+  const auth: GatewayAuthConfig = {};
+  if (mode) {
+    auth.mode = mode;
+  }
+  if (token) {
+    auth.token = token;
+  }
+  if (password) {
+    auth.password = password;
+  }
+  return auth;
+}
 
+async function startGateway(): Promise<void> {
+  loadDotEnv({ quiet: true });
+  normalizeEnv();
+  enableConsoleCapture();
+  assertSupportedRuntime();
+
+  let cfg;
+  try {
+    cfg = loadConfig();
+  } catch (err) {
+    log.error(`gateway: failed to load config: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+    return;
+  }
+
+  const allowUnconfigured = parseBooleanFlag(
+    readPropAiEnvValue(process.env, "GATEWAY_ALLOW_UNCONFIGURED"),
+  );
+  if (!allowUnconfigured && cfg.gateway?.mode && cfg.gateway.mode !== "local") {
+    log.error(
+      `gateway start blocked: gateway.mode=${cfg.gateway.mode} (set gateway.mode=local or PROPAI_GATEWAY_ALLOW_UNCONFIGURED=1).`,
+    );
+    process.exit(1);
+    return;
+  }
+
+  const port = resolveGatewayPort(cfg, process.env);
+  const bind =
+    parseGatewayBindMode(readPropAiEnvValue(process.env, "GATEWAY_BIND")) ??
+    cfg.gateway?.bind ??
+    "loopback";
+  const authOverride = resolveGatewayAuthOverride(process.env);
+
+  const server = await startGatewayServer(port, { bind, auth: authOverride });
+
+  const shutdown = async (signal: string) => {
+    log.info(`gateway: shutting down (${signal})`);
+    await server.close({ reason: signal });
+    process.exit(0);
+  };
+
+  process.on("SIGINT", () => {
+    void shutdown("SIGINT");
+  });
+  process.on("SIGTERM", () => {
+    void shutdown("SIGTERM");
+  });
+}
+
+void startGateway().catch((err) => {
+  log.error(`gateway: failed to start: ${err instanceof Error ? err.message : String(err)}`);
+  process.exit(1);
+});

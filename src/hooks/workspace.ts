@@ -24,7 +24,7 @@ import type {
 
 type HookPackageManifest = {
   name?: string;
-} & Partial<Record<typeof MANIFEST_KEY, { hooks?: string[] }>>;
+} & Partial<Record<typeof MANIFEST_KEY | (typeof LEGACY_MANIFEST_KEYS)[number], { hooks?: string[] }>>;
 const log = createSubsystemLogger("hooks/workspace");
 
 function filterHookEntries(

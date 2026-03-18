@@ -8,14 +8,14 @@ import {
   parseCameraSnapPayload,
   writeCameraClipPayloadToFile,
   writeCameraPayloadToFile,
-} from "../../cli/nodes-camera.js";
-import { parseEnvPairs, parseTimeoutMs } from "../../cli/nodes-run.js";
+} from "../../core/nodes-camera.js";
+import { parseEnvPairs, parseTimeoutMs } from "../../core/nodes-run.js";
 import {
   parseScreenRecordPayload,
   screenRecordTempPath,
   writeScreenRecordToFile,
-} from "../../cli/nodes-screen.js";
-import { parseDurationMs } from "../../cli/parse-duration.js";
+} from "../../core/nodes-screen.js";
+import { parseDurationMs } from "../../core/parse-duration.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import { parsePreparedSystemRunPayload } from "../../infra/system-run-approval-context.js";
 import { imageMimeFromFormat } from "../../media/mime.js";
@@ -811,5 +811,6 @@ const DEFAULT_PHOTOS_LIMIT = 1;
 const MAX_PHOTOS_LIMIT = 20;
 const DEFAULT_PHOTOS_MAX_WIDTH = 1600;
 const DEFAULT_PHOTOS_QUALITY = 0.85;
+
 
 

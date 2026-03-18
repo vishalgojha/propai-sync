@@ -74,105 +74,287 @@
    =========================================== */
 
 .shell--onboarding .content {
+  color: #c7ffe5;
+  --bg: #000000;
+  --bg-accent: #020604;
+  --bg-elevated: #03120c;
+  --bg-hover: #072017;
+  --bg-muted: #061a13;
+  --card: #020a07;
+  --card-highlight: rgba(188, 255, 223, 0.05);
+  --panel: #000000;
+  --panel-strong: #03120c;
+  --panel-hover: #072017;
+  --text: #c7ffe5;
+  --text-strong: #f1fff8;
+  --muted: #88c6ad;
+  --muted-strong: #5f9f86;
+  --border: rgba(91, 247, 191, 0.18);
+  --border-strong: rgba(91, 247, 191, 0.34);
+  --input: rgba(91, 247, 191, 0.22);
+  --ring: #5bf7bf;
+  --accent: #5bf7bf;
+  --accent-hover: #7cf8cb;
+  --accent-muted: #5bf7bf;
+  --accent-subtle: rgba(91, 247, 191, 0.14);
+  --accent-foreground: #02120b;
+  --accent-glow: rgba(91, 247, 191, 0.28);
+  --primary: #5bf7bf;
+  --primary-foreground: #02120b;
+  --secondary: #04150f;
+  --secondary-foreground: #e8fff5;
+  --ok: #5bf7bf;
+  --ok-subtle: rgba(91, 247, 191, 0.14);
+  --warn: #b4ffda;
+  --warn-subtle: rgba(180, 255, 218, 0.12);
   background:
-    radial-gradient(900px 420px at 8% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%),
-    radial-gradient(800px 360px at 92% 12%, color-mix(in srgb, var(--ok) 12%, transparent), transparent 60%),
+    radial-gradient(900px 420px at 8% 0%, rgba(91, 247, 191, 0.18), transparent 60%),
+    radial-gradient(800px 360px at 92% 12%, rgba(91, 247, 191, 0.1), transparent 60%),
+    linear-gradient(180deg, rgba(7, 23, 17, 0.65), rgba(0, 0, 0, 0)),
     var(--bg);
 }
 
 .onboarding {
-  max-width: 760px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 24px 8px 48px;
+  padding: 32px 16px 56px;
   display: grid;
-  gap: 18px;
+  gap: 22px;
 }
 
 .onboarding__hero {
-  padding: 24px;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border);
-  background: linear-gradient(135deg, var(--bg-elevated), var(--card));
+  padding: 32px;
+  border-radius: 24px;
+  border: 1px solid rgba(91, 247, 191, 0.2);
+  background:
+    linear-gradient(135deg, rgba(6, 24, 17, 0.95), rgba(0, 0, 0, 0.98)),
+    linear-gradient(135deg, rgba(91, 247, 191, 0.08), transparent 45%);
   box-shadow:
-    var(--shadow-md),
-    inset 0 1px 0 var(--card-highlight);
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(225, 255, 244, 0.08),
+    0 0 0 1px rgba(91, 247, 191, 0.06);
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 .onboarding__eyebrow {
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
+  letter-spacing: 0.24em;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(91, 247, 191, 0.84);
 }
 
 .onboarding__title {
-  font-size: 28px;
+  max-width: 10ch;
+  font-size: clamp(34px, 7vw, 64px);
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--text-strong);
+  line-height: 0.95;
 }
 
 .onboarding__subtitle {
-  font-size: 14px;
-  color: var(--muted);
+  max-width: 700px;
+  font-size: 16px;
+  color: rgba(199, 255, 229, 0.84);
+  line-height: 1.6;
 }
 
-.onboarding__status {
-  margin-top: 6px;
+.onboarding__status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.onboarding__status-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  min-height: 38px;
+  padding: 8px 14px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--border);
-  background: var(--secondary);
+  border: 1px solid rgba(91, 247, 191, 0.16);
+  background: rgba(4, 21, 15, 0.88);
+  color: rgba(199, 255, 229, 0.84);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  width: fit-content;
+  letter-spacing: 0.03em;
 }
 
 .onboarding__status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--warn);
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.45);
+  background: rgba(91, 247, 191, 0.42);
+  box-shadow: 0 0 10px rgba(91, 247, 191, 0.25);
 }
 
-.onboarding__status.ok .onboarding__status-dot {
+.onboarding__status-pill.ok .onboarding__status-dot {
   background: var(--ok);
-  box-shadow: 0 0 6px rgba(34, 197, 94, 0.45);
+  box-shadow: 0 0 12px rgba(91, 247, 191, 0.55);
 }
 
-.onboarding-card {
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--card) 0%, var(--bg-elevated) 100%);
+.onboarding__status-pill.warn .onboarding__status-dot {
+  background: #d7ffeb;
+  box-shadow: 0 0 12px rgba(215, 255, 235, 0.35);
 }
 
-.onboarding-card__intro {
-  color: var(--text);
+.onboarding-journey {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.onboarding-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(91, 247, 191, 0.12);
+  background: linear-gradient(180deg, rgba(3, 11, 8, 0.92), rgba(0, 0, 0, 0.98));
+  padding: 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.onboarding-stage--active {
+  border-color: rgba(91, 247, 191, 0.34);
+  box-shadow:
+    0 0 0 1px rgba(91, 247, 191, 0.08),
+    0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.onboarding-stage--done {
+  border-color: rgba(91, 247, 191, 0.24);
+}
+
+.onboarding-stage__index {
+  color: rgba(91, 247, 191, 0.64);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.onboarding-stage__title {
+  margin-top: 12px;
+  color: var(--text-strong);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.onboarding-stage__copy {
+  margin-top: 8px;
+  color: rgba(199, 255, 229, 0.74);
   font-size: 14px;
   line-height: 1.55;
 }
 
-.onboarding-card__status {
+.onboarding-paths {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.onboarding-card {
+  border: 1px solid rgba(91, 247, 191, 0.12);
+  background: linear-gradient(180deg, rgba(3, 11, 8, 0.92), rgba(0, 0, 0, 0.98));
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.onboarding-path {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 100%;
+}
+
+.onboarding-path.is-selected {
+  border-color: rgba(91, 247, 191, 0.34);
+  box-shadow:
+    0 0 0 1px rgba(91, 247, 191, 0.08),
+    0 18px 40px rgba(0, 0, 0, 0.34);
+}
+
+.onboarding-path--accent {
+  background:
+    linear-gradient(180deg, rgba(5, 18, 13, 0.98), rgba(0, 0, 0, 0.98)),
+    radial-gradient(circle at top left, rgba(91, 247, 191, 0.12), transparent 55%);
+}
+
+.onboarding-path--blocked {
+  border-color: rgba(180, 255, 218, 0.18);
+}
+
+.onboarding-path__eyebrow {
+  color: rgba(91, 247, 191, 0.76);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.onboarding-path__title {
+  color: var(--text-strong);
+  font-size: 24px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.onboarding-path__summary {
+  color: rgba(236, 255, 248, 0.9);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.onboarding-path__detail,
+.onboarding-path__note,
+.onboarding-card__intro {
+  color: rgba(199, 255, 229, 0.7);
   font-size: 14px;
+  line-height: 1.6;
+}
+
+.onboarding-advanced summary {
+  cursor: pointer;
+  color: var(--text-strong);
+  font-size: 15px;
   font-weight: 600;
+  list-style: none;
+}
+
+.onboarding-advanced summary::-webkit-details-marker {
+  display: none;
+}
+
+.onboarding-advanced[open] summary {
+  margin-bottom: 14px;
+}
+
+.onboarding-card__status {
+  font-size: 20px;
+  font-weight: 700;
   color: var(--text-strong);
 }
 
+.onboarding-card__toggle {
+  color: rgba(199, 255, 229, 0.84);
+}
+
 .onboarding-card--status {
-  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-color: rgba(91, 247, 191, 0.24);
+}
+
+.onboarding-card--ollama {
+  border-color: rgba(180, 255, 218, 0.2);
 }
 
 .onboarding-card--step .muted {
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 10px;
+  letter-spacing: 0.18em;
+  font-size: 11px;
 }
 
 .onboarding-actions {
@@ -181,6 +363,38 @@
 
 .onboarding-actions .btn {
   min-width: 180px;
+}
+
+.shell--onboarding .input,
+.shell--onboarding .select,
+.shell--onboarding textarea {
+  background: rgba(3, 18, 12, 0.96);
+  border-color: rgba(91, 247, 191, 0.2);
+  color: var(--text-strong);
+}
+
+.shell--onboarding .field span,
+.shell--onboarding .muted {
+  color: rgba(136, 198, 173, 0.9);
+}
+
+@media (max-width: 960px) {
+  .onboarding {
+    max-width: 760px;
+  }
+
+  .onboarding-journey,
+  .onboarding-paths {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding__hero {
+    padding: 24px;
+  }
+
+  .onboarding__title {
+    max-width: none;
+  }
 }
 
 /* ===========================================

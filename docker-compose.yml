@@ -5,6 +5,9 @@ services:
       HOME: /home/node
       TERM: xterm-256color
       PROPAI_GATEWAY_TOKEN: ${PROPAI_GATEWAY_TOKEN:-}
+      PROPAI_GATEWAY_BIND: ${PROPAI_GATEWAY_BIND:-lan}
+      PROPAI_GATEWAY_PORT: ${PROPAI_GATEWAY_PORT:-18789}
+      PROPAI_GATEWAY_ALLOW_UNCONFIGURED: "1"
       PROPAI_ALLOW_INSECURE_PRIVATE_WS: ${PROPAI_ALLOW_INSECURE_PRIVATE_WS:-}
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
@@ -25,16 +28,7 @@ services:
       - "${PROPAI_BRIDGE_PORT:-18790}:18790"
     init: true
     restart: unless-stopped
-    command:
-      [
-        "node",
-        "dist/index.js",
-        "gateway",
-        "--bind",
-        "${PROPAI_GATEWAY_BIND:-lan}",
-        "--port",
-        "18789",
-      ]
+    command: ["node", "dist/entry.js"]
     healthcheck:
       test:
         [
@@ -47,33 +41,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-
-  propai-cli:
-    image: ${PROPAI_IMAGE:-propai:local}
-    network_mode: "service:propai-gateway"
-    cap_drop:
-      - NET_RAW
-      - NET_ADMIN
-    security_opt:
-      - no-new-privileges:true
-    environment:
-      HOME: /home/node
-      TERM: xterm-256color
-      PROPAI_GATEWAY_TOKEN: ${PROPAI_GATEWAY_TOKEN:-}
-      PROPAI_ALLOW_INSECURE_PRIVATE_WS: ${PROPAI_ALLOW_INSECURE_PRIVATE_WS:-}
-      BROWSER: echo
-      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
-      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
-      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
-    volumes:
-      - ${PROPAI_CONFIG_DIR}:/home/node/.propai
-      - ${PROPAI_WORKSPACE_DIR}:/home/node/.propai/workspace
-    stdin_open: true
-    tty: true
-    init: true
-    entrypoint: ["node", "dist/index.js"]
-    depends_on:
-      - propai-gateway
 
 
 

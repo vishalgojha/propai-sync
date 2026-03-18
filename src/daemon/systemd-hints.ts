@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 
 export function isSystemdUnavailableDetail(detail?: string): boolean {
   if (!detail) {
@@ -27,5 +27,6 @@ export function renderSystemdUnavailableHints(options: { wsl?: boolean } = {}): 
     `If you're in a container, run the gateway in the foreground instead of \`${formatCliCommand("propai gateway")}\`.`,
   ];
 }
+
 
 

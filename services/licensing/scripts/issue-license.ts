@@ -1,5 +1,8 @@
+export {};
+
 type IssueLicensePayload = {
   token?: string;
+  email?: string;
   plan?: string;
   status?: string;
   expiresAt?: string | null;
@@ -28,10 +31,22 @@ if (!adminKey.trim()) {
 
 const payload: IssueLicensePayload = {
   token: getArg("--token") ?? undefined,
+  email: getArg("--email") ?? undefined,
   plan: getArg("--plan") ?? undefined,
   status: getArg("--status") ?? undefined,
   expiresAt: getArg("--expires-at") ?? undefined,
-  maxDevices: getArg("--max-devices") ? Number(getArg("--max-devices")) : undefined,
+  maxDevices: (() => {
+    const raw = getArg("--max-devices");
+    if (!raw) {
+      return undefined;
+    }
+    const value = Number.parseInt(raw, 10);
+    if (Number.isNaN(value)) {
+      console.error("Invalid --max-devices value.");
+      process.exit(1);
+    }
+    return value;
+  })(),
 };
 
 const response = await fetch(`${apiUrl.replace(/\/+$/, "")}/v1/admin/licenses`, {
@@ -49,14 +64,7 @@ if (!response.ok) {
   process.exit(1);
 }
 
-const data = (await response.json()) as {
-  ok?: boolean;
-  token?: string;
-  plan?: string;
-  status?: string;
-  expiresAt?: string | null;
-  maxDevices?: number;
-};
+const data = (await response.json()) as { token?: string };
 
 if (!data.token) {
   console.error("No token returned.");

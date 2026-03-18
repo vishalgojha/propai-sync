@@ -95,20 +95,27 @@ import type {
 } from "./types.ts";
 import { type ChatAttachment, type ChatQueueItem, type CronFormState } from "./ui-types.ts";
 import { generateUUID } from "./uuid.ts";
+import { openExternalUrlSafe } from "./open-external-url.ts";
 import { restartDesktopGateway } from "./desktop/gateway.ts";
-import { isTauriRuntime } from "./desktop/tauri.ts";
+import { isTauriRuntime, tauriInvoke } from "./desktop/tauri.ts";
 import type { NostrProfileFormState } from "./views/channels.nostr-profile-form.ts";
 import {
+  activateLicenseKey,
+  approvePendingLicenseKey,
+  loadLicenseActivationToken,
   getOrCreateLicenseDeviceId,
   isLicenseBypassEnabled,
   isEntitlementValid,
+  parseDateMs,
+  refreshLicenseActivation,
   loadLicenseApiUrl,
   loadLicenseCache,
   loadLicenseToken,
+  requestLicenseKey,
+  saveLicenseActivationToken,
   saveLicenseApiUrl,
   saveLicenseCache,
   saveLicenseToken,
-  verifyLicenseToken,
   type LicenseEntitlement,
   type LicenseStatus,
 } from "./license.ts";
@@ -124,8 +131,10 @@ const DESKTOP_ONBOARDING_DONE_KEY = "PropAiSync.desktop.onboarding.done";
 const TAURI_ONBOARDING_OPEN_EVENT = "PropAi Sync:onboarding-open";
 const TAURI_GATEWAY_RESTART_EVENT = "PropAi Sync:gateway-restart";
 const BRAND_NAME = "propai";
+const OLLAMA_DOWNLOAD_URL = "https://ollama.com/download";
 
 type ConfigShape = Record<string, unknown> | null | undefined;
+type OllamaStatus = { installed: boolean; running: boolean };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -280,10 +289,14 @@ export class PropAiSyncApp extends LitElement {
   @state() onboardingWizardDraftTouched = false;
   @state() onboardingWizardPresetId: OnboardingWizardPresetId = resolveOnboardingPresetId();
   @state() onboardingWizardAutoAdvance = resolveOnboardingAutoAdvance();
+  @state() ollamaStatus: OllamaStatus | null = null;
+  @state() ollamaStatusLoading = false;
   @state() licenseToken = loadLicenseToken();
   @state() licenseApiUrl = loadLicenseApiUrl();
   @state() licenseStatus: LicenseStatus = "unknown";
   @state() licenseError: string | null = null;
+  @state() licenseNotice: string | null = null;
+  @state() licenseAdminKey = "";
   @state() licenseEntitlement: LicenseEntitlement | null = loadLicenseCache();
   @state() licenseBusy = false;
   @state() licenseGateActive =
@@ -296,7 +309,7 @@ export class PropAiSyncApp extends LitElement {
   @state() lastError: string | null = null;
   @state() lastErrorCode: string | null = null;
   @state() eventLog: EventLogEntry[] = [];
-  private eventLogBuffer: EventLogEntry[] = [];
+  eventLogBuffer: EventLogEntry[] = [];
   private toolStreamSyncTimer: number | null = null;
   private sidebarCloseTimer: number | null = null;
 
@@ -548,7 +561,7 @@ export class PropAiSyncApp extends LitElement {
   client: GatewayBrowserClient | null = null;
   private chatScrollFrame: number | null = null;
   private chatScrollTimeout: number | null = null;
-  private chatHasAutoScrolled = false;
+  @state() chatHasAutoScrolled = false;
   private chatUserNearBottom = true;
   @state() chatNewMessagesBelow = false;
   private nodesPollInterval: number | null = null;
@@ -561,12 +574,14 @@ export class PropAiSyncApp extends LitElement {
   basePath = "";
   private popStateHandler = () =>
     onPopStateInternal(this as unknown as Parameters<typeof onPopStateInternal>[0]);
-  private themeMedia: MediaQueryList | null = null;
-  private themeMediaHandler: ((event: MediaQueryListEvent) => void) | null = null;
+  themeMedia: MediaQueryList | null = null;
+  themeMediaHandler: ((event: MediaQueryListEvent) => void) | null = null;
   private topbarObserver: ResizeObserver | null = null;
   private tauriUnlistenOnboardingOpen: (() => void) | null = null;
   private tauriUnlistenGatewayRestart: (() => void) | null = null;
   private licenseDeviceId = getOrCreateLicenseDeviceId();
+  private licenseActivationToken = loadLicenseActivationToken();
+  private licenseRefreshTimer: number | null = null;
   private readonly licenseBypass = isLicenseBypassEnabled();
   private appStarted = false;
   private desktopOnboardingSuppressed = false;
@@ -598,10 +613,7 @@ export class PropAiSyncApp extends LitElement {
   }
 
   private startAppIfLicensed() {
-    if (this.appStarted) {
-      return;
-    }
-    if (this.licenseGateActive) {
+    if (this.appStarted || this.licenseGateActive) {
       return;
     }
     this.appStarted = true;
@@ -617,10 +629,135 @@ export class PropAiSyncApp extends LitElement {
     }
     const valid = isEntitlementValid(this.licenseEntitlement);
     this.licenseGateActive = !valid;
-    if (valid) {
-      this.licenseStatus = this.licenseEntitlement?.status ?? "active";
+    if (valid && this.licenseStatus !== "grace" && this.licenseStatus !== "checking") {
+      this.licenseStatus = "active";
+      this.startAppIfLicensed();
     }
-    this.startAppIfLicensed();
+  }
+
+  private clearLicenseRefreshTimer() {
+    if (this.licenseRefreshTimer !== null) {
+      window.clearTimeout(this.licenseRefreshTimer);
+      this.licenseRefreshTimer = null;
+    }
+  }
+
+  private scheduleLicenseRefresh() {
+    this.clearLicenseRefreshTimer();
+    if (this.licenseBypass || !this.licenseActivationToken || !isEntitlementValid(this.licenseEntitlement)) {
+      return;
+    }
+    const targetMs = parseDateMs(this.licenseEntitlement?.refreshAt);
+    const now = Date.now();
+    const fallbackMs = now + 6 * 60 * 60 * 1000;
+    const nextMs = targetMs !== null ? Math.max(targetMs, now + 60_000) : fallbackMs;
+    this.licenseRefreshTimer = window.setTimeout(() => {
+      void this.refreshLicenseEntitlement({ silent: true });
+    }, Math.max(5_000, nextMs - now));
+  }
+
+  private persistLicenseEntitlement(entitlement: LicenseEntitlement | null, status: LicenseStatus) {
+    this.licenseEntitlement = entitlement;
+    saveLicenseCache(entitlement);
+    this.licenseStatus = status;
+    this.updateLicenseGate();
+    this.scheduleLicenseRefresh();
+  }
+
+  private setLicenseActivationToken(token: string | null) {
+    this.licenseActivationToken = token?.trim() ?? "";
+    saveLicenseActivationToken(this.licenseActivationToken);
+    this.scheduleLicenseRefresh();
+  }
+
+  private clearCachedLicenseEntitlement() {
+    this.persistLicenseEntitlement(null, "invalid");
+  }
+
+  private resolveLicenseFailureStatus(entitlement: LicenseEntitlement | null, code?: string): LicenseStatus {
+    if (code === "pending" || code === "pending_approval" || entitlement?.status === "pending") {
+      return "pending";
+    }
+    if (code === "expired") {
+      return "expired";
+    }
+    const expiresAtMs = parseDateMs(entitlement?.expiresAt);
+    if (expiresAtMs !== null && expiresAtMs < Date.now()) {
+      return "expired";
+    }
+    return "invalid";
+  }
+
+  private async refreshLicenseEntitlement(opts: { silent?: boolean } = {}) {
+    if (!this.licenseActivationToken.trim()) {
+      return "none" as const;
+    }
+    if (!opts.silent) {
+      this.licenseBusy = true;
+      this.licenseError = null;
+      this.licenseNotice = null;
+      this.licenseStatus = "checking";
+    }
+    try {
+      const result = await refreshLicenseActivation({
+        apiUrl: this.licenseApiUrl,
+        activationToken: this.licenseActivationToken,
+        deviceId: this.licenseDeviceId,
+        appVersion: this.hello?.server?.version ?? null,
+      });
+      if (result.ok && result.valid) {
+        this.setLicenseActivationToken(result.activationToken ?? this.licenseActivationToken);
+        this.persistLicenseEntitlement(result.entitlement, "active");
+        this.licenseError = null;
+        return "active" as const;
+      }
+      if (!result.ok) {
+        if (isEntitlementValid(this.licenseEntitlement)) {
+          this.licenseStatus = "grace";
+          this.licenseGateActive = false;
+          this.startAppIfLicensed();
+          this.scheduleLicenseRefresh();
+          if (!opts.silent) {
+            this.licenseError = result.message ?? "License service unavailable. Using cached access.";
+          }
+          return "grace" as const;
+        }
+        this.licenseStatus = this.resolveLicenseFailureStatus(this.licenseEntitlement, result.code);
+        this.licenseGateActive = true;
+        if (!opts.silent) {
+          this.licenseError = result.message ?? "License refresh failed.";
+        }
+        return "invalid" as const;
+      }
+      this.setLicenseActivationToken("");
+      if (this.licenseToken.trim()) {
+        const reactivation = await activateLicenseKey({
+          apiUrl: this.licenseApiUrl,
+          token: this.licenseToken.trim(),
+          deviceId: this.licenseDeviceId,
+          appVersion: this.hello?.server?.version ?? null,
+        });
+        if (reactivation.ok && reactivation.valid) {
+          saveLicenseToken(this.licenseToken.trim());
+          this.setLicenseActivationToken(reactivation.activationToken ?? "");
+          this.persistLicenseEntitlement(reactivation.entitlement, "active");
+          this.licenseError = null;
+          return "active" as const;
+        }
+      }
+      const status = this.resolveLicenseFailureStatus(result.entitlement, result.code);
+      this.clearCachedLicenseEntitlement();
+      this.licenseStatus = status;
+      this.licenseGateActive = true;
+      if (!opts.silent) {
+        this.licenseError = result.message ?? "License refresh failed.";
+      }
+      return "invalid" as const;
+    } finally {
+      if (!opts.silent) {
+        this.licenseBusy = false;
+      }
+    }
   }
 
   private async bootstrapLicense() {
@@ -632,8 +769,16 @@ export class PropAiSyncApp extends LitElement {
     }
     this.licenseApiUrl = loadLicenseApiUrl();
     if (this.licenseEntitlement && isEntitlementValid(this.licenseEntitlement)) {
-      this.licenseStatus = this.licenseEntitlement.status;
+      this.licenseStatus = "active";
       this.updateLicenseGate();
+      this.scheduleLicenseRefresh();
+    } else if (this.licenseEntitlement) {
+      this.licenseStatus = this.resolveLicenseFailureStatus(this.licenseEntitlement);
+      this.licenseGateActive = true;
+    }
+    const refreshed = await this.refreshLicenseEntitlement({ silent: true });
+    if (refreshed === "active" || refreshed === "grace") {
+      return;
     }
     if (!this.licenseToken.trim()) {
       return;
@@ -645,47 +790,48 @@ export class PropAiSyncApp extends LitElement {
     const token = this.licenseToken.trim();
     if (!token) {
       if (!opts.silent) {
-        this.licenseError = "Enter a license token to continue.";
+        this.licenseError = "Enter an activation key to continue.";
       }
       return;
     }
     this.licenseBusy = true;
     this.licenseError = null;
+    this.licenseNotice = null;
     this.licenseStatus = "checking";
     try {
-      const result = await verifyLicenseToken({
+      const result = await activateLicenseKey({
         apiUrl: this.licenseApiUrl,
         token,
         deviceId: this.licenseDeviceId,
         appVersion: this.hello?.server?.version ?? null,
       });
-      if (!result.ok) {
-        this.licenseStatus = result.status === "expired" ? "expired" : "invalid";
+      if (!result.ok || !result.valid) {
+        if (isEntitlementValid(this.licenseEntitlement)) {
+          this.licenseStatus = "active";
+        } else {
+          this.licenseStatus = this.resolveLicenseFailureStatus(result.entitlement, result.code);
+          this.licenseGateActive = true;
+        }
         if (!opts.silent) {
-          this.licenseError = result.message ?? "License verification failed.";
+          this.licenseError = result.message ?? "Activation failed.";
         }
         return;
       }
-      const entitlement: LicenseEntitlement = {
-        status: result.status,
-        plan: result.plan ?? null,
-        trialEndsAt: result.trialEndsAt ?? null,
-        expiresAt: result.expiresAt ?? null,
-        graceEndsAt: result.graceEndsAt ?? null,
-        features: result.features ?? [],
-        issuedAt: result.issuedAt ?? null,
-      };
-      this.licenseEntitlement = entitlement;
-      this.licenseStatus = entitlement.status;
       saveLicenseToken(token);
-      saveLicenseCache(entitlement);
+      this.setLicenseActivationToken(result.activationToken ?? "");
+      this.persistLicenseEntitlement(result.entitlement, "active");
       this.licenseError = null;
-      this.updateLicenseGate();
+      this.licenseNotice = null;
     } catch (err) {
-      this.licenseStatus = "invalid";
+      if (isEntitlementValid(this.licenseEntitlement)) {
+        this.licenseStatus = "active";
+      } else {
+        this.licenseStatus = "invalid";
+        this.licenseGateActive = true;
+      }
       if (!opts.silent) {
         const message = err instanceof Error ? err.message : String(err);
-        this.licenseError = message || "License verification failed.";
+        this.licenseError = message || "Activation failed.";
       }
     } finally {
       this.licenseBusy = false;
@@ -697,6 +843,9 @@ export class PropAiSyncApp extends LitElement {
     if (this.licenseError) {
       this.licenseError = null;
     }
+    if (this.licenseNotice) {
+      this.licenseNotice = null;
+    }
   }
 
   handleLicenseApiInput(value: string) {
@@ -704,16 +853,99 @@ export class PropAiSyncApp extends LitElement {
     saveLicenseApiUrl(value);
   }
 
+  handleLicenseAdminKeyInput(value: string) {
+    this.licenseAdminKey = value;
+    if (this.licenseError) {
+      this.licenseError = null;
+    }
+  }
+
+  async handleLicenseRequest() {
+    this.licenseBusy = true;
+    this.licenseError = null;
+    this.licenseNotice = null;
+    this.licenseStatus = "checking";
+    try {
+      const result = await requestLicenseKey({
+        apiUrl: this.licenseApiUrl,
+        plan: "pro",
+        maxDevices: 2,
+      });
+      if (!result.ok) {
+        this.licenseStatus = "invalid";
+        this.licenseGateActive = true;
+        this.licenseError = result.message;
+        return;
+      }
+      this.licenseToken = result.token;
+      saveLicenseToken(result.token);
+      this.setLicenseActivationToken("");
+      this.clearCachedLicenseEntitlement();
+      this.licenseStatus = "pending";
+      this.licenseGateActive = true;
+      this.licenseNotice =
+        result.message ?? "Activation key generated. Waiting for admin approval.";
+    } finally {
+      this.licenseBusy = false;
+    }
+  }
+
+  async handleLicenseApprove() {
+    const token = this.licenseToken.trim();
+    const adminKey = this.licenseAdminKey.trim();
+    if (!token) {
+      this.licenseError = "Generate or enter an activation key first.";
+      return;
+    }
+    if (!adminKey) {
+      this.licenseError = "Enter the admin key to approve this activation key.";
+      return;
+    }
+    this.licenseBusy = true;
+    this.licenseError = null;
+    this.licenseNotice = null;
+    this.licenseStatus = "checking";
+    try {
+      const approval = await approvePendingLicenseKey({
+        apiUrl: this.licenseApiUrl,
+        adminKey,
+        token,
+      });
+      if (!approval.ok) {
+        this.licenseStatus = "pending";
+        this.licenseGateActive = true;
+        this.licenseError = approval.message;
+        return;
+      }
+
+      const activation = await activateLicenseKey({
+        apiUrl: this.licenseApiUrl,
+        token: approval.token,
+        deviceId: this.licenseDeviceId,
+        appVersion: this.hello?.server?.version ?? null,
+      });
+      if (!activation.ok || !activation.valid) {
+        this.licenseStatus = this.resolveLicenseFailureStatus(activation.entitlement, activation.code);
+        this.licenseGateActive = true;
+        this.licenseError = activation.message ?? "Key approved, but desktop activation failed.";
+        return;
+      }
+      this.licenseToken = approval.token;
+      saveLicenseToken(approval.token);
+      this.setLicenseActivationToken(activation.activationToken ?? "");
+      this.persistLicenseEntitlement(activation.entitlement, "active");
+      this.licenseNotice = "Activation key approved. Desktop unlocked.";
+    } finally {
+      this.licenseBusy = false;
+    }
+  }
+
   connectedCallback() {
     super.connectedCallback();
     applyBrandTheme();
-    if (this.licenseGateActive) {
-      applyResolvedThemeInternal(this, resolveTheme("knot", "dark"));
-    } else {
-      this.startAppIfLicensed();
-    }
     if (this.onboarding) {
       applyResolvedThemeInternal(this, resolveTheme(this.theme, "dark"));
+      void this.refreshOllamaStatus();
     }
     void this.ensureTauriMenuListeners();
   }
@@ -724,6 +956,7 @@ export class PropAiSyncApp extends LitElement {
   }
 
   disconnectedCallback() {
+    this.clearLicenseRefreshTimer();
     this.tauriUnlistenOnboardingOpen?.();
     this.tauriUnlistenOnboardingOpen = null;
     this.tauriUnlistenGatewayRestart?.();
@@ -734,16 +967,10 @@ export class PropAiSyncApp extends LitElement {
 
   protected updated(changed: Map<PropertyKey, unknown>) {
     handleUpdated(this as unknown as Parameters<typeof handleUpdated>[0], changed);
-    if (changed.has("licenseGateActive")) {
-      if (this.licenseGateActive) {
-        applyResolvedThemeInternal(this, resolveTheme("knot", "dark"));
-      } else if (!this.onboarding) {
-        syncThemeWithSettingsInternal(this);
-      }
-    }
     if (changed.has("onboarding")) {
       if (this.onboarding) {
         applyResolvedThemeInternal(this, resolveTheme(this.theme, "dark"));
+        void this.refreshOllamaStatus();
       } else {
         syncThemeWithSettingsInternal(this);
       }
@@ -752,6 +979,30 @@ export class PropAiSyncApp extends LitElement {
 
   connect() {
     connectGatewayInternal(this as unknown as Parameters<typeof connectGatewayInternal>[0]);
+  }
+
+  private async refreshOllamaStatus() {
+    if (!isTauriRuntime()) {
+      this.ollamaStatus = null;
+      this.ollamaStatusLoading = false;
+      return;
+    }
+    if (this.ollamaStatusLoading) {
+      return;
+    }
+    this.ollamaStatusLoading = true;
+    this.ollamaStatus = null;
+    try {
+      const status = await tauriInvoke<OllamaStatus>("ollama_status");
+      this.ollamaStatus = status;
+      if (!status.installed && this.onboardingWizardPresetId === "ollama") {
+        this.onboardingWizardPresetId = "none";
+      }
+    } catch {
+      this.ollamaStatus = null;
+    } finally {
+      this.ollamaStatusLoading = false;
+    }
   }
 
   private enterOnboardingMode() {
@@ -768,6 +1019,7 @@ export class PropAiSyncApp extends LitElement {
     this.onboardingWizardPresetId = resolveOnboardingPresetId();
     this.onboardingWizardAutoAdvance = resolveOnboardingAutoAdvance();
     this.desktopOnboardingSuppressed = false;
+    void this.refreshOllamaStatus();
   }
 
   async restartDesktopGateway() {
@@ -780,6 +1032,14 @@ export class PropAiSyncApp extends LitElement {
 
   handleOnboardingAutoAdvanceChange(value: boolean) {
     this.onboardingWizardAutoAdvance = value;
+  }
+
+  handleOllamaDownload() {
+    openExternalUrlSafe(OLLAMA_DOWNLOAD_URL);
+  }
+
+  handleOllamaRecheck() {
+    void this.refreshOllamaStatus();
   }
 
   private findWizardOptionValue(step: WizardStep, desired: string): unknown | undefined {
@@ -892,6 +1152,10 @@ export class PropAiSyncApp extends LitElement {
 
   async startOnboardingWizard() {
     if (this.onboardingWizardBusy) {
+      return;
+    }
+    if (this.licenseGateActive) {
+      this.onboardingWizardError = "License required to start onboarding.";
       return;
     }
     this.onboardingWizardError = null;
@@ -1131,6 +1395,10 @@ export class PropAiSyncApp extends LitElement {
     messageOverride?: string,
     opts?: Parameters<typeof handleSendChatInternal>[2],
   ) {
+    if (this.licenseGateActive) {
+      this.lastError = "License required to send messages.";
+      return;
+    }
     await handleSendChatInternal(
       this as unknown as Parameters<typeof handleSendChatInternal>[0],
       messageOverride,
@@ -1260,22 +1528,6 @@ export class PropAiSyncApp extends LitElement {
     return renderApp(this as unknown as AppViewState);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { readConfigFileSnapshot, writeConfigFile, type PropAiSyncConfig } from "../config/config.js";
 import { resolveSecretInputRef } from "../config/types.secrets.js";
 import { shouldRequireGatewayTokenForInstall } from "../gateway/auth-install-policy.js";
@@ -145,6 +145,7 @@ export async function resolveGatewayInstallToken(
     warnings,
   };
 }
+
 
 
 

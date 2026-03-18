@@ -55,14 +55,30 @@ LICENSE_ADMIN_KEY=... pnpm --dir apps/tauri issue-activation-key -- --plan pro -
 Defaults to the local licensing service at `http://localhost:8787`. Override with
 `--api-url` or `LICENSE_API_URL`.
 
+On Windows you can also double-click
+`apps/tauri/scripts/issue-activation-key.bat`; it will prompt for the admin key,
+plan, and max devices, then keep the window open so you can read the result.
+
+Inside the desktop onboarding UI, a user can now generate a real activation key in
+`pending` state. That key will not activate the desktop until an admin approves it.
+The same license gate exposes an admin approval field so an operator can approve the
+current key and immediately unlock the desktop.
+
+To configure the required licensing environment variables on Windows, double-click
+`apps/tauri/scripts/set-licensing-keys.bat`. It saves `ADMIN_KEY`,
+`LICENSE_ADMIN_KEY`, `LICENSE_JWT_SECRET`, and `LICENSE_API_URL` with `setx`.
+
 Builds automatically skip updater artifacts when `TAURI_SIGNING_PRIVATE_KEY` is not set.
 
 ### Windows notes
 
 - Run `pnpm desktop:build` from Windows (PowerShell/CMD), not from WSL.
 - You need the Rust toolchain for Windows (MSVC), plus the usual Tauri prerequisites.
-- This repo defaults to building an **NSIS** installer on Windows (`bundle.targets = ["nsis"]`).
-  - If you switch to MSI (`"targets": "all"` or `"targets": ["msi"]`), follow Tauri's Windows MSI prerequisites (VBSCRIPT feature + WiX toolchain).
+- This repo defaults to building an **MSI** package on Windows (`bundle.targets = ["msi"]`).
+- The MSI uses a custom WiX template so same-version MSI upgrades are allowed and legacy NSIS install paths are ignored.
+- Installing the MSI is still a Windows per-machine install, so expect an admin/UAC prompt.
+- If you have an older NSIS install under `%LOCALAPPDATA%\PropAi Sync`, uninstall that legacy build before switching to MSI.
+- Tauri does not bundle directly to **MSIX** in this setup; MSI is the supported Windows package target here.
 - Shortcut: `powershell -ExecutionPolicy Bypass -File apps/tauri/scripts/windows-build.ps1`
 
 The build pipeline:
@@ -77,7 +93,3 @@ The desktop app can auto-check for updates on launch (release builds only). Conf
 - `PROPAI_TAURI_UPDATE_PUBKEY` (the public key used to validate update signatures)
 
 These map directly to the Tauri updater plugin configuration; the updater requires signed artifacts. See the Tauri updater docs for the update feed format and signing steps.
-
-
-
-

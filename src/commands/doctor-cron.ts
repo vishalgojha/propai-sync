@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { normalizeStoredCronJobs } from "../cron/store-migration.js";
 import { resolveCronStorePath, loadCronStore, saveCronStore } from "../cron/store.js";
@@ -181,6 +181,7 @@ export async function maybeRepairLegacyCronStore(params: {
     note(notifyMigration.warnings.join("\n"), "Doctor warnings");
   }
 }
+
 
 
 

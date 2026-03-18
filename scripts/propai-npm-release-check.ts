@@ -10,7 +10,6 @@ type PackageJson = {
   description?: string;
   license?: string;
   repository?: { url?: string } | string;
-  bin?: Record<string, string>;
 };
 
 export type ParsedReleaseVersion = {
@@ -135,12 +134,6 @@ export function collectReleasePackageMetadataErrors(pkg: PackageJson): string[] 
       }.`,
     );
   }
-  if (pkg.bin?.propai !== "propai.mjs") {
-    errors.push(
-      `package.json bin.propai must be "propai.mjs"; found "${pkg.bin?.propai ?? ""}".`,
-    );
-  }
-
   return errors;
 }
 

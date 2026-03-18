@@ -36,13 +36,7 @@ describe("resolveGatewayProgramArguments", () => {
 
     const result = await resolveGatewayProgramArguments({ port: 18789 });
 
-    expect(result.programArguments).toEqual([
-      process.execPath,
-      entryPath,
-      "gateway",
-      "--port",
-      "18789",
-    ]);
+    expect(result.programArguments).toEqual([process.execPath, entryPath]);
   });
 
   it("prefers symlinked path over realpath for stable service config", async () => {
@@ -79,13 +73,7 @@ describe("resolveGatewayProgramArguments", () => {
 
     const result = await resolveGatewayProgramArguments({ port: 18789 });
 
-    expect(result.programArguments).toEqual([
-      process.execPath,
-      indexPath,
-      "gateway",
-      "--port",
-      "18789",
-    ]);
+    expect(result.programArguments).toEqual([process.execPath, indexPath]);
   });
 });
 

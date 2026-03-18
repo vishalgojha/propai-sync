@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { parseByteSize } from "../cli/parse-bytes.js";
-import { parseDurationMs } from "../cli/parse-duration.js";
+import { parseByteSize } from "../core/parse-bytes.js";
+import { parseDurationMs } from "../core/parse-duration.js";
 import { ElevatedAllowFromSchema } from "./zod-schema.agent-runtime.js";
 import { createAllowDenyChannelRulesSchema } from "./zod-schema.allowdeny.js";
 import {
@@ -212,3 +212,4 @@ export const CommandsSchema = z
   .default(
     () => ({ native: "auto", nativeSkills: "auto", restart: true, ownerDisplay: "raw" }) as const,
   );
+

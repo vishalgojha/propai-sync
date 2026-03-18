@@ -1,5 +1,5 @@
-import { resolveCommandSecretRefsViaGateway } from "../../cli/command-secret-gateway.js";
-import { getModelsCommandSecretTargetIds } from "../../cli/command-secret-targets.js";
+import { resolveCommandSecretRefsViaGateway } from "../../core/command-secret-gateway.js";
+import { getModelsCommandSecretTargetIds } from "../../core/command-secret-targets.js";
 import {
   loadConfig,
   readConfigFileSnapshotForWrite,
@@ -56,5 +56,6 @@ export async function loadModelsConfig(params: {
 }): Promise<PropAiSyncConfig> {
   return (await loadModelsConfigWithSource(params)).resolvedConfig;
 }
+
 
 

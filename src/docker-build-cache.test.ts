@@ -97,7 +97,7 @@ describe("docker build cache layout", () => {
     ).toBeLessThan(installIndex);
     expect(
       dockerfile.indexOf(
-        "COPY tsconfig.json tsconfig.plugin-sdk.dts.json tsdown.config.ts vitest.config.ts vitest.e2e.config.ts propai.mjs ./",
+        "COPY tsconfig.json tsconfig.plugin-sdk.dts.json tsdown.config.ts vitest.config.ts vitest.e2e.config.ts ./",
       ),
     ).toBeGreaterThan(installIndex);
     expect(dockerfile.indexOf("COPY src ./src")).toBeGreaterThan(installIndex);

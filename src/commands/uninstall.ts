@@ -1,6 +1,6 @@
 import path from "node:path";
 import { cancel, confirm, isCancel, multiselect } from "@clack/prompts";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { isNixMode } from "../config/config.js";
 import { resolveGatewayService } from "../daemon/service.js";
 import type { RuntimeEnv } from "../runtime.js";
@@ -197,6 +197,7 @@ export async function uninstallCommand(runtime: RuntimeEnv, opts: UninstallOptio
     }
   }
 }
+
 
 
 

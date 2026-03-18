@@ -8,7 +8,7 @@ import { FailoverError } from "../agents/failover-error.js";
 import { loadModelCatalog } from "../agents/model-catalog.js";
 import * as modelSelectionModule from "../agents/model-selection.js";
 import { runEmbeddedPiAgent } from "../agents/pi-embedded.js";
-import * as commandSecretGatewayModule from "../cli/command-secret-gateway.js";
+import * as commandSecretGatewayModule from "../core/command-secret-gateway.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import * as configModule from "../config/config.js";
 import * as sessionsModule from "../config/sessions.js";
@@ -985,6 +985,7 @@ describe("agentCommand", () => {
     });
   });
 });
+
 
 
 

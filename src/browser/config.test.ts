@@ -17,10 +17,10 @@ describe("browser config", () => {
     expect(profile?.cdpPort).toBe(18800);
     expect(profile?.cdpUrl).toBe("http://127.0.0.1:18800");
 
-    const PropAi Sync = resolveProfile(resolved, "PropAi Sync");
-    expect(PropAi Sync?.driver).toBe("PropAi Sync");
-    expect(PropAi Sync?.cdpPort).toBe(18800);
-    expect(PropAi Sync?.cdpUrl).toBe("http://127.0.0.1:18800");
+    const propaiProfile = resolveProfile(resolved, "PropAi Sync");
+    expect(propaiProfile?.driver).toBe("PropAi Sync");
+    expect(propaiProfile?.cdpPort).toBe(18800);
+    expect(propaiProfile?.cdpUrl).toBe("http://127.0.0.1:18800");
     const chrome = resolveProfile(resolved, "chrome");
     expect(chrome?.driver).toBe("extension");
     expect(chrome?.cdpPort).toBe(18792);
@@ -38,9 +38,9 @@ describe("browser config", () => {
       expect(chrome?.cdpPort).toBe(19004);
       expect(chrome?.cdpUrl).toBe("http://127.0.0.1:19004");
 
-      const PropAi Sync = resolveProfile(resolved, "PropAi Sync");
-      expect(PropAi Sync?.cdpPort).toBe(19012);
-      expect(PropAi Sync?.cdpUrl).toBe("http://127.0.0.1:19012");
+      const propaiProfile = resolveProfile(resolved, "PropAi Sync");
+      expect(propaiProfile?.cdpPort).toBe(19012);
+      expect(propaiProfile?.cdpUrl).toBe("http://127.0.0.1:19012");
     });
   });
 
@@ -53,9 +53,9 @@ describe("browser config", () => {
       expect(chrome?.cdpPort).toBe(19014);
       expect(chrome?.cdpUrl).toBe("http://127.0.0.1:19014");
 
-      const PropAi Sync = resolveProfile(resolved, "PropAi Sync");
-      expect(PropAi Sync?.cdpPort).toBe(19022);
-      expect(PropAi Sync?.cdpUrl).toBe("http://127.0.0.1:19022");
+      const propaiProfile = resolveProfile(resolved, "PropAi Sync");
+      expect(propaiProfile?.cdpPort).toBe(19022);
+      expect(propaiProfile?.cdpUrl).toBe("http://127.0.0.1:19022");
     });
   });
 
@@ -63,10 +63,10 @@ describe("browser config", () => {
     const resolved = resolveBrowserConfig({
       cdpPortRangeStart: 19000,
     });
-    const PropAi Sync = resolveProfile(resolved, "PropAi Sync");
+    const propaiProfile = resolveProfile(resolved, "PropAi Sync");
     expect(resolved.cdpPortRangeStart).toBe(19000);
-    expect(PropAi Sync?.cdpPort).toBe(19000);
-    expect(PropAi Sync?.cdpUrl).toBe("http://127.0.0.1:19000");
+    expect(propaiProfile?.cdpPort).toBe(19000);
+    expect(propaiProfile?.cdpUrl).toBe("http://127.0.0.1:19000");
   });
 
   it("rejects cdpPortRangeStart values that overflow the CDP range window", () => {

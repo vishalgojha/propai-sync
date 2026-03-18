@@ -14,8 +14,8 @@ import { upsertAuthProfile } from "../../agents/auth-profiles.js";
 import type { AuthProfileCredential } from "../../agents/auth-profiles/types.js";
 import { normalizeProviderId } from "../../agents/model-selection.js";
 import { resolveDefaultAgentWorkspaceDir } from "../../agents/workspace.js";
-import { formatCliCommand } from "../../cli/command-format.js";
-import { parseDurationMs } from "../../cli/parse-duration.js";
+import { formatCliCommand } from "../../core/command-format.js";
+import { parseDurationMs } from "../../core/parse-duration.js";
 import { logConfigUpdated } from "../../config/logging.js";
 import { resolvePluginProviders } from "../../plugins/providers.js";
 import type { ProviderAuthResult, ProviderPlugin } from "../../plugins/types.js";
@@ -468,5 +468,6 @@ export async function modelsAuthLoginCommand(opts: LoginOptions, runtime: Runtim
     await prompter.note(result.notes.join("\n"), "Provider notes");
   }
 }
+
 
 

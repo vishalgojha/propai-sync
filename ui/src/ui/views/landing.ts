@@ -15,22 +15,28 @@ export type LandingProps = {
 
 function renderStatus(props: LandingProps) {
   if (props.busy) {
-    return html`<div class="landing-status">Verifying license...</div>`;
+    return html`<div class="landing-status">Checking activation...</div>`;
   }
   if (props.status === "active") {
-    return html`<div class="landing-status ok">License active</div>`;
+    const plan = props.entitlement?.plan ? props.entitlement.plan.toUpperCase() : null;
+    const ends = props.entitlement?.expiresAt
+      ? new Date(props.entitlement.expiresAt).toLocaleDateString()
+      : null;
+    return html`<div class="landing-status ok">
+      ${plan ? `${plan} active` : "License active"}${ends ? ` until ${ends}` : ""}
+    </div>`;
   }
-  if (props.status === "trial") {
-    const ends = props.entitlement?.trialEndsAt
-      ? new Date(props.entitlement.trialEndsAt).toLocaleDateString()
-      : "soon";
-    return html`<div class="landing-status ok">Trial active - ends ${ends}</div>`;
+  if (props.status === "grace") {
+    return html`<div class="landing-status warn">Offline grace mode</div>`;
   }
   if (props.status === "expired") {
-    return html`<div class="landing-status warn">Trial expired</div>`;
+    return html`<div class="landing-status warn">License expired</div>`;
+  }
+  if (props.status === "pending") {
+    return html`<div class="landing-status warn">Activation key pending admin approval</div>`;
   }
   if (props.status === "invalid") {
-    return html`<div class="landing-status warn">Invalid token</div>`;
+    return html`<div class="landing-status warn">Invalid activation key</div>`;
   }
   return nothing;
 }
@@ -64,8 +70,8 @@ export function renderLanding(props: LandingProps) {
           </div>
           <div class="landing__stats">
             <div>
-              <div class="landing__stat-value">7-day</div>
-              <div class="landing__stat-label">free trial</div>
+              <div class="landing__stat-value">Instant</div>
+              <div class="landing__stat-label">setup</div>
             </div>
             <div>
               <div class="landing__stat-value">24/7</div>
@@ -83,12 +89,12 @@ export function renderLanding(props: LandingProps) {
             <div>
               <div class="landing__panel-title">Activate your workspace</div>
               <div class="landing__panel-subtitle">
-                Enter your license token to unlock your 7-day trial.
+                Enter your activation key to unlock your workspace.
               </div>
             </div>
           </div>
           <label class="landing__field">
-            <span>License token</span>
+            <span>Activation key</span>
             <input
               type="text"
               placeholder="propai_sync_****"
@@ -102,7 +108,6 @@ export function renderLanding(props: LandingProps) {
             <button class="btn primary" ?disabled=${props.busy} @click=${props.onSubmit}>
               ${props.busy ? "Checking..." : "Activate"}
             </button>
-            <button class="btn" ?disabled=${props.busy} @click=${props.onSubmit}>Retry</button>
           </div>
           ${renderStatus(props)}
           ${props.error ? html`<div class="landing__error">${props.error}</div>` : nothing}

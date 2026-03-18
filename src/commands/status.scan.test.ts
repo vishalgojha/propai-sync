@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   resolveGatewayProbeAuthResolution: vi.fn(),
 }));
 
-vi.mock("../cli/progress.js", () => ({
+vi.mock("../core/progress.js", () => ({
   withProgress: vi.fn(async (_opts, run) => await run({ setLabel: vi.fn(), tick: vi.fn() })),
 }));
 
@@ -20,7 +20,7 @@ vi.mock("../config/config.js", () => ({
   readBestEffortConfig: mocks.readBestEffortConfig,
 }));
 
-vi.mock("../cli/command-secret-gateway.js", () => ({
+vi.mock("../core/command-secret-gateway.js", () => ({
   resolveCommandSecretRefsViaGateway: mocks.resolveCommandSecretRefsViaGateway,
 }));
 
@@ -136,3 +136,4 @@ describe("scanStatus", () => {
     );
   });
 });
+

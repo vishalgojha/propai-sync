@@ -99,7 +99,7 @@ pub struct NostrProfileImportArgs {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LicenseVerifyArgs {
+pub struct LicenseActivateArgs {
   pub api_url: String,
   pub token: String,
   pub device_id: String,
@@ -107,6 +107,45 @@ pub struct LicenseVerifyArgs {
   pub app_version: Option<String>,
   #[serde(default)]
   pub client: Option<serde_json::Value>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LicenseRequestArgs {
+  pub api_url: String,
+  #[serde(default)]
+  pub email: Option<String>,
+  #[serde(default)]
+  pub plan: Option<String>,
+  #[serde(default)]
+  pub max_devices: Option<u32>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LicenseRefreshArgs {
+  pub api_url: String,
+  pub activation_token: String,
+  pub device_id: String,
+  #[serde(default)]
+  pub app_version: Option<String>,
+  #[serde(default)]
+  pub client: Option<serde_json::Value>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LicenseDeactivateArgs {
+  pub api_url: String,
+  pub activation_token: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LicenseAdminApproveArgs {
+  pub api_url: String,
+  pub admin_key: String,
+  pub token: String,
 }
 
 struct GatewayHttpTarget {
@@ -490,15 +529,8 @@ pub async fn channels_nostr_profile_import(
 }
 
 #[tauri::command]
-pub async fn license_verify(args: LicenseVerifyArgs) -> Result<serde_json::Value, String> {
-  let api_url = args.api_url.trim();
-  if api_url.is_empty() {
-    return Err("apiUrl is required".to_string());
-  }
-  let mut url = api_url.to_string();
-  if !url.ends_with("/verify") {
-    url = format!("{}/verify", url.trim_end_matches('/'));
-  }
+pub async fn license_verify(args: LicenseActivateArgs) -> Result<serde_json::Value, String> {
+  let url = build_license_url(&args.api_url, "/verify")?;
   let mut body = serde_json::Map::new();
   body.insert("token".to_string(), serde_json::Value::String(args.token));
   body.insert("deviceId".to_string(), serde_json::Value::String(args.device_id));
@@ -508,16 +540,117 @@ pub async fn license_verify(args: LicenseVerifyArgs) -> Result<serde_json::Value
   if let Some(client) = args.client {
     body.insert("client".to_string(), client);
   }
+  send_license_request(url, serde_json::Value::Object(body), None).await
+}
+
+#[tauri::command]
+pub async fn license_activate(args: LicenseActivateArgs) -> Result<serde_json::Value, String> {
+  let url = build_license_url(&args.api_url, "/v1/activations/activate")?;
+  let mut body = serde_json::Map::new();
+  body.insert("token".to_string(), serde_json::Value::String(args.token));
+  body.insert("deviceId".to_string(), serde_json::Value::String(args.device_id));
+  if let Some(value) = normalize_optional_string(args.app_version) {
+    body.insert("appVersion".to_string(), serde_json::Value::String(value));
+  }
+  if let Some(client) = args.client {
+    body.insert("client".to_string(), client);
+  }
+  send_license_request(url, serde_json::Value::Object(body), None).await
+}
+
+#[tauri::command]
+pub async fn license_request(args: LicenseRequestArgs) -> Result<serde_json::Value, String> {
+  let url = build_license_url(&args.api_url, "/v1/activations/request")?;
+  let mut body = serde_json::Map::new();
+  if let Some(value) = normalize_optional_string(args.email) {
+    body.insert("email".to_string(), serde_json::Value::String(value));
+  }
+  if let Some(value) = normalize_optional_string(args.plan) {
+    body.insert("plan".to_string(), serde_json::Value::String(value));
+  }
+  if let Some(value) = args.max_devices {
+    body.insert(
+      "maxDevices".to_string(),
+      serde_json::Value::Number(serde_json::Number::from(value)),
+    );
+  }
+  send_license_request(url, serde_json::Value::Object(body), None).await
+}
+
+#[tauri::command]
+pub async fn license_admin_approve(
+  args: LicenseAdminApproveArgs,
+) -> Result<serde_json::Value, String> {
+  let admin_key = normalize_optional_string(Some(args.admin_key))
+    .ok_or_else(|| "adminKey is required".to_string())?;
+  let token =
+    normalize_optional_string(Some(args.token)).ok_or_else(|| "token is required".to_string())?;
+  let url = build_license_url(&args.api_url, "/v1/admin/licenses/approve")?;
+  let mut body = serde_json::Map::new();
+  body.insert("token".to_string(), serde_json::Value::String(token));
+  send_license_request(url, serde_json::Value::Object(body), Some(admin_key.as_str())).await
+}
+
+#[tauri::command]
+pub async fn license_refresh(args: LicenseRefreshArgs) -> Result<serde_json::Value, String> {
+  let url = build_license_url(&args.api_url, "/v1/activations/refresh")?;
+  let mut body = serde_json::Map::new();
+  body.insert(
+    "activationToken".to_string(),
+    serde_json::Value::String(args.activation_token),
+  );
+  body.insert("deviceId".to_string(), serde_json::Value::String(args.device_id));
+  if let Some(value) = normalize_optional_string(args.app_version) {
+    body.insert("appVersion".to_string(), serde_json::Value::String(value));
+  }
+  if let Some(client) = args.client {
+    body.insert("client".to_string(), client);
+  }
+  send_license_request(url, serde_json::Value::Object(body), None).await
+}
+
+#[tauri::command]
+pub async fn license_deactivate(args: LicenseDeactivateArgs) -> Result<serde_json::Value, String> {
+  let url = build_license_url(&args.api_url, "/v1/activations/deactivate")?;
+  let mut body = serde_json::Map::new();
+  body.insert(
+    "activationToken".to_string(),
+    serde_json::Value::String(args.activation_token),
+  );
+  send_license_request(url, serde_json::Value::Object(body), None).await
+}
+
+fn build_license_url(api_url: &str, endpoint: &str) -> Result<String, String> {
+  let trimmed = api_url.trim();
+  if trimmed.is_empty() {
+    return Err("apiUrl is required".to_string());
+  }
+  if trimmed.ends_with(endpoint) {
+    return Ok(trimmed.to_string());
+  }
+  Ok(format!("{}{}", trimmed.trim_end_matches('/'), endpoint))
+}
+
+async fn send_license_request(
+  url: String,
+  body: serde_json::Value,
+  admin_key: Option<&str>,
+) -> Result<serde_json::Value, String> {
   let client = reqwest::Client::new();
-  let raw = send_request_raw(
-    &client,
-    reqwest::Method::POST,
-    url,
-    None,
-    Some(serde_json::Value::Object(body)),
-  )
-  .await?;
-  parse_json_response(raw)
+  let mut builder = client.post(&url).json(&body);
+  if let Some(value) = admin_key {
+    builder = builder.header("x-admin-key", value);
+  }
+  let res = builder
+    .send()
+    .await
+    .map_err(|err| format!("license request failed: {err}"))?;
+  let status = res.status();
+  let text = res
+    .text()
+    .await
+    .map_err(|err| format!("license response read failed: {err}"))?;
+  parse_json_response(RawHttpResponse { status, text })
 }
 
 async fn run_gateway_ipc(

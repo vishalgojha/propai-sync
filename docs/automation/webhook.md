@@ -153,8 +153,8 @@ Mapping options (summary):
 - `hooks.allowedSessionKeyPrefixes` optionally restricts explicit `sessionKey` values from request payloads and mappings.
 - `allowUnsafeExternalContent: true` disables the external content safety wrapper for that hook
   (dangerous; only for trusted internal sources).
-- `propai webhooks gmail setup` writes `hooks.gmail` config for `propai webhooks gmail run`.
-  See [Gmail Pub/Sub](/automation/gmail-pubsub) for the full Gmail watch flow.
+- See [Gmail Pub/Sub](/automation/gmail-pubsub) for the full Gmail watch flow and
+  the recommended `hooks.gmail` configuration.
 
 ## Responses
 

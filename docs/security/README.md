@@ -1,6 +1,6 @@
 # propai Security & Trust
 
-**Live:** [trust.propai.ai](https://trust.propai.ai)
+**Live:** [trust.propai.live](https://trust.propai.live)
 
 ## Documents
 
@@ -9,12 +9,13 @@
 
 ## Reporting Vulnerabilities
 
-See the [Trust page](https://trust.propai.ai) for full reporting instructions covering all repos.
+See the [Trust page](https://trust.propai.live) for full reporting instructions covering all repos.
 
 ## Contact
 
 - **Jamieson O'Reilly** ([@theonejvo](https://twitter.com/theonejvo)) - Security & Trust
 - Discord: #security channel
+
 
 
 

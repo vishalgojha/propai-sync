@@ -1,4 +1,4 @@
-import { parseDurationMs } from "../../../cli/parse-duration.js";
+import { parseDurationMs } from "../../../core/parse-duration.js";
 import { skipDirectiveArgPrefix, takeDirectiveToken } from "../directive-parsing.js";
 import { normalizeQueueDropPolicy, normalizeQueueMode } from "./normalize.js";
 import type { QueueDropPolicy, QueueMode } from "./types.js";
@@ -174,3 +174,4 @@ export function extractQueueDirective(body?: string): {
     hasOptions: parsed.hasOptions,
   };
 }
+

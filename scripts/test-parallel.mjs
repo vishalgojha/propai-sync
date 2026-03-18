@@ -29,15 +29,11 @@ const unitIsolatedFilesRaw = [
   "src/commands/doctor.warns-state-directory-is-missing.test.ts",
   "src/commands/doctor.warns-per-agent-sandbox-docker-browser-prune.test.ts",
   "src/commands/doctor.runs-legacy-state-migrations-yes-mode-without.test.ts",
-  // Setup-heavy CLI update flow suite; move off unit-fast critical path.
-  "src/cli/update-cli.test.ts",
   // Uses temp repos + module cache resets; keep it off vmForks to avoid ref-resolution flakes.
   "src/infra/git-commit.test.ts",
   // Expensive schema build/bootstrap checks; keep coverage but run in isolated lane.
   "src/config/schema.test.ts",
   "src/config/schema.tags.test.ts",
-  // CLI smoke/agent flows are stable but setup-heavy.
-  "src/cli/program.smoke.test.ts",
   "src/commands/agent.test.ts",
   "src/media/store.test.ts",
   "src/media/store.header-ext.test.ts",
@@ -69,7 +65,6 @@ const unitIsolatedFilesRaw = [
   "src/agents/bash-tools.exec.background-abort.test.ts",
   "src/agents/subagent-announce.format.test.ts",
   "src/infra/archive.test.ts",
-  "src/cli/daemon-cli.coverage.test.ts",
   // Model normalization test imports config/model discovery stack; keep off unit-fast critical path.
   "src/agents/models-config.normalizes-gemini-3-ids-preview-google-providers.test.ts",
   // Auth profile rotation suite is retry-heavy and high-variance under vmForks contention.

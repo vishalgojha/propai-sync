@@ -17,7 +17,7 @@ import type { SandboxToolPolicy } from "../agents/sandbox/types.js";
 import { loadWorkspaceSkillEntries } from "../agents/skills.js";
 import { resolveToolProfilePolicy } from "../agents/tool-policy.js";
 import { listAgentWorkspaceDirs } from "../agents/workspace-dirs.js";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { MANIFEST_KEY } from "../compat/legacy-names.js";
 import { resolveNativeSkillsEnabled } from "../config/commands.js";
 import type { PropAiSyncConfig, ConfigFileSnapshot } from "../config/config.js";
@@ -576,7 +576,7 @@ export async function collectPluginsTrustFindings(params: {
         (whatsappConfigured &&
           resolveNativeSkillsEnabled({
             providerId: "whatsapp",
-            providerSetting: params.cfg.channels?.whatsapp?.commands?.nativeSkills,
+            providerSetting: undefined,
             globalSetting: params.cfg.commands?.nativeSkills,
           }));
 
@@ -1287,5 +1287,6 @@ export async function collectInstalledSkillsCodeSafetyFindings(params: {
 
   return findings;
 }
+
 
 

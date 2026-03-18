@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
-import { formatCliCommand } from "../../cli/command-format.js";
+import { formatCliCommand } from "../../core/command-format.js";
 import { markPropAiSyncExecEnv } from "../../infra/propai-exec-env.js";
 import {
   materializeWindowsSpawnProgram,
@@ -564,6 +564,7 @@ export async function ensureSandboxContainer(params: {
   });
   return containerName;
 }
+
 
 
 

@@ -1,5 +1,5 @@
 ---
-summary: "Gmail Pub/Sub push wired into propai webhooks via gogcli"
+summary: "Gmail Pub/Sub push wired into Gateway webhooks via gogcli"
 read_when:
   - Wiring Gmail inbox triggers to propai
   - Setting up Pub/Sub push for agent wake
@@ -8,7 +8,10 @@ title: "Gmail PubSub"
 
 # Gmail Pub/Sub -> propai
 
-Goal: Gmail watch -> Pub/Sub push -> `gog gmail watch serve` -> propai webhook.
+Goal: Gmail watch -> Pub/Sub push -> `gog gmail watch serve` -> Gateway webhook.
+
+Note: The `propai` CLI helper commands are no longer documented. Configure
+`hooks.gmail` manually and let the Gateway watcher manage the `gog` process.
 
 ## Prereqs
 
@@ -90,47 +93,59 @@ Notes:
 To customize payload handling further, add `hooks.mappings` or a JS/TS transform module
 under `~/.propai/hooks/transforms` (see [Webhooks](/automation/webhook)).
 
-## Wizard (recommended)
+## Gateway watcher (recommended)
 
-Use the propai helper to wire everything together (installs deps on macOS via brew):
+Configure `hooks.gmail` and let the Gateway start `gog gmail watch serve` on boot:
 
-```bash
-propai webhooks gmail setup \
-  --account propai@gmail.com
+```json5
+{
+  hooks: {
+    enabled: true,
+    token: "PROPAI_HOOK_TOKEN",
+    path: "/hooks",
+    presets: ["gmail"],
+    gmail: {
+      account: "propai@gmail.com",
+      label: "INBOX",
+      topic: "projects/<project-id>/topics/gog-gmail-watch",
+      pushToken: "GOG_PUSH_TOKEN",
+      // Optional:
+      // hookUrl: "http://127.0.0.1:18789/hooks/gmail",
+      // includeBody: true,
+      // maxBytes: 20000,
+      // renewEveryMinutes: 720,
+      // serve: { bind: "127.0.0.1", port: 8788, path: "/gmail-pubsub" },
+      // tailscale: { mode: "funnel", path: "/gmail-pubsub" }
+    },
+  },
+}
 ```
 
 Defaults:
 
-- Uses Tailscale Funnel for the public push endpoint.
-- Writes `hooks.gmail` config for `propai webhooks gmail run`.
+- Uses Tailscale Funnel when `hooks.gmail.tailscale.mode` is `funnel`.
 - Enables the Gmail hook preset (`hooks.presets: ["gmail"]`).
 
-Path note: when `tailscale.mode` is enabled, propai automatically sets
-`hooks.gmail.serve.path` to `/` and keeps the public path at
+Path note: when `hooks.gmail.tailscale.mode` is enabled, propai automatically
+sets `hooks.gmail.serve.path` to `/` and keeps the public path at
 `hooks.gmail.tailscale.path` (default `/gmail-pubsub`) because Tailscale
 strips the set-path prefix before proxying.
 If you need the backend to receive the prefixed path, set
-`hooks.gmail.tailscale.target` (or `--tailscale-target`) to a full URL like
+`hooks.gmail.tailscale.target` to a full URL like
 `http://127.0.0.1:8788/gmail-pubsub` and match `hooks.gmail.serve.path`.
 
-Want a custom endpoint? Use `--push-endpoint <url>` or `--tailscale off`.
+Want a custom endpoint? Set `hooks.gmail.tailscale.mode` to `off` and configure
+`hooks.gmail.serve` + `hooks.gmail.hookUrl`.
 
-Platform note: on macOS the wizard installs `gcloud`, `gogcli`, and `tailscale`
-via Homebrew; on Linux install them manually first.
+Platform note: install `gcloud`, `gogcli`, and `tailscale` manually first.
 
-Gateway auto-start (recommended):
+Gateway auto-start:
 
 - When `hooks.enabled=true` and `hooks.gmail.account` is set, the Gateway starts
   `gog gmail watch serve` on boot and auto-renews the watch.
 - Set `PROPAI_SKIP_GMAIL_WATCHER=1` to opt out (useful if you run the daemon yourself).
 - Do not run the manual daemon at the same time, or you will hit
   `listen tcp 127.0.0.1:8788: bind: address already in use`.
-
-Manual daemon (starts `gog gmail watch serve` + auto-renew):
-
-```bash
-propai webhooks gmail run
-```
 
 ## One-time setup
 
@@ -196,8 +211,6 @@ Notes:
 - `--token` protects the push endpoint (`x-gog-token` or `?token=`).
 - `--hook-url` points to propai `/hooks/gmail` (mapped; isolated run + summary to main).
 - `--include-body` and `--max-bytes` control the body snippet sent to propai.
-
-Recommended: `propai webhooks gmail run` wraps the same flow and auto-renews the watch.
 
 ## Expose the handler (advanced, unsupported)
 

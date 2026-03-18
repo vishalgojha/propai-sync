@@ -1,6 +1,6 @@
 import fsPromises from "node:fs/promises";
 import nodePath from "node:path";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { readConfigFileSnapshot, resolveGatewayPort, writeConfigFile } from "../config/config.js";
 import { logConfigUpdated } from "../config/logging.js";
@@ -490,7 +490,6 @@ export async function runConfigureWizard(
       if (channelMode === "configure") {
         nextConfig = await setupChannels(nextConfig, runtime, prompter, {
           allowDisable: true,
-          allowSignalInstall: true,
           skipConfirm: true,
           skipStatusNote: true,
         });
@@ -703,6 +702,7 @@ export async function runConfigureWizard(
     throw err;
   }
 }
+
 
 
 

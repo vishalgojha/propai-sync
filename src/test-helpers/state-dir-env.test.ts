@@ -9,13 +9,13 @@ import {
 } from "./state-dir-env.js";
 
 type EnvSnapshot = {
-  PropAi Sync?: string;
+  propai?: string;
   legacy?: string;
 };
 
 function snapshotCurrentStateDirVars(): EnvSnapshot {
   return {
-    "PropAi Sync": process.env.propai_STATE_DIR,
+    propai: process.env.propai_STATE_DIR,
     legacy: process.env.CLAWDBOT_STATE_DIR,
   };
 }

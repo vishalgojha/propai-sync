@@ -56,7 +56,7 @@ propai browser --browser-profile work tabs
 
 ```bash
 propai browser tabs
-propai browser open https://docs.propai.ai
+propai browser open https://docs.propai.live
 propai browser focus <targetId>
 propai browser close <targetId>
 ```
@@ -105,6 +105,7 @@ If the Gateway runs on a different machine than the browser, run a **node host**
 Use `gateway.nodes.browser.mode` to control auto-routing and `gateway.nodes.browser.node` to pin a specific node if multiple are connected.
 
 Security + remote setup: [Browser tool](/tools/browser), [Remote access](/gateway/remote), [Tailscale](/gateway/tailscale), [Security](/gateway/security)
+
 
 
 

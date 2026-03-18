@@ -11,41 +11,19 @@ PropAi Sync is a personal AI assistant you run on your own devices. It answers y
 
 Website · Docs · Getting Started · Updating · FAQ
 
-Preferred setup: run the onboarding wizard (`propai onboard`) in your terminal. The wizard guides you step by step through setting up the gateway, workspace, channels, and skills. The CLI wizard works on **macOS, Linux, and Windows (via WSL2)**. Works with npm, pnpm, or bun.
-CLI command: `propai` (product name: PropAi Sync).
+Preferred setup: run the onboarding wizard inside the PropAi Sync desktop app (Tauri). The wizard guides you step by step through setting up the gateway, workspace, channels, and skills.
 
 ## Install (recommended)
 
-Runtime: **Node ≥22**.
+Use the PropAi Sync desktop app (Tauri).
 
-```bash
-npm install -g propai@latest
-# or: pnpm add -g propai@latest
-
-propai onboard --install-daemon
-```
-
-The wizard installs the Gateway daemon (launchd/systemd user service) so it stays running.
-
-Building from source? Run `pnpm install` then `pnpm build` before using the packaged `propai` CLI.
+Building from source? Run `pnpm install`, then `pnpm --dir apps/tauri dev` for local development.
 
 ## Quick start (TL;DR)
 
-Runtime: **Node ≥22**.
-
-```bash
-propai onboard --install-daemon
-
-propai gateway --port 18789 --verbose
-
-# Send a message
-propai message send --to +1234567890 --message "Hello from PropAi Sync"
-
-# Talk to the assistant
-propai agent --message "Ship checklist" --thinking high
-```
-
-Upgrading? Run `propai update` and `propai doctor`.
+1. Open the PropAi Sync desktop app.
+2. Run onboarding to configure the Gateway, channels, and skills.
+3. Open the Web UI from the app to chat and manage your agent.
 
 ## Security defaults (DM access)
 
@@ -54,10 +32,8 @@ PropAi Sync connects to real messaging surfaces. Treat inbound DMs as **untruste
 Default behavior on WhatsApp/Telegram:
 
 - **DM pairing** (`dmPolicy="pairing"`): unknown senders receive a short pairing code and the bot does not process their message.
-- Approve with: `propai pairing approve <channel> <code>` (then the sender is added to a local allowlist store).
+- Approve pairing requests from the PropAi Sync app (senders are added to the local allowlist store).
 - Public inbound DMs require an explicit opt‑in: set `dmPolicy="open"` and include `"*"` in the channel allowlist (`allowFrom`).
-
-Run `propai doctor` to surface risky/misconfigured DM policies.
 
 ## Highlights
 
@@ -80,9 +56,8 @@ WhatsApp / Telegram
 └──────────────┬────────────────┘
                │
                ├─ Pi agent (RPC)
-               ├─ CLI (propai …)
+               ├─ Desktop app (Tauri)
                ├─ Web UI
-               ├─ macOS app (optional)
                └─ iOS / Android nodes (optional)
 ```
 
@@ -90,7 +65,7 @@ WhatsApp / Telegram
 
 ### WhatsApp
 
-- Link the device: `propai channels login` (stores creds in `~/.propai/credentials`).
+- Link the device in the PropAi Sync desktop app (credentials store in `~/.propai/credentials`).
 - Allowlist who can talk to the assistant via `channels.whatsapp.allowFrom`.
 - If `channels.whatsapp.groups` is set, it becomes a group allowlist; include `"*"` to allow all.
 
@@ -134,4 +109,4 @@ Send these in WhatsApp/Telegram (group commands are owner‑only):
 
 ## Credits
 
-PropAi Sync is built on the propai codebase, refined for WhatsApp + Telegram only.
+PropAi Sync is built on the propai codebase, with a WhatsApp + Telegram focus.

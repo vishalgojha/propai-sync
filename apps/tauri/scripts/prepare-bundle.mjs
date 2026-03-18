@@ -36,7 +36,7 @@ function assertDistEntryExists(dirPath, label) {
   if (fs.existsSync(entryJs) || fs.existsSync(entryMjs)) {
     return;
   }
-  fail(`${label} is missing dist/entry.(m)js (required by propai.mjs): ${dirPath}`);
+  fail(`${label} is missing dist/entry.(m)js (required by the desktop gateway): ${dirPath}`);
 }
 
 function statFingerprint(targetPath) {
@@ -96,6 +96,10 @@ function ensureNonEmptyFile(pathname, label) {
   }
 }
 
+function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
 function run(cmd, args, opts = {}) {
   log(`$ ${cmd} ${args.map((a) => JSON.stringify(a)).join(" ")}`);
   const res = spawnSync(cmd, args, {
@@ -110,6 +114,23 @@ function run(cmd, args, opts = {}) {
   if (res.status !== 0) {
     fail(`Command failed (exit ${res.status ?? "?"}): ${cmd}`);
   }
+}
+
+function copyFileWithRetry(src, dest, { label, attempts = 10, delayMs = 300 } = {}) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      fs.copyFileSync(src, dest);
+      return;
+    } catch (err) {
+      lastError = err;
+      if (attempt < attempts) {
+        sleep(delayMs);
+      }
+    }
+  }
+  const description = label ?? dest;
+  throw new Error(`Unable to copy ${description}: ${lastError?.message ?? "unknown error"}`);
 }
 
 function runPnpm(args, opts = {}) {
@@ -272,6 +293,20 @@ function downloadNode(version) {
     }
   }
 
+  rmRF(NODE_RES_DIR);
+  mkdirp(NODE_RES_DIR);
+
+  if (target.platform === "win") {
+    // Avoid placing a live `node.exe` under `src-tauri/resources/` during the build.
+    // Windows/Defender can hold freshly written executables open long enough for Tauri's
+    // resource scan to fail with "os error 32". Ship the official zip instead and expand
+    // it into the app-local runtime directory on first launch.
+    const outPath = path.resolve(NODE_RES_DIR, "node-runtime.zip");
+    copyFileWithRetry(archivePath, outPath, { label: "bundled node runtime archive" });
+    ensureNonEmptyFile(outPath, "Bundled node runtime archive");
+    return outPath;
+  }
+
   if (target.ext === "zip") {
     if (process.platform === "win32") {
       run(
@@ -304,12 +339,9 @@ function downloadNode(version) {
     throw new Error(`Node binary not found after extract: ${nodeBin}`);
   }
 
-  mkdirp(NODE_RES_DIR);
   const outPath = path.resolve(NODE_RES_DIR, nodeFilenameForTarget(target));
-  fs.copyFileSync(nodeBin, outPath);
-  if (target.platform !== "win") {
-    fs.chmodSync(outPath, 0o755);
-  }
+  copyFileWithRetry(nodeBin, outPath, { label: "bundled node runtime" });
+  fs.chmodSync(outPath, 0o755);
 
   return outPath;
 }
@@ -466,7 +498,7 @@ function writeDesktopManifest() {
     format: 1,
     createdAt: new Date().toISOString(),
     node: {
-      // Keep aligned with `propai.mjs` minimum (>= 22.12).
+      // Keep aligned with the desktop runtime minimum (>= 22.12).
       version: "22.12.0",
     },
   };
@@ -479,7 +511,6 @@ function stagePropAiSync() {
   mkdirp(PROPAI_RES_DIR);
 
   // Runtime entrypoints + assets.
-  copyTree(path.resolve(REPO_ROOT, "propai.mjs"), path.resolve(PROPAI_RES_DIR, "propai.mjs"));
   copyTree(path.resolve(REPO_ROOT, "package.json"), path.resolve(PROPAI_RES_DIR, "package.json"));
   const repoDist = path.resolve(REPO_ROOT, "dist");
   assertExists(repoDist, "Repo dist directory");

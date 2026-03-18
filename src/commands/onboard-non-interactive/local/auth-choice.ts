@@ -1,6 +1,6 @@
 import { upsertAuthProfile } from "../../../agents/auth-profiles.js";
 import { normalizeProviderId } from "../../../agents/model-selection.js";
-import { parseDurationMs } from "../../../cli/parse-duration.js";
+import { parseDurationMs } from "../../../core/parse-duration.js";
 import type { PropAiSyncConfig } from "../../../config/config.js";
 import type { SecretInput } from "../../../config/types.secrets.js";
 import type { RuntimeEnv } from "../../../runtime.js";
@@ -1100,5 +1100,6 @@ export async function applyNonInteractiveAuthChoice(params: {
 
   return nextConfig;
 }
+
 
 

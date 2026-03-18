@@ -62,6 +62,7 @@ export type CronProps = {
   timezoneSuggestions: string[];
   deliveryToSuggestions: string[];
   accountSuggestions: string[];
+  licenseLocked: boolean;
   onFormChange: (patch: Partial<CronFormState>) => void;
   onRefresh: () => void;
   onAdd: () => void;
@@ -1151,18 +1152,26 @@ export function renderCron(props: CronProps) {
                       </label>
                       <label class="field">
                         ${renderFieldLabel(t("cron.form.model"))}
-                        <input
-                          id="cron-payload-model"
-                          .value=${props.form.payloadModel}
-                          list="cron-model-suggestions"
-                          @input=${(e: Event) =>
-                            props.onFormChange({
-                              payloadModel: (e.target as HTMLInputElement).value,
-                            })}
-                          placeholder=${t("cron.form.modelPlaceholder")}
-                        />
-                        <div class="cron-help">${t("cron.form.modelHelp")}</div>
-                      </label>
+                          <input
+                            id="cron-payload-model"
+                            .value=${props.form.payloadModel}
+                            list="cron-model-suggestions"
+                            ?disabled=${props.busy || props.licenseLocked}
+                            @input=${(e: Event) =>
+                              props.onFormChange({
+                                payloadModel: (e.target as HTMLInputElement).value,
+                              })}
+                            placeholder=${t("cron.form.modelPlaceholder")}
+                          />
+                          <div class="cron-help">${t("cron.form.modelHelp")}</div>
+                          ${
+                            props.licenseLocked
+                              ? html`<div class="cron-help">
+                                  License required to change the model.
+                                </div>`
+                              : nothing
+                          }
+                        </label>
                       <label class="field">
                         ${renderFieldLabel(t("cron.form.thinking"))}
                         <input

@@ -1,5 +1,5 @@
 import path from "node:path";
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { note } from "../terminal/note.js";
 
@@ -162,6 +162,7 @@ export async function noteOpenAIOAuthTlsPrerequisites(params: {
   }
   note(formatOpenAIOAuthTlsPreflightFix(result), "OAuth TLS prerequisites");
 }
+
 
 
 

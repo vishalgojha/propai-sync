@@ -1,6 +1,6 @@
 import { AGENT_LANE_NESTED } from "../../agents/lanes.js";
 import { getChannelPlugin, normalizeChannelId } from "../../channels/plugins/index.js";
-import { createOutboundSendDeps, type CliDeps } from "../../cli/outbound-send-deps.js";
+import { createOutboundSendDeps, type CliDeps } from "../../core/outbound-send-deps.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import type { SessionEntry } from "../../config/sessions.js";
 import {
@@ -237,4 +237,5 @@ export async function deliverAgentCommandResult(params: {
 
   return { payloads: normalizedPayloads, meta: result.meta };
 }
+
 

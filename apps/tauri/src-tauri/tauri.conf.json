@@ -24,10 +24,28 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "msi"
+    ],
+    "icon": [
+      "icons/icon.ico"
+    ],
     "useLocalToolsDir": true,
-    "createUpdaterArtifacts": true,
-    "resources": ["resources/**/*"]
+    "createUpdaterArtifacts": false,
+    "windows": {
+      "allowDowngrades": false,
+      "wix": {
+        "version": "26.3.11.0",
+        "upgradeCode": "adb19d7a-2060-5be9-aed1-26170c9799a1",
+        "template": "installer/wix-template.wxs",
+        "fragmentPaths": [
+          "installer/wix-close-app.wxs"
+        ]
+      }
+    },
+    "resources": [
+      "resources/**/*"
+    ]
   },
   "plugins": {
     "updater": {
@@ -35,6 +53,3 @@
     }
   }
 }
-
-
-

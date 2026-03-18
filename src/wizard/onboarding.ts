@@ -1,4 +1,10 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
+import {
+  DEFAULT_WORKSPACE,
+  handleReset,
+  printWizardHeader,
+  summarizeExistingConfig,
+} from "../commands/onboard-helpers.js";
 import type {
   GatewayAuthChoice,
   OnboardMode,
@@ -75,8 +81,7 @@ export async function runOnboardingWizard(
   runtime: RuntimeEnv = defaultRuntime,
   prompter: WizardPrompter,
 ) {
-  const onboardHelpers = await import("../commands/onboard-helpers.js");
-  onboardHelpers.printWizardHeader(runtime);
+  printWizardHeader(runtime);
   await prompter.intro("PropAi Sync onboarding");
   await requireRiskAcknowledgement({ opts, prompter });
 
@@ -84,7 +89,7 @@ export async function runOnboardingWizard(
   let baseConfig: PropAiSyncConfig = snapshot.valid ? (snapshot.exists ? snapshot.config : {}) : {};
 
   if (snapshot.exists && !snapshot.valid) {
-    await prompter.note(onboardHelpers.summarizeExistingConfig(baseConfig), "Invalid config");
+    await prompter.note(summarizeExistingConfig(baseConfig), "Invalid config");
     if (snapshot.issues.length > 0) {
       await prompter.note(
         [
@@ -140,7 +145,7 @@ export async function runOnboardingWizard(
 
   if (snapshot.exists) {
     await prompter.note(
-      onboardHelpers.summarizeExistingConfig(baseConfig),
+      summarizeExistingConfig(baseConfig),
       "Existing config detected",
     );
 
@@ -155,7 +160,7 @@ export async function runOnboardingWizard(
 
     if (action === "reset") {
       const workspaceDefault =
-        baseConfig.agents?.defaults?.workspace ?? onboardHelpers.DEFAULT_WORKSPACE;
+        baseConfig.agents?.defaults?.workspace ?? DEFAULT_WORKSPACE;
       const resetScope = (await prompter.select({
         message: "Reset scope",
         options: [
@@ -170,7 +175,7 @@ export async function runOnboardingWizard(
           },
         ],
       })) as ResetScope;
-      await onboardHelpers.handleReset(resetScope, resolveUserPath(workspaceDefault), runtime);
+      await handleReset(resetScope, resolveUserPath(workspaceDefault), runtime);
       baseConfig = {};
     }
   }
@@ -559,8 +564,5 @@ export async function runOnboardingWizard(
     return;
   }
 }
-
-
-
 
 

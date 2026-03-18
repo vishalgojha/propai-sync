@@ -99,7 +99,7 @@ tailscale status
 ## 5) Install propai
 
 ```bash
-curl -fsSL https://propai.ai/install.sh | bash
+curl -fsSL https://propai.live/install.sh | bash
 source ~/.bashrc
 ```
 
@@ -301,6 +301,7 @@ tar -czvf propai-backup.tar.gz ~/.propai ~/.propai/workspace
 - [Gateway configuration](/gateway/configuration) — all config options
 - [DigitalOcean guide](/platforms/digitalocean) — if you want paid + easier signup
 - [Hetzner guide](/install/hetzner) — Docker-based alternative
+
 
 
 

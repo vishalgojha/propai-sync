@@ -58,10 +58,10 @@ import {
   isSilentReplyText,
   SILENT_REPLY_TOKEN,
 } from "../auto-reply/tokens.js";
-import { formatCliCommand } from "../cli/command-format.js";
-import { resolveCommandSecretRefsViaGateway } from "../cli/command-secret-gateway.js";
-import { getAgentRuntimeCommandSecretTargetIds } from "../cli/command-secret-targets.js";
-import { type CliDeps, createDefaultDeps } from "../cli/deps.js";
+import { formatCliCommand } from "../core/command-format.js";
+import { resolveCommandSecretRefsViaGateway } from "../core/command-secret-gateway.js";
+import { getAgentRuntimeCommandSecretTargetIds } from "../core/command-secret-targets.js";
+import { type CliDeps, createDefaultDeps } from "../core/deps.js";
 import {
   loadConfig,
   readConfigFileSnapshotForWrite,
@@ -1254,5 +1254,6 @@ export async function agentCommandFromIngress(
     deps,
   );
 }
+
 
 

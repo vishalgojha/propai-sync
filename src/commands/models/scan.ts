@@ -1,7 +1,7 @@
 import { cancel, multiselect as clackMultiselect, isCancel } from "@clack/prompts";
 import { resolveApiKeyForProvider } from "../../agents/model-auth.js";
 import { type ModelScanResult, scanOpenRouterModels } from "../../agents/model-scan.js";
-import { withProgressTotals } from "../../cli/progress.js";
+import { withProgressTotals } from "../../core/progress.js";
 import { logConfigUpdated } from "../../config/logging.js";
 import { toAgentModelListLike } from "../../config/model-input.js";
 import type { RuntimeEnv } from "../../runtime.js";
@@ -357,3 +357,4 @@ export async function modelsScanCommand(
     runtime.log(`Image model: ${selectedImages[0]}`);
   }
 }
+

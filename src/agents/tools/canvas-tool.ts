@@ -2,8 +2,8 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Type } from "@sinclair/typebox";
-import { writeBase64ToFile } from "../../cli/nodes-camera.js";
-import { canvasSnapshotTempPath, parseCanvasSnapshotPayload } from "../../cli/nodes-canvas.js";
+import { writeBase64ToFile } from "../../core/nodes-camera.js";
+import { canvasSnapshotTempPath, parseCanvasSnapshotPayload } from "../../core/nodes-canvas.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
 import { logVerbose, shouldLogVerbose } from "../../globals.js";
 import { isInboundPathAllowed } from "../../media/inbound-path-policy.js";
@@ -213,5 +213,6 @@ export function createCanvasTool(options?: { config?: PropAiSyncConfig }): AnyAg
     },
   };
 }
+
 
 

@@ -14,11 +14,11 @@ vi.mock("../../config/config.js", () => ({
   setRuntimeConfigSnapshot: mocks.setRuntimeConfigSnapshot,
 }));
 
-vi.mock("../../cli/command-secret-gateway.js", () => ({
+vi.mock("../../core/command-secret-gateway.js", () => ({
   resolveCommandSecretRefsViaGateway: mocks.resolveCommandSecretRefsViaGateway,
 }));
 
-vi.mock("../../cli/command-secret-targets.js", () => ({
+vi.mock("../../core/command-secret-targets.js", () => ({
   getModelsCommandSecretTargetIds: mocks.getModelsCommandSecretTargetIds,
 }));
 
@@ -101,3 +101,4 @@ describe("models load-config", () => {
     expect(mocks.setRuntimeConfigSnapshot).toHaveBeenCalledWith(resolvedConfig, sourceConfig);
   });
 });
+

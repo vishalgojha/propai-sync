@@ -34,7 +34,7 @@ title: "propai"
     Install propai and bring up the Gateway in minutes.
   </Card>
   <Card title="Run the Wizard" href="/start/wizard" icon="sparkles">
-    Guided setup with `propai onboard` and pairing flows.
+    Guided setup with the desktop onboarding wizard and pairing flows.
   </Card>
   <Card title="Open the Control UI" href="/web/control-ui" icon="layout-dashboard">
     Launch the browser dashboard for chat, config, and sessions.
@@ -62,10 +62,9 @@ propai is a **self-hosted gateway** that connects your favorite chat apps — Wh
 flowchart LR
   A["Chat apps + plugins"] --> B["Gateway"]
   B --> C["Pi agent"]
-  B --> D["CLI"]
-  B --> E["Web Control UI"]
-  B --> F["macOS app"]
-  B --> G["iOS and Android nodes"]
+  B --> D["Web Control UI"]
+  B --> E["Desktop app"]
+  B --> F["iOS and Android nodes"]
 ```
 
 The Gateway is the single source of truth for sessions, routing, and channel connections.
@@ -96,21 +95,14 @@ The Gateway is the single source of truth for sessions, routing, and channel con
 ## Quick start
 
 <Steps>
-  <Step title="Install propai">
-    ```bash
-    npm install -g propai@latest
-    ```
+  <Step title="Install the desktop app">
+    Download and install PropAi Sync for your OS, then launch it.
   </Step>
-  <Step title="Onboard and install the service">
-    ```bash
-    propai onboard --install-daemon
-    ```
+  <Step title="Run the onboarding wizard">
+    Use the in-app Setup wizard to connect a provider and configure the Gateway.
   </Step>
-  <Step title="Pair WhatsApp and start the Gateway">
-    ```bash
-    propai channels login
-    propai gateway --port 18789
-    ```
+  <Step title="Pair your channels">
+    In the Control Console, open the Channels tab and connect WhatsApp/Telegram.
   </Step>
 </Steps>
 

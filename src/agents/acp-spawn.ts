@@ -22,7 +22,7 @@ import {
   resolveThreadBindingMaxAgeMsForChannel,
   resolveThreadBindingSpawnPolicy,
 } from "../channels/thread-bindings-policy.js";
-import { parseDurationMs } from "../cli/parse-duration.js";
+import { parseDurationMs } from "../core/parse-duration.js";
 import { loadConfig } from "../config/config.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { loadSessionStore, resolveStorePath, type SessionEntry } from "../config/sessions.js";
@@ -760,5 +760,6 @@ export async function spawnAcpDirect(
     note: spawnMode === "session" ? ACP_SPAWN_SESSION_ACCEPTED_NOTE : ACP_SPAWN_ACCEPTED_NOTE,
   };
 }
+
 
 

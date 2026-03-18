@@ -18,8 +18,7 @@ title: "Usage Tracking"
 - `/status` in chats: emoji‑rich status card with session tokens + estimated cost (API key only). Provider usage shows for the **current model provider** when available.
 - `/usage off|tokens|full` in chats: per-response usage footer (OAuth shows tokens only).
 - `/usage cost` in chats: local cost summary aggregated from propai session logs.
-- CLI: `propai status --usage` prints a full per-provider breakdown.
-- CLI: `propai channels list` prints the same usage snapshot alongside provider config (use `--no-usage` to skip).
+- Control Console → Usage tab: full per-provider breakdown and recent usage snapshots.
 - macOS menu bar: “Usage” section under Context (only if available).
 
 ## Providers + credentials

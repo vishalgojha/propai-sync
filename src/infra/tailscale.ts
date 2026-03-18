@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
-import { formatCliCommand } from "../cli/command-format.js";
-import { promptYesNo } from "../cli/prompt.js";
+import { formatCliCommand } from "../core/command-format.js";
+import { promptYesNo } from "../core/prompt.js";
 import { danger, info, logVerbose, shouldLogVerbose, warn } from "../globals.js";
 import { runExec } from "../process/exec.js";
 import { defaultRuntime, type RuntimeEnv } from "../runtime.js";
@@ -498,6 +498,7 @@ export async function readTailscaleWhoisIdentity(
     return null;
   }
 }
+
 
 
 

@@ -1,4 +1,4 @@
-import { formatCliCommand } from "../cli/command-format.js";
+import { formatCliCommand } from "../core/command-format.js";
 import { collectConfigServiceEnvVars } from "../config/env-vars.js";
 import type { PropAiSyncConfig } from "../config/types.js";
 import { resolveGatewayLaunchAgentLabel } from "../daemon/constants.js";
@@ -72,6 +72,7 @@ export function gatewayInstallErrorHint(platform = process.platform): string {
     ? "Tip: rerun from an elevated PowerShell (Start → type PowerShell → right-click → Run as administrator) or skip service install."
     : `Tip: rerun \`${formatCliCommand("propai gateway install")}\` after fixing the error.`;
 }
+
 
 
 

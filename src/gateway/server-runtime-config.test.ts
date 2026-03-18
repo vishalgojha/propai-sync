@@ -16,7 +16,7 @@ const TOKEN_AUTH = {
 describe("resolveGatewayRuntimeConfig", () => {
   describe("trusted-proxy auth mode", () => {
     // This test validates BOTH validation layers:
-    // 1. CLI validation in src/cli/gateway-cli/run.ts (line 246)
+    // 1. Gateway entrypoint validation
     // 2. Runtime config validation in src/gateway/server-runtime-config.ts (line 99)
     // Both must allow lan binding when authMode === "trusted-proxy"
     it.each([

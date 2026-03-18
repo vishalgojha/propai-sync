@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { CliDeps } from "../cli/deps.js";
+import type { CliDeps } from "../core/deps.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import type { SessionEntry } from "../config/sessions.js";
 import type { RuntimeEnv } from "../runtime.js";
@@ -285,5 +285,6 @@ describe("deliverAgentCommandResult", () => {
     expect(line).toContain("ANNOUNCE_SKIP");
   });
 });
+
 
 

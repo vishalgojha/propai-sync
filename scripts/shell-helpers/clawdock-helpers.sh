@@ -193,16 +193,11 @@ clawdock-workspace() {
 
 # Container Access
 clawdock-shell() {
-  _clawdock_compose exec propai-gateway \
-    bash -c 'echo "alias PropAi Sync=\"./propai.mjs\"" > /tmp/.bashrc_PropAi Sync && bash --rcfile /tmp/.bashrc_PropAi Sync'
+  _clawdock_compose exec propai-gateway bash
 }
 
 clawdock-exec() {
   _clawdock_compose exec propai-gateway "$@"
-}
-
-clawdock-cli() {
-  _clawdock_compose run --rm propai-cli "$@"
 }
 
 # Maintenance
@@ -225,7 +220,7 @@ clawdock-health() {
     return 1
   fi
   _clawdock_compose exec -e "PROPAI_GATEWAY_TOKEN=$token" propai-gateway \
-    node dist/index.js health
+    curl -fsS "http://127.0.0.1:18789/healthz" >/dev/null
 }
 
 # Show gateway token
@@ -248,13 +243,47 @@ clawdock-fix-token() {
 
   echo "📝 Setting token: ${token:0:20}..."
 
-  _clawdock_compose exec -e "TOKEN=$token" propai-gateway \
-    bash -c './propai.mjs config set gateway.remote.token "$TOKEN" && ./propai.mjs config set gateway.auth.token "$TOKEN"' 2>&1 | _clawdock_filter_warnings
+  _clawdock_compose exec -e "TOKEN=$token" propai-gateway node - <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+
+const token = process.env.TOKEN;
+const home = process.env.HOME || "/home/node";
+const configPath = path.join(home, ".propai", "propai.json");
+let cfg = {};
+try {
+  cfg = JSON.parse(fs.readFileSync(configPath, "utf8"));
+} catch {
+  cfg = {};
+}
+cfg.gateway ??= {};
+cfg.gateway.remote ??= {};
+cfg.gateway.auth ??= {};
+cfg.gateway.remote.token = token;
+cfg.gateway.auth.token = token;
+fs.mkdirSync(path.dirname(configPath), { recursive: true });
+fs.writeFileSync(configPath, `${JSON.stringify(cfg, null, 2)}\n`);
+NODE
 
   echo "🔍 Verifying token was saved..."
   local saved_token
-  saved_token=$(_clawdock_compose exec propai-gateway \
-    bash -c "./propai.mjs config get gateway.remote.token 2>/dev/null" 2>&1 | _clawdock_filter_warnings | tr -d '\r\n' | head -c 64)
+  saved_token=$(_clawdock_compose exec propai-gateway node - <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+
+const home = process.env.HOME || "/home/node";
+const configPath = path.join(home, ".propai", "propai.json");
+try {
+  const cfg = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  const token = cfg?.gateway?.remote?.token;
+  if (typeof token === "string") {
+    process.stdout.write(token.trim());
+  }
+} catch {
+  // Ignore read errors.
+}
+NODE
+ 2>&1 | _clawdock_filter_warnings | tr -d '\r\n' | head -c 64)
 
   if [[ "$saved_token" == "$token" ]]; then
     echo "✅ Token saved correctly!"
@@ -271,85 +300,28 @@ clawdock-fix-token() {
   sleep 5
 
   echo "✅ Configuration complete!"
-  echo -e "   Try: $(_cmd clawdock-devices)"
+  echo -e "   Next: $(_cmd clawdock-dashboard)"
 }
 
 # Open dashboard in browser
 clawdock-dashboard() {
   _clawdock_ensure_dir || return 1
 
-  echo "🦞 Getting dashboard URL..."
-  local output exit_status url
-  output=$(_clawdock_compose run --rm propai-cli dashboard --no-open 2>&1)
-  exit_status=$?
-  url=$(printf "%s\n" "$output" | _clawdock_filter_warnings | grep -o 'http[s]\?://[^[:space:]]*' | head -n 1)
-  if [[ $exit_status -ne 0 ]]; then
-    echo "❌ Failed to get dashboard URL"
-    echo -e "   Try restarting: $(_cmd clawdock-restart)"
+  local token
+  token=$(_clawdock_read_env_token)
+  if [[ -z "$token" ]]; then
+    echo "❌ Error: Could not find gateway token"
+    echo "   Check: ${CLAWDOCK_DIR}/.env"
     return 1
   fi
 
-  if [[ -n "$url" ]]; then
-    echo "✅ Opening: $url"
-    open "$url" 2>/dev/null || xdg-open "$url" 2>/dev/null || echo "   Please open manually: $url"
-    echo ""
-    echo -e "${_CLR_CYAN}💡 If you see 'pairing required' error:${_CLR_RESET}"
-    echo -e "   1. Run: $(_cmd clawdock-devices)"
-    echo "   2. Copy the Request ID from the Pending table"
-    echo -e "   3. Run: $(_cmd 'clawdock-approve <request-id>')"
-  else
-    echo "❌ Failed to get dashboard URL"
-    echo -e "   Try restarting: $(_cmd clawdock-restart)"
-  fi
-}
-
-# List device pairings
-clawdock-devices() {
-  _clawdock_ensure_dir || return 1
-
-  echo "🔍 Checking device pairings..."
-  local output exit_status
-  output=$(_clawdock_compose exec propai-gateway node dist/index.js devices list 2>&1)
-  exit_status=$?
-  printf "%s\n" "$output" | _clawdock_filter_warnings
-  if [ $exit_status -ne 0 ]; then
-    echo ""
-    echo -e "${_CLR_CYAN}💡 If you see token errors above:${_CLR_RESET}"
-    echo -e "   1. Verify token is set: $(_cmd clawdock-token)"
-    echo "   2. Try manual config inside container:"
-    echo -e "      $(_cmd clawdock-shell)"
-    echo -e "      $(_cmd 'PropAi Sync config get gateway.remote.token')"
-    return 1
-  fi
-
+  local port url
+  port="${PROPAI_GATEWAY_PORT:-18789}"
+  url="http://127.0.0.1:${port}"
+  echo "✅ Opening: $url"
+  open "$url" 2>/dev/null || xdg-open "$url" 2>/dev/null || echo "   Please open manually: $url"
   echo ""
-  echo -e "${_CLR_CYAN}💡 To approve a pairing request:${_CLR_RESET}"
-  echo -e "   $(_cmd 'clawdock-approve <request-id>')"
-}
-
-# Approve device pairing request
-clawdock-approve() {
-  _clawdock_ensure_dir || return 1
-
-  if [[ -z "$1" ]]; then
-    echo -e "❌ Usage: $(_cmd 'clawdock-approve <request-id>')"
-    echo ""
-    echo -e "${_CLR_CYAN}💡 How to approve a device:${_CLR_RESET}"
-    echo -e "   1. Run: $(_cmd clawdock-devices)"
-    echo "   2. Find the Request ID in the Pending table (long UUID)"
-    echo -e "   3. Run: $(_cmd 'clawdock-approve <that-request-id>')"
-    echo ""
-    echo "Example:"
-    echo -e "   $(_cmd 'clawdock-approve 6f9db1bd-a1cc-4d3f-b643-2c195262464e')"
-    return 1
-  fi
-
-  echo "✅ Approving device: $1"
-  _clawdock_compose exec propai-gateway \
-    node dist/index.js devices approve "$1" 2>&1 | _clawdock_filter_warnings
-
-  echo ""
-  echo "✅ Device approved! Refresh your browser."
+  echo -e "${_CLR_CYAN}💡 Paste the token in Control UI settings:${_CLR_RESET} ${token:0:12}…"
 }
 
 # Show all available clawdock helper commands
@@ -365,15 +337,12 @@ clawdock-help() {
   echo ""
 
   echo -e "${_CLR_BOLD}${_CLR_MAGENTA}🐚 Container Access${_CLR_RESET}"
-  echo -e "  $(_cmd clawdock-shell)       ${_CLR_DIM}Shell into container (PropAi Sync alias ready)${_CLR_RESET}"
-  echo -e "  $(_cmd clawdock-cli)         ${_CLR_DIM}Run CLI commands (e.g., clawdock-cli status)${_CLR_RESET}"
+  echo -e "  $(_cmd clawdock-shell)       ${_CLR_DIM}Shell into container${_CLR_RESET}"
   echo -e "  $(_cmd clawdock-exec) ${_CLR_CYAN}<cmd>${_CLR_RESET}  ${_CLR_DIM}Execute command in gateway container${_CLR_RESET}"
   echo ""
 
-  echo -e "${_CLR_BOLD}${_CLR_MAGENTA}🌐 Web UI & Devices${_CLR_RESET}"
-  echo -e "  $(_cmd clawdock-dashboard)   ${_CLR_DIM}Open web UI in browser ${_CLR_CYAN}(auto-guides you)${_CLR_RESET}"
-  echo -e "  $(_cmd clawdock-devices)     ${_CLR_DIM}List device pairings ${_CLR_CYAN}(auto-guides you)${_CLR_RESET}"
-  echo -e "  $(_cmd clawdock-approve) ${_CLR_CYAN}<id>${_CLR_RESET} ${_CLR_DIM}Approve device pairing ${_CLR_CYAN}(with examples)${_CLR_RESET}"
+  echo -e "${_CLR_BOLD}${_CLR_MAGENTA}🌐 Web UI${_CLR_RESET}"
+  echo -e "  $(_cmd clawdock-dashboard)   ${_CLR_DIM}Open web UI in browser${_CLR_RESET}"
   echo ""
 
   echo -e "${_CLR_BOLD}${_CLR_MAGENTA}⚙️  Setup & Configuration${_CLR_RESET}"
@@ -398,14 +367,10 @@ clawdock-help() {
   echo -e "${_CLR_CYAN}  1.${_CLR_RESET} $(_cmd clawdock-start)          ${_CLR_DIM}# Start the gateway${_CLR_RESET}"
   echo -e "${_CLR_CYAN}  2.${_CLR_RESET} $(_cmd clawdock-fix-token)      ${_CLR_DIM}# Configure token${_CLR_RESET}"
   echo -e "${_CLR_CYAN}  3.${_CLR_RESET} $(_cmd clawdock-dashboard)      ${_CLR_DIM}# Open web UI${_CLR_RESET}"
-  echo -e "${_CLR_CYAN}  4.${_CLR_RESET} $(_cmd clawdock-devices)        ${_CLR_DIM}# If pairing needed${_CLR_RESET}"
-  echo -e "${_CLR_CYAN}  5.${_CLR_RESET} $(_cmd clawdock-approve) ${_CLR_CYAN}<id>${_CLR_RESET}   ${_CLR_DIM}# Approve pairing${_CLR_RESET}"
   echo ""
 
   echo -e "${_CLR_BOLD}${_CLR_GREEN}💬 WhatsApp Setup${_CLR_RESET}"
-  echo -e "  $(_cmd clawdock-shell)"
-  echo -e "    ${_CLR_BLUE}>${_CLR_RESET} $(_cmd 'PropAi Sync channels login --channel whatsapp')"
-  echo -e "    ${_CLR_BLUE}>${_CLR_RESET} $(_cmd 'PropAi Sync status')"
+  echo -e "  Open the Control UI and link WhatsApp from Channels."
   echo ""
 
   echo -e "${_CLR_BOLD}${_CLR_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${_CLR_RESET}"

@@ -77,10 +77,23 @@ struct DesktopGatewayProcess {
   log_path: Option<PathBuf>,
 }
 
+fn resolve_gateway_entry(root: &Path) -> Option<PathBuf> {
+  let entry_js = root.join("dist").join("entry.js");
+  if entry_js.is_file() {
+    return Some(entry_js);
+  }
+  let entry_mjs = root.join("dist").join("entry.mjs");
+  if entry_mjs.is_file() {
+    return Some(entry_mjs);
+  }
+  None
+}
+
 fn resolve_repo_root() -> Result<PathBuf, DesktopGatewayError> {
   if let Ok(raw) = std::env::var("PROPAI_DESKTOP_REPO_ROOT") {
     let candidate = PathBuf::from(raw);
-    if candidate.join("propai.mjs").is_file() {
+    if resolve_gateway_entry(&candidate).is_some() || candidate.join("src").join("entry.ts").is_file()
+    {
       return Ok(candidate);
     }
   }
@@ -91,7 +104,8 @@ fn resolve_repo_root() -> Result<PathBuf, DesktopGatewayError> {
     .map(|p| p.to_path_buf())
     .ok_or(DesktopGatewayError::RepoRootNotFound)?;
 
-  if candidate.join("propai.mjs").is_file() {
+  if resolve_gateway_entry(&candidate).is_some() || candidate.join("src").join("entry.ts").is_file()
+  {
     return Ok(candidate);
   }
 
@@ -229,15 +243,12 @@ fn ensure_parent_dir(path: &Path) {
 }
 
 fn resolve_bundled_resource_base(resource_root: &Path) -> Option<PathBuf> {
-  let direct_propai_sync = resource_root.join("propai").join("propai.mjs");
-  if direct_propai_sync.is_file() {
+  let direct_propai_sync = resource_root.join("propai");
+  if resolve_gateway_entry(&direct_propai_sync).is_some() {
     return Some(resource_root.to_path_buf());
   }
-  let nested_propai_sync = resource_root
-    .join("resources")
-    .join("propai")
-    .join("propai.mjs");
-  if nested_propai_sync.is_file() {
+  let nested_propai_sync = resource_root.join("resources").join("propai");
+  if resolve_gateway_entry(&nested_propai_sync).is_some() {
     return Some(resource_root.join("resources"));
   }
   None
@@ -417,10 +428,49 @@ fn unzip_node_modules(zip_path: &Path, runtime_root: &Path) -> Result<(), Deskto
   Ok(())
 }
 
+#[cfg(windows)]
+fn unzip_node_runtime(zip_path: &Path, node_dir: &Path) -> Result<PathBuf, DesktopGatewayError> {
+  let file = fs::File::open(zip_path).map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
+  let mut archive =
+    ZipArchive::new(file).map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
+  fs::create_dir_all(node_dir).map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
+
+  for i in 0..archive.len() {
+    let mut file = archive
+      .by_index(i)
+      .map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
+    if file.is_dir() {
+      continue;
+    }
+
+    let name = file.name().replace('\\', "/");
+    let Some(filename) = Path::new(&name).file_name() else {
+      continue;
+    };
+    if !filename.to_string_lossy().eq_ignore_ascii_case("node.exe") {
+      continue;
+    }
+
+    let out_path = node_dir.join("node.exe");
+    if let Some(parent) = out_path.parent() {
+      fs::create_dir_all(parent).map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
+    }
+    let mut out_file =
+      fs::File::create(&out_path).map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
+    std::io::copy(&mut file, &mut out_file)
+      .map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
+    return Ok(out_path);
+  }
+
+  Err(DesktopGatewayError::SpawnFailed(
+    "desktop runtime archive missing node.exe".into(),
+  ))
+}
+
 fn ensure_desktop_runtime(resource_base: &Path, app_data_dir: &Path) -> Result<PathBuf, DesktopGatewayError> {
   // resource_base contains:
-  // - propai/ (dist, propai.mjs, assets, skills, node_modules.zip, etc)
-  // - node/ (node.exe)
+  // - propai/ (dist/entry.js, assets, skills, node_modules.zip, etc)
+  // - node/ (node-runtime.zip on Windows, node binary on other platforms)
   // - propai/.prepared (timestamp marker)
   let stamp = read_text(&resource_base.join("propai").join(".prepared"))
     .or_else(|| read_text(&resource_base.join("desktop.prepared.txt")))
@@ -428,6 +478,8 @@ fn ensure_desktop_runtime(resource_base: &Path, app_data_dir: &Path) -> Result<P
   let runtime_root = app_data_dir.join("runtime").join("propai");
   let runtime_stamp_path = runtime_root.join(".prepared");
   let chalk_path = runtime_root.join("node_modules").join("chalk").join("package.json");
+  #[cfg(windows)]
+  let runtime_node_bin = runtime_root.join("node").join("node.exe");
   let templates_path = runtime_root
     .join("docs")
     .join("reference")
@@ -436,7 +488,20 @@ fn ensure_desktop_runtime(resource_base: &Path, app_data_dir: &Path) -> Result<P
 
   if runtime_stamp_path.is_file() {
     if let Some(existing) = read_text(&runtime_stamp_path) {
-      if existing == stamp && chalk_path.is_file() && templates_path.is_file() {
+      if existing == stamp
+        && chalk_path.is_file()
+        && templates_path.is_file()
+        && {
+          #[cfg(windows)]
+          {
+            runtime_node_bin.is_file()
+          }
+          #[cfg(not(windows))]
+          {
+            true
+          }
+        }
+      {
         return Ok(runtime_root);
       }
     }
@@ -446,7 +511,7 @@ fn ensure_desktop_runtime(resource_base: &Path, app_data_dir: &Path) -> Result<P
   fs::create_dir_all(&runtime_root).map_err(|e| DesktopGatewayError::SpawnFailed(e.to_string()))?;
 
   let resource_propai_sync = resource_base.join("propai");
-  if !resource_propai_sync.join("propai.mjs").is_file() {
+  if resolve_gateway_entry(&resource_propai_sync).is_none() {
     return Err(DesktopGatewayError::MissingResources);
   }
   copy_dir_recursive(&resource_propai_sync, &runtime_root)
@@ -464,6 +529,22 @@ fn ensure_desktop_runtime(resource_base: &Path, app_data_dir: &Path) -> Result<P
     return Err(DesktopGatewayError::SpawnFailed(
       "desktop runtime extract missing chalk".into(),
     ));
+  }
+
+  #[cfg(windows)]
+  {
+    let runtime_node_dir = runtime_root.join("node");
+    let _ = fs::remove_dir_all(&runtime_node_dir);
+    let node_runtime_zip = resource_base.join("node").join("node-runtime.zip");
+    if !node_runtime_zip.is_file() {
+      return Err(DesktopGatewayError::MissingResources);
+    }
+    let extracted = unzip_node_runtime(&node_runtime_zip, &runtime_node_dir)?;
+    if !extracted.is_file() {
+      return Err(DesktopGatewayError::SpawnFailed(
+        "desktop runtime extract missing node.exe".into(),
+      ));
+    }
   }
 
   fs::write(runtime_stamp_path, format!("{stamp}\n"))
@@ -518,50 +599,35 @@ pub fn start_gateway(
     let repo_root = resolve_repo_root()?;
     let mut cmd = Command::new("node");
     cmd.current_dir(&repo_root);
-    cmd.arg("scripts/run-node.mjs")
-      .arg("gateway")
-      .arg("--bind")
-      .arg("loopback")
-      .arg("--auth")
-      .arg("token")
-      .arg("--token")
-      .arg(&token)
-      .arg("--port")
-      .arg(port.to_string())
-      .arg("--allow-unconfigured")
-      .arg("--dev");
     cmd.env("PROPAI_PROFILE", "dev");
+    cmd.arg("scripts/run-node.mjs");
     cmd
   } else {
     let resource_root = resource_root.ok_or(DesktopGatewayError::MissingResources)?;
     let base = resolve_bundled_resource_base(&resource_root).ok_or(DesktopGatewayError::MissingResources)?;
+    let app_data_dir_path = app_data_dir.as_ref().ok_or(DesktopGatewayError::MissingResources)?;
+    let propai_root = ensure_desktop_runtime(&base, app_data_dir_path)?;
     let node_bin = if cfg!(windows) {
-      base.join("node").join("node.exe")
+      propai_root.join("node").join("node.exe")
     } else {
       base.join("node").join("node")
     };
-    let app_data_dir_path = app_data_dir.as_ref().ok_or(DesktopGatewayError::MissingResources)?;
-    let propai_root = ensure_desktop_runtime(&base, app_data_dir_path)?;
-    let propai_entry = propai_root.join("propai.mjs");
-    if !node_bin.is_file() || !propai_entry.is_file() {
+    let entry = resolve_gateway_entry(&propai_root).ok_or(DesktopGatewayError::MissingResources)?;
+    if !node_bin.is_file() {
       return Err(DesktopGatewayError::MissingResources);
     }
 
     let mut cmd = Command::new(node_bin);
     cmd.current_dir(&propai_root);
-    cmd.arg(propai_entry)
-      .arg("gateway")
-      .arg("--bind")
-      .arg("loopback")
-      .arg("--auth")
-      .arg("token")
-      .arg("--token")
-      .arg(&token)
-      .arg("--port")
-      .arg(port.to_string())
-      .arg("--allow-unconfigured");
+    cmd.arg(entry);
     cmd
   };
+
+  cmd.env("PROPAI_GATEWAY_PORT", port.to_string());
+  cmd.env("PROPAI_GATEWAY_BIND", "loopback");
+  cmd.env("PROPAI_GATEWAY_AUTH_MODE", "token");
+  cmd.env("PROPAI_GATEWAY_TOKEN", &token);
+  cmd.env("PROPAI_GATEWAY_ALLOW_UNCONFIGURED", "1");
 
   apply_windows_no_window(&mut cmd);
 

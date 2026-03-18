@@ -11,6 +11,9 @@ title: "Install"
 
 Already followed [Getting Started](/start/getting-started)? You're all set — this page is for alternative install methods, platform-specific instructions, and maintenance.
 
+Note: This guide no longer documents `propai` CLI commands. Use the Control
+Console for onboarding, configuration, and verification.
+
 ## System requirements
 
 - **[Node 22+](/install/node)** (the [installer script](#install-methods) will install it if missing)
@@ -33,17 +36,17 @@ For VPS/cloud hosts, avoid third-party "1-click" marketplace images when possibl
 
 <AccordionGroup>
   <Accordion title="Installer script" icon="rocket" defaultOpen>
-    Downloads the CLI, installs it globally via npm, and launches the onboarding wizard.
+    Downloads the Gateway package, installs it globally via npm, and launches the onboarding wizard.
 
     <Tabs>
       <Tab title="macOS / Linux / WSL2">
         ```bash
-        curl -fsSL https://propai.ai/install.sh | bash
+        curl -fsSL https://propai.live/install.sh | bash
         ```
       </Tab>
       <Tab title="Windows (PowerShell)">
         ```powershell
-        iwr -useb https://propai.ai/install.ps1 | iex
+        iwr -useb https://propai.live/install.ps1 | iex
         ```
       </Tab>
     </Tabs>
@@ -55,12 +58,12 @@ For VPS/cloud hosts, avoid third-party "1-click" marketplace images when possibl
     <Tabs>
       <Tab title="macOS / Linux / WSL2">
         ```bash
-        curl -fsSL https://propai.ai/install.sh | bash -s -- --no-onboard
+        curl -fsSL https://propai.live/install.sh | bash -s -- --no-onboard
         ```
       </Tab>
       <Tab title="Windows (PowerShell)">
         ```powershell
-        & ([scriptblock]::Create((iwr -useb https://propai.ai/install.ps1))) -NoOnboard
+        & ([scriptblock]::Create((iwr -useb https://propai.live/install.ps1))) -NoOnboard
         ```
       </Tab>
     </Tabs>
@@ -76,7 +79,6 @@ For VPS/cloud hosts, avoid third-party "1-click" marketplace images when possibl
       <Tab title="npm">
         ```bash
         npm install -g propai@latest
-        propai onboard --install-daemon
         ```
 
         <Accordion title="sharp build errors?">
@@ -93,7 +95,6 @@ For VPS/cloud hosts, avoid third-party "1-click" marketplace images when possibl
         ```bash
         pnpm add -g propai@latest
         pnpm approve-builds -g        # approve propai, node-llama-cpp, sharp, etc.
-        propai onboard --install-daemon
         ```
 
         <Note>
@@ -101,6 +102,9 @@ For VPS/cloud hosts, avoid third-party "1-click" marketplace images when possibl
         </Note>
       </Tab>
     </Tabs>
+
+    Start the Gateway using your service manager or the macOS app, then complete
+    onboarding in the Control Console at `/setup`.
 
   </Accordion>
 
@@ -120,18 +124,11 @@ For VPS/cloud hosts, avoid third-party "1-click" marketplace images when possibl
         ```
       </Step>
       <Step title="Link the CLI">
-        Make the `propai` command available globally:
-
-        ```bash
-        pnpm link --global
-        ```
-
-        Alternatively, skip the link and run commands via `pnpm propai ...` from inside the repo.
+        Optional: expose the built entrypoint in your PATH for local dev tools.
       </Step>
       <Step title="Run onboarding">
-        ```bash
-        propai onboard --install-daemon
-        ```
+        Start the Gateway process using your preferred Node runner, then complete
+        onboarding in the Control Console at `/setup`.
       </Step>
     </Steps>
 
@@ -164,11 +161,9 @@ For VPS/cloud hosts, avoid third-party "1-click" marketplace images when possibl
 
 Verify everything is working:
 
-```bash
-propai doctor         # check for config issues
-propai status         # gateway status
-propai dashboard      # open the browser UI
-```
+- Open the Control Console at `/setup` to finish onboarding if needed.
+- Check Control Console → **Overview** for Gateway + RPC health.
+- Check Control Console → **Logs** for startup errors.
 
 If you need custom runtime paths, use:
 
@@ -216,6 +211,7 @@ Then open a new terminal (or `rehash` in zsh / `hash -r` in bash).
     Remove propai completely.
   </Card>
 </CardGroup>
+
 
 
 

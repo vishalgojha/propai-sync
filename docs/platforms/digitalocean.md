@@ -71,7 +71,7 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt install -y nodejs
 
 # Install propai
-curl -fsSL https://propai.ai/install.sh | bash
+curl -fsSL https://propai.live/install.sh | bash
 
 # Verify
 propai --version
@@ -264,6 +264,7 @@ free -h
 - [Docker install](/install/docker) — containerized setup
 - [Tailscale](/gateway/tailscale) — secure remote access
 - [Configuration](/gateway/configuration) — full config reference
+
 
 
 

@@ -44,33 +44,23 @@ Status: production-ready via WhatsApp Web (Baileys). Gateway owns linked session
 
   <Step title="Link WhatsApp (QR)">
 
-```bash
-propai channels login --channel whatsapp
-```
-
-    For a specific account:
-
-```bash
-propai channels login --channel whatsapp --account work
-```
+    Use Control Console → **Channels** → **WhatsApp** to show the QR code and
+    scan it from the phone you want linked. For multi-account setups, pick the
+    target account in the WhatsApp channel config first.
 
   </Step>
 
   <Step title="Start the gateway">
 
-```bash
-propai gateway
-```
+    Start the Gateway process (service, app, or container). Confirm it is
+    running in Control Console → **Overview**.
 
   </Step>
 
-  <Step title="Approve first pairing request (if using pairing mode)">
+  <Step title="Allow first sender (if using pairing mode)">
 
-```bash
-propai pairing list whatsapp
-propai pairing approve whatsapp <CODE>
-```
-
+    In Control Console → **Config**, add the sender to
+    `channels.whatsapp.allowFrom` (or switch `dmPolicy` to `allowlist`/`open`).
     Pairing requests expire after 1 hour. Pending requests are capped at 3 per channel.
 
   </Step>
@@ -375,7 +365,8 @@ Behavior notes:
   </Accordion>
 
   <Accordion title="Logout behavior">
-    `propai channels logout --channel whatsapp [--account <id>]` clears WhatsApp auth state for that account.
+    Use Control Console → **Channels** → **WhatsApp** → **Logout** to clear auth
+    state for that account.
 
     In legacy auth directories, `oauth.json` is preserved while Baileys auth files are removed.
 
@@ -397,11 +388,8 @@ Behavior notes:
     Symptom: channel status reports not linked.
 
     Fix:
-
-    ```bash
-    propai channels login --channel whatsapp
-    propai channels status
-    ```
+    Use Control Console → **Channels** → **WhatsApp** to show the QR and link the device,
+    then refresh the channel card.
 
   </Accordion>
 
@@ -409,13 +397,7 @@ Behavior notes:
     Symptom: linked account with repeated disconnects or reconnect attempts.
 
     Fix:
-
-    ```bash
-    propai doctor
-    propai logs --follow
-    ```
-
-    If needed, re-link with `channels login`.
+    Review Control Console → **Logs** for errors and re-link via the WhatsApp channel card.
 
   </Accordion>
 

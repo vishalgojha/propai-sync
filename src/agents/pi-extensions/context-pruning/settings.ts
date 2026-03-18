@@ -1,4 +1,4 @@
-import { parseDurationMs } from "../../../cli/parse-duration.js";
+import { parseDurationMs } from "../../../core/parse-duration.js";
 
 export type ContextPruningToolMatch = {
   allow?: string[];
@@ -121,3 +121,4 @@ export function computeEffectiveSettings(raw: unknown): EffectiveContextPruningS
 
   return s;
 }
+

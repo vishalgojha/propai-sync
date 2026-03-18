@@ -1,6 +1,6 @@
 import path from "node:path";
 import { resolveAgentWorkspaceDir } from "../agents/agent-scope.js";
-import { parseDurationMs } from "../cli/parse-duration.js";
+import { parseDurationMs } from "../core/parse-duration.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import type { SessionSendPolicyConfig } from "../config/types.base.js";
 import type {
@@ -352,5 +352,6 @@ export function resolveMemoryBackendConfig(params: {
     qmd: resolved,
   };
 }
+
 
 

@@ -82,7 +82,8 @@ Or tail while reproducing:
 tail -f /tmp/propai/propai-$(date +%F).log | rg "telegram http error"
 ```
 
-For remote gateways, you can also use `propai logs --follow` (see [/cli/logs](/cli/logs)).
+For remote gateways, use Control Console → **Logs** or access the log file on the
+gateway host.
 
 ## Notes
 

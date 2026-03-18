@@ -173,8 +173,8 @@ and points at the pinned multi-arch manifest list for that tag):
 - `org.opencontainers.image.base.name=docker.io/library/node:22-bookworm`
 - `org.opencontainers.image.base.digest=sha256:b501c082306a4f528bc4038cbf2fbb58095d583d0419a259b2114b5ac53d12e9`
 - `org.opencontainers.image.source=https://github.com/propai/propai`
-- `org.opencontainers.image.url=https://propai.ai`
-- `org.opencontainers.image.documentation=https://docs.propai.ai/install/docker`
+- `org.opencontainers.image.url=https://propai.live`
+- `org.opencontainers.image.documentation=https://docs.propai.live/install/docker`
 - `org.opencontainers.image.licenses=MIT`
 - `org.opencontainers.image.title=propai`
 - `org.opencontainers.image.description=propai gateway and CLI runtime container image`
@@ -841,6 +841,7 @@ Example:
   sources `/etc/profile` and may reset PATH. Set `docker.env.PATH` to prepend your
   custom tool paths (e.g., `/custom/bin:/usr/local/share/npm-global/bin`), or add
   a script under `/etc/profile.d/` in your Dockerfile.
+
 
 
 

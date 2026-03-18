@@ -108,7 +108,7 @@ function exists(p) {
   }
 }
 
-function normalizeUpdaterArtifacts() {
+function readTauriConfig() {
   let raw = "";
   try {
     raw = fs.readFileSync(TAURI_CONFIG_PATH, "utf8");
@@ -116,12 +116,26 @@ function normalizeUpdaterArtifacts() {
     fail(`Unable to read ${TAURI_CONFIG_PATH}`);
   }
 
-  let config = null;
   try {
-    config = JSON.parse(raw);
+    return JSON.parse(raw);
   } catch {
     fail(`Unable to parse ${TAURI_CONFIG_PATH}`);
   }
+}
+
+function bundleTargetsInclude(config, target) {
+  const rawTargets = config?.bundle?.targets;
+  if (typeof rawTargets === "string") {
+    return rawTargets === "all" || rawTargets === target;
+  }
+  if (Array.isArray(rawTargets)) {
+    return rawTargets.includes("all") || rawTargets.includes(target);
+  }
+  return false;
+}
+
+function normalizeUpdaterArtifacts() {
+  const config = readTauriConfig();
 
   const hasSigningKey = Boolean(process.env.TAURI_SIGNING_PRIVATE_KEY?.trim());
   const desired = hasSigningKey;
@@ -258,7 +272,9 @@ function ensureWindowsNsisTools() {
 
 function main() {
   normalizeUpdaterArtifacts();
-  ensureWindowsNsisTools();
+  if (bundleTargetsInclude(readTauriConfig(), "nsis")) {
+    ensureWindowsNsisTools();
+  }
   run(process.execPath, [path.resolve(TAURI_DIR, "scripts/prepare-bundle.mjs")], { cwd: TAURI_DIR });
 }
 

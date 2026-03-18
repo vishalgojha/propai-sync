@@ -1,5 +1,6 @@
 import { shouldMoveSingleAccountChannelKey } from "../channels/plugins/setup-helpers.js";
 import type { PropAiSyncConfig } from "../config/config.js";
+import type { TelegramConfig } from "../config/types.telegram.js";
 import { resolveTelegramPreviewStreamMode } from "../config/streaming-modes.js";
 import { DEFAULT_ACCOUNT_ID } from "../routing/session-key.js";
 
@@ -116,7 +117,7 @@ export function normalizeCompatibilityConfigValues(cfg: PropAiSyncConfig): {
         ...next,
         channels: {
           ...next.channels,
-          [provider]: updated as unknown,
+          [provider]: updated as TelegramConfig,
         },
       };
     }

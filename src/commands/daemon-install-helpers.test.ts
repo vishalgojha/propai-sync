@@ -34,11 +34,11 @@ afterEach(() => {
 
 describe("resolveGatewayDevMode", () => {
   it("detects dev mode for src ts entrypoints", () => {
-    expect(resolveGatewayDevMode(["node", "/Users/me/propai/src/cli/index.ts"])).toBe(true);
-    expect(resolveGatewayDevMode(["node", "C:\\Users\\me\\\PropAiSync\\src\\cli\\index.ts"])).toBe(
+    expect(resolveGatewayDevMode(["node", "/Users/me/propai/src/entry.ts"])).toBe(true);
+    expect(resolveGatewayDevMode(["node", "C:\\Users\\me\\\PropAiSync\\src\\entry.ts"])).toBe(
       true,
     );
-    expect(resolveGatewayDevMode(["node", "/Users/me/propai/dist/cli/index.js"])).toBe(false);
+    expect(resolveGatewayDevMode(["node", "/Users/me/propai/dist/entry.js"])).toBe(false);
   });
 });
 
@@ -60,7 +60,7 @@ function mockNodeGatewayPlanFixture(
   } = params;
   mocks.resolvePreferredNodePath.mockResolvedValue("/opt/node");
   mocks.resolveGatewayProgramArguments.mockResolvedValue({
-    programArguments: ["node", "gateway"],
+    programArguments: ["node", "dist/entry.js"],
     workingDirectory,
   });
   mocks.resolveSystemNodeInfo.mockResolvedValue({
@@ -83,7 +83,7 @@ describe("buildGatewayInstallPlan", () => {
       nodePath: "/custom/node",
     });
 
-    expect(plan.programArguments).toEqual(["node", "gateway"]);
+    expect(plan.programArguments).toEqual(["node", "dist/entry.js"]);
     expect(plan.workingDirectory).toBe("/Users/me");
     expect(plan.environment).toEqual({ PROPAI_PORT: "3000" });
     expect(mocks.resolvePreferredNodePath).not.toHaveBeenCalled();

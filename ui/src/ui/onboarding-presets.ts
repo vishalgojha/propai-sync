@@ -29,8 +29,8 @@ export const DEFAULT_ONBOARDING_PRESET_ID = "openai-codex";
 
 const MANUAL_PRESET: OnboardingWizardPreset = {
   id: "none",
-  label: "Pick options manually",
-  hint: "No preset",
+  label: "Advanced setup",
+  hint: "Choose provider and setup details yourself",
 };
 
 const ONBOARDING_PRESET_GROUPS: PresetGroup[] = [
@@ -202,8 +202,8 @@ const ONBOARDING_PRESET_GROUPS: PresetGroup[] = [
   },
   {
     id: "ollama",
-    label: "Ollama",
-    hint: "Cloud and local open models",
+    label: "Local models (Ollama)",
+    hint: "Run AI models locally on this machine (no API key required)",
     choices: [{ id: "ollama", label: "Ollama", authChoice: "ollama" }],
   },
   {
@@ -356,6 +356,10 @@ export const ONBOARDING_WIZARD_PRESETS: OnboardingWizardPreset[] = [
 export const ONBOARDING_WIZARD_PRESET_GROUPS = ONBOARDING_PRESET_GROUPS_SORTED;
 
 const PRESET_ALIAS_MAP = new Map<string, string>([
+  ["advanced", "none"],
+  ["cloud", "openai-codex"],
+  ["fast", "openai-codex"],
+  ["local", "ollama"],
   ["manual", "none"],
   ["none", "none"],
   ["anthropic", "apiKey"],

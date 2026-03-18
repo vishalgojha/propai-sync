@@ -11,7 +11,7 @@ import {
   spinner,
   text,
 } from "@clack/prompts";
-import { createCliProgress } from "../cli/progress.js";
+import { createCliProgress } from "../core/progress.js";
 import { stripAnsi } from "../terminal/ansi.js";
 import { note as emitNote } from "../terminal/note.js";
 import { stylePromptHint, stylePromptMessage, stylePromptTitle } from "../terminal/prompt-style.js";
@@ -138,3 +138,4 @@ export function createClackPrompter(): WizardPrompter {
     },
   };
 }
+

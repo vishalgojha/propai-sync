@@ -6,7 +6,7 @@
  */
 
 import type { WorkspaceBootstrapFile } from "../agents/workspace.js";
-import type { CliDeps } from "../cli/deps.js";
+import type { CliDeps } from "../core/deps.js";
 import type { PropAiSyncConfig } from "../config/config.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 
@@ -419,6 +419,7 @@ export function isMessagePreprocessedEvent(
   }
   return hasStringContextField(context, "channelId");
 }
+
 
 
 

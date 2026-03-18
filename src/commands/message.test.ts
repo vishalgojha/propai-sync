@@ -4,7 +4,7 @@ import type {
   ChannelOutboundAdapter,
   ChannelPlugin,
 } from "../channels/plugins/types.js";
-import type { CliDeps } from "../cli/deps.js";
+import type { CliDeps } from "../core/deps.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { createTestRegistry } from "../test-utils/channel-plugins.js";
 import { captureEnv } from "../test-utils/env.js";
@@ -22,7 +22,7 @@ const resolveCommandSecretRefsViaGateway = vi.fn(async ({ config }: { config: un
   resolvedConfig: config,
   diagnostics: [] as string[],
 }));
-vi.mock("../cli/command-secret-gateway.js", () => ({
+vi.mock("../core/command-secret-gateway.js", () => ({
   resolveCommandSecretRefsViaGateway,
 }));
 
@@ -36,16 +36,6 @@ vi.mock("../gateway/call.js", () => ({
 const webAuthExists = vi.fn(async () => false);
 vi.mock("../web/session.js", () => ({
   webAuthExists,
-}));
-
-const handleDiscordAction = vi.fn(async (..._args: unknown[]) => ({ details: { ok: true } }));
-vi.mock("../agents/tools/discord-actions.js", () => ({
-  handleDiscordAction,
-}));
-
-const handleSlackAction = vi.fn(async (..._args: unknown[]) => ({ details: { ok: true } }));
-vi.mock("../agents/tools/slack-actions.js", () => ({
-  handleSlackAction,
 }));
 
 const handleTelegramAction = vi.fn(async (..._args: unknown[]) => ({ details: { ok: true } }));
@@ -66,15 +56,12 @@ const setRegistry = async (registry: ReturnType<typeof createTestRegistry>) => {
 };
 
 beforeEach(async () => {
-  envSnapshot = captureEnv(["TELEGRAM_BOT_TOKEN", "DISCORD_BOT_TOKEN"]);
+  envSnapshot = captureEnv(["TELEGRAM_BOT_TOKEN"]);
   process.env.TELEGRAM_BOT_TOKEN = "";
-  process.env.DISCORD_BOT_TOKEN = "";
   testConfig = {};
   await setRegistry(createTestRegistry([]));
   callGatewayMock.mockClear();
   webAuthExists.mockClear().mockResolvedValue(false);
-  handleDiscordAction.mockClear();
-  handleSlackAction.mockClear();
   handleTelegramAction.mockClear();
   handleWhatsAppAction.mockClear();
   resolveCommandSecretRefsViaGateway.mockClear();
@@ -95,10 +82,6 @@ const runtime: RuntimeEnv = {
 const makeDeps = (overrides: Partial<CliDeps> = {}): CliDeps => ({
   sendMessageWhatsApp: vi.fn(),
   sendMessageTelegram: vi.fn(),
-  sendMessageDiscord: vi.fn(),
-  sendMessageSlack: vi.fn(),
-  sendMessageSignal: vi.fn(),
-  sendMessageIMessage: vi.fn(),
   ...overrides,
 });
 
@@ -129,24 +112,6 @@ const createStubPlugin = (params: {
 type ChannelActionParams = Parameters<
   NonNullable<NonNullable<ChannelPlugin["actions"]>["handleAction"]>
 >[0];
-
-const createDiscordPollPluginRegistration = () => ({
-  pluginId: "discord",
-  source: "test",
-  plugin: createStubPlugin({
-    id: "discord",
-    label: "Discord",
-    actions: {
-      listActions: () => ["poll"],
-      handleAction: (async ({ action, params, cfg, accountId }: ChannelActionParams) => {
-        return await handleDiscordAction(
-          { action, to: params.to, accountId: accountId ?? undefined },
-          cfg,
-        );
-      }) as unknown as NonNullable<ChannelPlugin["actions"]>["handleAction"],
-    },
-  }),
-});
 
 const createTelegramSendPluginRegistration = () => ({
   pluginId: "telegram",
@@ -380,14 +345,18 @@ describe("messageCommand", () => {
 
   it("requires channel when multiple configured", async () => {
     process.env.TELEGRAM_BOT_TOKEN = "token-abc";
-    process.env.DISCORD_BOT_TOKEN = "token-discord";
     await setRegistry(
       createTestRegistry([
         {
           ...createTelegramSendPluginRegistration(),
         },
         {
-          ...createDiscordPollPluginRegistration(),
+          pluginId: "whatsapp",
+          source: "test",
+          plugin: createStubPlugin({
+            id: "whatsapp",
+            label: "WhatsApp",
+          }),
         },
       ]),
     );
@@ -435,35 +404,6 @@ describe("messageCommand", () => {
     expect(callGatewayMock).toHaveBeenCalled();
   });
 
-  it("routes discord polls through message action", async () => {
-    await setRegistry(
-      createTestRegistry([
-        {
-          ...createDiscordPollPluginRegistration(),
-        },
-      ]),
-    );
-    const deps = makeDeps();
-    await messageCommand(
-      {
-        action: "poll",
-        channel: "discord",
-        target: "channel:123456789",
-        pollQuestion: "Snack?",
-        pollOption: ["Pizza", "Sushi"],
-      },
-      deps,
-      runtime,
-    );
-    expect(handleDiscordAction).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: "poll",
-        to: "channel:123456789",
-      }),
-      expect.any(Object),
-    );
-  });
-
   it("routes telegram polls through message action", async () => {
     await setRegistry(
       createTestRegistry([
@@ -494,3 +434,4 @@ describe("messageCommand", () => {
     );
   });
 });
+

@@ -36,7 +36,7 @@ inside a sandbox workspace under `~/.propai/sandboxes`, not your host workspace.
 }
 ```
 
-`propai onboard`, `propai configure`, or `propai setup` will create the
+The desktop onboarding wizard (or Control Console Config tab) will create the
 workspace and seed the bootstrap files if they are missing.
 Sandbox seed copies only accept regular in-workspace files; symlink/hardlink
 aliases that resolve outside the source workspace are ignored.
@@ -59,7 +59,8 @@ extra folders, archive or move them to Trash (for example `trash ~/propai`).
 If you intentionally keep multiple workspaces, make sure
 `agents.defaults.workspace` points to the active one.
 
-`propai doctor` warns when it detects extra workspace directories.
+If you notice multiple workspace folders, clean them up so only the active
+workspace remains.
 
 ## Workspace file map (what each file means)
 
@@ -120,8 +121,8 @@ If any bootstrap file is missing, propai injects a "missing file" marker into
 the session and continues. Large bootstrap files are truncated when injected;
 adjust limits with `agents.defaults.bootstrapMaxChars` (default: 20000) and
 `agents.defaults.bootstrapTotalMaxChars` (default: 150000).
-`propai setup` can recreate missing defaults without overwriting existing
-files.
+The onboarding wizard can recreate missing defaults without overwriting
+existing files.
 
 ## What is NOT in the workspace
 
@@ -224,7 +225,8 @@ Suggested `.gitignore` starter:
 
 1. Clone the repo to the desired path (default `~/.propai/workspace`).
 2. Set `agents.defaults.workspace` to that path in `~/.propai/propai.json`.
-3. Run `propai setup --workspace <path>` to seed any missing files.
+3. Update `agents.defaults.workspace` to that path and seed any missing files
+   (via the onboarding wizard or by copying defaults into place).
 4. If you need sessions, copy `~/.propai/agents/<agentId>/sessions/` from the
    old machine separately.
 

@@ -7,6 +7,7 @@ import { abortChatRun, loadChatHistory, sendChatMessage } from "./controllers/ch
 import { loadSessions } from "./controllers/sessions.ts";
 import { tauriInvoke } from "./desktop/tauri.ts";
 import type { GatewayHelloOk } from "./gateway.ts";
+import type { UiSettings } from "./storage.ts";
 import type { ChatAttachment, ChatQueueItem } from "./ui-types.ts";
 import { generateUUID } from "./uuid.ts";
 
@@ -22,6 +23,7 @@ export type ChatHost = {
   hello: GatewayHelloOk | null;
   chatAvatarUrl: string | null;
   refreshSessionsAfterChat: Set<string>;
+  settings?: UiSettings;
 };
 
 export const CHAT_SESSIONS_ACTIVE_MINUTES = 120;

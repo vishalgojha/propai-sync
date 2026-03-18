@@ -14,7 +14,6 @@
     "issue-license": "tsx scripts/issue-license.ts"
   },
   "dependencies": {
-    "better-sqlite3": "^11.6.0",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "zod": "^3.23.8"

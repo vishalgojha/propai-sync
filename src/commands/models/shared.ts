@@ -6,7 +6,7 @@ import {
   parseModelRef,
   resolveModelRefFromString,
 } from "../../agents/model-selection.js";
-import { formatCliCommand } from "../../cli/command-format.js";
+import { formatCliCommand } from "../../core/command-format.js";
 import {
   type PropAiSyncConfig,
   readConfigFileSnapshot,
@@ -221,6 +221,7 @@ export { DEFAULT_MODEL, DEFAULT_PROVIDER };
  * For providers with hierarchical model IDs (e.g., OpenRouter), the model ID may include
  * sub-providers (e.g., "moonshotai/kimi-k2"), resulting in a key like "openrouter/moonshotai/kimi-k2".
  */
+
 
 
 

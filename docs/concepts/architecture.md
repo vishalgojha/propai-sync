@@ -13,7 +13,7 @@ Last updated: 2026-01-22
 
 - A single long‑lived **Gateway** owns all messaging surfaces (WhatsApp via
   Baileys, Telegram via grammY, Slack, Discord, Signal, iMessage, WebChat).
-- Control-plane clients (macOS app, CLI, web UI, automations) connect to the
+- Control-plane clients (desktop app, web UI, automations) connect to the
   Gateway over **WebSocket** on the configured bind host (default
   `127.0.0.1:18789`).
 - **Nodes** (macOS/iOS/Android/headless) also connect over **WebSocket**, but
@@ -33,7 +33,7 @@ Last updated: 2026-01-22
 - Validates inbound frames against JSON Schema.
 - Emits events like `agent`, `chat`, `presence`, `health`, `heartbeat`, `cron`.
 
-### Clients (mac app / CLI / web admin)
+### Clients (desktop app / web admin)
 
 - One WS connection per client.
 - Send requests (`health`, `status`, `send`, `agent`, `system-presence`).
@@ -128,7 +128,9 @@ Details: [Gateway protocol](/gateway/protocol), [Pairing](/channels/pairing),
 
 ## Operations snapshot
 
-- Start: `propai gateway` (foreground, logs to stdout).
+- Start: the desktop app launches and manages the Gateway for local installs.
+  For headless hosts, use your service manager (systemd/launchd) or container
+  runtime to keep the Gateway process running.
 - Health: `health` over WS (also included in `hello-ok`).
 - Supervision: launchd/systemd for auto‑restart.
 

@@ -537,8 +537,8 @@ vi.mock("../commands/agent.js", () => ({
 vi.mock("../auto-reply/reply.js", () => ({
   getReplyFromConfig,
 }));
-vi.mock("../cli/deps.js", async () => {
-  const actual = await vi.importActual<typeof import("../cli/deps.js")>("../cli/deps.js");
+vi.mock("../core/deps.js", async () => {
+  const actual = await vi.importActual<typeof import("../core/deps.js")>("../core/deps.js");
   const base = actual.createDefaultDeps();
   return {
     ...actual,
@@ -563,6 +563,7 @@ process.env.propai_SKIP_CHANNELS = "1";
 process.env.propai_SKIP_CRON = "1";
 process.env.propai_SKIP_CHANNELS = "1";
 process.env.propai_SKIP_CRON = "1";
+
 
 
 

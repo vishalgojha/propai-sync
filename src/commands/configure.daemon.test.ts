@@ -18,7 +18,7 @@ const serviceRestart = vi.hoisted(() =>
 const ensureSystemdUserLingerInteractive = vi.hoisted(() => vi.fn(async () => {}));
 const select = vi.hoisted(() => vi.fn(async () => "node"));
 
-vi.mock("../cli/progress.js", () => ({
+vi.mock("../core/progress.js", () => ({
   withProgress,
 }));
 
@@ -184,4 +184,5 @@ describe("maybeInstallDaemon", () => {
     expect(progressSetLabel).toHaveBeenLastCalledWith("Gateway service restart scheduled.");
   });
 });
+
 

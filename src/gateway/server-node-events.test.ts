@@ -52,7 +52,7 @@ vi.mock("./session-utils.js", () => ({
   })),
 }));
 
-import type { CliDeps } from "../cli/deps.js";
+import type { CliDeps } from "../core/deps.js";
 import { agentCommand } from "../commands/agent.js";
 import type { HealthSummary } from "../commands/health.js";
 import { loadConfig } from "../config/config.js";
@@ -582,6 +582,7 @@ describe("agent request events", () => {
     });
   });
 });
+
 
 
 

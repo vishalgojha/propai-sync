@@ -4,7 +4,7 @@ import { emptyPluginConfigSchema } from "propai/plugin-sdk/memory-core";
 const memoryCorePlugin = {
   id: "memory-core",
   name: "Memory (Core)",
-  description: "File-backed memory search tools and CLI",
+  description: "File-backed memory search tools",
   kind: "memory",
   configSchema: emptyPluginConfigSchema(),
   register(api: PropAiSyncPluginApi) {
@@ -26,12 +26,6 @@ const memoryCorePlugin = {
       { names: ["memory_search", "memory_get"] },
     );
 
-    api.registerCli(
-      ({ program }) => {
-        api.runtime.tools.registerMemoryCli(program);
-      },
-      { commands: ["memory"] },
-    );
   },
 };
 

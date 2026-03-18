@@ -113,7 +113,7 @@ LABEL org.opencontainers.image.source="https://github.com/propai/propai" \
   org.opencontainers.image.documentation="https://docs.propai.ai/install/docker" \
   org.opencontainers.image.licenses="MIT" \
   org.opencontainers.image.title="PropAiSync" \
-  org.opencontainers.image.description="PropAiSync gateway and CLI runtime container image"
+  org.opencontainers.image.description="PropAiSync gateway runtime container image"
 
 WORKDIR /app
 
@@ -130,7 +130,6 @@ RUN chown node:node /app
 COPY --from=runtime-assets --chown=node:node /app/dist ./dist
 COPY --from=runtime-assets --chown=node:node /app/node_modules ./node_modules
 COPY --from=runtime-assets --chown=node:node /app/package.json .
-COPY --from=runtime-assets --chown=node:node /app/propai.mjs .
 COPY --from=runtime-assets --chown=node:node /app/extensions ./extensions
 COPY --from=runtime-assets --chown=node:node /app/skills ./skills
 COPY --from=runtime-assets --chown=node:node /app/docs ./docs
@@ -202,11 +201,8 @@ RUN --mount=type=cache,id=PropAiSync-bookworm-apt-cache,target=/var/cache/apt,sh
         docker-ce-cli docker-compose-plugin; \
     fi
 
-# Expose the CLI binary without requiring npm global writes as non-root.
-RUN ln -sf /app/propai.mjs /usr/local/bin/PropAiSync \
- && chmod 755 /app/propai.mjs
-
 ENV NODE_ENV=production
+ENV PROPAI_GATEWAY_ALLOW_UNCONFIGURED=1
 
 # Security hardening: Run as non-root user
 # The node:22-bookworm image includes a 'node' user (uid 1000)
@@ -227,7 +223,7 @@ USER node
 # For external access from host/ingress, override bind to "lan" and set auth.
 HEALTHCHECK --interval=3m --timeout=10s --start-period=15s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "propai.mjs", "gateway", "--allow-unconfigured"]
+CMD ["node", "dist/entry.js"]
 
 
 

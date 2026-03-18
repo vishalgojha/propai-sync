@@ -19,17 +19,20 @@ const (
 var errEmptyTranslation = errors.New("empty translation")
 
 type PiTranslator struct {
-	client *pi.OneShotClient
+	client   *pi.OneShotClient
+	provider string
+	model    string
 }
 
-func NewPiTranslator(srcLang, tgtLang string, glossary []GlossaryEntry, thinking string) (*PiTranslator, error) {
+func NewPiTranslator(srcLang, tgtLang string, glossary []GlossaryEntry, thinking, provider, model string) (*PiTranslator, error) {
+	provider, model = normalizeProviderModel(provider, model)
 	options := pi.DefaultOneShotOptions()
 	options.AppName = "propai-docs-i18n"
 	options.WorkDir = "/tmp"
 	options.Mode = pi.ModeDragons
 	options.Dragons = pi.DragonsOptions{
-		Provider: "anthropic",
-		Model:    modelVersion,
+		Provider: provider,
+		Model:    model,
 		Thinking: normalizeThinking(thinking),
 	}
 	options.SystemPrompt = translationPrompt(srcLang, tgtLang, glossary)
@@ -37,7 +40,7 @@ func NewPiTranslator(srcLang, tgtLang string, glossary []GlossaryEntry, thinking
 	if err != nil {
 		return nil, err
 	}
-	return &PiTranslator{client: client}, nil
+	return &PiTranslator{client: client, provider: provider, model: model}, nil
 }
 
 func (t *PiTranslator) Translate(ctx context.Context, text, srcLang, tgtLang string) (string, error) {
@@ -245,5 +248,3 @@ func normalizeThinking(value string) string {
 		return "high"
 	}
 }
-
-

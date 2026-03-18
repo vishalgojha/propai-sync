@@ -10,6 +10,7 @@ export type ConfigFormProps = {
   value: Record<string, unknown> | null;
   disabled?: boolean;
   unsupportedPaths?: string[];
+  licenseLocked?: boolean;
   searchQuery?: string;
   activeSection?: string | null;
   activeSubsection?: string | null;
@@ -336,6 +337,7 @@ export function renderConfigForm(props: ConfigFormProps) {
   const searchCriteria = parseConfigSearchQuery(searchQuery);
   const activeSection = props.activeSection;
   const activeSubsection = props.activeSubsection ?? null;
+  const licenseLocked = props.licenseLocked ?? false;
 
   const entries = Object.entries(properties).toSorted((a, b) => {
     const orderA = hintForPath([a[0]], props.uiHints)?.order ?? 50;
@@ -430,6 +432,7 @@ export function renderConfigForm(props: ConfigFormProps) {
                     hints: props.uiHints,
                     unsupported,
                     disabled: props.disabled ?? false,
+                    licenseLocked,
                     showLabel: false,
                     searchCriteria,
                     onPatch: props.onPatch,
@@ -465,6 +468,7 @@ export function renderConfigForm(props: ConfigFormProps) {
                     hints: props.uiHints,
                     unsupported,
                     disabled: props.disabled ?? false,
+                    licenseLocked,
                     showLabel: false,
                     searchCriteria,
                     onPatch: props.onPatch,

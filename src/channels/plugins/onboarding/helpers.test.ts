@@ -16,23 +16,17 @@ import {
   parseMentionOrPrefixedId,
   parseOnboardingEntriesAllowingWildcard,
   patchChannelConfigForAccount,
-  patchLegacyDmChannelConfig,
   promptLegacyChannelAllowFrom,
   parseOnboardingEntriesWithParser,
-  promptParsedAllowFromForScopedChannel,
   promptSingleChannelSecretInput,
   promptSingleChannelToken,
   promptResolvedAllowFrom,
   resolveAccountIdForConfigure,
   resolveOnboardingAccountId,
-  setAccountAllowFromForChannel,
-  setAccountGroupPolicyForChannel,
   setChannelDmPolicyWithAllowFrom,
   setTopLevelChannelAllowFrom,
   setTopLevelChannelDmPolicyWithAllowFrom,
   setTopLevelChannelGroupPolicy,
-  setLegacyChannelAllowFrom,
-  setLegacyChannelDmPolicyWithAllowFrom,
   setOnboardingChannelEnabled,
   splitOnboardingEntries,
 } from "./helpers.js";
@@ -139,7 +133,6 @@ describe("buildSingleChannelSecretPromptState", () => {
 
 async function runPromptLegacyAllowFrom(params: {
   cfg?: PropAiSyncConfig;
-  channel: "discord" | "slack";
   prompter: ReturnType<typeof createPrompter>;
   existing: string[];
   token: string;
@@ -150,7 +143,6 @@ async function runPromptLegacyAllowFrom(params: {
 }) {
   return await promptLegacyChannelAllowFrom({
     cfg: params.cfg ?? {},
-    channel: params.channel,
     // oxlint-disable-next-line typescript/no-explicit-any
     prompter: params.prompter as any,
     existing: params.existing,
@@ -240,18 +232,17 @@ describe("promptLegacyChannelAllowFrom", () => {
 
     const next = await runPromptLegacyAllowFrom({
       cfg: {} as PropAiSyncConfig,
-      channel: "discord",
       existing: ["999"],
       prompter,
       token: "",
-      noteTitle: "Discord allowlist",
+      noteTitle: "Telegram allowlist",
       noteLines: ["line1", "line2"],
       parseId: (value) => (/^\d+$/.test(value.trim()) ? value.trim() : null),
       resolveEntries: asAllowFromResolver(resolveEntries),
     });
 
-    expect(next.channels?.discord?.allowFrom).toEqual(["999", "123"]);
-    expect(prompter.note).toHaveBeenCalledWith("line1\nline2", "Discord allowlist");
+    expect(next).toEqual(["999", "123"]);
+    expect(prompter.note).toHaveBeenCalledWith("line1\nline2", "Telegram allowlist");
     expect(resolveEntries).not.toHaveBeenCalled();
   });
 
@@ -261,17 +252,16 @@ describe("promptLegacyChannelAllowFrom", () => {
 
     const next = await runPromptLegacyAllowFrom({
       cfg: {} as PropAiSyncConfig,
-      channel: "slack",
       prompter,
       existing: [],
       token: "xoxb-token",
-      noteTitle: "Slack allowlist",
+      noteTitle: "Telegram allowlist",
       noteLines: ["line"],
       parseId: () => null,
       resolveEntries: asAllowFromResolver(resolveEntries),
     });
 
-    expect(next.channels?.slack?.allowFrom).toEqual(["U1"]);
+    expect(next).toEqual(["U1"]);
     expect(resolveEntries).toHaveBeenCalledWith({ token: "xoxb-token", entries: ["alice"] });
   });
 });
@@ -364,7 +354,7 @@ describe("promptSingleChannelSecretInput", () => {
       cfg: {},
       // oxlint-disable-next-line typescript/no-explicit-any
       prompter: prompter as any,
-      providerHint: "discord",
+      providerHint: "telegram",
       credentialLabel: "Discord bot token",
       accountConfigured: false,
       canUseEnv: false,
@@ -418,15 +408,15 @@ describe("applySingleTokenPromptResult", () => {
   it("writes env selection as an empty patch on target account", () => {
     const next = applySingleTokenPromptResult({
       cfg: {},
-      channel: "discord",
+      channel: "telegram",
       accountId: "work",
-      tokenPatchKey: "token",
+      tokenPatchKey: "botToken",
       tokenResult: { useEnv: true, token: null },
     });
 
-    expect(next.channels?.discord?.enabled).toBe(true);
-    expect(next.channels?.discord?.accounts?.work?.enabled).toBe(true);
-    expect(next.channels?.discord?.accounts?.work?.token).toBeUndefined();
+    expect(next.channels?.telegram?.enabled).toBe(true);
+    expect(next.channels?.telegram?.accounts?.work?.enabled).toBe(true);
+    expect(next.channels?.telegram?.accounts?.work?.botToken).toBeUndefined();
   });
 
   it("writes provided token under requested key", () => {
@@ -440,99 +430,6 @@ describe("applySingleTokenPromptResult", () => {
 
     expect(next.channels?.telegram?.enabled).toBe(true);
     expect(next.channels?.telegram?.botToken).toBe("abc");
-  });
-});
-
-describe("promptParsedAllowFromForScopedChannel", () => {
-  it("writes parsed allowFrom values to default account channel config", async () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        imessage: {
-          allowFrom: ["old"],
-        },
-      },
-    };
-    const prompter = createPrompter([" Alice, ALICE "]);
-
-    const next = await promptParsedAllowFromForScopedChannel({
-      cfg,
-      channel: "imessage",
-      defaultAccountId: DEFAULT_ACCOUNT_ID,
-      prompter,
-      noteTitle: "iMessage allowlist",
-      noteLines: ["line1", "line2"],
-      message: "msg",
-      placeholder: "placeholder",
-      parseEntries: (raw) =>
-        parseOnboardingEntriesWithParser(raw, (entry) => ({ value: entry.toLowerCase() })),
-      getExistingAllowFrom: ({ cfg }) => cfg.channels?.imessage?.allowFrom ?? [],
-    });
-
-    expect(next.channels?.imessage?.allowFrom).toEqual(["alice"]);
-    expect(prompter.note).toHaveBeenCalledWith("line1\nline2", "iMessage allowlist");
-  });
-
-  it("writes parsed values to non-default account allowFrom", async () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        signal: {
-          accounts: {
-            alt: {
-              allowFrom: ["+15555550123"],
-            },
-          },
-        },
-      },
-    };
-    const prompter = createPrompter(["+15555550124"]);
-
-    const next = await promptParsedAllowFromForScopedChannel({
-      cfg,
-      channel: "signal",
-      accountId: "alt",
-      defaultAccountId: DEFAULT_ACCOUNT_ID,
-      prompter,
-      noteTitle: "Signal allowlist",
-      noteLines: ["line"],
-      message: "msg",
-      placeholder: "placeholder",
-      parseEntries: (raw) => ({ entries: [raw.trim()] }),
-      getExistingAllowFrom: ({ cfg, accountId }) =>
-        cfg.channels?.signal?.accounts?.[accountId]?.allowFrom ?? [],
-    });
-
-    expect(next.channels?.signal?.accounts?.alt?.allowFrom).toEqual(["+15555550124"]);
-    expect(next.channels?.signal?.allowFrom).toBeUndefined();
-  });
-
-  it("uses parser validation from the prompt validate callback", async () => {
-    const prompter = {
-      note: vi.fn(async () => undefined),
-      text: vi.fn(async (params: { validate?: (value: string) => string | undefined }) => {
-        expect(params.validate?.("")).toBe("Required");
-        expect(params.validate?.("bad")).toBe("bad entry");
-        expect(params.validate?.("ok")).toBeUndefined();
-        return "ok";
-      }),
-    };
-
-    const next = await promptParsedAllowFromForScopedChannel({
-      cfg: {},
-      channel: "imessage",
-      defaultAccountId: DEFAULT_ACCOUNT_ID,
-      prompter,
-      noteTitle: "title",
-      noteLines: ["line"],
-      message: "msg",
-      placeholder: "placeholder",
-      parseEntries: (raw) =>
-        raw.trim() === "bad"
-          ? { entries: [], error: "bad entry" }
-          : { entries: [raw.trim().toLowerCase()] },
-      getExistingAllowFrom: () => [],
-    });
-
-    expect(next.channels?.imessage?.allowFrom).toEqual(["ok"]);
   });
 });
 
@@ -579,57 +476,6 @@ describe("channel lookup note helpers", () => {
   });
 });
 
-describe("setAccountAllowFromForChannel", () => {
-  it("writes allowFrom on default account channel config", () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        imessage: {
-          enabled: true,
-          allowFrom: ["old"],
-          accounts: {
-            work: { allowFrom: ["work-old"] },
-          },
-        },
-      },
-    };
-
-    const next = setAccountAllowFromForChannel({
-      cfg,
-      channel: "imessage",
-      accountId: DEFAULT_ACCOUNT_ID,
-      allowFrom: ["new-default"],
-    });
-
-    expect(next.channels?.imessage?.allowFrom).toEqual(["new-default"]);
-    expect(next.channels?.imessage?.accounts?.work?.allowFrom).toEqual(["work-old"]);
-  });
-
-  it("writes allowFrom on nested non-default account config", () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        signal: {
-          enabled: true,
-          allowFrom: ["default-old"],
-          accounts: {
-            alt: { enabled: true, account: "+15555550123", allowFrom: ["alt-old"] },
-          },
-        },
-      },
-    };
-
-    const next = setAccountAllowFromForChannel({
-      cfg,
-      channel: "signal",
-      accountId: "alt",
-      allowFrom: ["alt-new"],
-    });
-
-    expect(next.channels?.signal?.allowFrom).toEqual(["default-old"]);
-    expect(next.channels?.signal?.accounts?.alt?.allowFrom).toEqual(["alt-new"]);
-    expect(next.channels?.signal?.accounts?.alt?.account).toBe("+15555550123");
-  });
-});
-
 describe("patchChannelConfigForAccount", () => {
   it("patches root channel config for default account", () => {
     const cfg: PropAiSyncConfig = {
@@ -656,12 +502,12 @@ describe("patchChannelConfigForAccount", () => {
   it("patches nested account config and preserves existing enabled flag", () => {
     const cfg: PropAiSyncConfig = {
       channels: {
-        slack: {
+        whatsapp: {
           enabled: true,
           accounts: {
             work: {
               enabled: false,
-              botToken: "old-bot",
+              authDir: "/tmp/wa-auth-old",
             },
           },
         },
@@ -670,15 +516,14 @@ describe("patchChannelConfigForAccount", () => {
 
     const next = patchChannelConfigForAccount({
       cfg,
-      channel: "slack",
+      channel: "whatsapp",
       accountId: "work",
-      patch: { botToken: "new-bot", appToken: "new-app" },
+      patch: { authDir: "/tmp/wa-auth-new" },
     });
 
-    expect(next.channels?.slack?.enabled).toBe(true);
-    expect(next.channels?.slack?.accounts?.work?.enabled).toBe(false);
-    expect(next.channels?.slack?.accounts?.work?.botToken).toBe("new-bot");
-    expect(next.channels?.slack?.accounts?.work?.appToken).toBe("new-app");
+    expect(next.channels?.whatsapp?.enabled).toBe(true);
+    expect(next.channels?.whatsapp?.accounts?.work?.enabled).toBe(false);
+    expect(next.channels?.whatsapp?.accounts?.work?.authDir).toBe("/tmp/wa-auth-new");
   });
 
   it("moves single-account config into default account when patching non-default", () => {
@@ -714,37 +559,25 @@ describe("patchChannelConfigForAccount", () => {
     expect(next.channels?.telegram?.accounts?.work?.botToken).toBe("work-token");
   });
 
-  it("supports imessage/signal account-scoped channel patches", () => {
+  it("supports whatsapp account-scoped channel patches", () => {
     const cfg: PropAiSyncConfig = {
       channels: {
-        signal: {
+        whatsapp: {
           enabled: false,
           accounts: {},
-        },
-        imessage: {
-          enabled: false,
         },
       },
     };
 
-    const signalNext = patchChannelConfigForAccount({
+    const next = patchChannelConfigForAccount({
       cfg,
-      channel: "signal",
+      channel: "whatsapp",
       accountId: "work",
-      patch: { account: "+15555550123", cliPath: "signal-cli" },
+      patch: { authDir: "/tmp/wa-auth" },
     });
-    expect(signalNext.channels?.signal?.enabled).toBe(true);
-    expect(signalNext.channels?.signal?.accounts?.work?.enabled).toBe(true);
-    expect(signalNext.channels?.signal?.accounts?.work?.account).toBe("+15555550123");
-
-    const imessageNext = patchChannelConfigForAccount({
-      cfg: signalNext,
-      channel: "imessage",
-      accountId: DEFAULT_ACCOUNT_ID,
-      patch: { cliPath: "imsg" },
-    });
-    expect(imessageNext.channels?.imessage?.enabled).toBe(true);
-    expect(imessageNext.channels?.imessage?.cliPath).toBe("imsg");
+    expect(next.channels?.whatsapp?.enabled).toBe(true);
+    expect(next.channels?.whatsapp?.accounts?.work?.enabled).toBe(true);
+    expect(next.channels?.whatsapp?.accounts?.work?.authDir).toBe("/tmp/wa-auth");
   });
 });
 
@@ -752,183 +585,25 @@ describe("setOnboardingChannelEnabled", () => {
   it("updates enabled and keeps existing channel fields", () => {
     const cfg: PropAiSyncConfig = {
       channels: {
-        discord: {
+        telegram: {
           enabled: true,
-          token: "abc",
+          botToken: "abc",
         },
       },
     };
 
-    const next = setOnboardingChannelEnabled(cfg, "discord", false);
-    expect(next.channels?.discord?.enabled).toBe(false);
-    expect(next.channels?.discord?.token).toBe("abc");
+    const next = setOnboardingChannelEnabled(cfg, "telegram", false);
+    expect(next.channels?.telegram?.enabled).toBe(false);
+    expect(next.channels?.telegram?.botToken).toBe("abc");
   });
 
   it("creates missing channel config with enabled state", () => {
-    const next = setOnboardingChannelEnabled({}, "signal", true);
-    expect(next.channels?.signal?.enabled).toBe(true);
-  });
-});
-
-describe("patchLegacyDmChannelConfig", () => {
-  it("patches discord root config and defaults dm.enabled to true", () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        discord: {
-          dmPolicy: "pairing",
-        },
-      },
-    };
-
-    const next = patchLegacyDmChannelConfig({
-      cfg,
-      channel: "discord",
-      patch: { allowFrom: ["123"] },
-    });
-    expect(next.channels?.discord?.allowFrom).toEqual(["123"]);
-    expect(next.channels?.discord?.dm?.enabled).toBe(true);
-  });
-
-  it("preserves explicit dm.enabled=false for slack", () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        slack: {
-          dm: {
-            enabled: false,
-          },
-        },
-      },
-    };
-
-    const next = patchLegacyDmChannelConfig({
-      cfg,
-      channel: "slack",
-      patch: { dmPolicy: "open" },
-    });
-    expect(next.channels?.slack?.dmPolicy).toBe("open");
-    expect(next.channels?.slack?.dm?.enabled).toBe(false);
-  });
-});
-
-describe("setLegacyChannelDmPolicyWithAllowFrom", () => {
-  it("adds wildcard allowFrom for open policy using legacy dm allowFrom fallback", () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        discord: {
-          dm: {
-            enabled: false,
-            allowFrom: ["123"],
-          },
-        },
-      },
-    };
-
-    const next = setLegacyChannelDmPolicyWithAllowFrom({
-      cfg,
-      channel: "discord",
-      dmPolicy: "open",
-    });
-    expect(next.channels?.discord?.dmPolicy).toBe("open");
-    expect(next.channels?.discord?.allowFrom).toEqual(["123", "*"]);
-    expect(next.channels?.discord?.dm?.enabled).toBe(false);
-  });
-
-  it("sets policy without changing allowFrom when not open", () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        slack: {
-          allowFrom: ["U1"],
-        },
-      },
-    };
-
-    const next = setLegacyChannelDmPolicyWithAllowFrom({
-      cfg,
-      channel: "slack",
-      dmPolicy: "pairing",
-    });
-    expect(next.channels?.slack?.dmPolicy).toBe("pairing");
-    expect(next.channels?.slack?.allowFrom).toEqual(["U1"]);
-  });
-});
-
-describe("setLegacyChannelAllowFrom", () => {
-  it("writes allowFrom through legacy dm patching", () => {
-    const next = setLegacyChannelAllowFrom({
-      cfg: {},
-      channel: "slack",
-      allowFrom: ["U123"],
-    });
-    expect(next.channels?.slack?.allowFrom).toEqual(["U123"]);
-    expect(next.channels?.slack?.dm?.enabled).toBe(true);
-  });
-});
-
-describe("setAccountGroupPolicyForChannel", () => {
-  it("writes group policy on default account config", () => {
-    const next = setAccountGroupPolicyForChannel({
-      cfg: {},
-      channel: "discord",
-      accountId: DEFAULT_ACCOUNT_ID,
-      groupPolicy: "open",
-    });
-    expect(next.channels?.discord?.groupPolicy).toBe("open");
-    expect(next.channels?.discord?.enabled).toBe(true);
-  });
-
-  it("writes group policy on nested non-default account", () => {
-    const next = setAccountGroupPolicyForChannel({
-      cfg: {},
-      channel: "slack",
-      accountId: "work",
-      groupPolicy: "disabled",
-    });
-    expect(next.channels?.slack?.accounts?.work?.groupPolicy).toBe("disabled");
-    expect(next.channels?.slack?.accounts?.work?.enabled).toBe(true);
+    const next = setOnboardingChannelEnabled({}, "whatsapp", true);
+    expect(next.channels?.whatsapp?.enabled).toBe(true);
   });
 });
 
 describe("setChannelDmPolicyWithAllowFrom", () => {
-  it("adds wildcard allowFrom when setting dmPolicy=open", () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        signal: {
-          dmPolicy: "pairing",
-          allowFrom: ["+15555550123"],
-        },
-      },
-    };
-
-    const next = setChannelDmPolicyWithAllowFrom({
-      cfg,
-      channel: "signal",
-      dmPolicy: "open",
-    });
-
-    expect(next.channels?.signal?.dmPolicy).toBe("open");
-    expect(next.channels?.signal?.allowFrom).toEqual(["+15555550123", "*"]);
-  });
-
-  it("sets dmPolicy without changing allowFrom for non-open policies", () => {
-    const cfg: PropAiSyncConfig = {
-      channels: {
-        imessage: {
-          dmPolicy: "open",
-          allowFrom: ["*"],
-        },
-      },
-    };
-
-    const next = setChannelDmPolicyWithAllowFrom({
-      cfg,
-      channel: "imessage",
-      dmPolicy: "pairing",
-    });
-
-    expect(next.channels?.imessage?.dmPolicy).toBe("pairing");
-    expect(next.channels?.imessage?.allowFrom).toEqual(["*"]);
-  });
-
   it("supports telegram channel dmPolicy updates", () => {
     const cfg: PropAiSyncConfig = {
       channels: {
@@ -946,6 +621,26 @@ describe("setChannelDmPolicyWithAllowFrom", () => {
     });
     expect(next.channels?.telegram?.dmPolicy).toBe("open");
     expect(next.channels?.telegram?.allowFrom).toEqual(["123", "*"]);
+  });
+
+  it("adds wildcard allowFrom when setting whatsapp dmPolicy=open", () => {
+    const cfg: PropAiSyncConfig = {
+      channels: {
+        whatsapp: {
+          dmPolicy: "pairing",
+          allowFrom: ["+15555550123"],
+        },
+      },
+    };
+
+    const next = setChannelDmPolicyWithAllowFrom({
+      cfg,
+      channel: "whatsapp",
+      dmPolicy: "open",
+    });
+
+    expect(next.channels?.whatsapp?.dmPolicy).toBe("open");
+    expect(next.channels?.whatsapp?.allowFrom).toEqual(["+15555550123", "*"]);
   });
 });
 
@@ -1205,6 +900,3 @@ describe("resolveAccountIdForConfigure", () => {
     );
   });
 });
-
-
-

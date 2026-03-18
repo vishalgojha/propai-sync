@@ -35,7 +35,7 @@ vi.mock("./nodes-utils.js", () => ({
   resolveNodeIdFromList: nodeUtilsMocks.resolveNodeIdFromList,
 }));
 
-vi.mock("../../cli/nodes-screen.js", () => ({
+vi.mock("../../core/nodes-screen.js", () => ({
   parseScreenRecordPayload: screenMocks.parseScreenRecordPayload,
   screenRecordTempPath: screenMocks.screenRecordTempPath,
   writeScreenRecordToFile: screenMocks.writeScreenRecordToFile,
@@ -132,3 +132,4 @@ describe("createNodesTool screen_record duration guardrails", () => {
     expect(prepareCall?.params).not.toHaveProperty("rawCommand");
   });
 });
+

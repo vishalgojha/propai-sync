@@ -36,7 +36,6 @@ export type PluginRuntimeCore = {
   tools: {
     createMemoryGetTool: typeof import("../../agents/tools/memory-tool.js").createMemoryGetTool;
     createMemorySearchTool: typeof import("../../agents/tools/memory-tool.js").createMemorySearchTool;
-    registerMemoryCli: typeof import("../../cli/memory-cli.js").registerMemoryCli;
   };
   events: {
     onAgentEvent: typeof import("../../infra/agent-events.js").onAgentEvent;
@@ -65,5 +64,6 @@ export type PluginRuntimeCore = {
     }) => Promise<import("../../agents/model-auth.js").ResolvedProviderAuth>;
   };
 };
+
 
 
