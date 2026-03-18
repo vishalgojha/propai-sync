@@ -1,0 +1,5 @@
+{
+  "name": "PropAi Sync",
+  "description": "Desktop-first synchronization gateway for PropAi mobile pairing and cloud setup.",
+  "requestFramePermissions": []
+}
