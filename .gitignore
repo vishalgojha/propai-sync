@@ -3,7 +3,6 @@ node_modules
 .env
 docker-compose.extra.yml
 dist
-pnpm-lock.yaml
 bun.lock
 bun.lockb
 coverage
@@ -61,11 +60,6 @@ vendor/a2ui/renderers/lit/dist/
 src/canvas-host/a2ui/*.bundle.js
 src/canvas-host/a2ui/*.map
 .bundle.hash
-apps/tauri/src-tauri/target/
-apps/tauri/src-tauri/gen/
-apps/tauri/src-tauri/resources/
-!apps/tauri/src-tauri/resources/.gitkeep
-!apps/tauri/src-tauri/resources/placeholder.txt
 
 # Licensing service data
 services/licensing/data/

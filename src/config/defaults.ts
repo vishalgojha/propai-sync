@@ -11,6 +11,7 @@ import {
 import type { PropAiSyncConfig } from "./types.js";
 import type { ModelDefinitionConfig } from "./types.models.js";
 import { hasConfiguredSecretInput } from "./types.secrets.js";
+import { readPropAiEnvValue } from "../infra/env-read.js";
 
 type WarnState = { warned: boolean };
 
@@ -208,6 +209,146 @@ export function applyTalkApiKey(config: PropAiSyncConfig): PropAiSyncConfig {
 
 export function applyTalkConfigNormalization(config: PropAiSyncConfig): PropAiSyncConfig {
   return normalizeTalkConfig(config);
+}
+
+function parseEnvList(value?: string): string[] | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const items = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return items.length > 0 ? items : undefined;
+}
+
+function parseEnvBool(value?: string): boolean | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const normalized = value.trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(normalized)) {
+    return true;
+  }
+  if (["0", "false", "no", "off"].includes(normalized)) {
+    return false;
+  }
+  return undefined;
+}
+
+export function applyControlUiEnvDefaults(cfg: PropAiSyncConfig): PropAiSyncConfig {
+  const allowedOrigins = parseEnvList(
+    readPropAiEnvValue(process.env, "CONTROL_UI_ALLOWED_ORIGINS") ??
+      process.env.CONTROL_UI_ALLOWED_ORIGINS ??
+      process.env.PROPAI_GATEWAY_CONTROL_UI_ALLOWED_ORIGINS ??
+      process.env.GATEWAY_CONTROL_UI_ALLOWED_ORIGINS,
+  );
+  const hostHeaderFallback = parseEnvBool(
+    readPropAiEnvValue(process.env, "CONTROL_UI_HOST_HEADER_FALLBACK") ??
+      process.env.CONTROL_UI_HOST_HEADER_FALLBACK ??
+      process.env.PROPAI_GATEWAY_CONTROL_UI_HOST_HEADER_FALLBACK ??
+      process.env.GATEWAY_CONTROL_UI_HOST_HEADER_FALLBACK ??
+      process.env.PROPAI_GATEWAY_CONTROL_UI_DANGEROUSLY_ALLOW_HOST_HEADER_ORIGIN_FALLBACK ??
+      process.env.GATEWAY_CONTROL_UI_DANGEROUSLY_ALLOW_HOST_HEADER_ORIGIN_FALLBACK ??
+      process.env.PROPAI_CONTROL_UI_DANGEROUSLY_ALLOW_HOST_HEADER_ORIGIN_FALLBACK ??
+      process.env.CONTROL_UI_DANGEROUSLY_ALLOW_HOST_HEADER_ORIGIN_FALLBACK,
+  );
+
+  if (!allowedOrigins && hostHeaderFallback === undefined) {
+    return cfg;
+  }
+
+  const gateway = cfg.gateway ?? {};
+  const controlUi = gateway.controlUi ?? {};
+  let mutated = false;
+
+  const nextControlUi = { ...controlUi };
+  const existingOrigins =
+    Array.isArray(controlUi.allowedOrigins)
+      ? controlUi.allowedOrigins.map((value) => value.trim()).filter(Boolean)
+      : [];
+  if (allowedOrigins) {
+    const sameOrigins =
+      existingOrigins.length === allowedOrigins.length &&
+      existingOrigins.every((value, index) => value === allowedOrigins[index]);
+    if (!sameOrigins) {
+      nextControlUi.allowedOrigins = allowedOrigins;
+      mutated = true;
+    }
+  }
+  if (
+    hostHeaderFallback !== undefined &&
+    controlUi.dangerouslyAllowHostHeaderOriginFallback !== hostHeaderFallback
+  ) {
+    nextControlUi.dangerouslyAllowHostHeaderOriginFallback = hostHeaderFallback;
+    mutated = true;
+  }
+
+  if (!mutated) {
+    return cfg;
+  }
+
+  return {
+    ...cfg,
+    gateway: {
+      ...gateway,
+      controlUi: nextControlUi,
+    },
+  };
+}
+
+export function applyWhatsAppCloudEnvDefaults(cfg: PropAiSyncConfig): PropAiSyncConfig {
+  const accessToken = process.env.META_WA_ACCESS_TOKEN?.trim();
+  const phoneNumberId = process.env.META_WA_PHONE_NUMBER_ID?.trim();
+  const verifyToken = process.env.META_WA_VERIFY_TOKEN?.trim();
+  const appSecret = process.env.META_WA_APP_SECRET?.trim();
+  const baseUrl = process.env.META_WA_BASE_URL?.trim();
+
+  if (!accessToken && !phoneNumberId && !verifyToken && !appSecret && !baseUrl) {
+    return cfg;
+  }
+
+  const channels = cfg.channels ?? {};
+  const whatsapp = channels.whatsapp ?? {};
+  const cloud = whatsapp.cloud ?? {};
+  let mutated = false;
+
+  const nextCloud = { ...cloud };
+  const assignIfMissing = <T extends keyof typeof nextCloud>(key: T, value?: string) => {
+    if (!value || (typeof nextCloud[key] === "string" && nextCloud[key]?.trim())) {
+      return;
+    }
+    nextCloud[key] = value as (typeof nextCloud)[T];
+    mutated = true;
+  };
+
+  assignIfMissing("accessToken", accessToken);
+  assignIfMissing("phoneNumberId", phoneNumberId);
+  assignIfMissing("verifyToken", verifyToken);
+  assignIfMissing("appSecret", appSecret);
+  assignIfMissing("baseUrl", baseUrl);
+
+  let nextProvider = whatsapp.provider;
+  if (!nextProvider && (accessToken || phoneNumberId)) {
+    nextProvider = "cloud";
+    mutated = true;
+  }
+
+  if (!mutated) {
+    return cfg;
+  }
+
+  return {
+    ...cfg,
+    channels: {
+      ...channels,
+      whatsapp: {
+        ...whatsapp,
+        provider: nextProvider,
+        cloud: nextCloud,
+      },
+    },
+  };
 }
 
 export function applyModelDefaults(cfg: PropAiSyncConfig): PropAiSyncConfig {
@@ -534,5 +675,3 @@ export function applyCompactionDefaults(cfg: PropAiSyncConfig): PropAiSyncConfig
 export function resetSessionDefaultsWarningForTests() {
   defaultWarnState = { warned: false };
 }
-
-
