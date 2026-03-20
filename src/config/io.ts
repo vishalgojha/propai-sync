@@ -27,6 +27,8 @@ import {
   applySessionDefaults,
   applyTalkConfigNormalization,
   applyTalkApiKey,
+  applyControlUiEnvDefaults,
+  applyWhatsAppCloudEnvDefaults,
 } from "./defaults.js";
 import { restoreEnvVarRefs } from "./env-preserve.js";
 import {
@@ -72,6 +74,11 @@ const SHELL_ENV_EXPECTED_KEYS = [
   "SYNTHETIC_API_KEY",
   "KILOCODE_API_KEY",
   "ELEVENLABS_API_KEY",
+  "META_WA_ACCESS_TOKEN",
+  "META_WA_PHONE_NUMBER_ID",
+  "META_WA_VERIFY_TOKEN",
+  "META_WA_APP_SECRET",
+  "META_WA_BASE_URL",
   "TELEGRAM_BOT_TOKEN",
   "DISCORD_BOT_TOKEN",
   "SLACK_BOT_TOKEN",
@@ -744,7 +751,9 @@ export function createConfigIO(overrides: ConfigIoDeps = {}) {
             timeoutMs: resolveShellEnvFallbackTimeoutMs(deps.env),
           });
         }
-        return {};
+        return applyControlUiEnvDefaults(
+          applyWhatsAppCloudEnvDefaults(applyMessageDefaults({})),
+        );
       }
       const raw = deps.fs.readFileSync(configPath, "utf-8");
       const parsed = deps.json5.parse(raw);
@@ -801,7 +810,13 @@ export function createConfigIO(overrides: ConfigIoDeps = {}) {
           applyCompactionDefaults(
             applyContextPruningDefaults(
               applyAgentDefaults(
-                applySessionDefaults(applyLoggingDefaults(applyMessageDefaults(validated.config))),
+                applySessionDefaults(
+                    applyLoggingDefaults(
+                    applyControlUiEnvDefaults(
+                      applyWhatsAppCloudEnvDefaults(applyMessageDefaults(validated.config)),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -892,7 +907,11 @@ export function createConfigIO(overrides: ConfigIoDeps = {}) {
           applyModelDefaults(
             applyCompactionDefaults(
               applyContextPruningDefaults(
-                applyAgentDefaults(applySessionDefaults(applyMessageDefaults({}))),
+                applyAgentDefaults(
+                  applySessionDefaults(
+                    applyControlUiEnvDefaults(applyWhatsAppCloudEnvDefaults(applyMessageDefaults({}))),
+                  ),
+                ),
               ),
             ),
           ),
@@ -1004,7 +1023,13 @@ export function createConfigIO(overrides: ConfigIoDeps = {}) {
           applyTalkConfigNormalization(
             applyModelDefaults(
               applyAgentDefaults(
-                applySessionDefaults(applyLoggingDefaults(applyMessageDefaults(validated.config))),
+                applySessionDefaults(
+                  applyLoggingDefaults(
+                    applyControlUiEnvDefaults(
+                      applyWhatsAppCloudEnvDefaults(applyMessageDefaults(validated.config)),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -1557,6 +1582,3 @@ export async function writeConfigFile(
   // When we had no runtime snapshot, keep callers reading from disk/cache so external/manual
   // edits to propai.json remain visible (no stale snapshot).
 }
-
-
-
