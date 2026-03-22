@@ -6,7 +6,7 @@ import { WHATSAPP_JOIN_URL } from '../../lib/links';
 
 export default function ContactPage() {
   const [companyName, setCompanyName] = useState('');
-  const defaultWhatsappUrl = 'https://wa.me/9819471';
+  const defaultWhatsappUrl = 'https://wa.me/9819471310';
   const baseWhatsappUrl = WHATSAPP_JOIN_URL || defaultWhatsappUrl;
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function ContactPage() {
     try {
       const url = new URL(baseWhatsappUrl);
       const digits = url.pathname.replace(/\//g, '');
-      return digits ? `+${digits}` : '+9819471';
+      return digits ? `+${digits}` : '+9819471310';
     } catch {
       return baseWhatsappUrl.replace(/^https?:\/\/wa\.me\//, '+');
     }
