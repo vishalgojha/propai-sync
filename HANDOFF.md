@@ -1,6 +1,6 @@
 # PropAi Sync Handoff
 
-Date: 2026-03-19  
+Date: 2026-03-22  
 Repo: `C:\Users\visha\propai-sync`
 
 ## Status
@@ -185,6 +185,22 @@ These need a separate follow-up pass.
 - keep user-facing language simple enough for non-technical staff
 - WhatsApp-first is core positioning
 - Telegram should be framed as optional
+
+## 2026-03-22 Checkpoint
+
+Done:
+- Android app no longer requires manual token/password (QR/setup only).
+- Control UI API proxy added in gateway (`/api/*` routes).
+- Control UI device pairing approvals + multi-device list.
+- Usage tab filters to OpenAI/Anthropic/xAI/ElevenLabs.
+- Docker build fix to include `apps/website/package.json` before `pnpm install`.
+- Identity and User templates rewritten for real-estate broker onboarding.
+
+Pending:
+- Railway env vars still need to be set for `gateway`, `control-api`, `Licensing`.
+- Gateway auth token required to unblock Chrome relay + device pairing.
+- Provider API key required for gateway agent model (Anthropic/OpenAI/xAI).
+- Trial activation “fetch failed” needs verification once envs are set.
 
 ## Resume Commands
 
