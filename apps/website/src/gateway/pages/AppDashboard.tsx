@@ -384,6 +384,10 @@ export default function AppDashboard() {
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerTenant, setRegisterTenant] = useState('');
+  const [passwordDraft, setPasswordDraft] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSaving, setPasswordSaving] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('agent');
   const [inviteToken, setInviteToken] = useState<string | null>(null);
@@ -863,30 +867,59 @@ export default function AppDashboard() {
   };
 
   const handleRegister = async () => {
-    if (!registerEmail.trim() || !registerPassword.trim() || !registerTenant.trim()) {
-      setControlError('Email, password, and workspace name are required.');
+    if (!registerEmail.trim() || !registerTenant.trim()) {
+      setControlError('Email and workspace name are required.');
       return;
     }
     setAuthLoading(true);
     setControlError(null);
     try {
+      const hasPassword = Boolean(registerPassword.trim());
       const response = await apiPostAuth<{
         token: string;
         user: ControlUser;
         tenant: ControlTenant;
-      }>('/control/v1/auth/register', {
+      }>(hasPassword ? '/control/v1/auth/register' : '/control/v1/auth/bootstrap', {
         email: registerEmail.trim(),
-        password: registerPassword,
+        ...(hasPassword ? { password: registerPassword } : {}),
         tenantName: registerTenant.trim(),
       });
       setControlToken(response.token);
       setControlUser(response.user);
       setControlTenants([response.tenant]);
       setSelectedTenantId(response.tenant.id);
+      setRegisterPassword('');
     } catch (error) {
       setControlError(normalizeError(error, 'Account setup failed.'));
     } finally {
       setAuthLoading(false);
+    }
+  };
+
+  const handleSetPassword = async () => {
+    if (!controlToken) {
+      setPasswordError('Sign in first to set a password.');
+      return;
+    }
+    if (!passwordDraft.trim()) {
+      setPasswordError('Enter a new password.');
+      return;
+    }
+    setPasswordSaving(true);
+    setPasswordError(null);
+    setPasswordMessage(null);
+    try {
+      await apiPostAuth<{ ok: boolean }>(
+        '/control/v1/auth/password',
+        { password: passwordDraft },
+        controlToken,
+      );
+      setPasswordMessage('Password updated.');
+      setPasswordDraft('');
+    } catch (error) {
+      setPasswordError(normalizeError(error, 'Could not update password.'));
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -2468,6 +2501,25 @@ export default function AppDashboard() {
                   <button onClick={handleSignOut} className="text-xs font-semibold text-destructive underline">
                     Sign out
                   </button>
+                  <div className="pt-4 space-y-2">
+                    <p className="text-sm font-semibold">Set password</p>
+                    <input
+                      type="password"
+                      value={passwordDraft}
+                      onChange={(event) => setPasswordDraft(event.target.value)}
+                      placeholder="New password"
+                      className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm"
+                    />
+                    <button
+                      onClick={handleSetPassword}
+                      disabled={passwordSaving}
+                      className="bg-secondary text-secondary-foreground px-5 py-2 rounded-xl text-sm font-bold"
+                    >
+                      {passwordSaving ? 'Saving…' : 'Save password'}
+                    </button>
+                    {passwordMessage && <p className="text-xs text-emerald-500">{passwordMessage}</p>}
+                    {passwordError && <p className="text-xs text-destructive">{passwordError}</p>}
+                  </div>
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 gap-6">
@@ -2482,7 +2534,8 @@ export default function AppDashboard() {
                   <div className="space-y-3">
                     <p className="text-sm font-semibold">Create workspace</p>
                     <input value={registerEmail} onChange={(event) => setRegisterEmail(event.target.value)} placeholder="Owner email" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
-                    <input type="password" value={registerPassword} onChange={(event) => setRegisterPassword(event.target.value)} placeholder="Password" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
+                    <input type="password" value={registerPassword} onChange={(event) => setRegisterPassword(event.target.value)} placeholder="Password (optional)" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
+                    <p className="text-xs text-muted-foreground">Leave password blank to quick-start. You can set it later.</p>
                     <input value={registerTenant} onChange={(event) => setRegisterTenant(event.target.value)} placeholder="Workspace name" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
                     <button onClick={handleRegister} disabled={authLoading} className="bg-secondary text-secondary-foreground px-5 py-3 rounded-xl text-sm font-bold">
                       {authLoading ? 'Creating…' : 'Create workspace'}

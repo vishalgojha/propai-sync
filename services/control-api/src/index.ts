@@ -86,8 +86,17 @@ const registerSchema = z.object({
   tenantName: z.string().min(2),
 });
 
+const bootstrapSchema = z.object({
+  email: z.string().email(),
+  tenantName: z.string().min(2),
+});
+
 const loginSchema = z.object({
   email: z.string().email(),
+  password: z.string().min(8),
+});
+
+const passwordUpdateSchema = z.object({
   password: z.string().min(8),
 });
 
@@ -240,6 +249,58 @@ app.post("/v1/auth/register", (req, res) => {
   });
 });
 
+app.post("/v1/auth/bootstrap", (req, res) => {
+  const payload = bootstrapSchema.safeParse(req.body);
+  if (!payload.success) {
+    res.status(400).json({ error: payload.error.message });
+    return;
+  }
+
+  if (countUsers() > 0) {
+    res.status(409).json({ error: "Bootstrap closed. Sign in instead." });
+    return;
+  }
+
+  const { email, tenantName } = payload.data;
+  const existing = getUserByEmail(email);
+  if (existing) {
+    res.status(409).json({ error: "Email already registered." });
+    return;
+  }
+
+  const now = nowIso();
+  const tenantId = randomId("tnt");
+  const userId = randomId("usr");
+  const membershipId = randomId("mem");
+  const tempPassword = `${createToken()}${createToken()}`;
+
+  try {
+    db.exec("BEGIN;");
+    db.prepare(
+      "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
+    ).run(tenantId, tenantName, now);
+    db.prepare(
+      "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
+    ).run(userId, email, hashPassword(tempPassword), now);
+    db.prepare(
+      "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
+    ).run(membershipId, tenantId, userId, "owner", now);
+    db.exec("COMMIT;");
+  } catch (err) {
+    db.exec("ROLLBACK;");
+    res.status(500).json({ error: "Failed to create account." });
+    return;
+  }
+
+  const token = signToken(userId);
+  res.json({
+    token,
+    user: { id: userId, email },
+    tenant: { id: tenantId, name: tenantName, role: "owner" },
+    bootstrap: true,
+  });
+});
+
 app.post("/v1/auth/login", (req, res) => {
   const payload = loginSchema.safeParse(req.body);
   if (!payload.success) {
@@ -261,6 +322,24 @@ app.post("/v1/auth/login", (req, res) => {
     user: { id: user.id, email: user.email },
     tenants: memberships.map((m) => ({ id: m.tenant_id, name: m.tenant_name, role: m.role })),
   });
+});
+
+app.post("/v1/auth/password", requireAuth, (req, res) => {
+  const payload = passwordUpdateSchema.safeParse(req.body);
+  if (!payload.success) {
+    res.status(400).json({ error: payload.error.message });
+    return;
+  }
+  try {
+    db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(
+      hashPassword(payload.data.password),
+      req.auth.uid,
+    );
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update password." });
+    return;
+  }
+  res.json({ ok: true });
 });
 
 app.get("/v1/me", requireAuth, (req, res) => {
@@ -1085,6 +1164,11 @@ function getUserByEmail(email: string): UserRow | undefined {
   return db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase()) as
     | UserRow
     | undefined;
+}
+
+function countUsers(): number {
+  const row = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count?: number } | undefined;
+  return row?.count ?? 0;
 }
 
 function getUserById(userId: string): UserRow | undefined {
