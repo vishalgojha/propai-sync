@@ -49,6 +49,7 @@ WORKDIR /app
 
 COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY patches ./patches
+COPY apps/website/package.json apps/website/package.json
 
 COPY --from=ext-deps /out/ ./extensions/
 
