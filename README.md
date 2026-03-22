@@ -11,19 +11,33 @@ PropAi Sync is a personal AI assistant you run on your own devices. It answers y
 
 Website · Docs · Getting Started · Updating · FAQ
 
-Preferred setup: run the onboarding wizard inside the PropAi Sync desktop app (Tauri). The wizard guides you step by step through setting up the gateway, workspace, channels, and skills.
+Preferred setup: use the hosted PropAi Sync web app. It guides you step by step through connecting WhatsApp, configuring your workspace, and inviting your team.
 
 ## Install (recommended)
 
-Use the PropAi Sync desktop app (Tauri).
-
-Building from source? Run `pnpm install`, then `pnpm --dir apps/tauri dev` for local development.
+Use the hosted PropAi Sync web app at app.propai.live.
 
 ## Quick start (TL;DR)
 
-1. Open the PropAi Sync desktop app.
-2. Run onboarding to configure the Gateway, channels, and skills.
-3. Open the Web UI from the app to chat and manage your agent.
+1. Open app.propai.live.
+2. Run onboarding to configure WhatsApp, channels, and skills.
+3. Invite your team and start chatting.
+
+
+## Model providers
+
+Set at least one provider key in your environment:
+
+- `GROQ_API_KEY`
+- `OPENROUTER_API_KEY`
+- `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GEMINI_API_KEY`
+- `ELEVENLABS_API_KEY` (or `XI_API_KEY`) + `ELEVENLABS_AGENT_ID` (Conversational AI agent id)
+
+## Hosted setup (Railway)
+
+- Web app: set `VITE_PROPAI_LICENSE_API` only if you want to override the default licensing URL.
+- Control API: set `CONTROL_JWT_SECRET` and optionally `CONTROL_ADMIN_KEY` (persist `CONTROL_DB_PATH` on a volume).
+- Gateway/worker: set your model provider keys (above) and any channel tokens you enable.
 
 ## Security defaults (DM access)
 
@@ -56,7 +70,7 @@ WhatsApp / Telegram
 └──────────────┬────────────────┘
                │
                ├─ Pi agent (RPC)
-               ├─ Desktop app (Tauri)
+               ├─ Hosted Web UI
                ├─ Web UI
                └─ iOS / Android nodes (optional)
 ```
@@ -65,7 +79,7 @@ WhatsApp / Telegram
 
 ### WhatsApp
 
-- Link the device in the PropAi Sync desktop app (credentials store in `~/.propai/credentials`).
+- Connect WhatsApp from the hosted app (credentials are stored securely).
 - Allowlist who can talk to the assistant via `channels.whatsapp.allowFrom`.
 - If `channels.whatsapp.groups` is set, it becomes a group allowlist; include `"*"` to allow all.
 

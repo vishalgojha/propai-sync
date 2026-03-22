@@ -240,7 +240,6 @@ propai health --json   # Gateway 网关健康快照（WS）
 - WebChat：[WebChat](/web/webchat)
 - Gateway 网关运维：[Gateway 网关运行手册](/gateway)
 - 定时任务 + 唤醒：[定时任务](/automation/cron-jobs)
-- macOS 菜单栏配套应用：[propai macOS 应用](/platforms/macos)
 - iOS 节点应用：[iOS 应用](/platforms/ios)
 - Android 节点应用：[Android 应用](/platforms/android)
 - Windows 状态：[Windows (WSL2)](/platforms/windows)

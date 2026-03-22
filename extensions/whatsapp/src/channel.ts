@@ -36,9 +36,15 @@ import {
   type ChannelPlugin,
   type ResolvedWhatsAppAccount,
 } from "propai/plugin-sdk/whatsapp";
+import { sendCloudMedia, sendCloudText } from "./cloud.js";
 import { getWhatsAppRuntime } from "./runtime.js";
 
 const meta = getChatChannelMeta("whatsapp");
+
+function isCloudConfigured(account: ResolvedWhatsAppAccount): boolean {
+  const cloud = account.cloud;
+  return Boolean(cloud?.accessToken?.trim() && cloud?.phoneNumberId?.trim());
+}
 
 export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
   id: "whatsapp",
@@ -50,7 +56,13 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
     preferSessionLookupForAnnounceTarget: true,
   },
   onboarding: whatsappOnboardingAdapter,
-  agentTools: () => [getWhatsAppRuntime().channel.whatsapp.createLoginTool()],
+  agentTools: ({ cfg }) => {
+    const account = cfg ? resolveWhatsAppAccount({ cfg, accountId: undefined }) : null;
+    if (account?.provider === "cloud") {
+      return [];
+    }
+    return [getWhatsAppRuntime().channel.whatsapp.createLoginTool()];
+  },
   pairing: {
     idLabel: "whatsappSenderId",
   },
@@ -106,16 +118,21 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
     isEnabled: (account, cfg) => account.enabled && cfg.web?.enabled !== false,
     disabledReason: () => "disabled",
     isConfigured: async (account) =>
-      await getWhatsAppRuntime().channel.whatsapp.webAuthExists(account.authDir),
-    unconfiguredReason: () => "not linked",
+      account.provider === "cloud"
+        ? isCloudConfigured(account)
+        : await getWhatsAppRuntime().channel.whatsapp.webAuthExists(account.authDir),
+    unconfiguredReason: (account) =>
+      account.provider === "cloud" ? "missing cloud credentials" : "not linked",
     describeAccount: (account) => ({
       accountId: account.accountId,
       name: account.name,
       enabled: account.enabled,
-      configured: Boolean(account.authDir),
-      linked: Boolean(account.authDir),
+      configured:
+        account.provider === "cloud" ? isCloudConfigured(account) : Boolean(account.authDir),
+      linked: account.provider === "cloud" ? isCloudConfigured(account) : Boolean(account.authDir),
       dmPolicy: account.dmPolicy,
       allowFrom: account.allowFrom,
+      mode: account.provider ?? "baileys",
     }),
     resolveAllowFrom: ({ cfg, accountId }) => resolveWhatsAppConfigAllowFrom({ cfg, accountId }),
     formatAllowFrom: ({ allowFrom }) => formatWhatsAppConfigAllowFromEntries(allowFrom),
@@ -227,6 +244,9 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
   directory: {
     self: async ({ cfg, accountId }) => {
       const account = resolveWhatsAppAccount({ cfg, accountId });
+      if (account.provider === "cloud") {
+        return null;
+      }
       const { e164, jid } = getWhatsAppRuntime().channel.whatsapp.readWebSelfId(account.authDir);
       const id = e164 ?? jid;
       if (!id) {
@@ -247,6 +267,10 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
       if (!cfg.channels?.whatsapp) {
         return [];
       }
+      const account = resolveWhatsAppAccount({ cfg, accountId: undefined });
+      if (account.provider === "cloud") {
+        return [];
+      }
       const gate = createActionGate(cfg.channels.whatsapp.actions);
       const actions = new Set<ChannelMessageActionName>();
       if (gate("reactions")) {
@@ -259,6 +283,10 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
     },
     supportsAction: ({ action }) => action === "react",
     handleAction: async ({ action, params, cfg, accountId }) => {
+      const account = resolveWhatsAppAccount({ cfg, accountId });
+      if (account.provider === "cloud") {
+        throw new Error("WhatsApp Cloud API does not support message reactions.");
+      }
       if (action !== "react") {
         throw new Error(`Action ${action} is not supported for provider ${meta.id}.`);
       }
@@ -292,6 +320,16 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
     resolveTarget: ({ to, allowFrom, mode }) =>
       resolveWhatsAppOutboundTarget({ to, allowFrom, mode }),
     sendText: async ({ cfg, to, text, accountId, deps, gifPlayback }) => {
+      const account = resolveWhatsAppAccount({ cfg, accountId });
+      if (account.provider === "cloud") {
+        const result = await sendCloudText({
+          cfg,
+          accountId: account.accountId,
+          to,
+          text,
+        });
+        return { channel: "whatsapp", ...result };
+      }
       const send = deps?.sendWhatsApp ?? getWhatsAppRuntime().channel.whatsapp.sendMessageWhatsApp;
       const result = await send(to, text, {
         verbose: false,
@@ -311,6 +349,17 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
       deps,
       gifPlayback,
     }) => {
+      const account = resolveWhatsAppAccount({ cfg, accountId });
+      if (account.provider === "cloud") {
+        const result = await sendCloudMedia({
+          cfg,
+          accountId: account.accountId,
+          to,
+          text,
+          mediaUrl,
+        });
+        return { channel: "whatsapp", ...result };
+      }
       const send = deps?.sendWhatsApp ?? getWhatsAppRuntime().channel.whatsapp.sendMessageWhatsApp;
       const result = await send(to, text, {
         verbose: false,
@@ -323,14 +372,24 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
       return { channel: "whatsapp", ...result };
     },
     sendPoll: async ({ cfg, to, poll, accountId }) =>
-      await getWhatsAppRuntime().channel.whatsapp.sendPollWhatsApp(to, poll, {
-        verbose: getWhatsAppRuntime().logging.shouldLogVerbose(),
-        accountId: accountId ?? undefined,
-        cfg,
-      }),
+      (() => {
+        const account = resolveWhatsAppAccount({ cfg, accountId });
+        if (account.provider === "cloud") {
+          throw new Error("WhatsApp Cloud API does not support polls yet.");
+        }
+        return getWhatsAppRuntime().channel.whatsapp.sendPollWhatsApp(to, poll, {
+          verbose: getWhatsAppRuntime().logging.shouldLogVerbose(),
+          accountId: accountId ?? undefined,
+          cfg,
+        });
+      })(),
   },
   auth: {
     login: async ({ cfg, accountId, runtime, verbose }) => {
+      const account = resolveWhatsAppAccount({ cfg, accountId });
+      if (account.provider === "cloud") {
+        return;
+      }
       const resolvedAccountId = accountId?.trim() || resolveDefaultWhatsAppAccountId(cfg);
       await getWhatsAppRuntime().channel.whatsapp.loginWeb(
         Boolean(verbose),
@@ -346,6 +405,11 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
         return { ok: false, reason: "whatsapp-disabled" };
       }
       const account = resolveWhatsAppAccount({ cfg, accountId });
+      if (account.provider === "cloud") {
+        return isCloudConfigured(account)
+          ? { ok: true, reason: "ok" }
+          : { ok: false, reason: "whatsapp-cloud-not-configured" };
+      }
       const authExists = await (
         deps?.webAuthExists ?? getWhatsAppRuntime().channel.whatsapp.webAuthExists
       )(account.authDir);
@@ -377,16 +441,21 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
     collectStatusIssues: collectWhatsAppStatusIssues,
     buildChannelSummary: async ({ account, snapshot }) => {
       const authDir = account.authDir;
+      const isCloud = account.provider === "cloud";
       const linked =
         typeof snapshot.linked === "boolean"
           ? snapshot.linked
-          : authDir
-            ? await getWhatsAppRuntime().channel.whatsapp.webAuthExists(authDir)
-            : false;
+          : isCloud
+            ? isCloudConfigured(account)
+            : authDir
+              ? await getWhatsAppRuntime().channel.whatsapp.webAuthExists(authDir)
+              : false;
       const authAgeMs =
-        linked && authDir ? getWhatsAppRuntime().channel.whatsapp.getWebAuthAgeMs(authDir) : null;
+        linked && authDir && !isCloud
+          ? getWhatsAppRuntime().channel.whatsapp.getWebAuthAgeMs(authDir)
+          : null;
       const self =
-        linked && authDir
+        linked && authDir && !isCloud
           ? getWhatsAppRuntime().channel.whatsapp.readWebSelfId(authDir)
           : { e164: null, jid: null };
       return {

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
+    "start": "node --import tsx src/index.ts",
     "build": "tsup src/index.ts --format esm --target node22 --out-dir dist",
     "create-license": "tsx scripts/create-license.ts",
     "issue-license": "tsx scripts/issue-license.ts"

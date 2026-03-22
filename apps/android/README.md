@@ -1,94 +1,41 @@
-## PropAi Sync Android App
+## PropAI Sync Android App
 
-Status: **extremely alpha**. The app is actively being rebuilt from the ground up.
+Status: **extremely alpha**. We’re iterating quickly and focusing on real broker workflows.
 
-### Rebuild Checklist
+PropAI Sync is a cloud‑first real estate assistant for Mumbai brokers. It’s chat‑first, minimal, and optimized for fast reading, quick replies, and WhatsApp follow‑ups.
 
-- [x] New 4-step onboarding flow
-- [x] Connect tab with `Setup Code` + `Manual` modes
-- [x] Encrypted persistence for gateway setup/auth state
-- [x] Chat UI restyled
-- [x] Settings UI restyled and de-duplicated (gateway controls moved to Connect)
-- [x] QR code scanning in onboarding
-- [x] Performance improvements
-- [x] Streaming support in chat UI
-- [x] Request camera/location and other permissions in onboarding/settings flow
-- [x] Push notifications for gateway/chat status updates
-- [x] Security hardening (biometric lock, token handling, safer defaults)
-- [x] Voice tab full functionality
-- [x] Screen tab full functionality
-- [ ] Full end-to-end QA and release hardening
+### What It Does
+
+- Chat‑first assistant (text + mic in the chat composer)
+- Provider‑based cloud AI (Claude/Anthropic default)
+- WhatsApp sync via notification listener (when enabled)
+- Screen / Auto modes remain available for advanced workflows
 
 ## Open in Android Studio
 
-- Open the folder `apps/android`.
+- Open the repository root folder.
 
 ## Build / Run
 
 ```bash
-cd apps/android
 ./gradlew :app:assembleDebug
 ./gradlew :app:installDebug
 ./gradlew :app:testDebugUnitTest
 ```
 
-## Kotlin Lint + Format
+## Configure AI Provider
 
-```bash
-pnpm android:lint
-pnpm android:format
-```
+1) Open **Settings → AI Provider**.
+2) Select your provider (Claude/Anthropic default).
+3) Paste API key and model (if required).
 
-Android framework/resource lint (separate pass):
+The app is cloud‑only and requires network access for responses.
 
-```bash
-pnpm android:lint:android
-```
+## Permissions (Optional but Recommended)
 
-Direct Gradle tasks:
-
-```bash
-cd apps/android
-./gradlew :app:ktlintCheck :benchmark:ktlintCheck
-./gradlew :app:ktlintFormat :benchmark:ktlintFormat
-./gradlew :app:lintDebug
-```
-
-`gradlew` auto-detects the Android SDK at `~/Library/Android/sdk` (macOS default) if `ANDROID_SDK_ROOT` / `ANDROID_HOME` are unset.
-
-## Macrobenchmark (Startup + Frame Timing)
-
-```bash
-cd apps/android
-./gradlew :benchmark:connectedDebugAndroidTest
-```
-
-Reports are written under:
-
-- `apps/android/benchmark/build/reports/androidTests/connected/`
-
-## Perf CLI (low-noise)
-
-Deterministic startup measurement + hotspot extraction with compact CLI output:
-
-```bash
-cd apps/android
-./scripts/perf-startup-benchmark.sh
-./scripts/perf-startup-hotspots.sh
-```
-
-Benchmark script behavior:
-
-- Runs only `StartupMacrobenchmark#coldStartup` (10 iterations).
-- Prints median/min/max/COV in one line.
-- Writes timestamped snapshot JSON to `apps/android/benchmark/results/`.
-- Auto-compares with previous local snapshot (or pass explicit baseline: `--baseline <old-benchmarkData.json>`).
-
-Hotspot script behavior:
-
-- Ensures debug app installed, captures startup `simpleperf` data for `.MainActivity`.
-- Prints top DSOs, top symbols, and key app-path clues (Compose/MainActivity/WebView).
-- Writes raw `perf.data` path for deeper follow-up if needed.
+- **Microphone** for voice input inside chat.
+- **Notification access** for WhatsApp sync.
+- **Accessibility** if Auto mode needs it.
 
 ## Run on a Real Android Phone (USB)
 
@@ -107,57 +54,49 @@ pnpm android:install
 pnpm android:run
 ```
 
-If `adb devices -l` shows `unauthorized`, re-plug and accept the trust prompt again.
-
-### USB-only gateway testing (no LAN dependency)
-
-Use `adb reverse` so Android `localhost:18789` tunnels to your laptop `localhost:18789`.
-
-Terminal A (gateway):
-
-```bash
-pnpm PropAi Sync gateway --port 18789 --verbose
-```
-
-Terminal B (USB tunnel):
-
-```bash
-adb reverse tcp:18789 tcp:18789
-```
-
-Then in app **Connect → Manual**:
-
-- Host: `127.0.0.1`
-- Port: `18789`
-- TLS: off
+If `adb devices -l` shows `unauthorized`, re‑plug and accept the trust prompt again.
 
 ## Hot Reload / Fast Iteration
 
 This app is native Kotlin + Jetpack Compose.
 
-- For Compose UI edits: use Android Studio **Live Edit** on a debug build (works on physical devices; project `minSdk=31` already meets API requirement).
-- For many non-structural code/resource changes: use Android Studio **Apply Changes**.
-- For structural/native/manifest/Gradle changes: do full reinstall (`pnpm android:run`).
-- Canvas web content already supports live reload when loaded from Gateway `__PROPAI__/canvas/` (see `docs/platforms/android.md`).
+- For Compose UI edits: use Android Studio **Live Edit** on a debug build.
+- For many non‑structural code/resource changes: use Android Studio **Apply Changes**.
+- For structural/native/manifest/Gradle changes: do a full reinstall (`pnpm android:run`).
 
-## Connect / Pair
-
-1) Start the gateway (on your main machine):
+## Kotlin Lint + Format
 
 ```bash
-pnpm PropAi Sync gateway --port 18789 --verbose
+pnpm android:lint
+pnpm android:format
 ```
 
-2) In the Android app:
+Android framework/resource lint (separate pass):
 
-- Open the **Connect** tab.
-- Use **Setup Code** or **Manual** mode to connect.
+```bash
+pnpm android:lint:android
+```
+
+Direct Gradle tasks:
+
+```bash
+./gradlew :app:ktlintCheck :benchmark:ktlintCheck
+./gradlew :app:ktlintFormat :benchmark:ktlintFormat
+./gradlew :app:lintDebug
+```
+- If `androidassistant qr` fails with `Gateway is only bound to loopback`, rerun it with a reachable URL:
+
+```bash
+androidassistant qr --public-url wss://gateway.example.com
+```
+
+Or persist the same value under `plugins.entries["device-pair"].config.publicUrl`, or expose the gateway on LAN/Tailscale.
 
 3) Approve pairing (on the gateway machine):
 
 ```bash
-PropAi Sync devices list
-PropAi Sync devices approve <requestId>
+androidassistant devices list
+androidassistant devices approve <requestId>
 ```
 
 More details: `docs/platforms/android.md`.
@@ -179,18 +118,18 @@ This suite assumes setup is already done manually. It does **not** install/run/p
 Pre-req checklist:
 
 1) Gateway is running and reachable from the Android app.
-2) Android app is connected to that gateway and `propai nodes status` shows it as paired + connected.
+2) Android app is connected to that gateway and `androidassistant nodes status` shows it as paired + connected.
 3) App stays unlocked and in foreground for the whole run.
 4) Open the app **Screen** tab and keep it active during the run (canvas/A2UI commands require the canvas WebView attached there).
 5) Grant runtime permissions for capabilities you expect to pass (camera/mic/location/notification listener/location, etc.).
 6) No interactive system dialogs should be pending before test start.
-7) Canvas host is enabled and reachable from the device (do not run gateway with `PROPAI_SKIP_CANVAS_HOST=1`; startup logs should include `canvas host mounted at .../__PROPAI__/`).
+7) Canvas host is enabled and reachable from the device (do not run gateway with `ANDROID_ASSISTANT_SKIP_CANVAS_HOST=1`; startup logs should include `canvas host mounted at .../__androidassistant__/`).
 8) Local operator test client pairing is approved. If first run fails with `pairing required`, approve latest pending device pairing request, then rerun:
 9) For A2UI checks, keep the app on **Screen** tab; the node now auto-refreshes canvas capability once on first A2UI reachability failure (TTL-safe retry).
 
 ```bash
-PropAi Sync devices list
-PropAi Sync devices approve --latest
+androidassistant devices list
+androidassistant devices approve --latest
 ```
 
 Run:
@@ -201,10 +140,10 @@ pnpm android:test:integration
 
 Optional overrides:
 
-- `PROPAI_ANDROID_GATEWAY_URL=ws://...` (default: from your local PropAi Sync config)
-- `PROPAI_ANDROID_GATEWAY_TOKEN=...`
-- `PROPAI_ANDROID_GATEWAY_PASSWORD=...`
-- `PROPAI_ANDROID_NODE_ID=...` or `PROPAI_ANDROID_NODE_NAME=...`
+- `ANDROID_ASSISTANT_ANDROID_GATEWAY_URL=ws://...` (default: from your local AndroidAssistant config)
+- `ANDROID_ASSISTANT_ANDROID_GATEWAY_TOKEN=...`
+- `ANDROID_ASSISTANT_ANDROID_GATEWAY_PASSWORD=...`
+- `ANDROID_ASSISTANT_ANDROID_NODE_ID=...` or `ANDROID_ASSISTANT_ANDROID_NODE_NAME=...`
 
 What it does:
 
@@ -216,7 +155,7 @@ What it does:
 Common failure quick-fixes:
 
 - `pairing required` before tests start:
-  - approve pending device pairing (`propai devices approve --latest`) and rerun.
+  - approve pending device pairing (`androidassistant devices approve --latest`) and rerun.
 - `A2UI host not reachable` / `A2UI_HOST_NOT_CONFIGURED`:
   - ensure gateway canvas host is running and reachable, keep the app on the **Screen** tab. The app will auto-refresh canvas capability once; if it still fails, reconnect app and rerun.
 - `NODE_BACKGROUND_UNAVAILABLE: canvas unavailable`:
@@ -226,6 +165,4 @@ Common failure quick-fixes:
 
 This Android app is currently being rebuilt.
 Maintainer: @obviyus. For issues/questions/contributions, please open an issue or reach out on Discord.
-
-
 

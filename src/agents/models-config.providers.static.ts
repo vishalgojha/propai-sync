@@ -126,6 +126,28 @@ const OPENROUTER_DEFAULT_COST = {
   cacheWrite: 0,
 };
 
+const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
+const GROQ_DEFAULT_MODEL_ID = "llama-3.1-8b-instant";
+const GROQ_DEFAULT_CONTEXT_WINDOW = 8192;
+const GROQ_DEFAULT_MAX_TOKENS = 8192;
+const GROQ_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
+export const ELEVENLABS_CONVAI_BASE_URL = "https://api.elevenlabs.io/v1/convai/conversation";
+export const ELEVENLABS_DEFAULT_AGENT_ID = "agent_id";
+const ELEVENLABS_DEFAULT_CONTEXT_WINDOW = 8192;
+const ELEVENLABS_DEFAULT_MAX_TOKENS = 8192;
+const ELEVENLABS_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
 export const QIANFAN_BASE_URL = "https://qianfan.baidubce.com/v2";
 export const QIANFAN_DEFAULT_MODEL_ID = "deepseek-v3.2";
 const QIANFAN_DEFAULT_CONTEXT_WINDOW = 98304;
@@ -446,6 +468,48 @@ export function buildOpenrouterProvider(): ProviderConfig {
         cost: OPENROUTER_DEFAULT_COST,
         contextWindow: 262144,
         maxTokens: 65536,
+      },
+    ],
+  };
+}
+
+export function buildGroqProvider(): ProviderConfig {
+  return {
+    baseUrl: GROQ_BASE_URL,
+    api: "openai-completions",
+    models: [
+      {
+        id: GROQ_DEFAULT_MODEL_ID,
+        name: "Groq Llama 3.1 8B Instant",
+        reasoning: false,
+        input: ["text"],
+        cost: GROQ_DEFAULT_COST,
+        contextWindow: GROQ_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: GROQ_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}
+
+export function buildElevenLabsProvider(): ProviderConfig {
+  const resolvedAgentId = process.env.ELEVENLABS_AGENT_ID?.trim() || ELEVENLABS_DEFAULT_AGENT_ID;
+  const defaultName =
+    resolvedAgentId === ELEVENLABS_DEFAULT_AGENT_ID
+      ? "ElevenLabs Agent (set ELEVENLABS_AGENT_ID)"
+      : `ElevenLabs ${resolvedAgentId}`;
+  return {
+    baseUrl: ELEVENLABS_CONVAI_BASE_URL,
+    api: "elevenlabs-convai",
+    models: [
+      {
+        id: resolvedAgentId,
+        name: defaultName,
+        reasoning: false,
+        input: ["text"],
+        compat: { supportsTools: false },
+        cost: ELEVENLABS_DEFAULT_COST,
+        contextWindow: ELEVENLABS_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: ELEVENLABS_DEFAULT_MAX_TOKENS,
       },
     ],
   };

@@ -20,7 +20,6 @@ x-i18n:
 
 旧版传输：[Bridge 协议](/gateway/bridge-protocol)（TCP JSONL；当前节点已弃用/移除）。
 
-macOS 也可以在**节点模式**下运行：菜单栏应用连接到 Gateway 网关的 WS 服务器，并将其本地 canvas/camera 命令作为节点暴露（因此 `propai nodes …` 可以针对这台 Mac 工作）。
 
 注意事项：
 
@@ -282,11 +281,9 @@ propai nodes notify --node <idOrNameOrIp> --title "Ping" --body "Gateway ready"
 注意事项：
 
 - `system.run` 在负载中返回 stdout/stderr/退出码。
-- `system.notify` 遵守 macOS 应用上的通知权限状态。
 - `system.run` 支持 `--cwd`、`--env KEY=VAL`、`--command-timeout` 和 `--needs-screen-recording`。
 - `system.notify` 支持 `--priority <passive|active|timeSensitive>` 和 `--delivery <system|overlay|auto>`。
 - macOS 节点会丢弃 `PATH` 覆盖；无头节点主机仅在 `PATH` 前置到节点主机 PATH 时才接受它。
-- 在 macOS 节点模式下，`system.run` 受 macOS 应用中的 exec 批准限制（设置 → Exec 批准）。
   Ask/allowlist/full 的行为与无头节点主机相同；被拒绝的提示返回 `SYSTEM_RUN_DENIED`。
 - 在无头节点主机上，`system.run` 受 exec 批准限制（`~/.propai/exec-approvals.json`）。
 
@@ -344,7 +341,6 @@ propai node run --host <gateway-host> --port 18789
 
 ## Mac 节点模式
 
-- macOS 菜单栏应用作为节点连接到 Gateway 网关 WS 服务器（因此 `propai nodes …` 可以针对这台 Mac 工作）。
 - 在远程模式下，应用为 Gateway 网关端口打开 SSH 隧道并连接到 `localhost`。
 
 

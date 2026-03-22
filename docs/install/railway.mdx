@@ -63,6 +63,31 @@ Set these variables on the service:
 - `PROPAI_WORKSPACE_DIR=/data/workspace` (recommended)
 - `PROPAI_GATEWAY_TOKEN` (recommended; treat as an admin secret)
 
+Optional model provider keys (set at least one):
+
+- `GROQ_API_KEY`
+- `OPENROUTER_API_KEY`
+- `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GEMINI_API_KEY`
+- `ELEVENLABS_API_KEY` (optional: use ElevenLabs Conversational AI)
+
+Optional WhatsApp Cloud API (if you want hosted WhatsApp without local pairing):
+
+- `META_WA_ACCESS_TOKEN`
+- `META_WA_PHONE_NUMBER_ID`
+- `META_WA_VERIFY_TOKEN`
+- `META_WA_APP_SECRET`
+- `META_WA_BASE_URL` (optional, default: `https://graph.facebook.com/v21.0`)
+
+Control UI (hosted):
+
+- `PROPAI_CONTROL_UI_ALLOWED_ORIGINS` (example: `https://app.propai.live`)
+- `PROPAI_CONTROL_UI_HOST_HEADER_FALLBACK=true` (optional fallback if you can’t set allowed origins)
+- `ELEVENLABS_API_KEY` (or `XI_API_KEY`) + `ELEVENLABS_AGENT_ID`
+
+Control UI (hosted separately on the website service):
+
+- `CONTROL_UI_REDIRECT_URL=https://propai.live/app` (redirect /app to the website UI when gateway assets are missing)
+
 ## Setup flow
 
 1. Visit `https://<your-railway-domain>/setup` and enter your `SETUP_PASSWORD`.

@@ -53,7 +53,6 @@ propai approvals allowlist remove "~/Projects/**/bin/rg"
 
 - `--node` 使用与 `propai nodes` 相同的解析器（id、name、ip 或 id 前缀）。
 - `--agent` 默认为 `"*"`，表示适用于所有智能体。
-- 节点主机必须公开 `system.execApprovals.get/set`（macOS 应用或无头节点主机）。
 - 审批文件按主机存储在 `~/.propai/exec-approvals.json`。
 
 

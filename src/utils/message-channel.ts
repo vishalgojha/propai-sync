@@ -18,7 +18,6 @@ export const INTERNAL_MESSAGE_CHANNEL = "webchat" as const;
 export type InternalMessageChannel = typeof INTERNAL_MESSAGE_CHANNEL;
 
 const MARKDOWN_CAPABLE_CHANNELS = new Set<string>([
-  "telegram",
   "whatsapp",
   "tui",
   INTERNAL_MESSAGE_CHANNEL,

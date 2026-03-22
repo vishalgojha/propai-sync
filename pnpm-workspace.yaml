@@ -1,6 +1,5 @@
 packages:
   - .
-  - ui
   - apps/*
   - services/*
   - packages/*

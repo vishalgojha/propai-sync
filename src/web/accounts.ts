@@ -13,6 +13,8 @@ export type ResolvedWhatsAppAccount = {
   accountId: string;
   name?: string;
   enabled: boolean;
+  provider?: "baileys" | "cloud";
+  cloud?: WhatsAppAccountConfig["cloud"];
   autoReply: boolean;
   sendReadReceipts: boolean;
   messagePrefix?: string;
@@ -122,6 +124,9 @@ export function resolveWhatsAppAccount(params: {
   const accountId = params.accountId?.trim() || resolveDefaultWhatsAppAccountId(params.cfg);
   const accountCfg = resolveAccountConfig(params.cfg, accountId);
   const enabled = accountCfg?.enabled !== false;
+  const cloud = accountCfg?.cloud ?? rootCfg?.cloud;
+  const provider =
+    accountCfg?.provider ?? rootCfg?.provider ?? (cloud ? "cloud" : "baileys");
   const { authDir, isLegacy } = resolveWhatsAppAuthDir({
     cfg: params.cfg,
     accountId,
@@ -130,6 +135,8 @@ export function resolveWhatsAppAccount(params: {
     accountId,
     name: accountCfg?.name?.trim() || undefined,
     enabled,
+    provider,
+    cloud,
     autoReply: accountCfg?.autoReply ?? rootCfg?.autoReply ?? false,
     sendReadReceipts: accountCfg?.sendReadReceipts ?? rootCfg?.sendReadReceipts ?? true,
     messagePrefix:

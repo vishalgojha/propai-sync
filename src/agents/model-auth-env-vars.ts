@@ -27,6 +27,7 @@ export const PROVIDER_ENV_API_KEY_CANDIDATES: Record<string, string[]> = {
   moonshot: ["MOONSHOT_API_KEY"],
   minimax: ["MINIMAX_API_KEY"],
   nvidia: ["NVIDIA_API_KEY"],
+  elevenlabs: ["ELEVENLABS_API_KEY", "XI_API_KEY"],
   xiaomi: ["XIAOMI_API_KEY"],
   synthetic: ["SYNTHETIC_API_KEY"],
   venice: ["VENICE_API_KEY"],

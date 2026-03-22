@@ -160,7 +160,6 @@ propai hooks enable session-memory
 
 **启用后：**
 
-- 重启 Gateway 网关以重新加载钩子（macOS 上重启菜单栏应用，或在开发环境中重启 Gateway 网关进程）。
 
 ## 禁用钩子
 

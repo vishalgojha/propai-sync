@@ -77,7 +77,7 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
       )
     }
   var setupCode by rememberSaveable { mutableStateOf("") }
-  var manualHostInput by rememberSaveable { mutableStateOf(manualHost.ifBlank { "10.0.2.2" }) }
+  var manualHostInput by rememberSaveable { mutableStateOf(manualHost) }
   var manualPortInput by rememberSaveable { mutableStateOf(manualPort.toString()) }
   var manualTlsInput by rememberSaveable { mutableStateOf(manualTls) }
   var passwordInput by rememberSaveable { mutableStateOf("") }
@@ -266,9 +266,11 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
             )
           }
 
-          Text("Run these on the gateway host:", style = mobileCallout, color = mobileTextSecondary)
-          CommandBlock("PropAi Sync qr --setup-code-only")
-          CommandBlock("PropAi Sync qr --json")
+          Text(
+            "Generate a setup code or QR in PropAi Sync Control (propai.live/app) and paste it below.",
+            style = mobileCallout,
+            color = mobileTextSecondary,
+          )
 
           if (inputMode == ConnectInputMode.SetupCode) {
             Text("Setup Code", style = mobileCaption1.copy(fontWeight = FontWeight.SemiBold), color = mobileTextSecondary)
@@ -278,7 +280,7 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
                 setupCode = it
                 validationText = null
               },
-              placeholder = { Text("Paste setup code", style = mobileBody, color = mobileTextTertiary) },
+              placeholder = { Text("Paste setup code from propai.live/app", style = mobileBody, color = mobileTextTertiary) },
               modifier = Modifier.fillMaxWidth(),
               minLines = 3,
               maxLines = 5,
@@ -291,27 +293,6 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
               EndpointPreview(endpoint = setupResolvedEndpoint)
             }
           } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-              QuickFillChip(
-                label = "Android Emulator",
-                onClick = {
-                  manualHostInput = "10.0.2.2"
-                  manualPortInput = "18789"
-                  manualTlsInput = false
-                  validationText = null
-                },
-              )
-              QuickFillChip(
-                label = "Localhost",
-                onClick = {
-                  manualHostInput = "127.0.0.1"
-                  manualPortInput = "18789"
-                  manualTlsInput = false
-                  validationText = null
-                },
-              )
-            }
-
             Text("Host", style = mobileCaption1.copy(fontWeight = FontWeight.SemiBold), color = mobileTextSecondary)
             OutlinedTextField(
               value = manualHostInput,
@@ -319,7 +300,7 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
                 manualHostInput = it
                 validationText = null
               },
-              placeholder = { Text("10.0.2.2", style = mobileBody, color = mobileTextTertiary) },
+              placeholder = { Text("gateway.up.railway.app", style = mobileBody, color = mobileTextTertiary) },
               modifier = Modifier.fillMaxWidth(),
               singleLine = true,
               keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
@@ -335,7 +316,7 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
                 manualPortInput = it
                 validationText = null
               },
-              placeholder = { Text("18789", style = mobileBody, color = mobileTextTertiary) },
+              placeholder = { Text("443", style = mobileBody, color = mobileTextTertiary) },
               modifier = Modifier.fillMaxWidth(),
               singleLine = true,
               keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -430,43 +411,6 @@ private fun MethodChip(label: String, active: Boolean, onClick: () -> Unit) {
     border = BorderStroke(1.dp, if (active) Color(0xFF184DAF) else mobileBorderStrong),
   ) {
     Text(label, style = mobileCaption1.copy(fontWeight = FontWeight.Bold))
-  }
-}
-
-@Composable
-private fun QuickFillChip(label: String, onClick: () -> Unit) {
-  Button(
-    onClick = onClick,
-    shape = RoundedCornerShape(999.dp),
-    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-    colors =
-      ButtonDefaults.buttonColors(
-        containerColor = mobileAccentSoft,
-        contentColor = mobileAccent,
-      ),
-    elevation = null,
-  ) {
-    Text(label, style = mobileCaption1.copy(fontWeight = FontWeight.SemiBold))
-  }
-}
-
-@Composable
-private fun CommandBlock(command: String) {
-  Surface(
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(12.dp),
-    color = mobileCodeBg,
-    border = BorderStroke(1.dp, Color(0xFF2B2E35)),
-  ) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-      Box(modifier = Modifier.width(3.dp).height(42.dp).background(Color(0xFF3FC97A)))
-      Text(
-        text = command,
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-        style = mobileCallout.copy(fontFamily = FontFamily.Monospace),
-        color = mobileCodeText,
-      )
-    }
   }
 }
 

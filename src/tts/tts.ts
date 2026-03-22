@@ -26,6 +26,7 @@ import { logVerbose } from "../globals.js";
 import { resolvePreferredPropAiSyncTmpDir } from "../infra/tmp-propai-dir.js";
 import { stripMarkdown } from "../line/markdown-to-line.js";
 import { isVoiceCompatibleAudio } from "../media/audio.js";
+import { reportTtsUsage } from "../usage/usage-reporter.js";
 import { CONFIG_DIR, resolveUserPath } from "../utils.js";
 import {
   DEFAULT_OPENAI_BASE_URL,
@@ -501,7 +502,7 @@ export function setLastTtsAttempt(entry: TtsStatusEntry | undefined): void {
 }
 
 /** Channels that require opus audio and support voice-bubble playback */
-const VOICE_BUBBLE_CHANNELS = new Set(["telegram", "whatsapp"]);
+const VOICE_BUBBLE_CHANNELS = new Set(["whatsapp"]);
 
 function resolveOutputFormat(channelId?: string | null) {
   if (channelId && VOICE_BUBBLE_CHANNELS.has(channelId)) {
@@ -665,9 +666,11 @@ export async function textToSpeech(params: {
       }
 
       let audioBuffer: Buffer;
+      let resolvedModelId = "";
       if (provider === "elevenlabs") {
         const voiceIdOverride = params.overrides?.elevenlabs?.voiceId;
         const modelIdOverride = params.overrides?.elevenlabs?.modelId;
+        resolvedModelId = modelIdOverride ?? config.elevenlabs.modelId;
         const voiceSettings = {
           ...config.elevenlabs.voiceSettings,
           ...params.overrides?.elevenlabs?.voiceSettings,
@@ -680,7 +683,7 @@ export async function textToSpeech(params: {
           apiKey,
           baseUrl: config.elevenlabs.baseUrl,
           voiceId: voiceIdOverride ?? config.elevenlabs.voiceId,
-          modelId: modelIdOverride ?? config.elevenlabs.modelId,
+          modelId: resolvedModelId,
           outputFormat: output.elevenlabs,
           seed: seedOverride ?? config.elevenlabs.seed,
           applyTextNormalization: normalizationOverride ?? config.elevenlabs.applyTextNormalization,
@@ -691,11 +694,12 @@ export async function textToSpeech(params: {
       } else {
         const openaiModelOverride = params.overrides?.openai?.model;
         const openaiVoiceOverride = params.overrides?.openai?.voice;
+        resolvedModelId = openaiModelOverride ?? config.openai.model;
         audioBuffer = await openaiTTS({
           text: params.text,
           apiKey,
           baseUrl: config.openai.baseUrl,
-          model: openaiModelOverride ?? config.openai.model,
+          model: resolvedModelId,
           voice: openaiVoiceOverride ?? config.openai.voice,
           speed: config.openai.speed,
           instructions: config.openai.instructions,
@@ -705,6 +709,14 @@ export async function textToSpeech(params: {
       }
 
       const latencyMs = Date.now() - providerStart;
+      if (provider === "openai" || provider === "elevenlabs") {
+        reportTtsUsage({
+          provider,
+          model: resolvedModelId || "unknown",
+          characters: params.text.length,
+          latencyMs,
+        });
+      }
 
       const tempRoot = resolvePreferredPropAiSyncTmpDir();
       mkdirSync(tempRoot, { recursive: true, mode: 0o700 });
@@ -778,11 +790,18 @@ export async function textToSpeechTelephony(params: {
           voiceSettings: config.elevenlabs.voiceSettings,
           timeoutMs: config.timeoutMs,
         });
+        const latencyMs = Date.now() - providerStart;
+        reportTtsUsage({
+          provider,
+          model: config.elevenlabs.modelId,
+          characters: params.text.length,
+          latencyMs,
+        });
 
         return {
           success: true,
           audioBuffer,
-          latencyMs: Date.now() - providerStart,
+          latencyMs,
           provider,
           outputFormat: output.format,
           sampleRate: output.sampleRate,
@@ -801,11 +820,18 @@ export async function textToSpeechTelephony(params: {
         responseFormat: output.format,
         timeoutMs: config.timeoutMs,
       });
+      const latencyMs = Date.now() - providerStart;
+      reportTtsUsage({
+        provider,
+        model: config.openai.model,
+        characters: params.text.length,
+        latencyMs,
+      });
 
       return {
         success: true,
         audioBuffer,
-        latencyMs: Date.now() - providerStart,
+        latencyMs,
         provider,
         outputFormat: output.format,
         sampleRate: output.sampleRate,

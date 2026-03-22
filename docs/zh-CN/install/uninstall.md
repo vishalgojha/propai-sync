@@ -71,10 +71,8 @@ pnpm remove -g propai
 bun remove -g propai
 ```
 
-6. 如果你安装了 macOS 应用：
 
 ```bash
-rm -rf /Applications/propai.app
 ```
 
 注意事项：

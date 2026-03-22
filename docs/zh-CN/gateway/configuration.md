@@ -2828,7 +2828,6 @@ propai 可以为 propai 启动一个**专用、隔离的** Chrome/Brave/Edge/Chr
 - 控制服务：仅 local loopback（端口从 `gateway.port` 派生，默认 `18791`）
 - CDP URL：`http://127.0.0.1:18792`（控制服务 + 1，旧版单配置文件）
 - 配置文件颜色：`#FF4500`（龙虾橙）
-- 注意：控制服务器由运行中的 Gateway 网关（propai.app 菜单栏或 `propai gateway`）启动。
 - 自动检测顺序：如果为 Chromium 内核则使用默认浏览器；否则 Chrome → Brave → Edge → Chromium → Chrome Canary。
 
 ```json5
@@ -2951,11 +2950,7 @@ propai 可以为 propai 启动一个**专用、隔离的** Chrome/Brave/Edge/Chr
 - `gateway.remote.token` 提供远程调用的 token（不需要认证时留空）。
 - `gateway.remote.password` 提供远程调用的密码（不需要认证时留空）。
 
-macOS 应用行为：
 
-- propai.app 监视 `~/.propai/propai.json`，当 `gateway.mode` 或 `gateway.remote.url` 变更时实时切换模式。
-- 如果 `gateway.mode` 未设置但 `gateway.remote.url` 已设置，macOS 应用将其视为远程模式。
-- 当你在 macOS 应用中更改连接模式时，它会将 `gateway.mode`（以及远程模式下的 `gateway.remote.url` + `gateway.remote.transport`）写回配置文件。
 
 ```json5
 {
@@ -2970,7 +2965,6 @@ macOS 应用行为：
 }
 ```
 
-直连传输示例（macOS 应用）：
 
 ```json5
 {

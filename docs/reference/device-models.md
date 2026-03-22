@@ -1,5 +1,4 @@
 ---
-summary: "How propai vendors Apple device model identifiers for friendly names in the macOS app."
 read_when:
   - Updating device model identifier mappings or NOTICE/license files
   - Changing how Instances UI displays device names
@@ -40,7 +39,6 @@ curl -fsSL "https://raw.githubusercontent.com/kyle-seongwoo-jun/apple-device-ide
 ```
 
 4. Ensure `apps/macos/Sources/propai/Resources/DeviceModels/LICENSE.apple-device-identifiers.txt` still matches upstream (replace it if the upstream license changes).
-5. Verify the macOS app builds cleanly (no warnings):
 
 ```bash
 swift build --package-path apps/macos

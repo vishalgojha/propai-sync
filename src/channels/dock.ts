@@ -1,18 +1,10 @@
+import { formatWhatsAppConfigAllowFromEntries } from "../plugin-sdk/channel-config-helpers.js";
 import {
-  formatAllowFromLowercase,
-} from "../plugin-sdk/allow-from.js";
-import {
-  mapAllowFromEntries,
-  resolveOptionalConfigString,
-  formatWhatsAppConfigAllowFromEntries,
   resolveWhatsAppConfigAllowFrom,
   resolveWhatsAppConfigDefaultTo,
 } from "../plugin-sdk/channel-config-helpers.js";
 import { requireActivePluginRegistry } from "../plugins/runtime.js";
-import { inspectTelegramAccount } from "../telegram/account-inspect.js";
 import {
-  resolveTelegramGroupRequireMention,
-  resolveTelegramGroupToolPolicy,
   resolveWhatsAppGroupRequireMention,
   resolveWhatsAppGroupToolPolicy,
 } from "./plugins/group-mentions.js";
@@ -73,49 +65,6 @@ const DEFAULT_OUTBOUND_TEXT_CHUNK_LIMIT_4000 = { textChunkLimit: 4000 };
 // - add a new entry to `DOCKS`
 // - keep it cheap; push heavy logic into `src/channels/plugins/<id>.ts` or channel modules
 const DOCKS: Record<ChatChannelId, ChannelDock> = {
-  telegram: {
-    id: "telegram",
-    capabilities: {
-      chatTypes: ["direct", "group", "channel", "thread"],
-      nativeCommands: true,
-      blockStreaming: true,
-    },
-    outbound: DEFAULT_OUTBOUND_TEXT_CHUNK_LIMIT_4000,
-    config: {
-      resolveAllowFrom: ({ cfg, accountId }) =>
-        mapAllowFromEntries(inspectTelegramAccount({ cfg, accountId }).config.allowFrom),
-      formatAllowFrom: ({ allowFrom }) =>
-        formatAllowFromLowercase({
-          allowFrom,
-          stripPrefixRe: /^(telegram|tg):/i,
-        }),
-      resolveDefaultTo: ({ cfg, accountId }) =>
-        resolveOptionalConfigString(inspectTelegramAccount({ cfg, accountId }).config.defaultTo),
-    },
-    groups: {
-      resolveRequireMention: resolveTelegramGroupRequireMention,
-      resolveToolPolicy: resolveTelegramGroupToolPolicy,
-    },
-    threading: {
-      resolveReplyToMode: ({ cfg }) => cfg.channels?.telegram?.replyToMode ?? "off",
-      buildToolContext: ({ context, hasRepliedRef }) => {
-        // Telegram auto-threading should only use actual thread/topic IDs.
-        // ReplyToId is a message ID and causes invalid message_thread_id in DMs.
-        const threadId = context.MessageThreadId;
-        const rawCurrentMessageId = context.CurrentMessageId;
-        const currentMessageId =
-          typeof rawCurrentMessageId === "number"
-            ? rawCurrentMessageId
-            : rawCurrentMessageId?.trim() || undefined;
-        return {
-          currentChannelId: context.To?.trim() || undefined,
-          currentThreadTs: threadId != null ? String(threadId) : undefined,
-          currentMessageId,
-          hasRepliedRef,
-        };
-      },
-    },
-  },
   whatsapp: {
     id: "whatsapp",
     capabilities: {

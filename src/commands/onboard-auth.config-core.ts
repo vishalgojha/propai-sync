@@ -36,6 +36,7 @@ import {
   KILOCODE_DEFAULT_MODEL_REF,
   MISTRAL_DEFAULT_MODEL_REF,
   OPENROUTER_DEFAULT_MODEL_REF,
+  GROQ_DEFAULT_MODEL_REF,
   TOGETHER_DEFAULT_MODEL_REF,
   XIAOMI_DEFAULT_MODEL_REF,
   ZAI_DEFAULT_MODEL_REF,
@@ -62,6 +63,8 @@ import {
 } from "./onboard-auth.config-shared.js";
 import {
   buildMistralModelDefinition,
+  buildGroqModelDefinition,
+  buildElevenLabsModelDefinition,
   buildZaiModelDefinition,
   buildMoonshotModelDefinition,
   buildXaiModelDefinition,
@@ -76,6 +79,11 @@ import {
   MOONSHOT_CN_BASE_URL,
   MOONSHOT_DEFAULT_MODEL_ID,
   MOONSHOT_DEFAULT_MODEL_REF,
+  ELEVENLABS_BASE_URL,
+  ELEVENLABS_DEFAULT_AGENT_ID,
+  ELEVENLABS_DEFAULT_MODEL_REF,
+  GROQ_BASE_URL,
+  GROQ_DEFAULT_MODEL_ID,
   ZAI_DEFAULT_MODEL_ID,
   resolveZaiBaseUrl,
   XAI_BASE_URL,
@@ -173,6 +181,54 @@ export function applyOpenrouterProviderConfig(cfg: PropAiSyncConfig): PropAiSync
 export function applyOpenrouterConfig(cfg: PropAiSyncConfig): PropAiSyncConfig {
   const next = applyOpenrouterProviderConfig(cfg);
   return applyAgentDefaultModelPrimary(next, OPENROUTER_DEFAULT_MODEL_REF);
+}
+
+export function applyGroqProviderConfig(cfg: PropAiSyncConfig): PropAiSyncConfig {
+  const models = { ...cfg.agents?.defaults?.models };
+  models[GROQ_DEFAULT_MODEL_REF] = {
+    ...models[GROQ_DEFAULT_MODEL_REF],
+    alias: models[GROQ_DEFAULT_MODEL_REF]?.alias ?? "Groq",
+  };
+
+  const defaultModel = buildGroqModelDefinition();
+
+  return applyProviderConfigWithDefaultModel(cfg, {
+    agentModels: models,
+    providerId: "groq",
+    api: "openai-completions",
+    baseUrl: GROQ_BASE_URL,
+    defaultModel,
+    defaultModelId: GROQ_DEFAULT_MODEL_ID,
+  });
+}
+
+export function applyGroqConfig(cfg: PropAiSyncConfig): PropAiSyncConfig {
+  const next = applyGroqProviderConfig(cfg);
+  return applyAgentDefaultModelPrimary(next, GROQ_DEFAULT_MODEL_REF);
+}
+
+export function applyElevenLabsProviderConfig(cfg: PropAiSyncConfig): PropAiSyncConfig {
+  const models = { ...cfg.agents?.defaults?.models };
+  models[ELEVENLABS_DEFAULT_MODEL_REF] = {
+    ...models[ELEVENLABS_DEFAULT_MODEL_REF],
+    alias: models[ELEVENLABS_DEFAULT_MODEL_REF]?.alias ?? "ElevenLabs",
+  };
+
+  const defaultModel = buildElevenLabsModelDefinition();
+
+  return applyProviderConfigWithDefaultModel(cfg, {
+    agentModels: models,
+    providerId: "elevenlabs",
+    api: "elevenlabs-convai",
+    baseUrl: ELEVENLABS_BASE_URL,
+    defaultModel,
+    defaultModelId: ELEVENLABS_DEFAULT_AGENT_ID,
+  });
+}
+
+export function applyElevenLabsConfig(cfg: PropAiSyncConfig): PropAiSyncConfig {
+  const next = applyElevenLabsProviderConfig(cfg);
+  return applyAgentDefaultModelPrimary(next, ELEVENLABS_DEFAULT_MODEL_REF);
 }
 
 export function applyMoonshotProviderConfig(cfg: PropAiSyncConfig): PropAiSyncConfig {

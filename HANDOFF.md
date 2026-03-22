@@ -1,176 +1,218 @@
-# Handoff (2026-03-17)
+# PropAi Sync Handoff
 
-## Project Snapshot
+Date: 2026-03-19  
+Repo: `C:\Users\visha\propai-sync`
 
-PropAi Sync is being treated as a production desktop + mobile product. The current repo state is centered on:
+## Status
+Work completed across:
+- licensing
+- marketing website
+- realtor-friendly hosted UI copy
 
-- desktop-first onboarding with product-style setup flow
-- production-oriented licensing with persistent activations
-- licensing now framed around activation keys, device activations, and refresh tokens instead of a minimal JWT-only gate
+Main branch is current.
+
+## Commits
+- `9345c1956` — `chore: checkpoint licensing and desktop onboarding work`
+- `3817f0041` — `feat: add propai sync marketing website`
+- `4ac222726` — `feat: simplify desktop copy for real estate users`
 
 ## Completed
 
-### Onboarding and Product UX
+### Licensing
+Implemented admin-approved trial behavior so approvals default to a 7-day trial unless an explicit expiry is supplied.
 
-- Desktop onboarding was reshaped into a consumer-facing first-run flow in [`ui/src/ui/views/onboarding.ts`](/mnt/c/Users/visha/propai-sync/ui/src/ui/views/onboarding.ts).
-- The onboarding visual system was shifted to a jet-black background and mint-green text treatment in [`ui/src/styles/components.css`](/mnt/c/Users/visha/propai-sync/ui/src/styles/components.css).
-- Onboarding choices were simplified in [`ui/src/ui/onboarding-presets.ts`](/mnt/c/Users/visha/propai-sync/ui/src/ui/onboarding-presets.ts).
+Changed:
+- `C:\Users\visha\propai-sync\services\licensing\src\index.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\license.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\app.ts`
+- `C:\Users\visha\propai-sync\services\licensing\README.md`
 
-### Licensing Backend
+Behavior:
+- pending request approved by admin
+- if `expiresAt` is omitted, backend sets expiry to `now + 7 days`
+- env var added:
+  - `LICENSE_PENDING_APPROVAL_TRIAL_DAYS`
+  - default `7`
+- UI success state can show trial end date
 
-- The licensing service was rebuilt around persistent SQLite state in [`services/licensing/src/index.ts`](/mnt/c/Users/visha/propai-sync/services/licensing/src/index.ts).
-- New production paths exist for:
-  - `POST /v1/activations/activate`
-  - `POST /v1/activations/refresh`
-  - `POST /v1/activations/deactivate`
-  - `POST /v1/admin/licenses`
-- The service now tracks:
-  - licenses
-  - activation keys
-  - per-device activations
-  - device caps via `maxDevices`
-  - activation token refresh lifecycle
-- Legacy compatibility remains for `/verify` and `/issue`.
-
-### Desktop Licensing Flow
-
-- The Tauri bridge now exposes explicit activation lifecycle commands in [`apps/tauri/src-tauri/src/gateway_ipc.rs`](/mnt/c/Users/visha/propai-sync/apps/tauri/src-tauri/src/gateway_ipc.rs) and wires them in [`apps/tauri/src-tauri/src/main.rs`](/mnt/c/Users/visha/propai-sync/apps/tauri/src-tauri/src/main.rs).
-- The UI licensing client now stores:
-  - activation key
-  - activation token
-  - entitlement cache
-  - stable device ID
-- Desktop boot now supports:
-  - cached entitlement startup
-  - silent refresh using activation token
-  - offline grace handling
-  - silent re-activation fallback
-- Relevant files:
-  - [`ui/src/ui/license.ts`](/mnt/c/Users/visha/propai-sync/ui/src/ui/license.ts)
-  - [`ui/src/ui/app.ts`](/mnt/c/Users/visha/propai-sync/ui/src/ui/app.ts)
-  - [`ui/src/ui/views/license-panel.ts`](/mnt/c/Users/visha/propai-sync/ui/src/ui/views/license-panel.ts)
-  - [`ui/src/ui/views/landing.ts`](/mnt/c/Users/visha/propai-sync/ui/src/ui/views/landing.ts)
-
-### Licensing Tooling and Docs
-
-- Licensing docs were rewritten to describe the production activation model in [`services/licensing/README.md`](/mnt/c/Users/visha/propai-sync/services/licensing/README.md).
-- Local issuance helpers were aligned to the DB-backed model in:
-  - [`services/licensing/scripts/create-license.ts`](/mnt/c/Users/visha/propai-sync/services/licensing/scripts/create-license.ts)
-  - [`services/licensing/scripts/issue-license.ts`](/mnt/c/Users/visha/propai-sync/services/licensing/scripts/issue-license.ts)
-  - [`apps/tauri/scripts/issue-activation-key.mjs`](/mnt/c/Users/visha/propai-sync/apps/tauri/scripts/issue-activation-key.mjs)
-
-## Verification
-
-- `pnpm --dir services/licensing exec tsc --noEmit` passes.
-- `pnpm --dir services/licensing build` is currently blocked by the repo's mixed Windows/WSL dependency state. Rollup's native optional package is missing in WSL.
-- Full desktop `cargo check` was started and progressed through the Tauri dependency graph, but a complete clean finish was not captured in-session.
-
-## Environment Rule
-
-Use PowerShell on Windows for installs and builds, not WSL.
-
-Reason:
-
-- the repo uses native Node and Tauri dependencies
-- WSL currently has a mismatched `node_modules` state
-- build/install work should run from [`C:\Users\visha\propai-sync`](/mnt/c/Users/visha/propai-sync)
-
-Recommended install path:
-
+Validation:
 ```powershell
-cd C:\Users\visha\propai-sync
-pnpm install
+pnpm --dir C:\Users\visha\propai-sync\services\licensing exec tsc --noEmit
+```
+Passed.
+
+### Marketing Website
+Added a new marketing website to the monorepo.
+
+Location:
+- `C:\Users\visha\propai-sync\apps\website`
+
+Key files:
+- `C:\Users\visha\propai-sync\apps\website\src\App.tsx`
+- `C:\Users\visha\propai-sync\apps\website\src\index.css`
+- `C:\Users\visha\propai-sync\apps\website\package.json`
+- `C:\Users\visha\propai-sync\apps\website\vite.config.ts`
+- `C:\Users\visha\propai-sync\apps\website\index.html`
+
+Completed:
+- kept overall design structure
+- rewrote copy for realtors and staff
+- used branding:
+  - `Built by Chaos Craft Labs`
+- avoided adding green-gradient-heavy styling
+- wired public links:
+  - installer/docs: `https://docs.propai.live/install/installer`
+  - getting started: `https://docs.propai.live/start/getting-started`
+  - FAQ: `https://docs.propai.live/help/faq`
+  - company: `https://www.chaoscraftlabs.com`
+
+Validation:
+```powershell
+pnpm --dir C:\Users\visha\propai-sync\apps\website run build
+pnpm --dir C:\Users\visha\propai-sync\apps\website run lint
+```
+Both passed.
+
+### Hosted Control API (RBAC)
+Added a new hosted control API for multi-tenant RBAC.
+
+Location:
+- `C:\Users\visha\propai-sync\services\control-api`
+
+Key features:
+- tenants, users, memberships, invites
+- roles: owner, manager, agent, viewer
+- JWT auth + invite flow
+
+Files:
+- `C:\Users\visha\propai-sync\services\control-api\src\index.ts`
+- `C:\Users\visha\propai-sync\services\control-api\README.md`
+- `C:\Users\visha\propai-sync\.env.example`
+
+### Product Language Direction
+Agreed app language should be fully non-technical.
+
+User constraints:
+- only realtors and their employees use this
+- no dev language
+- WhatsApp is primary
+- Telegram is optional
+- keep design direction mostly intact
+- do not add green gradients by default
+- keep branding line:
+  - `Built by Chaos Craft Labs`
+
+Naming direction:
+- `Cron` → `Auto Tasks`
+- `Config` → `Settings`
+- `Channels` → `WhatsApp & Apps`
+- `Sessions` → `Conversations`
+- `Usage` → `Reports`
+- debug/support content should be hidden or secondary
+
+### Realtor-Friendly Hosted UI Copy Pass
+A large wording pass was implemented in the hosted UI.
+
+Changed files:
+- `C:\Users\visha\propai-sync\ui\src\i18n\locales\en.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\app-render.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\onboarding.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\license-panel.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\config.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\debug.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\instances.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\nodes.ts`
+
+Completed:
+- onboarding now reads like a simple business setup flow
+- activation panel now reads as trial-first instead of licensing jargon
+- top app chrome says `Real Estate Assistant`
+- settings uses `Guided` and `Advanced` instead of `Form` and `Raw`
+- support/device screens use softer language like:
+  - `Phone Access`
+  - `Connected Devices`
+  - `Active Connections`
+  - `Allow / Deny / Refresh / Turn off`
+- more internal terms replaced with plain wording:
+  - website link instead of webhook in user-facing strings
+  - connection instead of gateway where practical
+  - conversation instead of session in user-facing copy
+
+Focused validation:
+```powershell
+git -C C:\Users\visha\propai-sync diff --check -- ui/src/i18n/locales/en.ts ui/src/ui/app-render.ts ui/src/ui/views/onboarding.ts ui/src/ui/views/license-panel.ts ui/src/ui/views/config.ts ui/src/ui/views/debug.ts ui/src/ui/views/instances.ts ui/src/ui/views/nodes.ts
+```
+Passed aside from line-ending warnings on some files.
+
+## Pending
+
+### 1. Continue Copy Cleanup in Remaining User Screens
+Still worth reviewing:
+- `C:\Users\visha\propai-sync\ui\src\ui\views\channels.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\overview.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\sessions.ts`
+- any schema-generated labels inside settings forms
+
+Goal:
+- keep app language aligned with the marketing site
+- remove remaining support/dev phrasing visible to end users
+
+### 2. Hosted App Home Polish
+A final visual + copy polish pass may still be wanted for the hosted home/onboarding.
+
+Desired direction:
+- activate trial
+- connect WhatsApp
+- finish setup
+- keep leads and follow-ups in one place
+- keep branding line:
+  - `Built by Chaos Craft Labs`
+
+### 4. UI Typecheck Has Existing Unrelated Failures
+Not addressed in this pass.
+
+Known failing areas from earlier run:
+- `C:\Users\visha\propai-sync\src\wizard\onboarding.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\app-render.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\controllers\agents.test.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\controllers\config.test.ts`
+
+These need a separate follow-up pass.
+
+## Notes
+- Tauri app removed (hosted-only)
+- builds/checks are better run from Windows PowerShell than WSL for this repo
+- keep user-facing language simple enough for non-technical staff
+- WhatsApp-first is core positioning
+- Telegram should be framed as optional
+
+## Resume Commands
+
+Website:
+```powershell
+pnpm --dir C:\Users\visha\propai-sync\apps\website run build
+pnpm --dir C:\Users\visha\propai-sync\apps\website run lint
 ```
 
-## Known Gaps
-
-- Desktop licensing is now production-shaped, but there is no mobile activation flow yet.
-- There is no mobile pairing UX that consumes the licensing model.
-- There is no mobile device-management UI in desktop yet.
-- The service does not yet expose end-user activation listing or admin revocation UI.
-- Full Windows-side clean build verification still needs to be rerun after a fresh native install.
-
-## Next Track: Mobile Support
-
-Mobile support is the next implementation phase.
-
-### Objective
-
-Ship a real desktop + mobile activation and pairing model where mobile is a first-class licensed device, not an afterthought or borrowed desktop session.
-
-### Required Product Outcome
-
-- User activates desktop with an activation key.
-- Desktop offers mobile pairing immediately after setup.
-- Mobile app receives its own activation record.
-- Desktop and mobile both refresh entitlements independently.
-- Device limits apply across desktop + mobile according to plan.
-
-### Required Backend Work
-
-Add the next licensing and pairing APIs:
-
-- `POST /v1/pairing/session`
-- `POST /v1/pairing/complete`
-- `GET /v1/licenses/me`
-- `GET /v1/activations`
-- `POST /v1/activations/revoke`
-
-Persist:
-
-- pairing sessions
-- mobile activation metadata
-- activation revoke history
-- optional account ownership metadata if mobile sign-in is account-backed
-
-### Required Desktop Work
-
-- Add a dedicated mobile-pairing step after onboarding completion.
-- Show pairing state in desktop:
-  - waiting
-  - code generated
-  - mobile connected
-  - activation complete
-- Add device-management UI for current plan and used seats.
-- Add revoke/deactivate actions for stale devices.
-
-### Required Mobile Work
-
-- Create activation bootstrap flow for mobile:
-  - scan QR or enter pairing code
-  - bind mobile device ID
-  - fetch entitlement
-  - store activation token locally
-- Support refresh and grace behavior mirroring desktop.
-- Show license and device state inside mobile settings.
-
-### Recommended Execution Order
-
-1. Finalize Windows-native install and rerun desktop verification from PowerShell.
-2. Add backend pairing/session schema and endpoints.
-3. Add desktop pairing step and device-management surfaces.
-4. Implement mobile activation bootstrap against the new APIs.
-5. Add revoke/deactivate handling and device-limit enforcement tests across desktop + mobile.
-
-## Immediate Next Command Set
-
-Run from PowerShell:
-
+Licensing service:
 ```powershell
-cd C:\Users\visha\propai-sync
-pnpm install
-pnpm --dir services/licensing dev
-pnpm desktop:dev
+pnpm --dir C:\Users\visha\propai-sync\services\licensing exec tsc --noEmit
 ```
 
-Issue an activation key from a second PowerShell window:
-
+UI typecheck:
 ```powershell
-cd C:\Users\visha\propai-sync
-$env:LICENSE_ADMIN_KEY=$env:ADMIN_KEY
-pnpm --dir services/licensing issue-license -- --plan pro --max-devices 2 --expires-at 2026-12-31
+pnpm --dir C:\Users\visha\propai-sync\ui exec tsc --noEmit
 ```
 
-## Decision
+## Recommended Resume Point
+Start with:
+- `C:\Users\visha\propai-sync\ui\src\ui\views\channels.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\overview.ts`
+- `C:\Users\visha\propai-sync\ui\src\ui\views\sessions.ts`
 
-Do not build any minimal or mock mobile path. The next phase should implement first-class mobile licensing and pairing on top of the production activation model now in the repo.
+Primary goal:
+- make the remaining app screens sound like the website:
+  - clear
+  - human
+  - WhatsApp-first
+  - realtor-friendly

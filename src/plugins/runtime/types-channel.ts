@@ -86,16 +86,6 @@ export type PluginRuntimeChannel = {
     shouldComputeCommandAuthorized: typeof import("../../auto-reply/command-detection.js").shouldComputeCommandAuthorized;
     shouldHandleTextCommands: typeof import("../../auto-reply/commands-registry.js").shouldHandleTextCommands;
   };
-  telegram: {
-    auditGroupMembership: typeof import("../../telegram/audit.js").auditTelegramGroupMembership;
-    collectUnmentionedGroupIds: typeof import("../../telegram/audit.js").collectTelegramUnmentionedGroupIds;
-    probeTelegram: typeof import("../../telegram/probe.js").probeTelegram;
-    resolveTelegramToken: typeof import("../../telegram/token.js").resolveTelegramToken;
-    sendMessageTelegram: typeof import("../../telegram/send.js").sendMessageTelegram;
-    sendPollTelegram: typeof import("../../telegram/send.js").sendPollTelegram;
-    monitorTelegramProvider: typeof import("../../telegram/monitor.js").monitorTelegramProvider;
-    messageActions: typeof import("../../channels/plugins/actions/telegram.js").telegramMessageActions;
-  };
   whatsapp: {
     getActiveWebListener: typeof import("../../web/active-listener.js").getActiveWebListener;
     getWebAuthAgeMs: typeof import("../../web/auth-store.js").getWebAuthAgeMs;

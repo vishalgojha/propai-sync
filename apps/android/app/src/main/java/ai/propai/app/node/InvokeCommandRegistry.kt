@@ -1,18 +1,18 @@
 package ai.propai.app.node
 
-import ai.propai.app.protocol.propaiCalendarCommand
-import ai.propai.app.protocol.propaiCanvasA2UICommand
-import ai.propai.app.protocol.propaiCanvasCommand
-import ai.propai.app.protocol.propaiCameraCommand
-import ai.propai.app.protocol.propaiCapability
-import ai.propai.app.protocol.propaiContactsCommand
-import ai.propai.app.protocol.propaiDeviceCommand
-import ai.propai.app.protocol.propaiLocationCommand
-import ai.propai.app.protocol.propaiMotionCommand
-import ai.propai.app.protocol.propaiNotificationsCommand
-import ai.propai.app.protocol.propaiPhotosCommand
-import ai.propai.app.protocol.propaiSmsCommand
-import ai.propai.app.protocol.propaiSystemCommand
+import ai.propai.app.protocol.PropAiSyncCalendarCommand
+import ai.propai.app.protocol.PropAiSyncCanvasA2UICommand
+import ai.propai.app.protocol.PropAiSyncCanvasCommand
+import ai.propai.app.protocol.PropAiSyncCameraCommand
+import ai.propai.app.protocol.PropAiSyncCapability
+import ai.propai.app.protocol.PropAiSyncContactsCommand
+import ai.propai.app.protocol.PropAiSyncDeviceCommand
+import ai.propai.app.protocol.PropAiSyncLocationCommand
+import ai.propai.app.protocol.PropAiSyncMotionCommand
+import ai.propai.app.protocol.PropAiSyncNotificationsCommand
+import ai.propai.app.protocol.PropAiSyncPhotosCommand
+import ai.propai.app.protocol.PropAiSyncSmsCommand
+import ai.propai.app.protocol.PropAiSyncSystemCommand
 
 data class NodeRuntimeFlags(
   val cameraEnabled: Boolean,

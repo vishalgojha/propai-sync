@@ -540,7 +540,6 @@ docker compose run --rm propai-cli devices list --url ws://127.0.0.1:18789
 
 - **Persistent host data:** Docker Compose bind-mounts `PROPAI_CONFIG_DIR` to `/home/node/.propai` and `PROPAI_WORKSPACE_DIR` to `/home/node/.propai/workspace`, so those paths survive container replacement.
 - **Ephemeral sandbox tmpfs:** when `agents.defaults.sandbox` is enabled, the sandbox containers use `tmpfs` for `/tmp`, `/var/tmp`, and `/run`. Those mounts are separate from the top-level Compose stack and disappear with the sandbox container.
-- **Disk growth hotspots:** watch `media/`, `agents/<agentId>/sessions/sessions.json`, transcript JSONL files, `cron/runs/*.jsonl`, and rolling file logs under `/tmp/propai/` (or your configured `logging.file`). If you also run the macOS app outside Docker, its service logs are separate again: `~/.propai/logs/gateway.log`, `~/.propai/logs/gateway.err.log`, and `/tmp/propai/propai-gateway.log`.
 
 ## Agent Sandbox (host gateway + Docker tools)
 

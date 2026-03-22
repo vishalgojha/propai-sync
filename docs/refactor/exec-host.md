@@ -13,7 +13,6 @@ title: "Exec Host Refactor"
 
 - Add `exec.host` + `exec.security` to route execution across **sandbox**, **gateway**, and **node**.
 - Keep defaults **safe**: no cross-host execution unless explicitly enabled.
-- Split execution into a **headless runner service** with optional UI (macOS app) via local IPC.
 - Provide **per-agent** policy, allowlist, ask mode, and node binding.
 - Support **ask modes** that work _with_ or _without_ allowlists.
 - Cross-platform: Unix socket + token auth (macOS/Linux/Windows parity).
@@ -34,7 +33,6 @@ title: "Exec Host Refactor"
 - **Node identity:** use existing `nodeId`.
 - **Socket auth:** Unix socket + token (cross-platform); split later if needed.
 - **Node host state:** `~/.propai/node.json` (node id + pairing token).
-- **macOS exec host:** run `system.run` inside the macOS app; node host service forwards requests over local IPC.
 - **No XPC helper:** stick to Unix socket + token + peer checks.
 
 ## Key concepts
@@ -162,7 +160,6 @@ Notes:
 - Approvals JSON is local to the execution host.
 - UI hosts a local Unix socket; runners connect on demand.
 
-## UI integration (macOS app)
 
 ### IPC
 
@@ -172,7 +169,6 @@ Notes:
 - Challenge/response: nonce + HMAC(token, request-hash) to prevent replay.
 - Short TTL (e.g., 10s) + max payload + rate limit.
 
-### Ask flow (macOS app exec host)
 
 1. Node service receives `system.run` from gateway.
 2. Node service connects to the local socket and sends the prompt/exec request.
@@ -282,7 +278,6 @@ Option B:
 ### Phase 3: node runner enforcement
 
 - Update node runner to enforce allowlist + ask.
-- Add Unix socket prompt bridge to macOS app UI.
 - Wire `askFallback`.
 
 ### Phase 4: events

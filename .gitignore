@@ -27,6 +27,7 @@ apps/android/.gradle/
 apps/android/app/build/
 apps/android/.cxx/
 apps/android/.kotlin/
+apps/android/keystore/
 
 # Bun build artifacts
 *.bun-build

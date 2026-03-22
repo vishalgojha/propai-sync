@@ -56,7 +56,6 @@ propai gateway --port 18789 --verbose
 对于仅 tailnet 设置（推荐用于维也纳 ⇄ 伦敦），将 Gateway 网关绑定到 tailnet IP：
 
 - 在 Gateway 网关主机的 `~/.propai/propai.json` 中设置 `gateway.bind: "tailnet"`。
-- 重启 Gateway 网关 / macOS 菜单栏应用。
 
 ### 2）验证发现（可选）
 

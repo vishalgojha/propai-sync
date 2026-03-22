@@ -54,7 +54,6 @@ x-i18n:
 
 ## 配套应用
 
-- [macOS 应用](/platforms/macos)
 - [iOS 应用](/platforms/ios)
 - [Android 应用](/platforms/android)
 - [Windows (WSL2)](/platforms/windows)

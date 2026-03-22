@@ -2,7 +2,6 @@
 summary: "Exec approvals, allowlists, and sandbox escape prompts"
 read_when:
   - Configuring exec approvals or allowlists
-  - Implementing exec approval UX in the macOS app
   - Reviewing sandbox escape prompts and implications
 title: "Exec Approvals"
 ---
@@ -41,8 +40,6 @@ Trust model note:
 
 macOS split:
 
-- **node host service** forwards `system.run` to the **macOS app** over local IPC.
-- **macOS app** enforces approvals + executes the command in UI context.
 
 ## Settings and storage
 
@@ -110,7 +107,6 @@ If a prompt is required but no UI is reachable, fallback decides:
 ## Allowlist (per agent)
 
 Allowlists are **per agent**. If multiple agents exist, switch which agent you’re
-editing in the macOS app. Patterns are **case-insensitive glob matches**.
 Patterns should resolve to **binary paths** (basename-only entries are ignored).
 Legacy `agents.default` entries are migrated to `agents.main` on load.
 
@@ -248,7 +244,6 @@ add/remove allowlist patterns, then **Save**. The UI shows **last used** metadat
 per pattern so you can keep the list tidy.
 
 The target selector chooses **Gateway** (local approvals) or a **Node**. Nodes
-must advertise `system.execApprovals.get/set` (macOS app or headless node host).
 If a node does not advertise exec approvals yet, edit its local
 `~/.propai/exec-approvals.json` directly.
 
@@ -257,7 +252,6 @@ CLI: `propai approvals` supports gateway or node editing (see [Approvals CLI](/c
 ## Approval flow
 
 When a prompt is required, the gateway broadcasts `exec.approval.requested` to operator clients.
-The Control UI and macOS app resolve it via `exec.approval.resolve`, then the gateway forwards the
 approved request to the node host.
 
 For `host=node`, approval requests include a canonical `systemRunPlan` payload. The gateway uses

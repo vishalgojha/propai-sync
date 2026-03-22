@@ -169,7 +169,6 @@ PROPAI_CONFIG_PATH=~/.propai/b.json PROPAI_STATE_DIR=~/.propai-b propai gateway 
 
 - WebChat 是原生 SwiftUI UI，直接与 Gateway 网关 WebSocket 通信以获取历史记录、发送、中止和事件。
 - 远程使用通过相同的 SSH/Tailscale 隧道；如果配置了 Gateway 网关令牌，客户端在 `connect` 期间包含它。
-- macOS 应用通过单个 WS 连接（共享连接）；它从初始快照填充 presence 并监听 `presence` 事件以更新 UI。
 
 ## 类型和验证
 
@@ -244,7 +243,6 @@ propai logs --follow
 
 捆绑的 mac 应用：
 
-- propai.app 可以捆绑基于 Node 的 Gateway 网关中继并安装标记为
   `bot.molt.gateway`（或 `bot.molt.<profile>`；旧版 `com.propai.*` 标签仍能干净卸载）的按用户 LaunchAgent。
 - 要干净地停止它，使用 `propai gateway stop`（或 `launchctl bootout gui/$UID/bot.molt.gateway`）。
 - 要重启，使用 `propai gateway restart`（或 `launchctl kickstart -k gui/$UID/bot.molt.gateway`）。

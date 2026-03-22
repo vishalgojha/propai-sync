@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "..");
-const uiDir = path.join(repoRoot, "ui");
+const uiDir = path.join(repoRoot, "apps", "website");
 
 const WINDOWS_SHELL_EXTENSIONS = new Set([".cmd", ".bat", ".com"]);
 const WINDOWS_UNSAFE_SHELL_ARG_PATTERN = /[\r\n"&|<>^%!]/;
@@ -131,17 +131,26 @@ function depsInstalled(kind) {
   try {
     const require = createRequire(path.join(uiDir, "package.json"));
     require.resolve("vite");
-    require.resolve("dompurify");
-    if (kind === "test") {
-      require.resolve("vitest");
-      require.resolve("@vitest/browser-playwright");
-      require.resolve("playwright");
-    }
+    require.resolve("tailwindcss");
+    require.resolve("@tailwindcss/vite");
     return true;
   } catch {
     return false;
   }
 }
+
+
+function copyControlUiBuild() {
+  const sourceDir = path.join(uiDir, "dist");
+  const destDir = path.join(repoRoot, "dist", "control-ui");
+  if (!fs.existsSync(sourceDir)) {
+    throw new Error(`Control UI build output missing at ${sourceDir}`);
+  }
+  fs.rmSync(destDir, { recursive: true, force: true });
+  fs.mkdirSync(destDir, { recursive: true });
+  fs.cpSync(sourceDir, destDir, { recursive: true });
+}
+
 
 function resolveScriptAction(action) {
   if (action === "install") {
@@ -160,6 +169,9 @@ function resolveScriptAction(action) {
 }
 
 export function main(argv = process.argv.slice(2)) {
+  if (!process.env.CI && !process.stdout.isTTY) {
+    process.env.CI = "true";
+  }
   const [action, ...rest] = argv;
   if (!action) {
     usage();
@@ -184,10 +196,23 @@ export function main(argv = process.argv.slice(2)) {
   }
 
   if (!depsInstalled(action === "test" ? "test" : "build")) {
-    const installEnv =
-      action === "build" ? { ...process.env, NODE_ENV: "production" } : process.env;
-    const installArgs = action === "build" ? ["install", "--prod"] : ["install"];
+    // UI build needs devDependencies (Tailwind/Vite plugins).
+    const installEnv = process.env;
+    const installArgs = ["install"];
     runSync(runner.cmd, installArgs, installEnv);
+  }
+
+  if (action === "build") {
+    runSync(runner.cmd, ["run", script, ...rest]);
+    try {
+      copyControlUiBuild();
+    } catch (err) {
+      console.error(
+        `Control UI build copy failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      process.exit(1);
+    }
+    return;
   }
 
   run(runner.cmd, ["run", script, ...rest]);

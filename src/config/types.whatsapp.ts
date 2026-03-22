@@ -35,9 +35,26 @@ export type WhatsAppAckReactionConfig = {
   group?: "always" | "mentions" | "never";
 };
 
+export type WhatsAppCloudConfig = {
+  /** Graph API base URL override (default: https://graph.facebook.com/v21.0). */
+  baseUrl?: string;
+  /** WhatsApp Business phone number id for Cloud API. */
+  phoneNumberId?: string;
+  /** Permanent access token for Cloud API. */
+  accessToken?: string;
+  /** Webhook verify token for Cloud API challenge. */
+  verifyToken?: string;
+  /** App secret for webhook signature verification (X-Hub-Signature-256). */
+  appSecret?: string;
+};
+
 type WhatsAppSharedConfig = {
   /** Whether the WhatsApp channel is enabled. */
   enabled?: boolean;
+  /** Provider selection for WhatsApp. Default: "baileys". */
+  provider?: "baileys" | "cloud";
+  /** Cloud API configuration (used when provider="cloud"). */
+  cloud?: WhatsAppCloudConfig;
   /** Direct message access policy (default: pairing). */
   dmPolicy?: DmPolicy;
   /** Enable WhatsApp auto-replies (default: false = read-only ingest). */

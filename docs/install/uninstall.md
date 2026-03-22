@@ -39,10 +39,8 @@ pnpm remove -g propai
 bun remove -g propai
 ```
 
-5. If you installed the macOS app:
 
 ```bash
-rm -rf /Applications/propai.app
 ```
 
 Notes:

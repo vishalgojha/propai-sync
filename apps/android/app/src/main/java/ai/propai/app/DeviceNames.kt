@@ -21,7 +21,7 @@ object DeviceNames {
         .joinToString(" ")
         .trim()
 
-    return model.ifEmpty { "Android Node" }
+    return model.ifEmpty { "PropAi Sync" }
   }
 }
 

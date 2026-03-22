@@ -412,7 +412,6 @@ Doctor 可以为你生成一个：`propai doctor --generate-gateway-token`。
 轮换清单（令牌/密码）：
 
 1. 生成/设置一个新的秘密（`gateway.auth.token` 或 `PROPAI_GATEWAY_PASSWORD`）。
-2. 重启 Gateway 网关（或者如果 macOS 应用监督 Gateway 网关，重启 macOS 应用）。
 3. 更新任何远程客户端（调用 Gateway 网关的机器上的 `gateway.remote.token` / `.password`）。
 4. 验证你不能再用旧凭证连接。
 
@@ -698,7 +697,6 @@ Doctor 可以为你生成一个：`propai doctor --generate-gateway-token`。
 
 ### 遏制
 
-1. **停止它：** 停止 macOS 应用（如果它监督 Gateway 网关）或终止你的 `propai gateway` 进程。
 2. **关闭暴露：** 设置 `gateway.bind: "loopback"`（或禁用 Tailscale Funnel/Serve）直到你了解发生了什么。
 3. **冻结访问：** 将有风险的私信/群组切换到 `dmPolicy: "disabled"` / 要求提及，并移除你可能有的 `"*"` 允许所有条目。
 

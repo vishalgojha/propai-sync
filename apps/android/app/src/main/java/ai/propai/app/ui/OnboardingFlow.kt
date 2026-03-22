@@ -121,24 +121,20 @@ private enum class SpecialAccessToggle {
 
 private val onboardingBackgroundGradient =
   listOf(
-    Color(0xFFFFFFFF),
-    Color(0xFFF7F8FA),
-    Color(0xFFEFF1F5),
+    Color(0xFF000000),
+    Color(0xFF050505),
+    Color(0xFF0B0B0B),
   )
-private val onboardingSurface = Color(0xFFF6F7FA)
-private val onboardingBorder = Color(0xFFE5E7EC)
-private val onboardingBorderStrong = Color(0xFFD6DAE2)
-private val onboardingText = Color(0xFF17181C)
-private val onboardingTextSecondary = Color(0xFF4D5563)
-private val onboardingTextTertiary = Color(0xFF8A92A2)
-private val onboardingAccent = Color(0xFF1D5DD8)
-private val onboardingAccentSoft = Color(0xFFECF3FF)
-private val onboardingSuccess = Color(0xFF2F8C5A)
-private val onboardingWarning = Color(0xFFC8841A)
-private val onboardingCommandBg = Color(0xFF15171B)
-private val onboardingCommandBorder = Color(0xFF2B2E35)
-private val onboardingCommandAccent = Color(0xFF3FC97A)
-private val onboardingCommandText = Color(0xFFE8EAEE)
+private val onboardingSurface = Color(0xFF0B0B0B)
+private val onboardingBorder = Color(0xFF1F1F1F)
+private val onboardingBorderStrong = Color(0xFF2A2A2A)
+private val onboardingText = Color(0xFFFFFFFF)
+private val onboardingTextSecondary = Color(0xFFB8B8B8)
+private val onboardingTextTertiary = Color(0xFF7A7A7A)
+private val onboardingAccent = Color(0xFF8CFFB0)
+private val onboardingAccentSoft = Color(0xFF1A2C21)
+private val onboardingSuccess = Color(0xFF8CFFB0)
+private val onboardingWarning = Color(0xFFFFC46B)
 
 private val onboardingFontFamily =
   FontFamily(
@@ -225,8 +221,8 @@ fun OnboardingFlow(viewModel: MainViewModel, modifier: Modifier = Modifier) {
   var gatewayPassword by rememberSaveable { mutableStateOf("") }
   var gatewayInputMode by rememberSaveable { mutableStateOf(GatewayInputMode.SetupCode) }
   var gatewayAdvancedOpen by rememberSaveable { mutableStateOf(false) }
-  var manualHost by rememberSaveable { mutableStateOf("10.0.2.2") }
-  var manualPort by rememberSaveable { mutableStateOf("18789") }
+  var manualHost by rememberSaveable { mutableStateOf("") }
+  var manualPort by rememberSaveable { mutableStateOf("443") }
   var manualTls by rememberSaveable { mutableStateOf(false) }
   var gatewayError by rememberSaveable { mutableStateOf<String?>(null) }
   var attemptedConnect by rememberSaveable { mutableStateOf(false) }
@@ -928,7 +924,7 @@ private fun StepRail(current: OnboardingStep) {
 private fun WelcomeStep() {
   StepShell(title = "What You Get") {
     Bullet("Control the gateway and operator chat from one mobile surface.")
-    Bullet("Connect with setup code and recover pairing with CLI commands.")
+    Bullet("Connect with a setup code from the PropAi Sync Control panel.")
     Bullet("Enable only the permissions and capabilities you want.")
     Bullet("Finish with a real connection check before entering the app.")
   }
@@ -960,9 +956,11 @@ private fun GatewayStep(
 
   StepShell(title = "Gateway Connection") {
     GuideBlock(title = "Scan onboarding QR") {
-      Text("Run these on the gateway host:", style = onboardingCalloutStyle, color = onboardingTextSecondary)
-      CommandBlock("PropAi Sync qr")
-      Text("Then scan with this device.", style = onboardingCalloutStyle, color = onboardingTextSecondary)
+      Text(
+        "Generate a QR in the PropAi Sync Control panel (propai.live/app), then scan it here.",
+        style = onboardingCalloutStyle,
+        color = onboardingTextSecondary,
+      )
     }
     Button(
       onClick = onScanQrClick,
@@ -1007,17 +1005,14 @@ private fun GatewayStep(
 
     AnimatedVisibility(visible = advancedOpen) {
       Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        GuideBlock(title = "Manual setup commands") {
-          Text("Run these on the gateway host:", style = onboardingCalloutStyle, color = onboardingTextSecondary)
-          CommandBlock("PropAi Sync qr --setup-code-only")
-          CommandBlock("PropAi Sync qr --json")
+        GuideBlock(title = "Manual setup") {
           Text(
-            "`--json` prints `setupCode` and `gatewayUrl`.",
+            "Generate a setup code in PropAi Sync Control (propai.live/app) and paste it below.",
             style = onboardingCalloutStyle,
             color = onboardingTextSecondary,
           )
           Text(
-            "Auto URL discovery is not wired yet. Android emulator uses `10.0.2.2`; real devices need LAN/Tailscale host.",
+            "If you are connecting to a custom gateway URL, use Manual mode and enter the host details.",
             style = onboardingCalloutStyle,
             color = onboardingTextSecondary,
           )
@@ -1029,7 +1024,7 @@ private fun GatewayStep(
           OutlinedTextField(
             value = setupCode,
             onValueChange = onSetupCodeChange,
-            placeholder = { Text("Paste code from `PropAi Sync qr --setup-code-only`", color = onboardingTextTertiary, style = onboardingBodyStyle) },
+            placeholder = { Text("Paste setup code from propai.live/app", color = onboardingTextTertiary, style = onboardingBodyStyle) },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3,
             maxLines = 5,
@@ -1051,24 +1046,11 @@ private fun GatewayStep(
             ResolvedEndpoint(endpoint = resolvedEndpoint)
           }
         } else {
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            QuickFillChip(label = "Android Emulator", onClick = {
-              onManualHostChange("10.0.2.2")
-              onManualPortChange("18789")
-              onManualTlsChange(false)
-            })
-            QuickFillChip(label = "Localhost", onClick = {
-              onManualHostChange("127.0.0.1")
-              onManualPortChange("18789")
-              onManualTlsChange(false)
-            })
-          }
-
           Text("HOST", style = onboardingCaption1Style.copy(letterSpacing = 0.9.sp), color = onboardingTextSecondary)
           OutlinedTextField(
             value = manualHost,
             onValueChange = onManualHostChange,
-            placeholder = { Text("10.0.2.2", color = onboardingTextTertiary, style = onboardingBodyStyle) },
+            placeholder = { Text("gateway.up.railway.app", color = onboardingTextTertiary, style = onboardingBodyStyle) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
@@ -1090,7 +1072,7 @@ private fun GatewayStep(
           OutlinedTextField(
             value = manualPort,
             onValueChange = onManualPortChange,
-            placeholder = { Text("18789", color = onboardingTextTertiary, style = onboardingBodyStyle) },
+            placeholder = { Text("443", color = onboardingTextTertiary, style = onboardingBodyStyle) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -1245,25 +1227,6 @@ private fun GatewayModeChip(
       text = label,
       style = onboardingCaption1Style.copy(fontWeight = FontWeight.Bold),
     )
-  }
-}
-
-@Composable
-private fun QuickFillChip(
-  label: String,
-  onClick: () -> Unit,
-) {
-  TextButton(
-    onClick = onClick,
-    shape = RoundedCornerShape(999.dp),
-    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
-    colors =
-      ButtonDefaults.textButtonColors(
-        containerColor = onboardingAccentSoft,
-        contentColor = onboardingAccent,
-      ),
-  ) {
-    Text(label, style = onboardingCaption1Style.copy(fontWeight = FontWeight.SemiBold))
   }
 }
 
@@ -1526,9 +1489,11 @@ private fun FinalStep(
         Text("Connected to ${serverName ?: remoteAddress ?: "gateway"}", style = onboardingCalloutStyle, color = onboardingSuccess)
       } else {
         GuideBlock(title = "Pairing Required") {
-          Text("Run these on the gateway host:", style = onboardingCalloutStyle, color = onboardingTextSecondary)
-          CommandBlock("PropAi Sync devices list")
-          CommandBlock("PropAi Sync devices approve <requestId>")
+          Text(
+            "Approve this device in PropAi Sync Control (propai.live/app) under Android Agent → Devices.",
+            style = onboardingCalloutStyle,
+            color = onboardingTextSecondary,
+          )
           Text("Then tap Connect again.", style = onboardingCalloutStyle, color = onboardingTextSecondary)
         }
       }
@@ -1546,26 +1511,6 @@ private fun SummaryField(label: String, value: String) {
     )
     Text(value, style = onboardingHeadlineStyle, color = onboardingText)
     HorizontalDivider(color = onboardingBorder)
-  }
-}
-
-@Composable
-private fun CommandBlock(command: String) {
-  Row(
-    modifier =
-      Modifier
-        .fillMaxWidth()
-        .background(onboardingCommandBg, RoundedCornerShape(12.dp))
-        .border(width = 1.dp, color = onboardingCommandBorder, shape = RoundedCornerShape(12.dp)),
-  ) {
-    Box(modifier = Modifier.width(3.dp).height(42.dp).background(onboardingCommandAccent))
-    Text(
-      command,
-      modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-      style = onboardingCalloutStyle,
-      fontFamily = FontFamily.Monospace,
-      color = onboardingCommandText,
-    )
   }
 }
 

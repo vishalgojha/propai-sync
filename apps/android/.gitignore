@@ -1,5 +1,9 @@
 .gradle/
 **/build/
+dist-smoke*/
 local.properties
 .idea/
 **/*.iml
+.native-dlls/
+.venv-mlc/
+.sdk-answers.txt

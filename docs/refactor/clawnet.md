@@ -69,14 +69,12 @@ Single, rigorous document for:
 ## Control plane clients today
 
 - CLI → Gateway WS via `callGateway` (`src/gateway/call.ts`).
-- macOS app UI → Gateway WS (`GatewayConnection`).
 - Web Control UI → Gateway WS.
 - ACP → Gateway WS.
 - Browser control uses its own HTTP control server.
 
 ## Nodes today
 
-- macOS app in node mode connects to Gateway bridge (`MacNodeBridgeSession`).
 - iOS/Android apps connect to Gateway bridge.
 - Pairing + per‑node token stored on gateway.
 
@@ -255,7 +253,6 @@ Approval is **gateway‑hosted**, UI delivered to operator clients.
 - Optional **operator.read** for status and chat view.
 - Optional **operator.write/admin** only when explicitly enabled.
 
-## macOS app
 
 - Operator role by default (control UI).
 - Node role when “Mac node” enabled (system.run, screen, camera).

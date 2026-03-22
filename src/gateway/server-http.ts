@@ -13,6 +13,7 @@ import type { CanvasHostHandler } from "../canvas-host/server.js";
 import { loadConfig } from "../config/config.js";
 import type { createSubsystemLogger } from "../logging/subsystem.js";
 import { safeEqualSecret } from "../security/secret-equal.js";
+import { handleWhatsAppCloudWebhook } from "../../extensions/whatsapp/src/cloud.js";
 import {
   AUTH_RATE_LIMIT_SCOPE_HOOK_AUTH,
   createAuthRateLimiter,
@@ -26,6 +27,7 @@ import {
   type ResolvedGatewayAuth,
 } from "./auth.js";
 import { normalizeCanvasScopedUrl } from "./canvas-capability.js";
+import { handleControlUiApiRequest } from "./control-ui-api.js";
 import {
   handleControlUiAvatarRequest,
   handleControlUiHttpRequest,
@@ -53,6 +55,7 @@ import { sendGatewayAuthFailure, setDefaultSecurityHeaders } from "./http-common
 import { getBearerToken } from "./http-utils.js";
 import { handleOpenAiHttpRequest } from "./openai-http.js";
 import { handleOpenResponsesHttpRequest } from "./openresponses-http.js";
+import { handleDevicePairHttpRequest } from "./device-pair-http.js";
 import {
   authorizeCanvasRequest,
   enforcePluginRouteGatewayAuth,
@@ -575,6 +578,15 @@ export function createGatewayHttpServer(opts: {
         : null;
       const requestStages: GatewayHttpRequestStage[] = [
         {
+          name: "whatsapp-webhook",
+          run: () => {
+            if (requestPath !== "/webhooks/whatsapp" && requestPath !== "/webhooks/whatsapp/") {
+              return false;
+            }
+            return handleWhatsAppCloudWebhook(req, res);
+          },
+        },
+        {
           name: "hooks",
           run: () => handleHooksRequest(req, res),
         },
@@ -587,6 +599,20 @@ export function createGatewayHttpServer(opts: {
               allowRealIpFallback,
               rateLimiter,
             }),
+        },
+        {
+          name: "device-pair",
+          run: () =>
+            handleDevicePairHttpRequest(req, res, {
+              auth: resolvedAuth,
+              trustedProxies,
+              allowRealIpFallback,
+              rateLimiter,
+            }),
+        },
+        {
+          name: "control-ui-api",
+          run: () => handleControlUiApiRequest(req, res, { controlUiRoot }),
         },
       ];
       if (openResponsesEnabled) {

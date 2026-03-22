@@ -1,12 +1,8 @@
 ---
-summary: "SSH tunnel setup for propai.app connecting to a remote gateway"
-read_when: "Connecting the macOS app to a remote gateway over SSH"
 title: "Remote Gateway Setup"
 ---
 
-# Running propai.app with a Remote Gateway
 
-propai.app uses SSH tunneling to connect to a remote gateway. This guide shows you how to set it up.
 
 ## Overview
 
@@ -14,7 +10,6 @@ propai.app uses SSH tunneling to connect to a remote gateway. This guide shows y
 flowchart TB
     subgraph Client["Client Machine"]
         direction TB
-        A["propai.app"]
         B["ws://127.0.0.1:18789\n(local port)"]
         T["SSH Tunnel"]
 
@@ -67,11 +62,8 @@ launchctl setenv PROPAI_GATEWAY_TOKEN "<your-token>"
 ssh -N remote-gateway &
 ```
 
-### Step 5: Restart propai.app
 
 ```bash
-# Quit propai.app (⌘Q), then reopen:
-open /path/to/propai.app
 ```
 
 The app will now connect to the remote gateway through the SSH tunnel.
@@ -155,7 +147,6 @@ launchctl bootout gui/$UID/ai.propai.ssh-tunnel
 | `KeepAlive`                          | Automatically restarts tunnel if it crashes                  |
 | `RunAtLoad`                          | Starts tunnel when the agent loads                           |
 
-propai.app connects to `ws://127.0.0.1:18789` on your client machine. The SSH tunnel forwards that connection to port 18789 on the remote machine where the Gateway is running.
 
 
 

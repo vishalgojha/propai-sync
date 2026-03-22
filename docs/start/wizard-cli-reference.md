@@ -91,7 +91,6 @@ It does not install or modify anything on the remote host.
     - Installs optional dependencies (some use Homebrew on macOS).
   </Step>
   <Step title="Finish">
-    - Summary and next steps, including iOS, Android, and macOS app options.
   </Step>
 </Steps>
 
@@ -276,7 +275,6 @@ Gateway wizard RPC:
 - `wizard.cancel`
 - `wizard.status`
 
-Clients (macOS app and Control UI) can render steps without re-implementing onboarding logic.
 
 Signal setup behavior:
 

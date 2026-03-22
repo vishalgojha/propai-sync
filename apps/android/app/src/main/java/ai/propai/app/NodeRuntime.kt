@@ -18,7 +18,7 @@ import ai.propai.app.gateway.GatewayEndpoint
 import ai.propai.app.gateway.GatewaySession
 import ai.propai.app.gateway.probeGatewayTlsFingerprint
 import ai.propai.app.node.*
-import ai.propai.app.protocol.propaiCanvasA2UIAction
+import ai.propai.app.protocol.PropAiSyncCanvasA2UIAction
 import ai.propai.app.voice.MicCaptureManager
 import ai.propai.app.voice.TalkModeManager
 import ai.propai.app.voice.VoiceConversationEntry
@@ -405,7 +405,7 @@ class NodeRuntime(context: Context) {
     _statusText.value =
       when {
         operatorConnected && _nodeConnected.value -> "Connected"
-        operatorConnected && !_nodeConnected.value -> "Connected (node offline)"
+        operatorConnected && !_nodeConnected.value -> "Connected (device offline)"
         !operatorConnected && _nodeConnected.value ->
           if (operator.isNotEmpty() && operator != "Offline") {
             "Connected (operator: $operator)"
@@ -443,7 +443,7 @@ class NodeRuntime(context: Context) {
     scope.launch {
       if (!_nodeConnected.value) {
         _canvasRehydratePending.value = false
-        _canvasRehydrateErrorText.value = "Node offline. Reconnect and retry."
+        _canvasRehydrateErrorText.value = "Device offline. Reconnect and retry."
         return@launch
       }
       if (!force && didAutoRequestCanvasRehydrate) return@launch

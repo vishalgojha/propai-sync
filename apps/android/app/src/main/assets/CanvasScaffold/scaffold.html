@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PropAi Sync Canvas</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0f16;
+        --card: #111827;
+        --border: #1f2937;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #60a5fa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #0f172a, var(--bg));
+        color: var(--text);
+      }
+
+      .container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+      }
+
+      .card {
+        width: min(420px, 90vw);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+      }
+
+      .title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .status {
+        margin-top: 14px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(96, 165, 250, 0.35);
+        background: rgba(96, 165, 250, 0.12);
+        color: var(--accent);
+        font-size: 13px;
+        display: none;
+      }
+
+      .status.show {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="title">Canvas ready</div>
+        <div class="subtitle">
+          This local canvas is ready for screen actions. No gateway connection is required.
+        </div>
+        <div id="status" class="status"></div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var statusEl = document.getElementById("status");
+        var debugEnabled = false;
+
+        function setDebugStatusEnabled(enabled) {
+          debugEnabled = !!enabled;
+          if (!statusEl) return;
+          statusEl.classList.toggle("show", debugEnabled);
+        }
+
+        function setStatus(title, subtitle) {
+          if (!statusEl) return;
+          var text = "";
+          if (title) text += title;
+          if (subtitle) text += (text ? " - " : "") + subtitle;
+          statusEl.textContent = text || "Status available.";
+        }
+
+        globalThis.__androidassistant = {
+          setDebugStatusEnabled: setDebugStatusEnabled,
+          setStatus: setStatus,
+        };
+      })();
+    </script>
+  </body>
+</html>

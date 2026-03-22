@@ -80,7 +80,7 @@ internal fun parseGatewayEndpoint(rawInput: String): GatewayEndpointConfig? {
       "wss", "https" -> true
       else -> true
     }
-  val port = uri.port.takeIf { it in 1..65535 } ?: 18789
+  val port = uri.port.takeIf { it in 1..65535 } ?: 443
   val displayUrl = "${if (tls) "https" else "http"}://$host:$port"
 
   return GatewayEndpointConfig(host = host, port = port, tls = tls, displayUrl = displayUrl)

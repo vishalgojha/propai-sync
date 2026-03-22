@@ -253,8 +253,14 @@ export function applyControlUiEnvDefaults(cfg: PropAiSyncConfig): PropAiSyncConf
       process.env.PROPAI_CONTROL_UI_DANGEROUSLY_ALLOW_HOST_HEADER_ORIGIN_FALLBACK ??
       process.env.CONTROL_UI_DANGEROUSLY_ALLOW_HOST_HEADER_ORIGIN_FALLBACK,
   );
+  const redirectUrl =
+    readPropAiEnvValue(process.env, "CONTROL_UI_REDIRECT_URL") ??
+    process.env.CONTROL_UI_REDIRECT_URL ??
+    process.env.PROPAI_CONTROL_UI_REDIRECT_URL ??
+    process.env.PROPAI_GATEWAY_CONTROL_UI_REDIRECT_URL ??
+    process.env.GATEWAY_CONTROL_UI_REDIRECT_URL;
 
-  if (!allowedOrigins && hostHeaderFallback === undefined) {
+  if (!allowedOrigins && hostHeaderFallback === undefined && !redirectUrl) {
     return cfg;
   }
 
@@ -281,6 +287,10 @@ export function applyControlUiEnvDefaults(cfg: PropAiSyncConfig): PropAiSyncConf
     controlUi.dangerouslyAllowHostHeaderOriginFallback !== hostHeaderFallback
   ) {
     nextControlUi.dangerouslyAllowHostHeaderOriginFallback = hostHeaderFallback;
+    mutated = true;
+  }
+  if (redirectUrl && controlUi.redirectUrl !== redirectUrl) {
+    nextControlUi.redirectUrl = redirectUrl;
     mutated = true;
   }
 

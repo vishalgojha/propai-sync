@@ -12,7 +12,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import ai.propai.app.ui.RootScreen
-import ai.propai.app.ui.propaiTheme
+import ai.propai.app.ui.PropAiSyncTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {

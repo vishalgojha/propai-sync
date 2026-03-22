@@ -17,6 +17,29 @@ const ACTIVATION_TOKEN_TTL_DAYS = parsePositiveInt(
   30,
 );
 const LICENSE_GRACE_DAYS = parsePositiveInt(process.env.LICENSE_GRACE_DAYS, 7);
+const LICENSE_PENDING_APPROVAL_TRIAL_DAYS = parsePositiveInt(
+  process.env.LICENSE_PENDING_APPROVAL_TRIAL_DAYS,
+  7,
+);
+const LICENSE_APPROVAL_LINK_TTL_HOURS = parsePositiveInt(
+  process.env.LICENSE_APPROVAL_LINK_TTL_HOURS,
+  72,
+);
+const LICENSE_DEFAULT_MAX_DEVICES = clampInt(
+  parsePositiveInt(process.env.LICENSE_DEFAULT_MAX_DEVICES, 5),
+  1,
+  100,
+);
+const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() ?? "";
+const LICENSE_APPROVAL_FROM = process.env.LICENSE_APPROVAL_FROM?.trim() ?? "";
+const LICENSE_APPROVAL_TO = (process.env.LICENSE_APPROVAL_TO ?? "")
+  .split(",")
+  .map((entry) => entry.trim())
+  .filter(Boolean);
+const LICENSE_PUBLIC_BASE_URL = (process.env.LICENSE_PUBLIC_BASE_URL?.trim() ?? "").replace(
+  /\/+$/,
+  "",
+);
 const isDev =
   process.env.PROPAI_PROFILE === "dev" || (process.env.NODE_ENV ?? "development") !== "production";
 let jwtSecret = process.env.LICENSE_JWT_SECRET ?? "";
@@ -71,6 +94,14 @@ type ActivationClaims = JwtPayload & {
   did: string;
 };
 
+type ApprovalAction = "approve" | "reject";
+
+type ApprovalClaims = JwtPayload & {
+  typ: "license_approval";
+  act: ApprovalAction;
+  tok: string;
+};
+
 type LegacyLicenseTokenPayload = JwtPayload & {
   email?: string | null;
   plan?: string | null;
@@ -115,6 +146,8 @@ const adminLicenseSchema = z.object({
 
 const licenseRequestSchema = z.object({
   email: z.string().email().optional(),
+  phone: z.string().min(6).max(32).optional(),
+  notes: z.string().max(2000).optional(),
   plan: z.string().min(1).optional(),
   maxDevices: z.number().int().positive().max(100).optional(),
 });
@@ -139,6 +172,13 @@ initSchema(db);
 function parsePositiveInt(raw: string | undefined, fallback: number): number {
   const value = Number.parseInt(raw ?? "", 10);
   return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function clampInt(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+  return Math.max(min, Math.min(max, Math.trunc(value)));
 }
 
 function openDatabase(dbPath: string): DatabaseSync {
@@ -203,6 +243,10 @@ function initSchema(database: DatabaseSync) {
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function addDaysIso(days: number): string {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
 function parseExpiresAt(expiresAt: string | null | undefined): number | null {
@@ -326,6 +370,182 @@ function verifyActivationToken(token: string): ActivationClaims {
     issuer: "propai-licensing",
     audience: "propai-sync",
   }) as ActivationClaims;
+}
+
+function signApprovalLinkToken(token: string, action: ApprovalAction): string {
+  return jwt.sign(
+    {
+      typ: "license_approval",
+      act: action,
+      tok: token,
+    } satisfies ApprovalClaims,
+    jwtSecret,
+    {
+      issuer: "propai-licensing",
+      audience: "propai-license-approval",
+      subject: `${action}:${sha256(token).slice(0, 12)}`,
+      expiresIn: `${LICENSE_APPROVAL_LINK_TTL_HOURS}h`,
+    },
+  );
+}
+
+function verifyApprovalLinkToken(token: string): ApprovalClaims {
+  return jwt.verify(token, jwtSecret, {
+    issuer: "propai-licensing",
+    audience: "propai-license-approval",
+  }) as ApprovalClaims;
+}
+
+function getLicensePublicBaseUrl(): string {
+  return LICENSE_PUBLIC_BASE_URL || `http://localhost:${PORT}`;
+}
+
+function buildApprovalLink(action: ApprovalAction, token: string): string {
+  const signedToken = signApprovalLinkToken(token, action);
+  return `${getLicensePublicBaseUrl()}/v1/admin/licenses/${action}-email?token=${encodeURIComponent(signedToken)}`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildApprovalEmailContent(params: {
+  token: string;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  plan: string;
+  maxDevices: number;
+}) {
+  const approveUrl = buildApprovalLink("approve", params.token);
+  const rejectUrl = buildApprovalLink("reject", params.token);
+  const requester = params.email?.trim() ? params.email.trim() : "Not provided";
+  const phone = params.phone?.trim() ? params.phone.trim() : "Not provided";
+  const notes = params.notes?.trim() ? params.notes.trim() : "Not provided";
+  const subject = `PropAi Sync trial request: ${params.plan.toUpperCase()} (${params.maxDevices} devices)`;
+  const safeToken = escapeHtml(params.token);
+  const safePlan = escapeHtml(params.plan.toUpperCase());
+  const safeRequester = escapeHtml(requester);
+  const safePhone = escapeHtml(phone);
+  const safeNotes = escapeHtml(notes);
+  const safeApproveUrl = escapeHtml(approveUrl);
+  const safeRejectUrl = escapeHtml(rejectUrl);
+  const html = `
+    <div style="background:#020704;padding:24px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#f1fff8;">
+      <div style="max-width:720px;margin:0 auto;background:#050d09;border:1px solid rgba(91,247,191,0.18);border-radius:20px;padding:28px;">
+        <div style="font-size:12px;letter-spacing:0.28em;text-transform:uppercase;color:#5bf7bf;font-weight:700;">PropAi Sync</div>
+        <h1 style="margin:16px 0 8px;font-size:32px;line-height:1.05;">New trial request</h1>
+        <p style="margin:0 0 20px;color:#bfead5;font-size:15px;line-height:1.6;">A new desktop trial request is waiting for review.</p>
+        <div style="display:grid;gap:10px;background:#020a07;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:18px;">
+          <div><strong>Key:</strong> <span style="font-family:'JetBrains Mono',monospace;">${safeToken}</span></div>
+          <div><strong>Plan:</strong> ${safePlan}</div>
+          <div><strong>Max devices:</strong> ${params.maxDevices}</div>
+          <div><strong>Requester email:</strong> ${safeRequester}</div>
+          <div><strong>Requester phone:</strong> ${safePhone}</div>
+          <div><strong>Notes:</strong> ${safeNotes}</div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;">
+          <a href="${safeApproveUrl}" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#5bf7bf;color:#02120b;text-decoration:none;font-weight:700;">Approve 7-day trial</a>
+          <a href="${safeRejectUrl}" style="display:inline-block;padding:12px 18px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);color:#f1fff8;text-decoration:none;font-weight:600;">Reject request</a>
+        </div>
+        <p style="margin:20px 0 0;color:#88c6ad;font-size:12px;line-height:1.6;">These links expire in ${LICENSE_APPROVAL_LINK_TTL_HOURS} hours.</p>
+      </div>
+    </div>
+  `;
+  const text = [
+    "PropAi Sync trial request",
+    "",
+    `Key: ${params.token}`,
+    `Plan: ${params.plan.toUpperCase()}`,
+    `Max devices: ${params.maxDevices}`,
+    `Requester email: ${requester}`,
+    `Requester phone: ${phone}`,
+    `Notes: ${notes}`,
+    "",
+    `Approve: ${approveUrl}`,
+    `Reject: ${rejectUrl}`,
+  ].join("\n");
+  return { subject, html, text, approveUrl, rejectUrl };
+}
+
+async function sendPendingApprovalEmail(params: {
+  token: string;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  plan: string;
+  maxDevices: number;
+}) {
+  const content = buildApprovalEmailContent(params);
+  if (!RESEND_API_KEY || !LICENSE_APPROVAL_FROM || LICENSE_APPROVAL_TO.length === 0 || !LICENSE_PUBLIC_BASE_URL) {
+    if (isDev) {
+      console.warn("Approval email env vars missing; using console approval links in dev mode.");
+      console.info(`Approve: ${content.approveUrl}`);
+      console.info(`Reject: ${content.rejectUrl}`);
+      return;
+    }
+    throw new Error("approval_email_disabled");
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: LICENSE_APPROVAL_FROM,
+      to: LICENSE_APPROVAL_TO,
+      subject: content.subject,
+      html: content.html,
+      text: content.text,
+    }),
+  });
+
+  if (!response.ok) {
+    let detail = `${response.status}`;
+    try {
+      const body = (await response.json()) as { message?: string; error?: string };
+      detail = body.message ?? body.error ?? detail;
+    } catch {
+      // ignore JSON parse failure
+    }
+    throw new Error(`approval_email_failed:${detail}`);
+  }
+}
+
+function renderDecisionPage(params: { title: string; body: string; accent?: "ok" | "warn" }) {
+  const accent = params.accent === "warn" ? "#d9fff0" : "#5bf7bf";
+  return `<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>${escapeHtml(params.title)}</title>
+      <style>
+        body { margin:0; font-family: Inter, Segoe UI, Arial, sans-serif; background:#020704; color:#f1fff8; }
+        .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+        .card { max-width:720px; background:#050d09; border:1px solid rgba(91,247,191,0.18); border-radius:20px; padding:28px; box-shadow:0 24px 60px rgba(0,0,0,0.35); }
+        .eyebrow { font-size:12px; letter-spacing:0.28em; text-transform:uppercase; color:${accent}; font-weight:700; }
+        h1 { margin:16px 0 8px; font-size:32px; line-height:1.05; }
+        p { margin:0; color:#bfead5; line-height:1.7; font-size:15px; }
+      </style>
+    </head>
+    <body>
+      <div class="wrap">
+        <div class="card">
+          <div class="eyebrow">PropAi Sync</div>
+          <h1>${escapeHtml(params.title)}</h1>
+          <p>${escapeHtml(params.body)}</p>
+        </div>
+      </div>
+    </body>
+  </html>`;
 }
 
 function countActiveActivations(licenseId: string): number {
@@ -488,7 +708,7 @@ function activateLicenseKey(params: {
       runtimeStatus === "expired"
         ? "License expired."
         : runtimeStatus === "pending"
-          ? "Activation key pending admin approval."
+          ? "This trial request is still waiting for approval. Please try again after it is reviewed."
           : `License ${runtimeStatus}.`,
       license,
     );
@@ -780,7 +1000,7 @@ function issueLicenseRecord(params: {
     throw new Error("expires_in_past");
   }
   const entitlements = normalizeEntitlements(params.entitlements, plan);
-  const maxDevices = Math.max(1, Math.min(100, params.maxDevices ?? 2));
+    const maxDevices = Math.max(1, Math.min(100, params.maxDevices ?? LICENSE_DEFAULT_MAX_DEVICES));
   const licenseId = crypto.randomUUID();
   const keyId = crypto.randomUUID();
   const now = nowIso();
@@ -861,6 +1081,52 @@ function requestPendingLicense(params: {
   });
 }
 
+function deleteLicenseRecord(licenseId: string) {
+  db.prepare("DELETE FROM licenses WHERE id = ?").run(licenseId);
+}
+
+function rejectPendingLicense(params: { token: string }) {
+  const token = params.token.trim();
+  if (!token) {
+    throw new Error("missing_token");
+  }
+  const license = getLicenseByToken(token);
+  if (!license) {
+    throw new Error("license_missing");
+  }
+  if (license.status !== "pending") {
+    throw new Error("already_resolved");
+  }
+  const now = nowIso();
+  withTransaction(() => {
+    db
+      .prepare(
+        `
+          UPDATE licenses
+          SET status = 'cancelled',
+              updated_at = ?
+          WHERE id = ?
+        `,
+      )
+      .run(now, license.id);
+    db
+      .prepare(
+        `
+          UPDATE activation_keys
+          SET revoked_at = ?
+          WHERE license_id = ? AND revoked_at IS NULL
+        `,
+      )
+      .run(now, license.id);
+  });
+  return {
+    token,
+    licenseId: license.id,
+    status: "cancelled" as const,
+    rejectedAt: now,
+  };
+}
+
 function approvePendingLicense(params: {
   token: string;
   email?: string;
@@ -884,7 +1150,11 @@ function approvePendingLicense(params: {
   const now = nowIso();
   const nextPlan = params.plan?.trim() || license.plan;
   const nextEmail = params.email?.trim() || license.email;
-  const nextExpiresAt = params.expiresAt?.trim() || null;
+  const nextExpiresAtRaw =
+    "expiresAt" in params
+      ? params.expiresAt
+      : addDaysIso(LICENSE_PENDING_APPROVAL_TRIAL_DAYS);
+  const nextExpiresAt = nextExpiresAtRaw?.trim() || null;
   const nextExpiresAtMs = parseExpiresAt(nextExpiresAt);
   if (nextExpiresAt && nextExpiresAtMs === null) {
     throw new Error("invalid_expires_at");
@@ -997,7 +1267,7 @@ app.post("/v1/activations/activate", (req, res) => {
   }
 });
 
-app.post("/v1/activations/request", (req, res) => {
+app.post("/v1/activations/request", async (req, res) => {
   const parsed = licenseRequestSchema.safeParse(req.body ?? {});
   if (!parsed.success) {
     res.status(400).json({ valid: false, message: "invalid request" });
@@ -1005,6 +1275,34 @@ app.post("/v1/activations/request", (req, res) => {
   }
   try {
     const result = requestPendingLicense(parsed.data);
+    try {
+      await sendPendingApprovalEmail({
+        token: result.token,
+        email: parsed.data.email ?? null,
+        phone: parsed.data.phone ?? null,
+        notes: parsed.data.notes ?? null,
+        plan: result.plan,
+        maxDevices: result.maxDevices,
+      });
+    } catch (error) {
+      deleteLicenseRecord(result.licenseId);
+      const message = error instanceof Error ? error.message : String(error);
+      if (message === "approval_email_disabled") {
+        res.status(503).json({
+          valid: false,
+          message: "Trial requests are temporarily unavailable while email approval is being set up.",
+        });
+        return;
+      }
+      if (message.startsWith("approval_email_failed:")) {
+        res.status(502).json({
+          valid: false,
+          message: `Approval email could not be sent (${message.slice("approval_email_failed:".length)}).`,
+        });
+        return;
+      }
+      throw error;
+    }
     res.status(201).json({
       token: result.token,
       licenseId: result.licenseId,
@@ -1013,7 +1311,7 @@ app.post("/v1/activations/request", (req, res) => {
       expiresAt: result.expiresAt,
       maxDevices: result.maxDevices,
       entitlements: result.entitlements,
-      message: "Activation key generated. Waiting for admin approval.",
+      message: "Trial request sent. We will review it shortly.",
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -1133,6 +1431,92 @@ app.post("/v1/admin/licenses", (req, res) => {
       return;
     }
     res.status(500).json({ valid: false, message: "failed to issue license" });
+  }
+});
+
+app.get("/v1/admin/licenses/approve-email", (req, res) => {
+  const raw = typeof req.query.token === "string" ? req.query.token.trim() : "";
+  if (!raw) {
+    res.status(400).type("html").send(
+      renderDecisionPage({
+        title: "Approval link missing",
+        body: "This approval link is incomplete. Request a new approval email.",
+        accent: "warn",
+      }),
+    );
+    return;
+  }
+  try {
+    const claims = verifyApprovalLinkToken(raw);
+    if (claims.typ !== "license_approval" || claims.act !== "approve") {
+      throw new Error("invalid_action");
+    }
+    const result = approvePendingLicense({ token: claims.tok });
+    res.type("html").send(
+      renderDecisionPage({
+        title: "Trial approved",
+        body: `Activation key ${result.token} is now active for a 7-day trial.`,
+        accent: "ok",
+      }),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const body =
+      message === "already_resolved"
+        ? "This request was already approved or rejected earlier."
+        : message === "license_missing"
+          ? "This activation key could not be found."
+          : "This approval link is invalid or has expired.";
+    res.status(400).type("html").send(
+      renderDecisionPage({
+        title: "Approval not completed",
+        body,
+        accent: "warn",
+      }),
+    );
+  }
+});
+
+app.get("/v1/admin/licenses/reject-email", (req, res) => {
+  const raw = typeof req.query.token === "string" ? req.query.token.trim() : "";
+  if (!raw) {
+    res.status(400).type("html").send(
+      renderDecisionPage({
+        title: "Reject link missing",
+        body: "This reject link is incomplete. Request a new approval email.",
+        accent: "warn",
+      }),
+    );
+    return;
+  }
+  try {
+    const claims = verifyApprovalLinkToken(raw);
+    if (claims.typ !== "license_approval" || claims.act !== "reject") {
+      throw new Error("invalid_action");
+    }
+    const result = rejectPendingLicense({ token: claims.tok });
+    res.type("html").send(
+      renderDecisionPage({
+        title: "Trial rejected",
+        body: `Activation key ${result.token} has been rejected and turned off.`,
+        accent: "warn",
+      }),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const body =
+      message === "already_resolved"
+        ? "This request was already approved or rejected earlier."
+        : message === "license_missing"
+          ? "This activation key could not be found."
+          : "This reject link is invalid or has expired.";
+    res.status(400).type("html").send(
+      renderDecisionPage({
+        title: "Rejection not completed",
+        body,
+        accent: "warn",
+      }),
+    );
   }
 });
 

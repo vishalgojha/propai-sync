@@ -157,6 +157,30 @@ export const MISTRAL_DEFAULT_COST = {
   cacheWrite: 0,
 };
 
+export const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
+export const GROQ_DEFAULT_MODEL_ID = "llama-3.1-8b-instant";
+export const GROQ_DEFAULT_MODEL_REF = `groq/${GROQ_DEFAULT_MODEL_ID}`;
+export const GROQ_DEFAULT_CONTEXT_WINDOW = 8192;
+export const GROQ_DEFAULT_MAX_TOKENS = 8192;
+export const GROQ_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
+export const ELEVENLABS_BASE_URL = "https://api.elevenlabs.io/v1/convai/conversation";
+export const ELEVENLABS_DEFAULT_AGENT_ID = "agent_id";
+export const ELEVENLABS_DEFAULT_MODEL_REF = `elevenlabs/${ELEVENLABS_DEFAULT_AGENT_ID}`;
+export const ELEVENLABS_DEFAULT_CONTEXT_WINDOW = 8192;
+export const ELEVENLABS_DEFAULT_MAX_TOKENS = 8192;
+export const ELEVENLABS_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
 export function buildMistralModelDefinition(): ModelDefinitionConfig {
   return {
     id: MISTRAL_DEFAULT_MODEL_ID,
@@ -166,6 +190,36 @@ export function buildMistralModelDefinition(): ModelDefinitionConfig {
     cost: MISTRAL_DEFAULT_COST,
     contextWindow: MISTRAL_DEFAULT_CONTEXT_WINDOW,
     maxTokens: MISTRAL_DEFAULT_MAX_TOKENS,
+  };
+}
+
+export function buildGroqModelDefinition(): ModelDefinitionConfig {
+  return {
+    id: GROQ_DEFAULT_MODEL_ID,
+    name: "Groq Llama 3.1 8B Instant",
+    reasoning: false,
+    input: ["text"],
+    cost: GROQ_DEFAULT_COST,
+    contextWindow: GROQ_DEFAULT_CONTEXT_WINDOW,
+    maxTokens: GROQ_DEFAULT_MAX_TOKENS,
+  };
+}
+
+export function buildElevenLabsModelDefinition(agentId?: string): ModelDefinitionConfig {
+  const resolvedId = agentId?.trim() || ELEVENLABS_DEFAULT_AGENT_ID;
+  const name =
+    resolvedId === ELEVENLABS_DEFAULT_AGENT_ID
+      ? "ElevenLabs Agent"
+      : `ElevenLabs ${resolvedId}`;
+  return {
+    id: resolvedId,
+    name,
+    reasoning: false,
+    input: ["text"],
+    compat: { supportsTools: false },
+    cost: ELEVENLABS_DEFAULT_COST,
+    contextWindow: ELEVENLABS_DEFAULT_CONTEXT_WINDOW,
+    maxTokens: ELEVENLABS_DEFAULT_MAX_TOKENS,
   };
 }
 

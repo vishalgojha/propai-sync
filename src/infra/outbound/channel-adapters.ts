@@ -1,6 +1,7 @@
-import type { TopLevelComponents } from "@buape/carbon";
 import type { ChannelId } from "../../channels/plugins/types.js";
 import type { PropAiSyncConfig } from "../../config/config.js";
+
+type TopLevelComponents = Record<string, unknown>;
 
 export type CrossContextComponentsBuilder = (message: string) => TopLevelComponents[];
 

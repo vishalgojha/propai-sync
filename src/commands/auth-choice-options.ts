@@ -26,13 +26,19 @@ const AUTH_CHOICE_GROUP_DEFS: {
   {
     value: "openai",
     label: "OpenAI",
-    hint: "Codex OAuth + API key",
+    hint: "Codex OAuth + API key (paid)",
     choices: ["openai-codex", "openai-api-key"],
+  },
+  {
+    value: "groq",
+    label: "Groq",
+    hint: "Fast open models (free tier available)",
+    choices: ["groq-api-key"],
   },
   {
     value: "anthropic",
     label: "Anthropic",
-    hint: "setup-token + API key",
+    hint: "setup-token + API key (paid)",
     choices: ["token", "apiKey"],
   },
   {
@@ -50,7 +56,7 @@ const AUTH_CHOICE_GROUP_DEFS: {
   {
     value: "ollama",
     label: "Ollama",
-    hint: "Cloud and local open models",
+    hint: "Local open models (no API key)",
     choices: ["ollama"],
   },
   {
@@ -74,7 +80,7 @@ const AUTH_CHOICE_GROUP_DEFS: {
   {
     value: "xai",
     label: "xAI (Grok)",
-    hint: "API key",
+    hint: "API key (paid)",
     choices: ["xai-api-key"],
   },
   {
@@ -98,8 +104,14 @@ const AUTH_CHOICE_GROUP_DEFS: {
   {
     value: "openrouter",
     label: "OpenRouter",
-    hint: "API key",
+    hint: "API key (free models + paid tiers)",
     choices: ["openrouter-api-key"],
+  },
+  {
+    value: "elevenlabs",
+    label: "ElevenLabs",
+    hint: "Conversational AI (agent id required)",
+    choices: ["elevenlabs-api-key"],
   },
   {
     value: "kilocode",
@@ -207,6 +219,8 @@ const PROVIDER_AUTH_CHOICE_OPTION_HINTS: Partial<Record<AuthChoice, string>> = {
   "huggingface-api-key": "Inference Providers — OpenAI-compatible chat",
   "opencode-zen": "Shared OpenCode key; curated Zen catalog",
   "opencode-go": "Shared OpenCode key; Kimi/GLM/MiniMax Go catalog",
+  "groq-api-key": "Low-latency open models (free tier available)",
+  "elevenlabs-api-key": "ElevenLabs Conversational AI (agent id required)",
 };
 
 const PROVIDER_AUTH_CHOICE_OPTION_LABELS: Partial<Record<AuthChoice, string>> = {
@@ -216,6 +230,7 @@ const PROVIDER_AUTH_CHOICE_OPTION_LABELS: Partial<Record<AuthChoice, string>> = 
   "cloudflare-ai-gateway-api-key": "Cloudflare AI Gateway",
   "opencode-zen": "OpenCode Zen catalog",
   "opencode-go": "OpenCode Go catalog",
+  "elevenlabs-api-key": "ElevenLabs API key",
 };
 
 function buildProviderAuthChoiceOptions(): AuthChoiceOption[] {
@@ -247,7 +262,7 @@ const BASE_AUTH_CHOICE_OPTIONS: ReadonlyArray<AuthChoiceOption> = [
   {
     value: "ollama",
     label: "Ollama",
-    hint: "Cloud and local open models",
+    hint: "Local open models (no API key)",
   },
   ...buildProviderAuthChoiceOptions(),
   {

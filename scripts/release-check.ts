@@ -10,7 +10,6 @@ import {
   type BundledExtension,
   type ExtensionPackageJson as PackageJson,
 } from "./lib/bundled-extension-manifest.ts";
-import { sparkleBuildFloorsFromShortVersion, type SparkleBuildFloors } from "./sparkle-build.ts";
 
 export { collectBundledExtensionManifestErrors } from "./lib/bundled-extension-manifest.ts";
 
@@ -27,26 +26,10 @@ const requiredPathGroups = [
   "dist/plugin-sdk/root-alias.cjs",
   "dist/plugin-sdk/compat.js",
   "dist/plugin-sdk/compat.d.ts",
-  "dist/plugin-sdk/telegram.js",
-  "dist/plugin-sdk/telegram.d.ts",
-  "dist/plugin-sdk/discord.js",
-  "dist/plugin-sdk/discord.d.ts",
-  "dist/plugin-sdk/slack.js",
-  "dist/plugin-sdk/slack.d.ts",
-  "dist/plugin-sdk/signal.js",
-  "dist/plugin-sdk/signal.d.ts",
-  "dist/plugin-sdk/imessage.js",
-  "dist/plugin-sdk/imessage.d.ts",
   "dist/plugin-sdk/whatsapp.js",
   "dist/plugin-sdk/whatsapp.d.ts",
-  "dist/plugin-sdk/line.js",
-  "dist/plugin-sdk/line.d.ts",
-  "dist/plugin-sdk/msteams.js",
-  "dist/plugin-sdk/msteams.d.ts",
   "dist/plugin-sdk/acpx.js",
   "dist/plugin-sdk/acpx.d.ts",
-  "dist/plugin-sdk/bluebubbles.js",
-  "dist/plugin-sdk/bluebubbles.d.ts",
   "dist/plugin-sdk/copilot-proxy.js",
   "dist/plugin-sdk/copilot-proxy.d.ts",
   "dist/plugin-sdk/device-pair.js",
@@ -55,56 +38,28 @@ const requiredPathGroups = [
   "dist/plugin-sdk/diagnostics-otel.d.ts",
   "dist/plugin-sdk/diffs.js",
   "dist/plugin-sdk/diffs.d.ts",
-  "dist/plugin-sdk/feishu.js",
-  "dist/plugin-sdk/feishu.d.ts",
   "dist/plugin-sdk/google-gemini-cli-auth.js",
   "dist/plugin-sdk/google-gemini-cli-auth.d.ts",
-  "dist/plugin-sdk/googlechat.js",
-  "dist/plugin-sdk/googlechat.d.ts",
-  "dist/plugin-sdk/irc.js",
-  "dist/plugin-sdk/irc.d.ts",
   "dist/plugin-sdk/llm-task.js",
   "dist/plugin-sdk/llm-task.d.ts",
   "dist/plugin-sdk/lobster.js",
   "dist/plugin-sdk/lobster.d.ts",
-  "dist/plugin-sdk/matrix.js",
-  "dist/plugin-sdk/matrix.d.ts",
-  "dist/plugin-sdk/mattermost.js",
-  "dist/plugin-sdk/mattermost.d.ts",
   "dist/plugin-sdk/memory-core.js",
   "dist/plugin-sdk/memory-core.d.ts",
   "dist/plugin-sdk/memory-lancedb.js",
   "dist/plugin-sdk/memory-lancedb.d.ts",
   "dist/plugin-sdk/minimax-portal-auth.js",
   "dist/plugin-sdk/minimax-portal-auth.d.ts",
-  "dist/plugin-sdk/nextcloud-talk.js",
-  "dist/plugin-sdk/nextcloud-talk.d.ts",
-  "dist/plugin-sdk/nostr.js",
-  "dist/plugin-sdk/nostr.d.ts",
   "dist/plugin-sdk/open-prose.js",
   "dist/plugin-sdk/open-prose.d.ts",
   "dist/plugin-sdk/phone-control.js",
   "dist/plugin-sdk/phone-control.d.ts",
   "dist/plugin-sdk/qwen-portal-auth.js",
   "dist/plugin-sdk/qwen-portal-auth.d.ts",
-  "dist/plugin-sdk/synology-chat.js",
-  "dist/plugin-sdk/synology-chat.d.ts",
   "dist/plugin-sdk/talk-voice.js",
   "dist/plugin-sdk/talk-voice.d.ts",
   "dist/plugin-sdk/test-utils.js",
   "dist/plugin-sdk/test-utils.d.ts",
-  "dist/plugin-sdk/thread-ownership.js",
-  "dist/plugin-sdk/thread-ownership.d.ts",
-  "dist/plugin-sdk/tlon.js",
-  "dist/plugin-sdk/tlon.d.ts",
-  "dist/plugin-sdk/twitch.js",
-  "dist/plugin-sdk/twitch.d.ts",
-  "dist/plugin-sdk/voice-call.js",
-  "dist/plugin-sdk/voice-call.d.ts",
-  "dist/plugin-sdk/zalo.js",
-  "dist/plugin-sdk/zalo.d.ts",
-  "dist/plugin-sdk/zalouser.js",
-  "dist/plugin-sdk/zalouser.d.ts",
   "dist/plugin-sdk/account-id.js",
   "dist/plugin-sdk/account-id.d.ts",
   "dist/plugin-sdk/keyed-async-queue.js",
@@ -112,9 +67,6 @@ const requiredPathGroups = [
   "dist/build-info.json",
 ];
 const forbiddenPrefixes = ["dist/PropAiSync.app/"];
-const appcastPath = resolve("appcast.xml");
-const laneBuildMin = 1_000_000_000;
-const laneFloorAdoptionDateKey = 20260227;
 
 function normalizePluginSyncVersion(version: string): string {
   const normalized = version.trim().replace(/^v/, "");
@@ -266,83 +218,6 @@ function checkPluginVersions() {
   }
 }
 
-function extractTag(item: string, tag: string): string | null {
-  const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`<${escapedTag}>([^<]+)</${escapedTag}>`);
-  return regex.exec(item)?.[1]?.trim() ?? null;
-}
-
-export function collectAppcastSparkleVersionErrors(xml: string): string[] {
-  const itemMatches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
-  const errors: string[] = [];
-  const calverItems: Array<{ title: string; sparkleBuild: number; floors: SparkleBuildFloors }> =
-    [];
-
-  if (itemMatches.length === 0) {
-    errors.push("appcast.xml contains no <item> entries.");
-  }
-
-  for (const [, item] of itemMatches) {
-    const title = extractTag(item, "title") ?? "unknown";
-    const shortVersion = extractTag(item, "sparkle:shortVersionString");
-    const sparkleVersion = extractTag(item, "sparkle:version");
-
-    if (!sparkleVersion) {
-      errors.push(`appcast item '${title}' is missing sparkle:version.`);
-      continue;
-    }
-    if (!/^[0-9]+$/.test(sparkleVersion)) {
-      errors.push(`appcast item '${title}' has non-numeric sparkle:version '${sparkleVersion}'.`);
-      continue;
-    }
-
-    if (!shortVersion) {
-      continue;
-    }
-    const floors = sparkleBuildFloorsFromShortVersion(shortVersion);
-    if (floors === null) {
-      continue;
-    }
-
-    calverItems.push({ title, sparkleBuild: Number(sparkleVersion), floors });
-  }
-
-  const observedLaneAdoptionDateKey = calverItems
-    .filter((item) => item.sparkleBuild >= laneBuildMin)
-    .map((item) => item.floors.dateKey)
-    .toSorted((a, b) => a - b)[0];
-  const effectiveLaneAdoptionDateKey =
-    typeof observedLaneAdoptionDateKey === "number"
-      ? Math.min(observedLaneAdoptionDateKey, laneFloorAdoptionDateKey)
-      : laneFloorAdoptionDateKey;
-
-  for (const item of calverItems) {
-    const expectLaneFloor =
-      item.sparkleBuild >= laneBuildMin || item.floors.dateKey >= effectiveLaneAdoptionDateKey;
-    const floor = expectLaneFloor ? item.floors.laneFloor : item.floors.legacyFloor;
-    if (item.sparkleBuild < floor) {
-      const floorLabel = expectLaneFloor ? "lane floor" : "legacy floor";
-      errors.push(
-        `appcast item '${item.title}' has sparkle:version ${item.sparkleBuild} below ${floorLabel} ${floor}.`,
-      );
-    }
-  }
-
-  return errors;
-}
-
-function checkAppcastSparkleVersions() {
-  const xml = readFileSync(appcastPath, "utf8");
-  const errors = collectAppcastSparkleVersionErrors(xml);
-  if (errors.length > 0) {
-    console.error("release-check: appcast sparkle version validation failed:");
-    for (const error of errors) {
-      console.error(`  - ${error}`);
-    }
-    process.exit(1);
-  }
-}
-
 // Critical functions that channel extension plugins import from propai/plugin-sdk.
 // If any are missing from the compiled output, plugins crash at runtime (#27569).
 const requiredPluginSdkExports = [
@@ -406,7 +281,6 @@ function checkPluginSdkExports() {
 
 function main() {
   checkPluginVersions();
-  checkAppcastSparkleVersions();
   checkPluginSdkExports();
   checkBundledExtensionRootDependencyMirrors();
 

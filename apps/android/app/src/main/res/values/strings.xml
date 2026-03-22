@@ -1,4 +1,11 @@
 <resources>
-    <string name="app_name">PropAi Sync Node</string>
+    <string name="app_name">PropAi Sync</string>
+    <string name="accessibility_service_label">PropAi Sync Automation</string>
+    <string name="accessibility_service_description">Allows PropAi Sync to observe the screen for automation.</string>
+    <string-array name="wake_words">
+        <item>propai</item>
+        <item>hey propai</item>
+        <item>okay propai</item>
+    </string-array>
 </resources>
 

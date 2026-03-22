@@ -1,4 +1,4 @@
-# PropAi Sync Android UI Style Guide
+# AndroidAssistant Android UI Style Guide
 
 Scope: all native Android UI in `apps/android` (Jetpack Compose).
 Goal: one coherent visual system across onboarding, settings, and future screens.
@@ -104,13 +104,11 @@ Hard rule: avoid ultra-thin weights on light backgrounds.
 
 ## 11. Source Of Truth
 
-- `app/src/main/java/ai/propai/android/ui/PropAiSyncTheme.kt`
-- `app/src/main/java/ai/propai/android/ui/OnboardingFlow.kt`
-- `app/src/main/java/ai/propai/android/ui/RootScreen.kt`
-- `app/src/main/java/ai/propai/android/ui/SettingsSheet.kt`
-- `app/src/main/java/ai/propai/android/MainViewModel.kt`
+- `app/src/main/java/ai/androidassistant/android/ui/AndroidAssistantTheme.kt`
+- `app/src/main/java/ai/androidassistant/android/ui/OnboardingFlow.kt`
+- `app/src/main/java/ai/androidassistant/android/ui/RootScreen.kt`
+- `app/src/main/java/ai/androidassistant/android/ui/SettingsSheet.kt`
+- `app/src/main/java/ai/androidassistant/android/MainViewModel.kt`
 
 If style and implementation diverge, update both in the same change.
-
-
 

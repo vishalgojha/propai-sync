@@ -31,8 +31,21 @@ const WhatsAppAckReactionSchema = z
   .strict()
   .optional();
 
+const WhatsAppCloudSchema = z
+  .object({
+    baseUrl: z.string().optional(),
+    phoneNumberId: z.string().optional(),
+    accessToken: z.string().optional(),
+    verifyToken: z.string().optional(),
+    appSecret: z.string().optional(),
+  })
+  .strict()
+  .optional();
+
 const WhatsAppSharedSchema = z.object({
   enabled: z.boolean().optional(),
+  provider: z.enum(["baileys", "cloud"]).optional(),
+  cloud: WhatsAppCloudSchema,
   capabilities: z.array(z.string()).optional(),
   markdown: MarkdownConfigSchema,
   configWrites: z.boolean().optional(),

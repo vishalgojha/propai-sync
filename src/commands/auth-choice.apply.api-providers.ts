@@ -20,6 +20,10 @@ import {
   applyAuthProfileConfig,
   applyCloudflareAiGatewayConfig,
   applyCloudflareAiGatewayProviderConfig,
+  applyElevenLabsConfig,
+  applyElevenLabsProviderConfig,
+  applyGroqConfig,
+  applyGroqProviderConfig,
   applyKilocodeConfig,
   applyKilocodeProviderConfig,
   applyQianfanConfig,
@@ -53,6 +57,8 @@ import {
   CLOUDFLARE_AI_GATEWAY_DEFAULT_MODEL_REF,
   KILOCODE_DEFAULT_MODEL_REF,
   LITELLM_DEFAULT_MODEL_REF,
+  ELEVENLABS_DEFAULT_MODEL_REF,
+  GROQ_DEFAULT_MODEL_REF,
   QIANFAN_DEFAULT_MODEL_REF,
   KIMI_CODING_MODEL_REF,
   MOONSHOT_DEFAULT_MODEL_REF,
@@ -63,6 +69,8 @@ import {
   VERCEL_AI_GATEWAY_DEFAULT_MODEL_REF,
   XIAOMI_DEFAULT_MODEL_REF,
   setCloudflareAiGatewayConfig,
+  setElevenLabsApiKey,
+  setGroqApiKey,
   setQianfanApiKey,
   setGeminiApiKey,
   setKilocodeApiKey,
@@ -93,6 +101,8 @@ import { detectZaiEndpoint } from "./zai-endpoint-detect.js";
 
 const API_KEY_TOKEN_PROVIDER_AUTH_CHOICE: Record<string, AuthChoice> = {
   openrouter: "openrouter-api-key",
+  elevenlabs: "elevenlabs-api-key",
+  groq: "groq-api-key",
   litellm: "litellm-api-key",
   "vercel-ai-gateway": "ai-gateway-api-key",
   "cloudflare-ai-gateway": "cloudflare-ai-gateway-api-key",
@@ -149,6 +159,35 @@ type SimpleApiKeyProviderFlow = {
 };
 
 const SIMPLE_API_KEY_PROVIDER_FLOWS: Partial<Record<AuthChoice, SimpleApiKeyProviderFlow>> = {
+  "groq-api-key": {
+    provider: "groq",
+    profileId: "groq:default",
+    expectedProviders: ["groq"],
+    envLabel: "GROQ_API_KEY",
+    promptMessage: "Enter Groq API key",
+    setCredential: setGroqApiKey,
+    defaultModel: GROQ_DEFAULT_MODEL_REF,
+    applyDefaultConfig: applyGroqConfig,
+    applyProviderConfig: applyGroqProviderConfig,
+    noteDefault: GROQ_DEFAULT_MODEL_REF,
+  },
+  "elevenlabs-api-key": {
+    provider: "elevenlabs",
+    profileId: "elevenlabs:default",
+    expectedProviders: ["elevenlabs"],
+    envLabel: "ELEVENLABS_API_KEY",
+    promptMessage: "Enter ElevenLabs API key",
+    setCredential: setElevenLabsApiKey,
+    defaultModel: ELEVENLABS_DEFAULT_MODEL_REF,
+    applyDefaultConfig: applyElevenLabsConfig,
+    applyProviderConfig: applyElevenLabsProviderConfig,
+    noteDefault: ELEVENLABS_DEFAULT_MODEL_REF,
+    noteTitle: "ElevenLabs",
+    noteMessage: [
+      "ElevenLabs Conversational AI needs an Agent ID.",
+      "Set ELEVENLABS_AGENT_ID or edit the model id in your config.",
+    ].join("\n"),
+  },
   "ai-gateway-api-key": {
     provider: "vercel-ai-gateway",
     profileId: "vercel-ai-gateway:default",

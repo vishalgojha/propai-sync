@@ -2,7 +2,6 @@
 read_when:
   - 更新设备型号标识符映射或 NOTICE/许可证文件
   - 更改实例 UI 中设备名称的显示方式
-summary: propai 如何内置 Apple 设备型号标识符以在 macOS 应用中显示友好名称。
 title: 设备型号数据库
 x-i18n:
   generated_at: "2026-02-01T21:37:07Z"
@@ -47,7 +46,6 @@ curl -fsSL "https://raw.githubusercontent.com/kyle-seongwoo-jun/apple-device-ide
 ```
 
 4. 确保 `apps/macos/Sources/propai/Resources/DeviceModels/LICENSE.apple-device-identifiers.txt` 仍与上游一致（如果上游许可证发生变更，请替换该文件）。
-5. 验证 macOS 应用能够正常构建（无警告）：
 
 ```bash
 swift build --package-path apps/macos

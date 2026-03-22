@@ -362,14 +362,14 @@ fun SettingsSheet(viewModel: MainViewModel) {
       }
       item { HorizontalDivider(color = mobileBorder) }
 
-    // Order parity: Node → Voice → Camera → Messaging → Location → Screen.
-      item {
-        Text(
-          "NODE",
-          style = mobileCaption1.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-          color = mobileAccent,
-        )
-      }
+    // Order parity: Device → Voice → Camera → Messaging → Location → Screen.
+    item {
+      Text(
+        "DEVICE",
+        style = mobileCaption1.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+        color = mobileAccent,
+      )
+    }
     item {
       OutlinedTextField(
         value = displayName,

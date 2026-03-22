@@ -1,7 +1,6 @@
 ---
 read_when:
   - 配置执行审批或允许列表
-  - 在 macOS 应用中实现执行审批用户体验
   - 审查沙箱逃逸提示及其影响
 summary: 执行审批、允许列表和沙箱逃逸提示
 title: 执行审批
@@ -31,8 +30,6 @@ x-i18n:
 
 macOS 分工：
 
-- **node 主机服务**通过本地 IPC 将 `system.run` 转发给 **macOS 应用**。
-- **macOS 应用**执行审批并在 UI 上下文中执行命令。
 
 ## 设置和存储
 
@@ -99,7 +96,6 @@ macOS 分工：
 
 ## 允许列表（按智能体）
 
-允许列表是**按智能体**配置的。如果存在多个智能体，请在 macOS 应用中切换要编辑的智能体。模式匹配**不区分大小写**。
 模式应解析为**二进制路径**（仅包含基本名称的条目会被忽略）。
 旧版 `agents.default` 条目在加载时会迁移到 `agents.main`。
 
@@ -134,7 +130,6 @@ macOS 分工：
 
 使用 **Control UI → Nodes → Exec approvals** 卡片来编辑默认值、按智能体的覆盖设置和允许列表。选择一个作用域（Defaults 或某个智能体），调整策略，添加/删除允许列表模式，然后点击 **Save**。UI 会显示每个模式的 **last used** 元数据，以便你保持列表整洁。
 
-目标选择器可选择 **Gateway**（本地审批）或 **Node**。节点必须通告 `system.execApprovals.get/set`（macOS 应用或无头节点主机）。
 如果节点尚未通告执行审批，请直接编辑其本地的 `~/.propai/exec-approvals.json`。
 
 CLI：`propai approvals` 支持 gateway 或 node 编辑（参见 [Approvals CLI](/cli/approvals)）。
@@ -142,7 +137,6 @@ CLI：`propai approvals` 支持 gateway 或 node 编辑（参见 [Approvals CLI]
 ## 审批流程
 
 当需要提示时，gateway 向操作员客户端广播 `exec.approval.requested`。
-Control UI 和 macOS 应用通过 `exec.approval.resolve` 进行处理，然后 gateway 将已批准的请求转发给节点主机。
 
 当需要审批时，exec 工具会立即返回一个审批 id。使用该 id 来关联后续的系统事件（`Exec finished` / `Exec denied`）。如果在超时前没有收到决定，请求将被视为审批超时，并作为拒绝原因显示。
 

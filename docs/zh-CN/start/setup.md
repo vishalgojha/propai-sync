@@ -20,8 +20,6 @@ x-i18n:
 ## 太长不看
 
 - **个性化设置存放在仓库之外：** `~/.propai/workspace`（工作区）+ `~/.propai/propai.json`（配置）。
-- **稳定工作流：** 安装 macOS 应用；让它运行内置的 Gateway 网关。
-- **前沿工作流：** 通过 `pnpm gateway:watch` 自己运行 Gateway 网关，然后让 macOS 应用以本地模式连接。
 
 ## 先决条件（从源码）
 
@@ -50,9 +48,7 @@ propai setup
 
 如果你还没有全局安装，通过 `pnpm propai setup` 运行它。
 
-## 稳定工作流（macOS 应用优先）
 
-1. 安装并启动 **propai.app**（菜单栏）。
 2. 完成新手引导/权限检查清单（TCC 提示）。
 3. 确保 Gateway 网关是**本地**并正在运行（应用管理它）。
 4. 链接表面（示例：WhatsApp）：
@@ -73,11 +69,8 @@ propai health
 
 ## 前沿工作流（在终端中运行 Gateway 网关）
 
-目标：开发 TypeScript Gateway 网关，获得热重载，保持 macOS 应用 UI 连接。
 
-### 0)（可选）也从源码运行 macOS 应用
 
-如果你也想让 macOS 应用保持前沿：
 
 ```bash
 ./scripts/restart-mac.sh
@@ -92,9 +85,7 @@ pnpm gateway:watch
 
 `gateway:watch` 以监视模式运行 Gateway 网关，并在 TypeScript 更改时重新加载。
 
-### 2) 将 macOS 应用指向你正在运行的 Gateway 网关
 
-在 **propai.app** 中：
 
 - 连接模式：**本地**
   应用将连接到在配置端口上运行的 Gateway 网关。
@@ -150,7 +141,6 @@ sudo loginctl enable-linger $USER
 - [Gateway 网关配置](/gateway/configuration)（配置模式 + 示例）
 - [Discord](/channels/discord) 和 [Telegram](/channels/telegram)（回复标签 + replyToMode 设置）
 - [propai 助手设置](/start/propai)
-- [macOS 应用](/platforms/macos)（Gateway 网关生命周期）
 
 
 

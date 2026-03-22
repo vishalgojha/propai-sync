@@ -66,7 +66,7 @@ class SecurePrefs(context: Context) {
   val manualHost: StateFlow<String> = _manualHost
 
   private val _manualPort =
-    MutableStateFlow(plainPrefs.getInt("gateway.manual.port", 18789))
+    MutableStateFlow(plainPrefs.getInt("gateway.manual.port", 443))
   val manualPort: StateFlow<Int> = _manualPort
 
   private val _manualTls =
@@ -246,10 +246,10 @@ class SecurePrefs(context: Context) {
 
   private fun loadOrMigrateDisplayName(context: Context): String {
     val existing = plainPrefs.getString(displayNameKey, null)?.trim().orEmpty()
-    if (existing.isNotEmpty() && existing != "Android Node") return existing
+    if (existing.isNotEmpty() && existing != "PropAi Sync") return existing
 
     val candidate = DeviceNames.bestDefaultNodeName(context).trim()
-    val resolved = candidate.ifEmpty { "Android Node" }
+    val resolved = candidate.ifEmpty { "PropAi Sync" }
 
     plainPrefs.edit { putString(displayNameKey, resolved) }
     return resolved

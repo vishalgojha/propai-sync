@@ -1,9 +1,11 @@
 import com.android.build.api.variant.impl.VariantOutputImpl
 
-val androidStoreFile = providers.gradleProperty("PROPAI_ANDROID_STORE_FILE").orNull?.takeIf { it.isNotBlank() }
-val androidStorePassword = providers.gradleProperty("PROPAI_ANDROID_STORE_PASSWORD").orNull?.takeIf { it.isNotBlank() }
-val androidKeyAlias = providers.gradleProperty("PROPAI_ANDROID_KEY_ALIAS").orNull?.takeIf { it.isNotBlank() }
-val androidKeyPassword = providers.gradleProperty("PROPAI_ANDROID_KEY_PASSWORD").orNull?.takeIf { it.isNotBlank() }
+val mlc4jEnabled = rootProject.findProject(":mlc4j") != null
+
+val androidStoreFile = providers.gradleProperty("ANDROID_ASSISTANT_ANDROID_STORE_FILE").orNull?.takeIf { it.isNotBlank() }
+val androidStorePassword = providers.gradleProperty("ANDROID_ASSISTANT_ANDROID_STORE_PASSWORD").orNull?.takeIf { it.isNotBlank() }
+val androidKeyAlias = providers.gradleProperty("ANDROID_ASSISTANT_ANDROID_KEY_ALIAS").orNull?.takeIf { it.isNotBlank() }
+val androidKeyPassword = providers.gradleProperty("ANDROID_ASSISTANT_ANDROID_KEY_PASSWORD").orNull?.takeIf { it.isNotBlank() }
 val resolvedAndroidStoreFile =
     androidStoreFile?.let { storeFilePath ->
         if (storeFilePath.startsWith("~/")) {
@@ -24,9 +26,9 @@ val wantsAndroidReleaseBuild =
 
 if (wantsAndroidReleaseBuild && !hasAndroidReleaseSigning) {
     error(
-        "Missing Android release signing properties. Set PROPAI_ANDROID_STORE_FILE, " +
-            "PROPAI_ANDROID_STORE_PASSWORD, PROPAI_ANDROID_KEY_ALIAS, and " +
-            "PROPAI_ANDROID_KEY_PASSWORD in ~/.gradle/gradle.properties.",
+        "Missing Android release signing properties. Set ANDROID_ASSISTANT_ANDROID_STORE_FILE, " +
+            "ANDROID_ASSISTANT_ANDROID_STORE_PASSWORD, ANDROID_ASSISTANT_ANDROID_KEY_ALIAS, and " +
+            "ANDROID_ASSISTANT_ANDROID_KEY_PASSWORD in ~/.gradle/gradle.properties.",
     )
 }
 
@@ -40,6 +42,16 @@ plugins {
 android {
     namespace = "ai.propai.app"
     compileSdk = 36
+    buildToolsVersion = "36.1.0"
+
+    sourceSets {
+        getByName("main") {
+            java.setSrcDirs(listOf("src/main/java/ai/propai"))
+            if (mlc4jEnabled) {
+                assets.srcDir(rootProject.layout.projectDirectory.dir("dist/bundle"))
+            }
+        }
+    }
 
     // Release signing is local-only; keep the keystore path and passwords out of the repo.
     signingConfigs {
@@ -53,12 +65,6 @@ android {
         }
     }
 
-    sourceSets {
-        getByName("main") {
-            assets.directories.add("../../shared/PropAiSyncKit/Sources/PropAiSyncKit/Resources")
-        }
-    }
-
     defaultConfig {
         applicationId = "ai.propai.app"
         minSdk = 31
@@ -66,9 +72,16 @@ android {
         versionCode = 202603110
         versionName = "2026.3.11"
         ndk {
-            // Support all major ABIs — native libs are tiny (~47 KB per ABI)
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            // MLC's Android packaging currently emits arm64-v8a runtime/model libraries only.
+            abiFilters +=
+                if (mlc4jEnabled) {
+                    listOf("arm64-v8a")
+                } else {
+                    // Support all major ABIs while the app runs in pure-Kotlin mode.
+                    listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+                }
         }
+        buildConfigField("boolean", "MLC4J_ENABLED", mlc4jEnabled.toString())
     }
 
     buildTypes {
@@ -132,7 +145,7 @@ androidComponents {
                 val versionName = output.versionName.orNull ?: "0"
                 val buildType = variant.buildType
 
-                val outputFileName = "propai-$versionName-$buildType.apk"
+                val outputFileName = "propai-sync-android-$versionName-$buildType.apk"
                 output.outputFileName = outputFileName
             }
     }
@@ -156,6 +169,10 @@ dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2026.02.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
+
+    if (mlc4jEnabled) {
+        implementation(project(":mlc4j"))
+    }
 
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
@@ -194,6 +211,7 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.5.2")
     implementation("androidx.camera:camera-video:1.5.2")
     implementation("androidx.camera:camera-view:1.5.2")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
     // Unicast DNS-SD (Wide-Area Bonjour) for tailnet discovery domains.
@@ -212,5 +230,10 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
+if (mlc4jEnabled) {
+    tasks.matching { it.name == "preBuild" }.configureEach {
+        dependsOn(rootProject.tasks.named("verifyMlcAndroidDist"))
+    }
+}
 
 

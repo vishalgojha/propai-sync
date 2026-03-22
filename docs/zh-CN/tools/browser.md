@@ -2,7 +2,6 @@
 read_when:
   - 添加智能体控制的浏览器自动化
   - 调试 propai 干扰你自己 Chrome 的问题
-  - 在 macOS 应用中实现浏览器设置和生命周期管理
 summary: 集成浏览器控制服务 + 操作命令
 title: 浏览器（propai 托管）
 x-i18n:

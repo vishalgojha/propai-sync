@@ -44,7 +44,6 @@ const pluginSdkEntrypoints = [
   "index",
   "core",
   "compat",
-  "telegram",
   "whatsapp",
   "acpx",
   "copilot-proxy",
@@ -62,8 +61,6 @@ const pluginSdkEntrypoints = [
   "qwen-portal-auth",
   "talk-voice",
   "test-utils",
-  "thread-ownership",
-  "voice-call",
   "account-id",
   "keyed-async-queue",
 ] as const;
@@ -86,9 +83,6 @@ export default defineConfig([
     entry: {
       "channels/plugins/agent-tools/whatsapp-login":
         "src/channels/plugins/agent-tools/whatsapp-login.ts",
-      "channels/plugins/actions/telegram": "src/channels/plugins/actions/telegram.ts",
-      "telegram/audit": "src/telegram/audit.ts",
-      "telegram/token": "src/telegram/token.ts",
     },
   }),
   ...pluginSdkEntrypoints.map((entry) =>

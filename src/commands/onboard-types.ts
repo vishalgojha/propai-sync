@@ -13,7 +13,9 @@ export type AuthChoice =
   | "ollama"
   | "openai-codex"
   | "openai-api-key"
+  | "groq-api-key"
   | "openrouter-api-key"
+  | "elevenlabs-api-key"
   | "kilocode-api-key"
   | "litellm-api-key"
   | "ai-gateway-api-key"
@@ -64,10 +66,12 @@ export type AuthChoiceGroupId =
   | "google"
   | "copilot"
   | "openrouter"
+  | "elevenlabs"
   | "kilocode"
   | "litellm"
   | "ai-gateway"
   | "cloudflare-ai-gateway"
+  | "groq"
   | "moonshot"
   | "zai"
   | "xiaomi"
@@ -118,8 +122,10 @@ export type OnboardOptions = {
   secretInputMode?: SecretInputMode;
   anthropicApiKey?: string;
   openaiApiKey?: string;
+  groqApiKey?: string;
   mistralApiKey?: string;
   openrouterApiKey?: string;
+  elevenlabsApiKey?: string;
   kilocodeApiKey?: string;
   litellmApiKey?: string;
   aiGatewayApiKey?: string;

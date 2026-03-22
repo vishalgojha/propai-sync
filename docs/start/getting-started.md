@@ -117,8 +117,6 @@ Full environment variable reference: [Environment vars](/help/environment).
   <Card title="Onboarding Wizard (details)" href="/start/wizard">
     Full CLI wizard reference and advanced options.
   </Card>
-  <Card title="macOS app onboarding" href="/start/onboarding">
-    First run flow for the macOS app.
   </Card>
 </Columns>
 

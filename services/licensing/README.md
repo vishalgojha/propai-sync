@@ -31,6 +31,8 @@ Environment:
   Optional. Defaults to `30`.
 - `LICENSE_GRACE_DAYS`
   Optional offline grace window for cached entitlements. Defaults to `7`.
+- `LICENSE_PENDING_APPROVAL_TRIAL_DAYS`
+  Optional. Pending activation keys approved through the admin approval flow default to this many trial days when no explicit `expiresAt` is supplied. Defaults to `7`.
 - `PORT`
   Optional. Defaults to `8787`.
 
@@ -90,6 +92,8 @@ Use this on app boot and periodically while the app is running.
 
 - `POST /v1/admin/licenses`
   Requires `x-admin-key`
+- `POST /v1/admin/licenses/approve`
+  Requires `x-admin-key`. Approving a pending activation key defaults it to a 7-day trial unless an explicit `expiresAt` is provided.
 - `POST /issue`
   Legacy alias that only returns `{ token }`
 

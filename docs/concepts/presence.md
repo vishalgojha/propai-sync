@@ -14,7 +14,6 @@ propai “presence” is a lightweight, best‑effort view of:
 - the **Gateway** itself, and
 - **clients connected to the Gateway** (mac app, WebChat, CLI, etc.)
 
-Presence is used primarily to render the macOS app’s **Instances** tab and to
 provide quick operator visibility.
 
 ## Presence fields (what shows up)
@@ -90,7 +89,6 @@ IP, loopback remote addresses are ignored.
 
 ### macOS Instances tab
 
-The macOS app renders the output of `system-presence` and applies a small status
 indicator (Active/Idle/Stale) based on the age of the last update.
 
 ## Debugging tips

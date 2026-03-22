@@ -1,0 +1,2 @@
+dist/bundle/** filter=lfs diff=lfs merge=lfs -text
+dist/lib/mlc4j/output/arm64-v8a/*.so filter=lfs diff=lfs merge=lfs -text

@@ -103,7 +103,6 @@ For VPS/cloud hosts, avoid third-party "1-click" marketplace images when possibl
       </Tab>
     </Tabs>
 
-    Start the Gateway using your service manager or the macOS app, then complete
     onboarding in the Control Console at `/setup`.
 
   </Accordion>

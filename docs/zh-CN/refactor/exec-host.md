@@ -20,7 +20,6 @@ x-i18n:
 
 - 添加 `exec.host` + `exec.security` 以在**沙箱**、**Gateway 网关**和**节点**之间路由执行。
 - 保持默认**安全**：除非明确启用，否则不进行跨主机执行。
-- 将执行拆分为**无头运行器服务**，通过本地 IPC 连接可选的 UI（macOS 应用）。
 - 提供**每智能体**策略、允许列表、询问模式和节点绑定。
 - 支持*与*或*不与*允许列表一起使用的**询问模式**。
 - 跨平台：Unix socket + token 认证（macOS/Linux/Windows 一致性）。
@@ -41,7 +40,6 @@ x-i18n:
 - **节点身份：** 使用现有 `nodeId`。
 - **Socket 认证：** Unix socket + token（跨平台）；如需要稍后拆分。
 - **节点主机状态：** `~/.propai/node.json`（节点 id + 配对 token）。
-- **macOS exec 主机：** 在 macOS 应用内运行 `system.run`；节点主机服务通过本地 IPC 转发请求。
 - **无 XPC helper：** 坚持使用 Unix socket + token + 对等检查。
 
 ## 关键概念
@@ -169,7 +167,6 @@ x-i18n:
 - 批准 JSON 是执行主机本地的。
 - UI 托管本地 Unix socket；运行器按需连接。
 
-## UI 集成（macOS 应用）
 
 ### IPC
 
@@ -179,7 +176,6 @@ x-i18n:
 - 挑战/响应：nonce + HMAC(token, request-hash) 防止重放。
 - 短 TTL（例如 10s）+ 最大负载 + 速率限制。
 
-### 询问流程（macOS 应用 exec 主机）
 
 1. 节点服务从 Gateway 网关接收 `system.run`。
 2. 节点服务连接到本地 socket 并发送提示/exec 请求。
@@ -289,7 +285,6 @@ Agent -> Gateway -> Bridge -> Node Service (TS)
 ### 阶段 3：节点运行器强制执行
 
 - 更新节点运行器以强制执行允许列表 + 询问。
-- 添加 Unix socket 提示桥接到 macOS 应用 UI。
 - 连接 `askFallback`。
 
 ### 阶段 4：事件

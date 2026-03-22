@@ -1,17 +1,18 @@
 package ai.propai.app.node
 
 import ai.propai.app.gateway.GatewaySession
-import ai.propai.app.protocol.propaiCalendarCommand
-import ai.propai.app.protocol.propaiCanvasA2UICommand
-import ai.propai.app.protocol.propaiCanvasCommand
-import ai.propai.app.protocol.propaiCameraCommand
-import ai.propai.app.protocol.propaiContactsCommand
-import ai.propai.app.protocol.propaiDeviceCommand
-import ai.propai.app.protocol.propaiLocationCommand
-import ai.propai.app.protocol.propaiMotionCommand
-import ai.propai.app.protocol.propaiNotificationsCommand
-import ai.propai.app.protocol.propaiSmsCommand
-import ai.propai.app.protocol.propaiSystemCommand
+import ai.propai.app.protocol.PropAiSyncCalendarCommand
+import ai.propai.app.protocol.PropAiSyncCanvasA2UICommand
+import ai.propai.app.protocol.PropAiSyncCanvasCommand
+import ai.propai.app.protocol.PropAiSyncCameraCommand
+import ai.propai.app.protocol.PropAiSyncContactsCommand
+import ai.propai.app.protocol.PropAiSyncDeviceCommand
+import ai.propai.app.protocol.PropAiSyncLocationCommand
+import ai.propai.app.protocol.PropAiSyncMotionCommand
+import ai.propai.app.protocol.PropAiSyncNotificationsCommand
+import ai.propai.app.protocol.PropAiSyncPhotosCommand
+import ai.propai.app.protocol.PropAiSyncSmsCommand
+import ai.propai.app.protocol.PropAiSyncSystemCommand
 
 class InvokeDispatcher(
   private val canvas: CanvasController,
@@ -142,7 +143,7 @@ class InvokeDispatcher(
       PropAiSyncSystemCommand.Notify.rawValue -> systemHandler.handleSystemNotify(paramsJson)
 
       // Photos command
-      ai.propai.app.protocol.propaiPhotosCommand.Latest.rawValue -> photosHandler.handlePhotosLatest(
+      PropAiSyncPhotosCommand.Latest.rawValue -> photosHandler.handlePhotosLatest(
         paramsJson,
       )
 

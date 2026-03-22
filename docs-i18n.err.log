@@ -1,0 +1,7 @@
+2026/03/17 15:16:57 docs-i18n: mode=doc total=339 pending=331 pre_skipped=8 overwrite=false thinking=high parallel=6
+2026/03/17 15:16:57 docs-i18n: [w4 1/331] start auth-credential-semantics.md
+2026/03/17 15:16:57 docs-i18n: [w5 4/331] start automation\cron-vs-heartbeat.md
+2026/03/17 15:16:57 docs-i18n: [w6 2/331] start automation\auth-monitoring.md
+2026/03/17 15:16:57 docs-i18n: [w2 3/331] start automation\cron-jobs.md
+2026/03/17 15:16:57 docs-i18n: [w3 5/331] start automation\gmail-pubsub.md
+2026/03/17 15:16:57 docs-i18n: [w1 6/331] start automation\hooks.md

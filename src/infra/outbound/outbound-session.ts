@@ -6,10 +6,6 @@ import type { PropAiSyncConfig } from "../../config/config.js";
 import { recordSessionMetaFromInbound, resolveStorePath } from "../../config/sessions.js";
 import { buildAgentSessionKey, type RoutePeer } from "../../routing/resolve-route.js";
 import { resolveThreadSessionKeys } from "../../routing/session-key.js";
-import { buildTelegramGroupPeerId } from "../../telegram/bot/helpers.js";
-import { resolveTelegramTargetChatType } from "../../telegram/inline-buttons.js";
-import { parseTelegramThreadId } from "../../telegram/outbound-params.js";
-import { parseTelegramTarget } from "../../telegram/targets.js";
 import { isWhatsAppGroupJid, normalizeWhatsAppTarget } from "../../whatsapp/normalize.js";
 import type { ResolvedMessagingTarget } from "./target-resolver.js";
 
@@ -103,59 +99,6 @@ function buildBaseSessionKey(params: {
   });
 }
 
-function resolveTelegramSession(
-  params: ResolveOutboundSessionRouteParams,
-): OutboundSessionRoute | null {
-  const parsed = parseTelegramTarget(params.target);
-  const chatId = parsed.chatId.trim();
-  if (!chatId) {
-    return null;
-  }
-  const parsedThreadId = parsed.messageThreadId;
-  const fallbackThreadId = normalizeThreadId(params.threadId);
-  const resolvedThreadId = parsedThreadId ?? parseTelegramThreadId(fallbackThreadId);
-  // Telegram topics are encoded in the peer id (chatId:topic:<id>).
-  const chatType = resolveTelegramTargetChatType(params.target);
-  // If the target is a username and we lack a resolvedTarget, default to DM to avoid group keys.
-  const isGroup =
-    chatType === "group" ||
-    (chatType === "unknown" &&
-      params.resolvedTarget?.kind &&
-      params.resolvedTarget.kind !== "user");
-  // For groups: include thread ID in peerId. For DMs: use simple chatId (thread handled via suffix).
-  const peerId =
-    isGroup && resolvedThreadId ? buildTelegramGroupPeerId(chatId, resolvedThreadId) : chatId;
-  const peer: RoutePeer = {
-    kind: isGroup ? "group" : "direct",
-    id: peerId,
-  };
-  const baseSessionKey = buildBaseSessionKey({
-    cfg: params.cfg,
-    agentId: params.agentId,
-    channel: "telegram",
-    accountId: params.accountId,
-    peer,
-  });
-  // Use thread suffix for DM topics to match inbound session key format
-  const threadKeys =
-    resolvedThreadId && !isGroup
-      ? { sessionKey: `${baseSessionKey}:thread:${resolvedThreadId}` }
-      : null;
-  return {
-    sessionKey: threadKeys?.sessionKey ?? baseSessionKey,
-    baseSessionKey,
-    peer,
-    chatType: isGroup ? "group" : "direct",
-    from: isGroup
-      ? `telegram:group:${peerId}`
-      : resolvedThreadId
-        ? `telegram:${chatId}:topic:${resolvedThreadId}`
-        : `telegram:${chatId}`,
-    to: `telegram:${chatId}`,
-    threadId: resolvedThreadId,
-  };
-}
-
 function resolveWhatsAppSession(
   params: ResolveOutboundSessionRouteParams,
 ): OutboundSessionRoute | null {
@@ -228,7 +171,6 @@ type OutboundSessionResolver = (
 ) => OutboundSessionRoute | null | Promise<OutboundSessionRoute | null>;
 
 const OUTBOUND_SESSION_RESOLVERS: Partial<Record<ChannelId, OutboundSessionResolver>> = {
-  telegram: resolveTelegramSession,
   whatsapp: resolveWhatsAppSession,
 };
 

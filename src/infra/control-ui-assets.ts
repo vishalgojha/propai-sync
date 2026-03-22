@@ -35,6 +35,15 @@ export async function resolveControlUiDistIndexHealth(
   };
 }
 
+
+function hasControlUiWorkspace(root: string): boolean {
+  return (
+    fs.existsSync(path.join(root, "ui", "vite.config.ts")) ||
+    fs.existsSync(path.join(root, "apps", "website", "vite.config.ts"))
+  );
+}
+
+
 export function resolveControlUiRepoRoot(
   argv1: string | undefined = process.argv[1],
 ): string | null {
@@ -46,7 +55,7 @@ export function resolveControlUiRepoRoot(
   const srcIndex = parts.lastIndexOf("src");
   if (srcIndex !== -1) {
     const root = parts.slice(0, srcIndex).join(path.sep);
-    if (fs.existsSync(path.join(root, "ui", "vite.config.ts"))) {
+    if (hasControlUiWorkspace(root)) {
       return root;
     }
   }
@@ -55,7 +64,7 @@ export function resolveControlUiRepoRoot(
   for (let i = 0; i < 8; i++) {
     if (
       fs.existsSync(path.join(dir, "package.json")) &&
-      fs.existsSync(path.join(dir, "ui", "vite.config.ts"))
+      hasControlUiWorkspace(dir)
     ) {
       return dir;
     }

@@ -38,6 +38,26 @@ const WORKSPACE_STATE_VERSION = 1;
 const workspaceTemplateCache = new Map<string, Promise<string>>();
 let gitAvailabilityPromise: Promise<boolean> | null = null;
 const MAX_WORKSPACE_BOOTSTRAP_FILE_BYTES = 2 * 1024 * 1024;
+const FALLBACK_WORKSPACE_TEMPLATES: Record<string, string> = {
+  "IDENTITY.md": `# Identity
+You are PropAi Sync, a real estate assistant. Keep replies short, clear, and action-focused.`,
+  "SOUL.md": `# Soul
+Be warm, professional, and practical. Ask clarifying questions only when needed.`,
+  "TOOLS.md": `# Tools
+Use available tools to look up data, organize leads, and draft follow-ups.`,
+  "AGENTS.md": `# Agents
+Default agent profile for PropAi Sync.`,
+  "USER.md": `# User
+Primary user profile placeholder.`,
+  "HEARTBEAT.md": `# Heartbeat
+Track important workflow health checks.`,
+  "BOOTSTRAP.md": `# Bootstrap
+Initial workspace bootstrap content.`,
+  "MEMORY.md": `# Memory
+Session memory placeholder.`,
+  "memory.md": `# Memory
+Session memory placeholder.`,
+};
 
 // File content cache keyed by stable file identity to avoid stale reads.
 const workspaceFileCache = new Map<string, { content: string; identity: string }>();
@@ -114,6 +134,11 @@ async function loadTemplate(name: string): Promise<string> {
       const content = await fs.readFile(templatePath, "utf-8");
       return stripFrontMatter(content);
     } catch {
+      const fallback = FALLBACK_WORKSPACE_TEMPLATES[name];
+      if (fallback) {
+        console.warn(`[workspace] Missing template ${name} at ${templatePath}. Using fallback content.`);
+        return fallback;
+      }
       throw new Error(
         `Missing workspace template: ${name} (${templatePath}). Ensure docs/reference/templates are packaged.`,
       );

@@ -148,7 +148,6 @@ x-i18n:
 ## macOS 配套应用（高级）
 
 - [macOS 开发环境配置](/platforms/mac/dev-setup)
-- [macOS 菜单栏](/platforms/mac/menu-bar)
 - [macOS 语音唤醒](/platforms/mac/voicewake)
 - [macOS 语音悬浮窗](/platforms/mac/voice-overlay)
 - [macOS WebChat](/platforms/mac/webchat)

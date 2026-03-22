@@ -4,8 +4,10 @@ type OnboardProviderAuthOptionKey = keyof Pick<
   OnboardOptions,
   | "anthropicApiKey"
   | "openaiApiKey"
+  | "groqApiKey"
   | "mistralApiKey"
   | "openrouterApiKey"
+  | "elevenlabsApiKey"
   | "kilocodeApiKey"
   | "aiGatewayApiKey"
   | "cloudflareAiGatewayApiKey"
@@ -55,6 +57,13 @@ export const ONBOARD_PROVIDER_AUTH_FLAGS: ReadonlyArray<OnboardProviderAuthFlag>
     description: "OpenAI API key",
   },
   {
+    optionKey: "groqApiKey",
+    authChoice: "groq-api-key",
+    cliFlag: "--groq-api-key",
+    cliOption: "--groq-api-key <key>",
+    description: "Groq API key",
+  },
+  {
     optionKey: "mistralApiKey",
     authChoice: "mistral-api-key",
     cliFlag: "--mistral-api-key",
@@ -67,6 +76,13 @@ export const ONBOARD_PROVIDER_AUTH_FLAGS: ReadonlyArray<OnboardProviderAuthFlag>
     cliFlag: "--openrouter-api-key",
     cliOption: "--openrouter-api-key <key>",
     description: "OpenRouter API key",
+  },
+  {
+    optionKey: "elevenlabsApiKey",
+    authChoice: "elevenlabs-api-key",
+    cliFlag: "--elevenlabs-api-key",
+    cliOption: "--elevenlabs-api-key <key>",
+    description: "ElevenLabs API key",
   },
   {
     optionKey: "kilocodeApiKey",

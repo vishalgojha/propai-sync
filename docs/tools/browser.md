@@ -3,7 +3,6 @@ summary: "Integrated browser control service + action commands"
 read_when:
   - Adding agent-controlled browser automation
   - Debugging why propai is interfering with your own Chrome
-  - Implementing browser settings + lifecycle in the macOS app
 title: "Browser (propai-managed)"
 ---
 

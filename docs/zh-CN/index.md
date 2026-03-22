@@ -58,7 +58,6 @@ flowchart LR
   B --> C["Pi agent"]
   B --> D["CLI"]
   B --> E["Web Control UI"]
-  B --> F["macOS app"]
   B --> G["iOS and Android nodes"]
 ```
 

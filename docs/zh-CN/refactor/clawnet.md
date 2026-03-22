@@ -76,14 +76,12 @@ x-i18n:
 ## 当前的控制平面客户端
 
 - CLI → 通过 `callGateway`（`src/gateway/call.ts`）连接 Gateway 网关 WS。
-- macOS 应用 UI → Gateway 网关 WS（`GatewayConnection`）。
 - Web 控制 UI → Gateway 网关 WS。
 - ACP → Gateway 网关 WS。
 - 浏览器控制使用自己的 HTTP 控制服务器。
 
 ## 当前的节点
 
-- macOS 应用在节点模式下连接到 Gateway 网关 bridge（`MacNodeBridgeSession`）。
 - iOS/Android 应用连接到 Gateway 网关 bridge。
 - 配对 + 每节点令牌存储在 Gateway 网关上。
 
@@ -262,7 +260,6 @@ x-i18n:
 - 可选的 **operator.read** 用于状态和聊天视图。
 - 可选的 **operator.write/admin** 仅在明确启用时。
 
-## macOS 应用
 
 - 默认是 Operator 角色（控制 UI）。
 - 启用"Mac 节点"时是 Node 角色（system.run、屏幕、相机）。

@@ -374,6 +374,8 @@ export const FIELD_HELP: Record<string, string> = {
     "Optional URL prefix where the Control UI is served (e.g. /PropAiSync).",
   "gateway.controlUi.root":
     "Optional filesystem root for Control UI assets (defaults to dist/control-ui).",
+  "gateway.controlUi.redirectUrl":
+    "Optional URL to redirect to when Control UI assets are missing (useful when hosting the UI separately).",
   "gateway.controlUi.allowedOrigins":
     "Allowed browser origins for Control UI/WebChat websocket connections (full origins only, e.g. https://control.example.com). Required for non-loopback Control UI deployments unless dangerous Host-header fallback is explicitly enabled.",
   "gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback":

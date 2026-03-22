@@ -77,20 +77,13 @@ function asTrimmedString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function resolveCommandLabel(channel: string): string {
-  return channel === "discord" ? "/talkvoice" : "/voice";
-}
-
 export default function register(api: PropAiSyncPluginApi) {
   api.registerCommand({
     name: "voice",
-    nativeNames: {
-      discord: "talkvoice",
-    },
     description: "List/set ElevenLabs Talk voice (affects iOS Talk playback).",
     acceptsArgs: true,
     handler: async (ctx) => {
-      const commandLabel = resolveCommandLabel(ctx.channel);
+      const commandLabel = "/voice";
       const args = ctx.args?.trim() ?? "";
       const tokens = args.split(/\s+/).filter(Boolean);
       const action = (tokens[0] ?? "status").toLowerCase();

@@ -827,7 +827,6 @@ capabilities like screen/camera/canvas and `system.run` on that device.
 Common pattern:
 
 - Gateway on the Mac mini (always-on).
-- MacBook Pro runs the macOS app or a node host and pairs to the Gateway.
 - Use `propai nodes status` / `propai nodes list` to see it.
 
 Docs: [Nodes](/nodes), [Nodes CLI](/cli/nodes).
@@ -1588,7 +1587,6 @@ Typical setup:
 1. Run the Gateway on the always-on host (VPS/home server).
 2. Put the Gateway host + your computer on the same tailnet.
 3. Ensure the Gateway WS is reachable (tailnet bind or SSH tunnel).
-4. Open the macOS app locally and connect in **Remote over SSH** mode (or direct tailnet)
    so it can register as a node.
 5. Approve the node on the Gateway:
 
@@ -1758,7 +1756,6 @@ Serve exposes the **Gateway Control UI + WS**. Nodes connect over the same Gatew
 Recommended setup:
 
 1. **Make sure the VPS + Mac are on the same tailnet**.
-2. **Use the macOS app in Remote mode** (SSH target can be the tailnet hostname).
    The app will tunnel the Gateway port and connect as a node.
 3. **Approve the node** on the gateway:
 
@@ -2517,7 +2514,6 @@ Set `gateway.mode: "remote"` and point to a remote WebSocket URL, optionally wit
 Notes:
 
 - `propai gateway` only starts when `gateway.mode` is `local` (or you pass the override flag).
-- The macOS app watches the config file and switches modes live when these values change.
 
 ### The Control UI says unauthorized or keeps reconnecting What now
 

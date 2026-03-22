@@ -26,7 +26,6 @@ On the first agent run, propai bootstraps the workspace (default
 
 ## Where it runs
 
-Bootstrapping always runs on the **gateway host**. If the macOS app connects to
 a remote Gateway, the workspace and bootstrapping files live on that remote
 machine.
 
@@ -37,7 +36,6 @@ host (for example, `user@gateway-host:~/.propai/workspace`).
 
 ## Related docs
 
-- macOS app onboarding: [Onboarding](/start/onboarding)
 - Workspace layout: [Agent workspace](/concepts/agent-workspace)
 
 

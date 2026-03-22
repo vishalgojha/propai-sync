@@ -226,7 +226,6 @@ export function createPluginRuntimeMock(overrides: DeepPartial<PluginRuntime> = 
           vi.fn() as unknown as PluginRuntime["channel"]["commands"]["shouldHandleTextCommands"],
       },
       activity: {} as PluginRuntime["channel"]["activity"],
-      telegram: {} as PluginRuntime["channel"]["telegram"],
       whatsapp: {} as PluginRuntime["channel"]["whatsapp"],
     },
     events: {

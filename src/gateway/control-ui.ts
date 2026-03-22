@@ -296,6 +296,40 @@ function isSafeRelativePath(relPath: string) {
   return true;
 }
 
+function normalizeRedirectBase(raw?: string): string | null {
+  if (!raw) {
+    return null;
+  }
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+  return trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
+}
+
+function buildControlUiRedirectUrl(params: {
+  redirectBase?: string;
+  basePath: string;
+  pathname: string;
+  search: string;
+}): string | null {
+  const base = normalizeRedirectBase(params.redirectBase);
+  if (!base) {
+    return null;
+  }
+  let suffix = params.pathname;
+  if (params.basePath && suffix.startsWith(params.basePath)) {
+    suffix = suffix.slice(params.basePath.length);
+  }
+  if (!suffix) {
+    suffix = "/";
+  }
+  if (!suffix.startsWith("/")) {
+    suffix = `/${suffix}`;
+  }
+  return `${base}${suffix}${params.search ?? ""}`;
+}
+
 export function handleControlUiHttpRequest(
   req: IncomingMessage,
   res: ServerResponse,
@@ -332,6 +366,23 @@ export function handleControlUiHttpRequest(
 
   applyControlUiSecurityHeaders(res);
 
+  const redirectUrl = buildControlUiRedirectUrl({
+    redirectBase: opts?.config?.gateway?.controlUi?.redirectUrl,
+    basePath,
+    pathname,
+    search: url.search,
+  });
+  const respondAssetsUnavailable = (options?: { configuredRootPath?: string }) => {
+    if (redirectUrl) {
+      res.statusCode = 302;
+      res.setHeader("Location", redirectUrl);
+      res.end();
+      return true;
+    }
+    respondControlUiAssetsUnavailable(res, options);
+    return true;
+  };
+
   const bootstrapConfigPath = basePath
     ? `${basePath}${CONTROL_UI_BOOTSTRAP_CONFIG_PATH}`
     : CONTROL_UI_BOOTSTRAP_CONFIG_PATH;
@@ -364,12 +415,10 @@ export function handleControlUiHttpRequest(
 
   const rootState = opts?.root;
   if (rootState?.kind === "invalid") {
-    respondControlUiAssetsUnavailable(res, { configuredRootPath: rootState.path });
-    return true;
+    return respondAssetsUnavailable({ configuredRootPath: rootState.path });
   }
   if (rootState?.kind === "missing") {
-    respondControlUiAssetsUnavailable(res);
-    return true;
+    return respondAssetsUnavailable();
   }
 
   const root =
@@ -381,8 +430,7 @@ export function handleControlUiHttpRequest(
           cwd: process.cwd(),
         });
   if (!root) {
-    respondControlUiAssetsUnavailable(res);
-    return true;
+    return respondAssetsUnavailable();
   }
 
   const rootReal = (() => {
@@ -396,8 +444,7 @@ export function handleControlUiHttpRequest(
     }
   })();
   if (!rootReal) {
-    respondControlUiAssetsUnavailable(res);
-    return true;
+    return respondAssetsUnavailable();
   }
 
   const uiPath =

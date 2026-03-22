@@ -27,6 +27,7 @@ import { joinPresentTextSegments } from "../../../shared/text/join-segments.js";
 import { resolveTelegramInlineButtonsScope } from "../../../telegram/inline-buttons.js";
 import { resolveTelegramReactionLevel } from "../../../telegram/reaction-level.js";
 import { buildTtsSystemPromptHint } from "../../../tts/tts.js";
+import { reportLlmUsage } from "../../../usage/usage-reporter.js";
 import { resolveUserPath } from "../../../utils.js";
 import { normalizeMessageChannel } from "../../../utils/message-channel.js";
 import { isReasoningTagProvider } from "../../../utils/provider-utils.js";
@@ -53,6 +54,7 @@ import { resolveImageSanitizationLimits } from "../../image-sanitization.js";
 import { resolveModelAuthMode } from "../../model-auth.js";
 import { normalizeProviderId, resolveDefaultModelForAgent } from "../../model-selection.js";
 import { supportsModelTools } from "../../model-tool-support.js";
+import { createElevenLabsStreamFn } from "../../elevenlabs-stream.js";
 import { createConfiguredOllamaStreamFn } from "../../ollama-stream.js";
 import { createOpenAIWebSocketStreamFn, releaseWsSession } from "../../openai-ws-stream.js";
 import { resolveOwnerDisplaySetting } from "../../owner-display.js";
@@ -1510,6 +1512,18 @@ export async function runEmbeddedAttempt(
         });
         activeSession.agent.streamFn = ollamaStreamFn;
         ensureCustomApiRegistered(params.model.api, ollamaStreamFn);
+      } else if (params.model.api === "elevenlabs-convai") {
+        const providerConfig = params.config?.models?.providers?.[params.model.provider];
+        const providerBaseUrl =
+          typeof providerConfig?.baseUrl === "string" ? providerConfig.baseUrl : undefined;
+        const apiKey = await params.authStorage.getApiKey(params.provider);
+        const elevenLabsStreamFn = createElevenLabsStreamFn({
+          apiKey: apiKey ?? undefined,
+          baseUrl: providerBaseUrl,
+          signal: runAbortController.signal,
+        });
+        activeSession.agent.streamFn = elevenLabsStreamFn;
+        ensureCustomApiRegistered(params.model.api, elevenLabsStreamFn);
       } else if (params.model.api === "openai-responses" && params.provider === "openai") {
         const wsApiKey = await params.authStorage.getApiKey(params.provider);
         if (wsApiKey) {
@@ -2303,6 +2317,7 @@ export async function runEmbeddedAttempt(
         )
         .map((entry) => ({ toolName: entry.toolName, meta: entry.meta }));
 
+      const usageTotals = getUsageTotals();
       if (hookRunner?.hasHooks("llm_output")) {
         hookRunner
           .runLlmOutput(
@@ -2313,7 +2328,7 @@ export async function runEmbeddedAttempt(
               model: params.modelId,
               assistantTexts,
               lastAssistant,
-              usage: getUsageTotals(),
+              usage: usageTotals,
             },
             {
               agentId: hookAgentId,
@@ -2329,6 +2344,14 @@ export async function runEmbeddedAttempt(
             log.warn(`llm_output hook failed: ${String(err)}`);
           });
       }
+
+      reportLlmUsage({
+        provider: params.provider,
+        model: params.modelId,
+        usage: usageTotals,
+        sessionId: params.sessionId,
+        runId: params.runId,
+      });
 
       return {
         aborted,
@@ -2352,7 +2375,7 @@ export async function runEmbeddedAttempt(
         cloudCodeAssistFormatError: Boolean(
           lastAssistant?.errorMessage && isCloudCodeAssistFormatError(lastAssistant.errorMessage),
         ),
-        attemptUsage: getUsageTotals(),
+        attemptUsage: usageTotals,
         compactionCount: getCompactionCount(),
         // Client tool call detected (OpenResponses hosted tools)
         clientToolCall: clientToolCallDetected ?? undefined,
