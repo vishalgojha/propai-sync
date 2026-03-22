@@ -539,8 +539,6 @@ fun OnboardingFlow(viewModel: MainViewModel, modifier: Modifier = Modifier) {
               manualHost = manualHost,
               manualPort = manualPort,
               manualTls = manualTls,
-              gatewayToken = persistedGatewayToken,
-              gatewayPassword = gatewayPassword,
               gatewayError = gatewayError,
               onScanQrClick = {
                 gatewayError = null
@@ -571,8 +569,6 @@ fun OnboardingFlow(viewModel: MainViewModel, modifier: Modifier = Modifier) {
                 gatewayError = null
               },
               onManualTlsChange = { manualTls = it },
-              onTokenChange = viewModel::setGatewayToken,
-              onPasswordChange = { gatewayPassword = it },
             )
           OnboardingStep.Permissions ->
             PermissionsStep(
@@ -938,8 +934,6 @@ private fun GatewayStep(
   manualHost: String,
   manualPort: String,
   manualTls: Boolean,
-  gatewayToken: String,
-  gatewayPassword: String,
   gatewayError: String?,
   onScanQrClick: () -> Unit,
   onAdvancedOpenChange: (Boolean) -> Unit,
@@ -948,8 +942,6 @@ private fun GatewayStep(
   onManualHostChange: (String) -> Unit,
   onManualPortChange: (String) -> Unit,
   onManualTlsChange: (Boolean) -> Unit,
-  onTokenChange: (String) -> Unit,
-  onPasswordChange: (String) -> Unit,
 ) {
   val resolvedEndpoint = remember(setupCode) { decodeGatewaySetupCode(setupCode)?.url?.let { parseGatewayEndpoint(it)?.displayUrl } }
   val manualResolvedEndpoint = remember(manualHost, manualPort, manualTls) { composeGatewayManualUrl(manualHost, manualPort, manualTls)?.let { parseGatewayEndpoint(it)?.displayUrl } }
@@ -1108,53 +1100,9 @@ private fun GatewayStep(
                   uncheckedTrackColor = onboardingBorderStrong,
                   checkedThumbColor = Color.White,
                   uncheckedThumbColor = Color.White,
-                ),
+              ),
             )
           }
-
-          Text("TOKEN (OPTIONAL)", style = onboardingCaption1Style.copy(letterSpacing = 0.9.sp), color = onboardingTextSecondary)
-          OutlinedTextField(
-            value = gatewayToken,
-            onValueChange = onTokenChange,
-            placeholder = { Text("token", color = onboardingTextTertiary, style = onboardingBodyStyle) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-            textStyle = onboardingBodyStyle.copy(color = onboardingText),
-            shape = RoundedCornerShape(14.dp),
-            colors =
-              OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = onboardingSurface,
-                unfocusedContainerColor = onboardingSurface,
-                focusedBorderColor = onboardingAccent,
-                unfocusedBorderColor = onboardingBorder,
-                focusedTextColor = onboardingText,
-                unfocusedTextColor = onboardingText,
-                cursorColor = onboardingAccent,
-              ),
-          )
-
-          Text("PASSWORD (OPTIONAL)", style = onboardingCaption1Style.copy(letterSpacing = 0.9.sp), color = onboardingTextSecondary)
-          OutlinedTextField(
-            value = gatewayPassword,
-            onValueChange = onPasswordChange,
-            placeholder = { Text("password", color = onboardingTextTertiary, style = onboardingBodyStyle) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-            textStyle = onboardingBodyStyle.copy(color = onboardingText),
-            shape = RoundedCornerShape(14.dp),
-            colors =
-              OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = onboardingSurface,
-                unfocusedContainerColor = onboardingSurface,
-                focusedBorderColor = onboardingAccent,
-                unfocusedBorderColor = onboardingBorder,
-                focusedTextColor = onboardingText,
-                unfocusedTextColor = onboardingText,
-                cursorColor = onboardingAccent,
-              ),
-          )
 
           if (!manualResolvedEndpoint.isNullOrBlank()) {
             ResolvedEndpoint(endpoint = manualResolvedEndpoint)

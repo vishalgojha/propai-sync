@@ -67,9 +67,9 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
 
   var advancedOpen by rememberSaveable { mutableStateOf(false) }
   var inputMode by
-    remember(manualEnabled, manualHost, gatewayToken) {
+    remember(manualEnabled, manualHost) {
       mutableStateOf(
-        if (manualEnabled || manualHost.isNotBlank() || gatewayToken.trim().isNotEmpty()) {
+        if (manualEnabled || manualHost.isNotBlank()) {
           ConnectInputMode.Manual
         } else {
           ConnectInputMode.SetupCode
@@ -80,7 +80,6 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
   var manualHostInput by rememberSaveable { mutableStateOf(manualHost) }
   var manualPortInput by rememberSaveable { mutableStateOf(manualPort.toString()) }
   var manualTlsInput by rememberSaveable { mutableStateOf(manualTls) }
-  var passwordInput by rememberSaveable { mutableStateOf("") }
   var validationText by rememberSaveable { mutableStateOf<String?>(null) }
 
   if (pendingTrust != null) {
@@ -182,7 +181,7 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
             manualPort = manualPortInput,
             manualTls = manualTlsInput,
             fallbackToken = gatewayToken,
-            fallbackPassword = passwordInput,
+            fallbackPassword = "",
           )
 
         if (config == null) {
@@ -203,7 +202,9 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
         if (config.token.isNotBlank()) {
           viewModel.setGatewayToken(config.token)
         }
-        viewModel.setGatewayPassword(config.password)
+        if (config.password.isNotBlank()) {
+          viewModel.setGatewayPassword(config.password)
+        }
         viewModel.connectManual()
       },
       modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -231,7 +232,7 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
       ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Text("Advanced controls", style = mobileHeadline, color = mobileText)
-          Text("Setup code, endpoint, TLS, token, password, onboarding.", style = mobileCaption1, color = mobileTextSecondary)
+          Text("Setup code, endpoint, TLS, onboarding.", style = mobileCaption1, color = mobileTextSecondary)
         }
         Icon(
           imageVector = if (advancedOpen) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -349,32 +350,6 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
                   ),
               )
             }
-
-            Text("Token (optional)", style = mobileCaption1.copy(fontWeight = FontWeight.SemiBold), color = mobileTextSecondary)
-            OutlinedTextField(
-              value = gatewayToken,
-              onValueChange = { viewModel.setGatewayToken(it) },
-              placeholder = { Text("token", style = mobileBody, color = mobileTextTertiary) },
-              modifier = Modifier.fillMaxWidth(),
-              singleLine = true,
-              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-              textStyle = mobileBody.copy(color = mobileText),
-              shape = RoundedCornerShape(14.dp),
-              colors = outlinedColors(),
-            )
-
-            Text("Password (optional)", style = mobileCaption1.copy(fontWeight = FontWeight.SemiBold), color = mobileTextSecondary)
-            OutlinedTextField(
-              value = passwordInput,
-              onValueChange = { passwordInput = it },
-              placeholder = { Text("password", style = mobileBody, color = mobileTextTertiary) },
-              modifier = Modifier.fillMaxWidth(),
-              singleLine = true,
-              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-              textStyle = mobileBody.copy(color = mobileText),
-              shape = RoundedCornerShape(14.dp),
-              colors = outlinedColors(),
-            )
 
             if (!manualResolvedEndpoint.isNullOrBlank()) {
               EndpointPreview(endpoint = manualResolvedEndpoint)
