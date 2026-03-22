@@ -4,20 +4,28 @@ read_when:
   - Bootstrapping a workspace manually
 ---
 
-# USER.md - About Your Human
+# USER.md - Broker Profile
 
-_Learn about the person you're helping. Update this as you go._
+Create or update this profile during the first interaction so the assistant
+knows the broker or business context immediately.
 
-- **Name:**
-- **What to call them:**
-- **Pronouns:** _(optional)_
-- **Timezone:**
-- **Notes:**
+- **Broker name:**
+- **Company / brand:**
+- **Team size and roles:**
+- **Primary markets (city/locality):**
+- **Property types:**
+- **Typical price bands:**
+- **Preferred language and tone:**
+- **WhatsApp numbers in use:**
+- **Business hours and response windows:**
+- **Lead sources (ads, referrals, portals):**
+- **CRM or tools in use:**
+- **Compliance notes or restrictions:**
 
-## Context
+## Business goals
 
-_(What do they care about? What projects are they working on? What annoys them? What makes them laugh? Build this over time.)_
+_(Examples: faster lead response, more site visits, higher-quality qualification, daily reporting.)_
 
----
+## Notes
 
-The more you know, the better you can help. But remember — you're learning about a person, not building a dossier. Respect the difference.
+_(Keep this concise and useful. Update when the broker changes focus or markets.)_
