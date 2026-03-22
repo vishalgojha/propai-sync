@@ -1,8 +1,54 @@
 import { ArrowLeft, Mail, MessageSquare, Clock, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { useEffect, useMemo, useState } from 'react';
+import { WHATSAPP_JOIN_URL } from '../../lib/links';
 
 export default function ContactPage() {
+  const [companyName, setCompanyName] = useState('');
+  const defaultWhatsappUrl = 'https://wa.me/9819471';
+  const baseWhatsappUrl = WHATSAPP_JOIN_URL || defaultWhatsappUrl;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const preset =
+      params.get('company') ||
+      params.get('brokerage') ||
+      params.get('tenant') ||
+      params.get('name');
+    if (preset) {
+      setCompanyName(preset);
+    }
+  }, []);
+
+  const whatsappJoinUrl = useMemo(() => {
+    const trimmed = companyName.trim();
+    try {
+      const url = new URL(baseWhatsappUrl);
+      const existingText = url.searchParams.get('text') || 'JOIN';
+      const nextText = trimmed ? `JOIN ${trimmed}` : existingText;
+      url.searchParams.set('text', nextText);
+      return url.toString();
+    } catch {
+      if (!trimmed) return baseWhatsappUrl;
+      const joinText = encodeURIComponent(`JOIN ${trimmed}`);
+      return baseWhatsappUrl.includes('?')
+        ? `${baseWhatsappUrl}&text=${joinText}`
+        : `${baseWhatsappUrl}?text=${joinText}`;
+    }
+  }, [baseWhatsappUrl, companyName]);
+
+  const whatsappDisplay = useMemo(() => {
+    try {
+      const url = new URL(baseWhatsappUrl);
+      const digits = url.pathname.replace(/\//g, '');
+      return digits ? `+${digits}` : '+9819471';
+    } catch {
+      return baseWhatsappUrl.replace(/^https?:\/\/wa\.me\//, '+');
+    }
+  }, [baseWhatsappUrl]);
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans py-20 px-4">
       <div className="max-w-3xl mx-auto">
@@ -45,7 +91,10 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="font-medium">WhatsApp</p>
-                    <a href="https://wa.me/919820056180" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">+91 9820056180</a>
+                    <a href={whatsappJoinUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{whatsappDisplay}</a>
+                    {companyName ? (
+                      <p className="text-xs text-muted-foreground mt-1">Prefilled join message for {companyName}</p>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
