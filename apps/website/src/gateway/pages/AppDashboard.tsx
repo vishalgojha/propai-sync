@@ -1307,6 +1307,30 @@ export default function AppDashboard() {
   const setupChecklistAllOk = setupChecklist.every((item) => item.ok);
   const setupMissingLabels = setupChecklist.filter((item) => !item.ok).map((item) => item.label);
   const setupMissingSummary = setupMissingLabels.length > 0 ? setupMissingLabels.join(' · ') : '';
+  const setupEnvSnippet = [
+    '# Gateway service',
+    'PROPAI_GATEWAY_TOKEN=',
+    'ANTHROPIC_API_KEY=',
+    'OPENAI_API_KEY=',
+    'XAI_API_KEY=',
+    '',
+    '# Control API service',
+    'CONTROL_GATEWAY_URL=http://gateway.railway.internal:8080',
+    'CONTROL_GATEWAY_TOKEN=',
+  ].join('\n');
+
+  const copySetupEnvSnippet = async () => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(setupEnvSnippet);
+        setSettingsMessage('Env snippet copied.');
+        return;
+      }
+      throw new Error('Clipboard unavailable');
+    } catch {
+      setSettingsMessage('Copy failed. Please copy manually.');
+    }
+  };
 
   useEffect(() => {
     if (!chatEndRef.current) {
@@ -1874,6 +1898,22 @@ export default function AppDashboard() {
                   >
                     {setupCheckLoading ? 'Checking…' : 'Recheck'}
                   </button>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      Need help setting env vars? Copy the starter block below.
+                    </p>
+                    <button
+                      onClick={copySetupEnvSnippet}
+                      className="text-xs font-semibold underline"
+                    >
+                      Copy env snippet
+                    </button>
+                  </div>
+                  <pre className="text-[11px] leading-relaxed bg-muted/40 border border-border rounded-xl p-3 overflow-x-auto">
+                    {setupEnvSnippet}
+                  </pre>
                 </div>
                 {setupCheckError && (
                   <p className="text-xs text-destructive">{setupCheckError}</p>
