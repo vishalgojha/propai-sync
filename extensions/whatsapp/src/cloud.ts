@@ -28,6 +28,8 @@ type CloudHandlerEntry = {
 };
 
 const cloudHandlers = new Map<string, CloudHandlerEntry>();
+const DEFAULT_CONTROL_API_URL_LOCAL = "http://localhost:8788";
+const DEFAULT_CONTROL_API_URL_RAILWAY = "http://control-api.railway.internal:8080";
 
 function resolveCloudAccounts(cfg: PropAiSyncConfig): CloudAccount[] {
   return listWhatsAppAccountIds(cfg)
@@ -87,6 +89,65 @@ function normalizeWhatsAppNumber(value: string): string {
     return trimmed;
   }
   return trimmed.startsWith("+") ? trimmed.slice(1) : trimmed;
+}
+
+function resolveControlApiUrl(): string {
+  const isRailway = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
+  const fallback = isRailway ? DEFAULT_CONTROL_API_URL_RAILWAY : DEFAULT_CONTROL_API_URL_LOCAL;
+  return (process.env.CONTROL_API_URL || fallback).replace(/\/+$/, "");
+}
+
+function shouldHandleJoinMessage(text: string): boolean {
+  const normalized = text.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  return (
+    normalized === "join" ||
+    normalized === "start" ||
+    normalized === "get started" ||
+    normalized.startsWith("join ") ||
+    normalized.startsWith("start ")
+  );
+}
+
+async function tryHandleWhatsAppJoin(params: {
+  text: string;
+  senderE164?: string;
+  senderName?: string | null;
+  reply: (text: string) => Promise<void>;
+}): Promise<boolean> {
+  if (!shouldHandleJoinMessage(params.text)) {
+    return false;
+  }
+  const phone = params.senderE164 ?? null;
+  if (!phone) {
+    await params.reply("Please send from a WhatsApp number so we can onboard you.");
+    return true;
+  }
+  const controlApiUrl = resolveControlApiUrl();
+  try {
+    const response = await fetch(`${controlApiUrl}/v1/whatsapp/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        phone,
+        name: params.senderName ?? undefined,
+      }),
+    });
+    const payload = (await response.json().catch(() => ({}))) as { loginUrl?: string };
+    if (!response.ok || !payload.loginUrl) {
+      await params.reply("We could not complete onboarding. Please try again in a minute.");
+      return true;
+    }
+    await params.reply(
+      `Welcome to PropAi Sync! Open this link to finish setup: ${payload.loginUrl}`,
+    );
+    return true;
+  } catch {
+    await params.reply("We could not reach the onboarding service. Please try again shortly.");
+    return true;
+  }
 }
 
 async function sendCloudMessage(params: {
@@ -383,6 +444,17 @@ export async function handleWhatsAppCloudWebhook(
             });
           },
         };
+
+        const handledJoin = await tryHandleWhatsAppJoin({
+          text,
+          senderE164: inbound.senderE164,
+          senderName: contactName,
+          reply: inbound.reply,
+        });
+        if (handledJoin) {
+          continue;
+        }
+
         const handler = getCloudOnMessageHandler({
           cfg,
           accountId: resolved.accountId ?? DEFAULT_ACCOUNT_ID,

@@ -100,6 +100,12 @@ const passwordUpdateSchema = z.object({
   password: z.string().min(8),
 });
 
+const whatsappJoinSchema = z.object({
+  phone: z.string().min(6),
+  name: z.string().min(1).optional(),
+  tenantName: z.string().min(2).optional(),
+});
+
 const createTenantSchema = z.object({
   name: z.string().min(2),
 });
@@ -194,6 +200,11 @@ app.use(express.json({ limit: "1mb" }));
 
 const db = openDatabase(DB_PATH);
 initSchema(db);
+
+const CONTROL_UI_URL = (process.env.CONTROL_UI_URL || process.env.APP_URL || "https://www.propai.live/app").replace(
+  /\/+$/,
+  "",
+);
 
 app.get("/health", (_req, res) => {
   res.json({
@@ -340,6 +351,78 @@ app.post("/v1/auth/password", requireAuth, (req, res) => {
     return;
   }
   res.json({ ok: true });
+});
+
+app.post("/v1/whatsapp/join", (req, res) => {
+  const payload = whatsappJoinSchema.safeParse(req.body);
+  if (!payload.success) {
+    res.status(400).json({ error: payload.error.message });
+    return;
+  }
+
+  const phone = normalizeWhatsAppPhone(payload.data.phone);
+  if (!phone) {
+    res.status(400).json({ error: "Phone required." });
+    return;
+  }
+
+  const existingIdentity = getWhatsappIdentity(phone);
+  if (existingIdentity) {
+    const user = getUserById(existingIdentity.user_id);
+    const tenant = getTenantById(existingIdentity.tenant_id);
+    if (user && tenant) {
+      const token = signToken(user.id);
+      res.json({
+        token,
+        loginUrl: buildControlLoginUrl(token, tenant.id),
+        user: { id: user.id, email: user.email },
+        tenant: { id: tenant.id, name: tenant.name, role: "owner" },
+        existing: true,
+      });
+      return;
+    }
+  }
+
+  const now = nowIso();
+  const tenantId = randomId("tnt");
+  const userId = randomId("usr");
+  const membershipId = randomId("mem");
+  const tenantName =
+    payload.data.tenantName?.trim() ||
+    payload.data.name?.trim() ||
+    `Broker ${phone.replace(/\D/g, "").slice(-4)}`;
+  const email = phoneToEmail(phone);
+  const tempPassword = `${createToken()}${createToken()}`;
+
+  try {
+    db.exec("BEGIN;");
+    db.prepare(
+      "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
+    ).run(tenantId, tenantName, now);
+    db.prepare(
+      "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
+    ).run(userId, email, hashPassword(tempPassword), now);
+    db.prepare(
+      "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
+    ).run(membershipId, tenantId, userId, "owner", now);
+    db.prepare(
+      "INSERT INTO whatsapp_identities (phone, user_id, tenant_id, created_at) VALUES (?, ?, ?, ?)",
+    ).run(phone, userId, tenantId, now);
+    db.exec("COMMIT;");
+  } catch (err) {
+    db.exec("ROLLBACK;");
+    res.status(500).json({ error: "Failed to create WhatsApp account." });
+    return;
+  }
+
+  const token = signToken(userId);
+  res.json({
+    token,
+    loginUrl: buildControlLoginUrl(token, tenantId),
+    user: { id: userId, email },
+    tenant: { id: tenantId, name: tenantName, role: "owner" },
+    existing: false,
+  });
 });
 
 app.get("/v1/me", requireAuth, (req, res) => {
@@ -979,6 +1062,13 @@ function initSchema(database: DatabaseSync) {
       accepted_at TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS whatsapp_identities (
+      phone TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS tenant_settings (
       tenant_id TEXT PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
       data TEXT NOT NULL,
@@ -1169,6 +1259,41 @@ function getUserByEmail(email: string): UserRow | undefined {
 function countUsers(): number {
   const row = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count?: number } | undefined;
   return row?.count ?? 0;
+}
+
+function normalizeWhatsAppPhone(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const cleaned = trimmed.replace(/[^\d+]/g, "");
+  if (!cleaned) {
+    return null;
+  }
+  if (cleaned.startsWith("+")) {
+    return cleaned;
+  }
+  return `+${cleaned}`;
+}
+
+function phoneToEmail(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return `wa+${digits}@propai.live`;
+}
+
+function getWhatsappIdentity(phone: string): { phone: string; user_id: string; tenant_id: string } | undefined {
+  return db
+    .prepare("SELECT phone, user_id, tenant_id FROM whatsapp_identities WHERE phone = ?")
+    .get(phone) as { phone: string; user_id: string; tenant_id: string } | undefined;
+}
+
+function buildControlLoginUrl(token: string, tenantId?: string): string {
+  const url = new URL(CONTROL_UI_URL);
+  url.searchParams.set("control_token", token);
+  if (tenantId) {
+    url.searchParams.set("tenant_id", tenantId);
+  }
+  return url.toString();
 }
 
 function getUserById(userId: string): UserRow | undefined {

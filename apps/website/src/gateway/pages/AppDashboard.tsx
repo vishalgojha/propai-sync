@@ -375,6 +375,25 @@ export default function AppDashboard() {
     }
     return window.localStorage.getItem(CONTROL_TENANT_STORAGE) ?? '';
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const url = new URL(window.location.href);
+    const tokenParam = url.searchParams.get('control_token');
+    const tenantParam = url.searchParams.get('tenant_id');
+    if (!tokenParam) {
+      return;
+    }
+    setControlToken(tokenParam);
+    if (tenantParam) {
+      setSelectedTenantId(tenantParam);
+    }
+    url.searchParams.delete('control_token');
+    url.searchParams.delete('tenant_id');
+    window.history.replaceState({}, '', url.toString());
+  }, []);
   const [controlUser, setControlUser] = useState<ControlUser | null>(null);
   const [controlTenants, setControlTenants] = useState<ControlTenant[]>([]);
   const [teamMembers, setTeamMembers] = useState<ControlUserRow[]>([]);

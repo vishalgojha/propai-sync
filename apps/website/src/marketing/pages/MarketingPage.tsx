@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Link } from 'react-router-dom';
-import { ANDROID_APK_URL, APP_URL } from '../../lib/links';
+import { ANDROID_APK_URL, APP_URL, WHATSAPP_JOIN_URL } from '../../lib/links';
 
 export default function MarketingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -98,6 +98,14 @@ export default function MarketingPage() {
               >
                 Open PropAi Live <ArrowRight className="w-5 h-5" />
               </a>
+              {WHATSAPP_JOIN_URL ? (
+                <a 
+                  href={WHATSAPP_JOIN_URL}
+                  className="bg-emerald-500 text-white px-8 py-4 rounded-xl text-lg font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                >
+                  Join on WhatsApp
+                </a>
+              ) : null}
               <a 
                 href={ANDROID_APK_URL}
                 className="bg-secondary text-secondary-foreground px-8 py-4 rounded-xl text-lg font-bold hover:bg-accent transition-all flex items-center justify-center gap-2"
