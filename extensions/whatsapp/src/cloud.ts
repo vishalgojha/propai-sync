@@ -111,6 +111,25 @@ function shouldHandleJoinMessage(text: string): boolean {
   );
 }
 
+function extractJoinTenantName(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const lower = trimmed.toLowerCase();
+  const prefixes = ["join ", "start ", "get started "];
+  for (const prefix of prefixes) {
+    if (lower.startsWith(prefix)) {
+      const raw = trimmed.slice(prefix.length).trim();
+      if (raw.length >= 2) {
+        return raw;
+      }
+      return null;
+    }
+  }
+  return null;
+}
+
 async function tryHandleWhatsAppJoin(params: {
   text: string;
   senderE164?: string;
@@ -126,6 +145,7 @@ async function tryHandleWhatsAppJoin(params: {
     return true;
   }
   const controlApiUrl = resolveControlApiUrl();
+  const tenantName = extractJoinTenantName(params.text);
   try {
     const response = await fetch(`${controlApiUrl}/v1/whatsapp/join`, {
       method: "POST",
@@ -133,6 +153,7 @@ async function tryHandleWhatsAppJoin(params: {
       body: JSON.stringify({
         phone,
         name: params.senderName ?? undefined,
+        tenantName: tenantName ?? undefined,
       }),
     });
     const payload = (await response.json().catch(() => ({}))) as { loginUrl?: string };
