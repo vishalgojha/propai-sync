@@ -198,6 +198,28 @@ Done:
 
 Pending:
 - Railway env vars still need to be set for `gateway`, `control-api`, `Licensing`.
+
+## 2026-03-22 Self-Healing Pass
+
+Done:
+- WhatsApp Baileys reconnect handling expanded for DisconnectReason cases.
+- Reconnect now refuses to retry after logged-out / bad-session / connection-replaced.
+- Reconnect halts if auth state is missing.
+- Session integrity check + auto-repair hook (`ensureWebAuthState`) before socket init.
+- Railway default state dir forced to `/app/.propai` for persistence.
+- Added shared retry helper with exponential backoff.
+- Wrapped key external calls with retries:
+  - WhatsApp cloud join + send
+  - Control UI proxy + health calls
+  - Usage ingest
+  - Control API → Gateway proxy
+  - Licensing → Resend email send
+- Global uncaught exception + unhandled rejection logging for gateway, control-api, licensing.
+- `/healthz` now returns lightweight live details (WhatsApp status + session state).
+
+Pending:
+- Validate health response in Railway after deploy.
+- Optional: extend retries to other external providers (non-critical fetch paths).
 - Gateway auth token required to unblock Chrome relay + device pairing.
 - Provider API key required for gateway agent model (Anthropic/OpenAI/xAI).
 - Trial activation “fetch failed” needs verification once envs are set.

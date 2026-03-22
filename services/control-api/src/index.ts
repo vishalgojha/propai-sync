@@ -161,6 +161,66 @@ const usageIngestSchema = z.object({
 
 const usageRangeSchema = z.enum(["24h", "7d", "30d"]);
 
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+const RETRY_POLICY = { initialMs: 500, maxMs: 8000, factor: 2, jitter: 0.2, maxRetries: 3 };
+
+function computeBackoff(attempt: number) {
+  const base = RETRY_POLICY.initialMs * RETRY_POLICY.factor ** Math.max(attempt - 1, 0);
+  const jitter = base * RETRY_POLICY.jitter * Math.random();
+  return Math.min(RETRY_POLICY.maxMs, Math.round(base + jitter));
+}
+
+async function sleep(ms: number) {
+  if (ms <= 0) {
+    return;
+  }
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  context: string,
+): Promise<Response> {
+  let attempt = 0;
+  while (true) {
+    attempt += 1;
+    try {
+      const res = await fetch(input, init);
+      if (RETRYABLE_STATUSES.has(res.status)) {
+        throw Object.assign(new Error(`fetch failed (${res.status})`), { status: res.status });
+      }
+      return res;
+    } catch (err) {
+      if (attempt >= RETRY_POLICY.maxRetries) {
+        throw err;
+      }
+      const delay = computeBackoff(attempt);
+      console.warn(
+        `[retry] ${context} attempt ${attempt}/${RETRY_POLICY.maxRetries} failed; retrying in ${delay}ms`,
+      );
+      await sleep(delay);
+    }
+  }
+}
+
+function registerGlobalErrorHandlers() {
+  process.on("uncaughtException", (err) => {
+    console.error(
+      `[control-api] uncaught exception (process kept alive): ${
+        err instanceof Error ? err.stack ?? err.message : String(err)
+      }`,
+    );
+  });
+  process.on("unhandledRejection", (reason) => {
+    console.error(
+      `[control-api] unhandled rejection (process kept alive): ${
+        reason instanceof Error ? reason.stack ?? reason.message : String(reason)
+      }`,
+    );
+  });
+}
+
 const settingsSchema = z.object({
   onboardingComplete: z.boolean().optional(),
   whatsapp: z
@@ -197,6 +257,7 @@ const settingsSchema = z.object({
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
+registerGlobalErrorHandlers();
 
 const db = openDatabase(DB_PATH);
 initSchema(db);
@@ -1213,11 +1274,15 @@ async function forwardGateway(
     if (opts.body && (opts.method ?? "GET") !== "GET") {
       headers["Content-Type"] = "application/json";
     }
-    const response = await fetch(`${CONTROL_GATEWAY_URL}${upstreamPath}`, {
-      method: opts.method ?? "GET",
-      headers,
-      body: opts.body ? JSON.stringify(opts.body) : undefined,
-    });
+    const response = await fetchWithRetry(
+      `${CONTROL_GATEWAY_URL}${upstreamPath}`,
+      {
+        method: opts.method ?? "GET",
+        headers,
+        body: opts.body ? JSON.stringify(opts.body) : undefined,
+      },
+      `gateway proxy ${opts.method ?? "GET"} ${upstreamPath}`,
+    );
     const payload = await response.json().catch(() => ({}));
     res.status(response.status).json(payload);
   } catch (error) {

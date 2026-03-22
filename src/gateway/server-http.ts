@@ -81,6 +81,15 @@ type HookDispatchers = {
   dispatchAgentHook: (value: HookAgentDispatchPayload) => string;
 };
 
+type LiveHealthDetails = {
+  ok: boolean;
+  status: "live";
+  uptimeMs?: number;
+  whatsapp?: Record<string, unknown>;
+  session?: Record<string, unknown>;
+  error?: string;
+};
+
 function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -134,6 +143,7 @@ async function handleGatewayProbeRequest(
   trustedProxies: string[],
   allowRealIpFallback: boolean,
   getReadiness?: ReadinessChecker,
+  getLiveHealth?: () => Promise<LiveHealthDetails>,
 ): Promise<boolean> {
   const status = GATEWAY_PROBE_STATUS_BY_PATH.get(requestPath);
   if (!status) {
@@ -172,8 +182,24 @@ async function handleGatewayProbeRequest(
       );
     }
   } else {
-    statusCode = 200;
-    body = JSON.stringify({ ok: true, status });
+    const wantsDetails = requestPath === "/healthz";
+    if (status === "live" && wantsDetails && getLiveHealth) {
+      try {
+        const details = await getLiveHealth();
+        statusCode = details.ok ? 200 : 503;
+        body = JSON.stringify(details);
+      } catch (err) {
+        statusCode = 503;
+        body = JSON.stringify({
+          ok: false,
+          status: "live",
+          error: err instanceof Error ? err.message : "health details unavailable",
+        } satisfies LiveHealthDetails);
+      }
+    } else {
+      statusCode = 200;
+      body = JSON.stringify({ ok: true, status });
+    }
   }
   res.statusCode = statusCode;
   res.end(method === "HEAD" ? undefined : body);
@@ -522,6 +548,7 @@ export function createGatewayHttpServer(opts: {
   /** Optional rate limiter for auth brute-force protection. */
   rateLimiter?: AuthRateLimiter;
   getReadiness?: ReadinessChecker;
+  getLiveHealth?: () => Promise<LiveHealthDetails>;
   tlsOptions?: TlsOptions;
 }): HttpServer {
   const {
@@ -541,6 +568,7 @@ export function createGatewayHttpServer(opts: {
     resolvedAuth,
     rateLimiter,
     getReadiness,
+    getLiveHealth,
   } = opts;
   const httpServer: HttpServer = opts.tlsOptions
     ? createHttpsServer(opts.tlsOptions, (req, res) => {
@@ -723,6 +751,7 @@ export function createGatewayHttpServer(opts: {
             trustedProxies,
             allowRealIpFallback,
             getReadiness,
+            getLiveHealth,
           ),
       });
 

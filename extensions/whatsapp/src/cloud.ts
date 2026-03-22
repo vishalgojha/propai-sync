@@ -16,6 +16,7 @@ import { createWebOnMessageHandler } from "../../../src/web/auto-reply/monitor/o
 import { buildMentionConfig } from "../../../src/web/auto-reply/mentions.js";
 import { newConnectionId } from "../../../src/web/reconnect.js";
 import type { WebInboundMessage } from "../../../src/web/inbound/types.js";
+import { fetchWithRetry } from "../../../src/infra/retry.js";
 import { getWhatsAppRuntime } from "./runtime.js";
 
 type CloudAccount = ReturnType<typeof resolveWhatsAppAccount> & {
@@ -147,15 +148,32 @@ async function tryHandleWhatsAppJoin(params: {
   const controlApiUrl = resolveControlApiUrl();
   const tenantName = extractJoinTenantName(params.text);
   try {
-    const response = await fetch(`${controlApiUrl}/v1/whatsapp/join`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        phone,
-        name: params.senderName ?? undefined,
-        tenantName: tenantName ?? undefined,
-      }),
-    });
+    const log = getWhatsAppRuntime().logging.getChildLogger({ module: "whatsapp-cloud" });
+    const response = await fetchWithRetry(
+      `${controlApiUrl}/v1/whatsapp/join`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          phone,
+          name: params.senderName ?? undefined,
+          tenantName: tenantName ?? undefined,
+        }),
+      },
+      {
+        context: "whatsapp-cloud join",
+        onRetry: (info) => {
+          log.warn(
+            {
+              attempt: info.retryCount + 1,
+              maxRetries: info.maxRetries,
+              delayMs: info.delayMs,
+            },
+            "control-api join failed, retrying",
+          );
+        },
+      },
+    );
     const payload = (await response.json().catch(() => ({}))) as { loginUrl?: string };
     if (!response.ok || !payload.loginUrl) {
       await params.reply("We could not complete onboarding. Please try again in a minute.");
@@ -203,14 +221,34 @@ async function sendCloudMessage(params: {
     payload.type = "text";
     payload.text = { body: params.text, preview_url: false };
   }
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${cloud.accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+  const log = getWhatsAppRuntime().logging.getChildLogger({
+    module: "whatsapp-cloud",
+    accountId: params.accountId,
   });
+  const response = await fetchWithRetry(
+    url,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${cloud.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+    {
+      context: `whatsapp-cloud send (${params.accountId})`,
+      onRetry: (info) => {
+        log.warn(
+          {
+            attempt: info.retryCount + 1,
+            maxRetries: info.maxRetries,
+            delayMs: info.delayMs,
+          },
+          "whatsapp cloud send failed, retrying",
+        );
+      },
+    },
+  );
   if (!response.ok) {
     const body = await response.text();
     throw new Error(

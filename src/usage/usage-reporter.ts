@@ -1,4 +1,5 @@
 import { createSubsystemLogger } from "../logging/subsystem.js";
+import { fetchWithRetry } from "../infra/retry.js";
 
 type UsageEventKind = "llm" | "tts";
 
@@ -70,7 +71,7 @@ async function postUsageEvents(events: UsageEvent[]): Promise<void> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), USAGE_TIMEOUT_MS);
   try {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${CONTROL_API_URL}/v1/tenants/${encodeURIComponent(CONTROL_TENANT_ID)}/usage/ingest`,
       {
         method: "POST",
@@ -81,6 +82,20 @@ async function postUsageEvents(events: UsageEvent[]): Promise<void> {
         },
         body: JSON.stringify({ events }),
         signal: controller.signal,
+      },
+      {
+        context: "usage ingest",
+        abortSignal: controller.signal,
+        onRetry: (info) => {
+          log.warn(
+            {
+              attempt: info.retryCount + 1,
+              maxRetries: info.maxRetries,
+              delayMs: info.delayMs,
+            },
+            "usage ingest failed, retrying",
+          );
+        },
       },
     );
     if (!response.ok) {

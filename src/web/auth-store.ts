@@ -128,6 +128,33 @@ async function clearLegacyBaileysAuthState(authDir: string) {
   );
 }
 
+export type WebAuthStateCheckResult = {
+  ok: boolean;
+  repaired: boolean;
+  reason?: "missing" | "corrupted";
+};
+
+export function ensureWebAuthState(authDir: string): WebAuthStateCheckResult {
+  const resolvedAuthDir = resolveUserPath(authDir);
+  try {
+    maybeRestoreCredsFromBackup(resolvedAuthDir);
+    const raw = readCredsJsonRaw(resolveWebCredsPath(resolvedAuthDir));
+    if (!raw) {
+      return { ok: false, repaired: false, reason: "missing" };
+    }
+    try {
+      JSON.parse(raw);
+      return { ok: true, repaired: false };
+    } catch {
+      // Corrupted creds; clear state so Baileys can reinitialize cleanly.
+      void clearLegacyBaileysAuthState(resolvedAuthDir).catch(() => {});
+      return { ok: false, repaired: true, reason: "corrupted" };
+    }
+  } catch {
+    return { ok: false, repaired: false, reason: "corrupted" };
+  }
+}
+
 export async function logoutWeb(params: {
   authDir?: string;
   isLegacyAuthDir?: boolean;

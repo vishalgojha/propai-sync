@@ -44,6 +44,66 @@ const isDev =
   process.env.PROPAI_PROFILE === "dev" || (process.env.NODE_ENV ?? "development") !== "production";
 let jwtSecret = process.env.LICENSE_JWT_SECRET ?? "";
 
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+const RETRY_POLICY = { initialMs: 500, maxMs: 8000, factor: 2, jitter: 0.2, maxRetries: 3 };
+
+function computeBackoff(attempt: number) {
+  const base = RETRY_POLICY.initialMs * RETRY_POLICY.factor ** Math.max(attempt - 1, 0);
+  const jitter = base * RETRY_POLICY.jitter * Math.random();
+  return Math.min(RETRY_POLICY.maxMs, Math.round(base + jitter));
+}
+
+async function sleep(ms: number) {
+  if (ms <= 0) {
+    return;
+  }
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  context: string,
+): Promise<Response> {
+  let attempt = 0;
+  while (true) {
+    attempt += 1;
+    try {
+      const res = await fetch(input, init);
+      if (RETRYABLE_STATUSES.has(res.status)) {
+        throw Object.assign(new Error(`fetch failed (${res.status})`), { status: res.status });
+      }
+      return res;
+    } catch (err) {
+      if (attempt >= RETRY_POLICY.maxRetries) {
+        throw err;
+      }
+      const delay = computeBackoff(attempt);
+      console.warn(
+        `[retry] ${context} attempt ${attempt}/${RETRY_POLICY.maxRetries} failed; retrying in ${delay}ms`,
+      );
+      await sleep(delay);
+    }
+  }
+}
+
+function registerGlobalErrorHandlers() {
+  process.on("uncaughtException", (err) => {
+    console.error(
+      `[licensing] uncaught exception (process kept alive): ${
+        err instanceof Error ? err.stack ?? err.message : String(err)
+      }`,
+    );
+  });
+  process.on("unhandledRejection", (reason) => {
+    console.error(
+      `[licensing] unhandled rejection (process kept alive): ${
+        reason instanceof Error ? reason.stack ?? reason.message : String(reason)
+      }`,
+    );
+  });
+}
+
 if (!jwtSecret) {
   if (isDev) {
     jwtSecret = crypto.randomBytes(32).toString("hex");
@@ -165,6 +225,7 @@ const verifySchema = activationRequestSchema;
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
+registerGlobalErrorHandlers();
 
 const db = openDatabase(LICENSE_DB_PATH);
 initSchema(db);
@@ -492,20 +553,24 @@ async function sendPendingApprovalEmail(params: {
     throw new Error("approval_email_disabled");
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
+  const response = await fetchWithRetry(
+    "https://api.resend.com/emails",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: LICENSE_APPROVAL_FROM,
+        to: LICENSE_APPROVAL_TO,
+        subject: content.subject,
+        html: content.html,
+        text: content.text,
+      }),
     },
-    body: JSON.stringify({
-      from: LICENSE_APPROVAL_FROM,
-      to: LICENSE_APPROVAL_TO,
-      subject: content.subject,
-      html: content.html,
-      text: content.text,
-    }),
-  });
+    "resend approval email",
+  );
 
   if (!response.ok) {
     let detail = `${response.status}`;

@@ -36,6 +36,7 @@ import {
   type ChannelPlugin,
   type ResolvedWhatsAppAccount,
 } from "propai/plugin-sdk/whatsapp";
+import { hasWebCredsSync } from "../../../src/web/auth-store.js";
 import { sendCloudMedia, sendCloudText } from "./cloud.js";
 import { getWhatsAppRuntime } from "./runtime.js";
 
@@ -128,8 +129,13 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
       name: account.name,
       enabled: account.enabled,
       configured:
-        account.provider === "cloud" ? isCloudConfigured(account) : Boolean(account.authDir),
-      linked: account.provider === "cloud" ? isCloudConfigured(account) : Boolean(account.authDir),
+        account.provider === "cloud"
+          ? isCloudConfigured(account)
+          : hasWebCredsSync(account.authDir),
+      linked:
+        account.provider === "cloud"
+          ? isCloudConfigured(account)
+          : hasWebCredsSync(account.authDir),
       dmPolicy: account.dmPolicy,
       allowFrom: account.allowFrom,
       mode: account.provider ?? "baileys",

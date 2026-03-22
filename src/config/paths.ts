@@ -67,6 +67,10 @@ export function resolveStateDir(
   if (override) {
     return resolveUserPath(override, env, effectiveHomedir);
   }
+  const isRailway = Boolean(env.RAILWAY_ENVIRONMENT || env.RAILWAY_PROJECT_ID);
+  if (isRailway) {
+    return path.resolve("/app/.propai");
+  }
   const newDir = newStateDir(effectiveHomedir);
   if (readPropAiEnvValue(env, "TEST_FAST") === "1") {
     return newDir;

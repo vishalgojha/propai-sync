@@ -52,6 +52,7 @@ import type { PluginServicesHandle } from "../plugins/services.js";
 import { getTotalQueueSize } from "../process/command-queue.js";
 import type { RuntimeEnv } from "../runtime.js";
 import type { CommandSecretAssignment } from "../secrets/command-config.js";
+import { hasAnyWhatsAppAuth, listWhatsAppAuthDirs } from "../web/accounts.js";
 import {
   GATEWAY_AUTH_SURFACE_PATHS,
   evaluateGatewayAuthSurfaceStates,
@@ -582,6 +583,56 @@ export async function startGatewayServer(
     channelManager,
     startedAt: serverStartedAt,
   });
+  const getLiveHealth = async () => {
+    try {
+      const cfg = loadConfig();
+      const snapshot = channelManager.getRuntimeSnapshot();
+      const whatsappAccounts = snapshot.channelAccounts.whatsapp ?? {};
+      const accountIds = Object.keys(whatsappAccounts);
+      const accounts = accountIds.length
+        ? Object.fromEntries(
+            accountIds.map((id) => {
+              const status = whatsappAccounts[id];
+              return [
+                id,
+                {
+                  running: status?.running ?? false,
+                  connected: status?.connected ?? false,
+                  lastEventAt: status?.lastEventAt ?? null,
+                  lastDisconnect: status?.lastDisconnect ?? null,
+                  lastError: status?.lastError ?? null,
+                },
+              ];
+            }),
+          )
+        : undefined;
+      const connected =
+        Object.values(whatsappAccounts).some((status) => status?.connected === true) ?? false;
+      const running =
+        Object.values(whatsappAccounts).some((status) => status?.running === true) ?? false;
+      const sessionPresent = hasAnyWhatsAppAuth(cfg);
+      return {
+        ok: true,
+        status: "live",
+        uptimeMs: Math.round(process.uptime() * 1000),
+        whatsapp: {
+          running,
+          connected,
+          accounts,
+        },
+        session: {
+          present: sessionPresent,
+          authDirs: listWhatsAppAuthDirs(cfg),
+        },
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        status: "live",
+        error: err instanceof Error ? err.message : String(err),
+      };
+    }
+  };
   const {
     canvasHost,
     httpServer,
@@ -626,6 +677,7 @@ export async function startGatewayServer(
     logHooks,
     logPlugins,
     getReadiness,
+    getLiveHealth,
   });
   let bonjourStop: (() => Promise<void>) | null = null;
   const nodeRegistry = new NodeRegistry();

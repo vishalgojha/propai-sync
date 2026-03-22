@@ -1,136 +1,135 @@
-import { sleep } from "../utils.js";
+import { computeBackoff, sleepWithAbort, type BackoffPolicy } from "./backoff.js";
 
-export type RetryConfig = {
-  attempts?: number;
-  minDelayMs?: number;
-  maxDelayMs?: number;
-  jitter?: number;
+export type RetryPolicy = BackoffPolicy & {
+  maxRetries: number;
 };
 
-export type RetryInfo = {
+export type RetryAttemptInfo = {
   attempt: number;
-  maxAttempts: number;
+  retryCount: number;
+  maxRetries: number;
   delayMs: number;
-  err: unknown;
-  label?: string;
+  error: unknown;
+  context?: string;
+  status?: number;
 };
 
-export type RetryOptions = RetryConfig & {
-  label?: string;
-  shouldRetry?: (err: unknown, attempt: number) => boolean;
-  retryAfterMs?: (err: unknown) => number | undefined;
-  onRetry?: (info: RetryInfo) => void;
+export type RetryOptions = {
+  context?: string;
+  maxRetries?: number;
+  policy?: Partial<BackoffPolicy>;
+  abortSignal?: AbortSignal;
+  shouldRetry?: (err: unknown) => boolean;
+  onRetry?: (info: RetryAttemptInfo) => void;
 };
 
-const DEFAULT_RETRY_CONFIG = {
-  attempts: 3,
-  minDelayMs: 300,
-  maxDelayMs: 30_000,
-  jitter: 0,
+const DEFAULT_POLICY: RetryPolicy = {
+  initialMs: 500,
+  maxMs: 8_000,
+  factor: 2,
+  jitter: 0.2,
+  maxRetries: 3,
 };
 
-const asFiniteNumber = (value: unknown): number | undefined =>
-  typeof value === "number" && Number.isFinite(value) ? value : undefined;
+const defaultShouldRetry = () => true;
 
-const clampNumber = (value: unknown, fallback: number, min?: number, max?: number) => {
-  const next = asFiniteNumber(value);
-  if (next === undefined) {
-    return fallback;
-  }
-  const floor = typeof min === "number" ? min : Number.NEGATIVE_INFINITY;
-  const ceiling = typeof max === "number" ? max : Number.POSITIVE_INFINITY;
-  return Math.min(Math.max(next, floor), ceiling);
-};
-
-export function resolveRetryConfig(
-  defaults: Required<RetryConfig> = DEFAULT_RETRY_CONFIG,
-  overrides?: RetryConfig,
-): Required<RetryConfig> {
-  const attempts = Math.max(1, Math.round(clampNumber(overrides?.attempts, defaults.attempts, 1)));
-  const minDelayMs = Math.max(
-    0,
-    Math.round(clampNumber(overrides?.minDelayMs, defaults.minDelayMs, 0)),
-  );
-  const maxDelayMs = Math.max(
-    minDelayMs,
-    Math.round(clampNumber(overrides?.maxDelayMs, defaults.maxDelayMs, 0)),
-  );
-  const jitter = clampNumber(overrides?.jitter, defaults.jitter, 0, 1);
-  return { attempts, minDelayMs, maxDelayMs, jitter };
-}
-
-function applyJitter(delayMs: number, jitter: number): number {
-  if (jitter <= 0) {
-    return delayMs;
-  }
-  const offset = (Math.random() * 2 - 1) * jitter;
-  return Math.max(0, Math.round(delayMs * (1 + offset)));
-}
-
-export async function retryAsync<T>(
-  fn: () => Promise<T>,
-  attemptsOrOptions: number | RetryOptions = 3,
-  initialDelayMs = 300,
+export async function withRetry<T>(
+  fn: (attempt: number) => Promise<T>,
+  opts: RetryOptions = {},
 ): Promise<T> {
-  if (typeof attemptsOrOptions === "number") {
-    const attempts = Math.max(1, Math.round(attemptsOrOptions));
-    let lastErr: unknown;
-    for (let i = 0; i < attempts; i += 1) {
-      try {
-        return await fn();
-      } catch (err) {
-        lastErr = err;
-        if (i === attempts - 1) {
-          break;
-        }
-        const delay = initialDelayMs * 2 ** i;
-        await sleep(delay);
-      }
-    }
-    throw lastErr ?? new Error("Retry failed");
-  }
+  const maxRetries = Math.max(opts.maxRetries ?? DEFAULT_POLICY.maxRetries, 3);
+  const policy: BackoffPolicy = {
+    initialMs: opts.policy?.initialMs ?? DEFAULT_POLICY.initialMs,
+    maxMs: opts.policy?.maxMs ?? DEFAULT_POLICY.maxMs,
+    factor: opts.policy?.factor ?? DEFAULT_POLICY.factor,
+    jitter: opts.policy?.jitter ?? DEFAULT_POLICY.jitter,
+  };
+  const shouldRetry = opts.shouldRetry ?? defaultShouldRetry;
+  let attempt = 0;
 
-  const options = attemptsOrOptions;
-
-  const resolved = resolveRetryConfig(DEFAULT_RETRY_CONFIG, options);
-  const maxAttempts = resolved.attempts;
-  const minDelayMs = resolved.minDelayMs;
-  const maxDelayMs =
-    Number.isFinite(resolved.maxDelayMs) && resolved.maxDelayMs > 0
-      ? resolved.maxDelayMs
-      : Number.POSITIVE_INFINITY;
-  const jitter = resolved.jitter;
-  const shouldRetry = options.shouldRetry ?? (() => true);
-  let lastErr: unknown;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+  while (true) {
+    attempt += 1;
     try {
-      return await fn();
+      return await fn(attempt);
     } catch (err) {
-      lastErr = err;
-      if (attempt >= maxAttempts || !shouldRetry(err, attempt)) {
-        break;
+      const retryCount = attempt - 1;
+      const canRetry = retryCount < maxRetries && shouldRetry(err);
+      if (!canRetry) {
+        throw err;
       }
-
-      const retryAfterMs = options.retryAfterMs?.(err);
-      const hasRetryAfter = typeof retryAfterMs === "number" && Number.isFinite(retryAfterMs);
-      const baseDelay = hasRetryAfter
-        ? Math.max(retryAfterMs, minDelayMs)
-        : minDelayMs * 2 ** (attempt - 1);
-      let delay = Math.min(baseDelay, maxDelayMs);
-      delay = applyJitter(delay, jitter);
-      delay = Math.min(Math.max(delay, minDelayMs), maxDelayMs);
-
-      options.onRetry?.({
+      const delayMs = computeBackoff(policy, retryCount + 1);
+      opts.onRetry?.({
         attempt,
-        maxAttempts,
-        delayMs: delay,
-        err,
-        label: options.label,
+        retryCount,
+        maxRetries,
+        delayMs,
+        error: err,
+        context: opts.context,
       });
-      await sleep(delay);
+      await sleepWithAbort(delayMs, opts.abortSignal);
     }
   }
+}
 
-  throw lastErr ?? new Error("Retry failed");
+type FetchRetryOptions = RetryOptions & {
+  fetchImpl?: typeof fetch;
+  retryOnStatuses?: number[];
+};
+
+function getRetryStatus(err: unknown): number | undefined {
+  if (!err || typeof err !== "object") {
+    return undefined;
+  }
+  const status = (err as { status?: unknown }).status;
+  return typeof status === "number" ? status : undefined;
+}
+
+function createRetryableFetchError(status: number, statusText: string, context?: string) {
+  const message = context
+    ? `fetch failed (${status} ${statusText}) for ${context}`
+    : `fetch failed (${status} ${statusText})`;
+  const error = new Error(message);
+  (error as { status?: number }).status = status;
+  return error;
+}
+
+export async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init: RequestInit | undefined,
+  opts: FetchRetryOptions = {},
+): Promise<Response> {
+  const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
+  if (!fetchImpl) {
+    throw new Error("fetch is not available in this runtime");
+  }
+  const retryOnStatuses = opts.retryOnStatuses ?? [429, 500, 502, 503, 504];
+
+  return await withRetry(
+    async () => {
+      const response = await fetchImpl(input, init);
+      if (retryOnStatuses.includes(response.status)) {
+        throw createRetryableFetchError(response.status, response.statusText, opts.context);
+      }
+      return response;
+    },
+    {
+      ...opts,
+      shouldRetry: (err) => {
+        const status = getRetryStatus(err);
+        if (status !== undefined) {
+          return retryOnStatuses.includes(status);
+        }
+        return true;
+      },
+      onRetry: (info) => {
+        const status = getRetryStatus(info.error);
+        const context = info.context ? ` (${info.context})` : "";
+        const statusInfo = status ? ` status=${status}` : "";
+        console.warn(
+          `[retry] attempt ${info.retryCount + 1}/${info.maxRetries}${context}${statusInfo} - retrying in ${info.delayMs}ms`,
+        );
+        opts.onRetry?.({ ...info, status });
+      },
+    },
+  );
 }

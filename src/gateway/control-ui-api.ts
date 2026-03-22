@@ -12,6 +12,7 @@ import {
 import type { PropAiSyncConfig } from "../config/config.js";
 import { loadConfig, writeConfigFile } from "../config/config.js";
 import { resolveControlUiRootSync } from "../infra/control-ui-assets.js";
+import { fetchWithRetry } from "../infra/retry.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { activateSecretsRuntimeSnapshot, prepareSecretsRuntimeSnapshot } from "../secrets/runtime.js";
 import type { ControlUiRootState } from "./control-ui.js";
@@ -348,11 +349,27 @@ async function probeTcp(host: string, port: number, timeoutMs = 1500) {
 
 async function forwardJson(res: ServerResponse, url: string, body: unknown) {
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(body ?? {}),
-    });
+    const response = await fetchWithRetry(
+      url,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(body ?? {}),
+      },
+      {
+        context: `control-ui proxy ${url}`,
+        onRetry: (info) => {
+          log.warn(
+            {
+              attempt: info.retryCount + 1,
+              maxRetries: info.maxRetries,
+              delayMs: info.delayMs,
+            },
+            "control-ui proxy failed, retrying",
+          );
+        },
+      },
+    );
     const payload = await response.json().catch(() => ({}));
     res.statusCode = response.status;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -435,9 +452,23 @@ export async function handleControlUiApiRequest(
 
   if (pathname === "/api/health/control") {
     try {
-      const response = await fetch(`${env.controlApiUrl}/health`, {
-        headers: { Accept: "application/json" },
-      });
+      const response = await fetchWithRetry(
+        `${env.controlApiUrl}/health`,
+        { headers: { Accept: "application/json" } },
+        {
+          context: "control-api health",
+          onRetry: (info) => {
+            log.warn(
+              {
+                attempt: info.retryCount + 1,
+                maxRetries: info.maxRetries,
+                delayMs: info.delayMs,
+              },
+              "control-api health failed, retrying",
+            );
+          },
+        },
+      );
       const payload = await response.json().catch(() => ({}));
       res.statusCode = response.status;
       res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -457,9 +488,23 @@ export async function handleControlUiApiRequest(
     let controlStatus = 503;
     let controlPayload: unknown = null;
     try {
-      const response = await fetch(`${env.controlApiUrl}/health`, {
-        headers: { Accept: "application/json" },
-      });
+      const response = await fetchWithRetry(
+        `${env.controlApiUrl}/health`,
+        { headers: { Accept: "application/json" } },
+        {
+          context: "control-api health",
+          onRetry: (info) => {
+            log.warn(
+              {
+                attempt: info.retryCount + 1,
+                maxRetries: info.maxRetries,
+                delayMs: info.delayMs,
+              },
+              "control-api health failed, retrying",
+            );
+          },
+        },
+      );
       controlStatus = response.status;
       controlPayload = await response.json().catch(() => ({}));
       controlOk = response.ok;
@@ -475,9 +520,23 @@ export async function handleControlUiApiRequest(
     let gatewayStatus = 503;
     let gatewayPayload: unknown = null;
     try {
-      const response = await fetch(`${env.gatewayUrl}/healthz`, {
-        headers: { Accept: "application/json" },
-      });
+      const response = await fetchWithRetry(
+        `${env.gatewayUrl}/healthz`,
+        { headers: { Accept: "application/json" } },
+        {
+          context: "gateway healthz",
+          onRetry: (info) => {
+            log.warn(
+              {
+                attempt: info.retryCount + 1,
+                maxRetries: info.maxRetries,
+                delayMs: info.delayMs,
+              },
+              "gateway healthz failed, retrying",
+            );
+          },
+        },
+      );
       gatewayStatus = response.status;
       gatewayPayload = await response.json().catch(() => ({}));
       gatewayOk = response.ok;
@@ -508,9 +567,23 @@ export async function handleControlUiApiRequest(
     let gatewayUrlConfigured = false;
     let gatewayTokenConfigured = false;
     try {
-      const response = await fetch(`${env.controlApiUrl}/health`, {
-        headers: { Accept: "application/json" },
-      });
+      const response = await fetchWithRetry(
+        `${env.controlApiUrl}/health`,
+        { headers: { Accept: "application/json" } },
+        {
+          context: "control-api health",
+          onRetry: (info) => {
+            log.warn(
+              {
+                attempt: info.retryCount + 1,
+                maxRetries: info.maxRetries,
+                delayMs: info.delayMs,
+              },
+              "control-api health failed, retrying",
+            );
+          },
+        },
+      );
       const payload = (await response.json().catch(() => ({}))) as {
         ok?: boolean;
         gatewayUrlConfigured?: boolean;
@@ -545,9 +618,23 @@ export async function handleControlUiApiRequest(
 
   if (pathname === "/api/gateway/health") {
     try {
-      const response = await fetch(`${env.gatewayUrl}/healthz`, {
-        headers: { Accept: "application/json" },
-      });
+      const response = await fetchWithRetry(
+        `${env.gatewayUrl}/healthz`,
+        { headers: { Accept: "application/json" } },
+        {
+          context: "gateway healthz",
+          onRetry: (info) => {
+            log.warn(
+              {
+                attempt: info.retryCount + 1,
+                maxRetries: info.maxRetries,
+                delayMs: info.delayMs,
+              },
+              "gateway healthz failed, retrying",
+            );
+          },
+        },
+      );
       const payload = await response.json().catch(() => ({}));
       res.statusCode = response.status;
       res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -574,11 +661,27 @@ export async function handleControlUiApiRequest(
       if (env.gatewayToken) {
         headers.Authorization = `Bearer ${env.gatewayToken}`;
       }
-      const response = await fetch(`${env.gatewayUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body.value ?? {}),
-      });
+      const response = await fetchWithRetry(
+        `${env.gatewayUrl}/v1/chat/completions`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body.value ?? {}),
+        },
+        {
+          context: "gateway chat proxy",
+          onRetry: (info) => {
+            log.warn(
+              {
+                attempt: info.retryCount + 1,
+                maxRetries: info.maxRetries,
+                delayMs: info.delayMs,
+              },
+              "gateway chat proxy failed, retrying",
+            );
+          },
+        },
+      );
       const payloadText = await response.text();
       res.statusCode = response.status;
       if (payloadText) {
@@ -690,11 +793,27 @@ export async function handleControlUiApiRequest(
       if (!["GET", "HEAD"].includes(method)) {
         headers["Content-Type"] = "application/json";
       }
-      const response = await fetch(targetUrl, {
-        method,
-        headers,
-        body: ["GET", "HEAD"].includes(method) ? undefined : JSON.stringify(body.value ?? {}),
-      });
+      const response = await fetchWithRetry(
+        targetUrl,
+        {
+          method,
+          headers,
+          body: ["GET", "HEAD"].includes(method) ? undefined : JSON.stringify(body.value ?? {}),
+        },
+        {
+          context: `control-api proxy ${method} ${upstreamSuffix}`,
+          onRetry: (info) => {
+            log.warn(
+              {
+                attempt: info.retryCount + 1,
+                maxRetries: info.maxRetries,
+                delayMs: info.delayMs,
+              },
+              "control-api proxy failed, retrying",
+            );
+          },
+        },
+      );
       const payload = await response.json().catch(() => ({}));
       res.statusCode = response.status;
       res.setHeader("Content-Type", "application/json; charset=utf-8");

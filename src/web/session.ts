@@ -19,6 +19,7 @@ import {
   resolveDefaultWebAuthDir,
   resolveWebCredsBackupPath,
   resolveWebCredsPath,
+  ensureWebAuthState,
 } from "./auth-store.js";
 
 export {
@@ -29,6 +30,7 @@ export {
   readWebSelfId,
   WA_WEB_AUTH_DIR,
   webAuthExists,
+  ensureWebAuthState,
 } from "./auth-store.js";
 
 let credsSaveQueue: Promise<void> = Promise.resolve();
@@ -102,7 +104,15 @@ export async function createWaSocket(
   const authDir = resolveUserPath(opts.authDir ?? resolveDefaultWebAuthDir());
   await ensureDir(authDir);
   const sessionLogger = getChildLogger({ module: "web-session" });
-  maybeRestoreCredsFromBackup(authDir);
+  const authCheck = ensureWebAuthState(authDir);
+  if (!authCheck.ok) {
+    const reason = authCheck.reason ?? "unknown";
+    const repaired = authCheck.repaired ? " (repaired)" : "";
+    sessionLogger.warn(
+      { authDir, reason },
+      `WhatsApp auth state ${reason}${repaired}; reinitializing`,
+    );
+  }
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
   const { version } = await fetchLatestBaileysVersion();
   const sock = makeWASocket({

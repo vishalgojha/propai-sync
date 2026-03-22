@@ -72,11 +72,29 @@ function resolveGatewayAuthOverride(env: NodeJS.ProcessEnv): GatewayAuthConfig |
   return auth;
 }
 
+function registerGlobalErrorHandlers() {
+  process.on("uncaughtException", (err) => {
+    log.error(
+      `gateway: uncaught exception (process kept alive): ${
+        err instanceof Error ? err.stack ?? err.message : String(err)
+      }`,
+    );
+  });
+  process.on("unhandledRejection", (reason) => {
+    log.error(
+      `gateway: unhandled rejection (process kept alive): ${
+        reason instanceof Error ? reason.stack ?? reason.message : String(reason)
+      }`,
+    );
+  });
+}
+
 async function startGateway(): Promise<void> {
   loadDotEnv({ quiet: true });
   normalizeEnv();
   enableConsoleCapture();
   assertSupportedRuntime();
+  registerGlobalErrorHandlers();
 
   let cfg;
   try {

@@ -1,3 +1,4 @@
+import { DisconnectReason } from "@whiskeysockets/baileys";
 import { hasControlCommand } from "../../auto-reply/command-detection.js";
 import { resolveInboundDebounceMs } from "../../auto-reply/inbound-debounce.js";
 import { getReplyFromConfig } from "../../auto-reply/reply.js";
@@ -23,7 +24,7 @@ import {
   resolveReconnectPolicy,
   sleepWithAbort,
 } from "../reconnect.js";
-import { formatError, getWebAuthAgeMs, readWebSelfId } from "../session.js";
+import { formatError, getWebAuthAgeMs, readWebSelfId, webAuthExists } from "../session.js";
 import { whatsappHeartbeatLog, whatsappLog } from "./loggers.js";
 import { buildMentionConfig } from "./mentions.js";
 import { createEchoTracker } from "./monitor/echo.js";
@@ -35,6 +36,33 @@ function isNonRetryableWebCloseStatus(statusCode: unknown): boolean {
   // WhatsApp 440 = session conflict ("Unknown Stream Errored (conflict)").
   // This is persistent until the operator resolves the conflicting session.
   return statusCode === 440;
+}
+
+function resolveDisconnectDisposition(
+  statusCode: number | undefined,
+): { retry: boolean; reason: string } {
+  switch (statusCode) {
+    case DisconnectReason.loggedOut:
+      return { retry: false, reason: "logged-out" };
+    case DisconnectReason.badSession:
+      return { retry: false, reason: "bad-session" };
+    case DisconnectReason.connectionReplaced:
+      return { retry: false, reason: "connection-replaced" };
+    case DisconnectReason.forbidden:
+      return { retry: false, reason: "forbidden" };
+    case DisconnectReason.multideviceMismatch:
+      return { retry: false, reason: "device-mismatch" };
+    case DisconnectReason.restartRequired:
+      return { retry: true, reason: "restart-required" };
+    case DisconnectReason.connectionClosed:
+      return { retry: true, reason: "connection-closed" };
+    case DisconnectReason.connectionLost:
+      return { retry: true, reason: "connection-lost" };
+    case DisconnectReason.timedOut:
+      return { retry: true, reason: "timed-out" };
+    default:
+      return { retry: true, reason: "unknown" };
+  }
 }
 
 export async function monitorWebChannel(
@@ -394,7 +422,10 @@ export async function monitorWebChannel(
       sessionKey: connectRoute.sessionKey,
     });
 
-    if (loggedOut) {
+    const numericStatus = typeof statusCode === "number" ? statusCode : undefined;
+    const disposition = resolveDisconnectDisposition(numericStatus);
+
+    if (loggedOut || disposition.reason === "logged-out") {
       runtime.error(
         `WhatsApp session logged out. Run \`${formatCliCommand("propai channels login --channel web")}\` to relink.`,
       );
@@ -413,6 +444,36 @@ export async function monitorWebChannel(
       );
       runtime.error(
         `WhatsApp Web connection closed (status ${statusCode}: session conflict). Resolve conflicting WhatsApp Web sessions, then relink with \`${formatCliCommand("propai channels login --channel web")}\`. Stopping web monitoring.`,
+      );
+      await closeListener();
+      break;
+    }
+
+    if (!disposition.retry) {
+      reconnectLogger.warn(
+        {
+          connectionId,
+          status: statusCode,
+          reason: disposition.reason,
+          error: errorStr,
+        },
+        "web reconnect: non-retryable disconnect reason; stopping monitor",
+      );
+      runtime.error(
+        `WhatsApp Web connection closed (${disposition.reason}). Re-link with \`${formatCliCommand("propai channels login --channel web")}\` to resume.`,
+      );
+      await closeListener();
+      break;
+    }
+
+    const authStillPresent = await webAuthExists(account.authDir);
+    if (!authStillPresent) {
+      reconnectLogger.warn(
+        { connectionId, status: statusCode, reason: disposition.reason },
+        "web reconnect: auth state missing; stopping monitor",
+      );
+      runtime.error(
+        `WhatsApp Web auth state missing; re-link with \`${formatCliCommand("propai channels login --channel web")}\` to resume.`,
       );
       await closeListener();
       break;
