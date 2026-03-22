@@ -55,6 +55,15 @@ async function probeTcp(host, port, timeoutMs = 1500) {
   });
 }
 
+function resolveProviderKeys() {
+  return {
+    openai: Boolean(process.env.OPENAI_API_KEY || process.env.OPENAI_KEY),
+    anthropic: Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_KEY),
+    xai: Boolean(process.env.XAI_API_KEY),
+    elevenlabs: Boolean(process.env.ELEVENLABS_API_KEY),
+  };
+}
+
 async function forwardJson(res, url, body) {
   try {
     const response = await fetch(url, {
@@ -142,6 +151,45 @@ app.get('/api/health/full', async (_req, res) => {
     ui: { ok: uiOk, indexPath: uiIndexPath },
     control: { ok: controlOk, status: controlStatus, payload: controlPayload },
     gateway: { ok: gatewayOk, status: gatewayStatus, payload: gatewayPayload },
+  });
+});
+
+app.get('/api/health/setup', async (_req, res) => {
+  const providerKeys = resolveProviderKeys();
+  const anyProvider = Object.values(providerKeys).some(Boolean);
+  const gatewayAuthConfigured = Boolean(GATEWAY_TOKEN);
+
+  let controlOk = false;
+  let gatewayUrlConfigured = false;
+  let gatewayTokenConfigured = false;
+  try {
+    const response = await fetch(`${CONTROL_API_URL}/health`, {
+      headers: { Accept: 'application/json' },
+    });
+    const payload = await response.json().catch(() => ({}));
+    controlOk = response.ok;
+    gatewayUrlConfigured = Boolean(payload.gatewayUrlConfigured);
+    gatewayTokenConfigured = Boolean(payload.gatewayTokenConfigured);
+  } catch (error) {
+    controlOk = false;
+  }
+
+  const controlLinkOk = gatewayUrlConfigured && gatewayTokenConfigured;
+  const ok = gatewayAuthConfigured && anyProvider && controlLinkOk;
+
+  res.status(ok ? 200 : 503).json({
+    ok,
+    gateway: {
+      authTokenConfigured: gatewayAuthConfigured,
+      providerKeys,
+      anyProvider,
+      licensingUrl: LICENSING_URL,
+    },
+    control: {
+      ok: controlOk,
+      gatewayUrlConfigured,
+      gatewayTokenConfigured,
+    },
   });
 });
 
