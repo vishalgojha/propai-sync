@@ -3,7 +3,17 @@ import fs from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import net from "node:net";
 import path from "node:path";
+import type { AuthProfileCredential } from "../agents/auth-profiles.js";
+import {
+  ensureAuthProfileStore,
+  listProfilesForProvider,
+  upsertAuthProfileWithLock,
+} from "../agents/auth-profiles.js";
+import type { PropAiSyncConfig } from "../config/config.js";
+import { loadConfig, writeConfigFile } from "../config/config.js";
 import { resolveControlUiRootSync } from "../infra/control-ui-assets.js";
+import { createSubsystemLogger } from "../logging/subsystem.js";
+import { activateSecretsRuntimeSnapshot, prepareSecretsRuntimeSnapshot } from "../secrets/runtime.js";
 import type { ControlUiRootState } from "./control-ui.js";
 import { readJsonBody } from "./hooks.js";
 
@@ -13,6 +23,9 @@ const DEFAULT_GATEWAY_URL_LOCAL = "http://localhost:8080";
 const DEFAULT_GATEWAY_URL_RAILWAY = "http://gateway.railway.internal:8080";
 const DEFAULT_CONTROL_API_URL_LOCAL = "http://localhost:8788";
 const DEFAULT_CONTROL_API_URL_RAILWAY = "http://control-api.railway.internal:8080";
+const CONTROL_UI_AUTH_PROFILE_PREFIX = "control-ui";
+
+const log = createSubsystemLogger("gateway").child("control-ui");
 
 type ControlUiApiEnv = {
   licensingUrl: string;
@@ -34,17 +47,253 @@ function resolveEnv(): ControlUiApiEnv {
   return { licensingUrl, gatewayUrl, controlApiUrl, gatewayToken };
 }
 
-function resolveGatewayProviderKeys() {
-  const openai = Boolean(process.env.OPENAI_API_KEY || process.env.OPENAI_KEY);
-  const anthropic = Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_KEY);
-  const xai = Boolean(process.env.XAI_API_KEY);
-  const elevenlabs = Boolean(process.env.ELEVENLABS_API_KEY);
+type ProviderKeyState = {
+  openai: boolean;
+  anthropic: boolean;
+  xai: boolean;
+  elevenlabs: boolean;
+};
+
+type ProviderKeyInputs = Partial<Record<keyof ProviderKeyState, string>>;
+
+function hasStoredCredentialForProvider(
+  store: ReturnType<typeof ensureAuthProfileStore>,
+  provider: string,
+): boolean {
+  const ids = listProfilesForProvider(store, provider);
+  for (const id of ids) {
+    const cred = store.profiles[id] as AuthProfileCredential | undefined;
+    if (!cred) {
+      continue;
+    }
+    if (cred.type === "api_key") {
+      if (typeof cred.key === "string" && cred.key.trim()) {
+        return true;
+      }
+      if (cred.keyRef) {
+        return true;
+      }
+      continue;
+    }
+    if (cred.type === "token") {
+      if (typeof cred.token === "string" && cred.token.trim()) {
+        return true;
+      }
+      if (cred.tokenRef) {
+        return true;
+      }
+      continue;
+    }
+    if (cred.type === "oauth") {
+      return true;
+    }
+  }
+  return false;
+}
+
+function resolveGatewayProviderKeys(): ProviderKeyState {
+  let store: ReturnType<typeof ensureAuthProfileStore> | null = null;
+  try {
+    store = ensureAuthProfileStore();
+  } catch (error) {
+    log.warn(`control-ui health: failed to read auth profiles: ${String(error)}`);
+  }
+  const openai =
+    (store ? hasStoredCredentialForProvider(store, "openai") : false) ||
+    Boolean(process.env.OPENAI_API_KEY || process.env.OPENAI_KEY);
+  const anthropic =
+    (store ? hasStoredCredentialForProvider(store, "anthropic") : false) ||
+    Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_KEY);
+  const xai =
+    (store ? hasStoredCredentialForProvider(store, "xai") : false) ||
+    Boolean(process.env.XAI_API_KEY);
+  const elevenlabs =
+    (store ? hasStoredCredentialForProvider(store, "elevenlabs") : false) ||
+    Boolean(process.env.ELEVENLABS_API_KEY);
   return {
     openai,
     anthropic,
     xai,
     elevenlabs,
   };
+}
+
+function normalizeProviderKey(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (trimmed.length < 8) {
+    return null;
+  }
+  return trimmed;
+}
+
+function extractProviderKeysFromSettings(settings: unknown): ProviderKeyInputs {
+  if (!settings || typeof settings !== "object") {
+    return {};
+  }
+  const providers = (settings as { providers?: Record<string, unknown> }).providers;
+  if (!providers || typeof providers !== "object") {
+    return {};
+  }
+  const record = providers as Record<string, unknown>;
+  const openai = normalizeProviderKey((record.openai as { apiKey?: unknown } | undefined)?.apiKey);
+  const anthropic = normalizeProviderKey(
+    (record.anthropic as { apiKey?: unknown } | undefined)?.apiKey,
+  );
+  const xai = normalizeProviderKey((record.xai as { apiKey?: unknown } | undefined)?.apiKey);
+  const elevenlabs = normalizeProviderKey(
+    (record.eleven as { apiKey?: unknown } | undefined)?.apiKey ??
+      (record.elevenlabs as { apiKey?: unknown } | undefined)?.apiKey,
+  );
+  return {
+    openai: openai ?? undefined,
+    anthropic: anthropic ?? undefined,
+    xai: xai ?? undefined,
+    elevenlabs: elevenlabs ?? undefined,
+  };
+}
+
+function withTtsApiKey(
+  config: PropAiSyncConfig,
+  provider: "openai" | "elevenlabs",
+  apiKey: string,
+): { config: PropAiSyncConfig; changed: boolean } {
+  const current = config.tts?.[provider]?.apiKey;
+  if (typeof current === "string" && current.trim() === apiKey.trim()) {
+    return { config, changed: false };
+  }
+  return {
+    config: {
+      ...config,
+      tts: {
+        ...config.tts,
+        [provider]: {
+          ...config.tts?.[provider],
+          apiKey,
+        },
+      },
+    },
+    changed: true,
+  };
+}
+
+function withTalkApiKey(
+  config: PropAiSyncConfig,
+  provider: "elevenlabs",
+  apiKey: string,
+): { config: PropAiSyncConfig; changed: boolean } {
+  const current = config.talk?.providers?.[provider]?.apiKey;
+  if (typeof current === "string" && current.trim() === apiKey.trim()) {
+    return { config, changed: false };
+  }
+  return {
+    config: {
+      ...config,
+      talk: {
+        ...config.talk,
+        apiKey,
+        providers: {
+          ...config.talk?.providers,
+          [provider]: {
+            ...config.talk?.providers?.[provider],
+            apiKey,
+          },
+        },
+      },
+    },
+    changed: true,
+  };
+}
+
+async function refreshSecretsRuntime(config: PropAiSyncConfig) {
+  try {
+    const snapshot = await prepareSecretsRuntimeSnapshot({ config, env: process.env });
+    activateSecretsRuntimeSnapshot(snapshot);
+  } catch (error) {
+    log.warn(`control-ui settings sync: failed to refresh secrets runtime: ${String(error)}`);
+  }
+}
+
+async function applyProviderKeysFromSettings(settings: unknown): Promise<void> {
+  try {
+    const keys = extractProviderKeysFromSettings(settings);
+    const anyKeys = Object.values(keys).some(Boolean);
+    if (!anyKeys) {
+      return;
+    }
+
+    const updates: Array<Promise<unknown>> = [];
+    if (keys.openai) {
+      updates.push(
+        upsertAuthProfileWithLock({
+          profileId: `${CONTROL_UI_AUTH_PROFILE_PREFIX}-openai`,
+          credential: { type: "api_key", provider: "openai", key: keys.openai },
+        }),
+      );
+    }
+    if (keys.anthropic) {
+      updates.push(
+        upsertAuthProfileWithLock({
+          profileId: `${CONTROL_UI_AUTH_PROFILE_PREFIX}-anthropic`,
+          credential: { type: "api_key", provider: "anthropic", key: keys.anthropic },
+        }),
+      );
+    }
+    if (keys.xai) {
+      updates.push(
+        upsertAuthProfileWithLock({
+          profileId: `${CONTROL_UI_AUTH_PROFILE_PREFIX}-xai`,
+          credential: { type: "api_key", provider: "xai", key: keys.xai },
+        }),
+      );
+    }
+    if (keys.elevenlabs) {
+      updates.push(
+        upsertAuthProfileWithLock({
+          profileId: `${CONTROL_UI_AUTH_PROFILE_PREFIX}-elevenlabs`,
+          credential: { type: "api_key", provider: "elevenlabs", key: keys.elevenlabs },
+        }),
+      );
+    }
+
+    let config = loadConfig();
+    let configChanged = false;
+    if (keys.openai) {
+      const applied = withTtsApiKey(config, "openai", keys.openai);
+      config = applied.config;
+      configChanged = configChanged || applied.changed;
+    }
+    if (keys.elevenlabs) {
+      const appliedTts = withTtsApiKey(config, "elevenlabs", keys.elevenlabs);
+      config = appliedTts.config;
+      configChanged = configChanged || appliedTts.changed;
+      const appliedTalk = withTalkApiKey(config, "elevenlabs", keys.elevenlabs);
+      config = appliedTalk.config;
+      configChanged = configChanged || appliedTalk.changed;
+    }
+
+    try {
+      await Promise.all(updates);
+    } catch (error) {
+      log.warn(`control-ui settings sync: failed to store auth profiles: ${String(error)}`);
+    }
+
+    if (configChanged) {
+      try {
+        await writeConfigFile(config);
+      } catch (error) {
+        log.warn(`control-ui settings sync: failed to write config: ${String(error)}`);
+      }
+    }
+
+    if (updates.length > 0 || configChanged) {
+      await refreshSecretsRuntime(config);
+    }
+  } catch (error) {
+    log.warn(`control-ui settings sync: ${String(error)}`);
+  }
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown) {
@@ -450,6 +699,15 @@ export async function handleControlUiApiRequest(
       res.statusCode = response.status;
       res.setHeader("Content-Type", "application/json; charset=utf-8");
       res.end(JSON.stringify(payload));
+      if (method === "PUT" && /^\/api\/control\/v1\/tenants\/[^/]+\/settings\/?$/.test(pathname)) {
+        const settings =
+          payload && typeof payload === "object" && "settings" in payload
+            ? (payload as { settings?: unknown }).settings
+            : undefined;
+        if (settings) {
+          void applyProviderKeysFromSettings(settings);
+        }
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Upstream request failed.";
       sendProxyError(res, message);

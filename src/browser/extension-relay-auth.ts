@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 import { loadConfig } from "../config/config.js";
 import { normalizeSecretInputString, resolveSecretInputRef } from "../config/types.secrets.js";
+import { readGatewayTokenEnv } from "../gateway/credentials.js";
 import { secretRefKey } from "../secrets/ref-contract.js";
 import { resolveSecretRefValues } from "../secrets/resolve.js";
 
@@ -21,8 +22,7 @@ function trimToUndefined(value: unknown): string | undefined {
 }
 
 async function resolveGatewayAuthToken(): Promise<string | null> {
-  const envToken =
-    process.env.propai_GATEWAY_TOKEN?.trim() || process.env.CLAWDBOT_GATEWAY_TOKEN?.trim();
+  const envToken = readGatewayTokenEnv(process.env, true);
   if (envToken) {
     return envToken;
   }

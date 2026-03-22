@@ -429,6 +429,9 @@ export async function startGatewayServer(
     persist: true,
   });
   cfgAtStart = authBootstrap.cfg;
+  if (authBootstrap.generatedToken && !process.env.PROPAI_GATEWAY_TOKEN) {
+    process.env.PROPAI_GATEWAY_TOKEN = authBootstrap.generatedToken;
+  }
   if (authBootstrap.generatedToken) {
     if (authBootstrap.persistedGeneratedToken) {
       log.info(
