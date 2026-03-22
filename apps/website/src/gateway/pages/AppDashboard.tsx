@@ -406,6 +406,7 @@ export default function AppDashboard() {
   const [setupCheck, setSetupCheck] = useState<SetupCheckResponse | null>(null);
   const [setupCheckLoading, setSetupCheckLoading] = useState(false);
   const [setupCheckError, setSetupCheckError] = useState<string | null>(null);
+  const [setupAutoOpened, setSetupAutoOpened] = useState(false);
   const [licenseInfo, setLicenseInfo] = useState<LicenseResponse | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [chatNotice, setChatNotice] = useState<string | null>(null);
@@ -507,6 +508,20 @@ export default function AppDashboard() {
     }
     void loadSetupCheck();
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!setupCheck) {
+      return;
+    }
+    if (setupReady) {
+      setSetupAutoOpened(false);
+      return;
+    }
+    if (!setupAutoOpened) {
+      setActiveTab('Setup');
+      setSetupAutoOpened(true);
+    }
+  }, [setupCheck, setupReady, setupAutoOpened]);
 
   const loadGatewayHealth = async () => {
     setGatewayHealth('checking');
@@ -1290,6 +1305,8 @@ export default function AppDashboard() {
     },
   ];
   const setupChecklistAllOk = setupChecklist.every((item) => item.ok);
+  const setupMissingLabels = setupChecklist.filter((item) => !item.ok).map((item) => item.label);
+  const setupMissingSummary = setupMissingLabels.length > 0 ? setupMissingLabels.join(' · ') : '';
 
   useEffect(() => {
     if (!chatEndRef.current) {
@@ -2856,6 +2873,40 @@ export default function AppDashboard() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10">
+          {(setupCheckError || (setupCheck && !setupReady)) && (
+            <div className="sticky top-0 z-20 mb-4">
+              <div className="bg-destructive/10 border border-destructive/40 rounded-2xl px-4 py-3 md:px-6 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-destructive">Setup incomplete</p>
+                  {setupCheckError ? (
+                    <p className="text-xs text-destructive">
+                      {setupCheckError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Finish setup to unlock onboarding and device pairing.
+                      {setupMissingSummary ? ` Missing: ${setupMissingSummary}.` : ''}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={loadSetupCheck}
+                    disabled={setupCheckLoading}
+                    className="px-3 py-2 rounded-lg text-xs font-semibold border border-border bg-card hover:bg-accent"
+                  >
+                    {setupCheckLoading ? 'Checking…' : 'Recheck'}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('Setup')}
+                    className="px-3 py-2 rounded-lg text-xs font-semibold bg-destructive text-destructive-foreground"
+                  >
+                    Go to setup
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
