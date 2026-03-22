@@ -10,7 +10,7 @@ import {
   Smartphone,
   Download
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Link } from 'react-router-dom';
@@ -18,10 +18,42 @@ import { ANDROID_APK_URL, APP_URL, WHATSAPP_JOIN_URL } from '../../lib/links';
 
 export default function MarketingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [companyName, setCompanyName] = useState('');
 
   useEffect(() => {
     document.title = 'PropAi Sync';
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const preset =
+      params.get('company') ||
+      params.get('brokerage') ||
+      params.get('tenant') ||
+      params.get('name');
+    if (preset) {
+      setCompanyName(preset);
+    }
+  }, []);
+
+  const whatsappJoinUrl = useMemo(() => {
+    if (!WHATSAPP_JOIN_URL) return '';
+    const trimmed = companyName.trim();
+    try {
+      const url = new URL(WHATSAPP_JOIN_URL);
+      const existingText = url.searchParams.get('text') || 'JOIN';
+      const nextText = trimmed ? `JOIN ${trimmed}` : existingText;
+      url.searchParams.set('text', nextText);
+      return url.toString();
+    } catch {
+      if (!trimmed) return WHATSAPP_JOIN_URL;
+      const joinText = encodeURIComponent(`JOIN ${trimmed}`);
+      return WHATSAPP_JOIN_URL.includes('?')
+        ? `${WHATSAPP_JOIN_URL}&text=${joinText}`
+        : `${WHATSAPP_JOIN_URL}?text=${joinText}`;
+    }
+  }, [companyName]);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
@@ -100,7 +132,7 @@ export default function MarketingPage() {
               </a>
               {WHATSAPP_JOIN_URL ? (
                 <a 
-                  href={WHATSAPP_JOIN_URL}
+                  href={whatsappJoinUrl || WHATSAPP_JOIN_URL}
                   className="bg-emerald-500 text-white px-8 py-4 rounded-xl text-lg font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2"
                 >
                   Join on WhatsApp
@@ -113,6 +145,22 @@ export default function MarketingPage() {
                 Download Android App <Download className="w-5 h-5" />
               </a>
             </div>
+            {WHATSAPP_JOIN_URL ? (
+              <div className="mt-6 max-w-xl mx-auto">
+                <label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold block text-left mb-2">
+                  Brokerage name (optional)
+                </label>
+                <input
+                  value={companyName}
+                  onChange={(event) => setCompanyName(event.target.value)}
+                  placeholder="e.g., Chaos Craft Realty"
+                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <p className="text-xs text-muted-foreground mt-2 text-left">
+                  We’ll prefill the WhatsApp join message with your brokerage name.
+                </p>
+              </div>
+            ) : null}
             <p className="text-sm text-muted-foreground mt-5">
               Need access? <Link to="/contact" className="text-primary hover:underline">Request access</Link>
             </p>
