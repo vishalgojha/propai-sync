@@ -64,6 +64,26 @@ type FullHealthResponse = {
   gateway?: { ok?: boolean; status?: number; payload?: unknown };
 };
 
+type SetupCheckResponse = {
+  ok?: boolean;
+  gateway?: {
+    authTokenConfigured?: boolean;
+    providerKeys?: {
+      openai?: boolean;
+      anthropic?: boolean;
+      xai?: boolean;
+      elevenlabs?: boolean;
+    };
+    anyProvider?: boolean;
+    licensingUrl?: string;
+  };
+  control?: {
+    ok?: boolean;
+    gatewayUrlConfigured?: boolean;
+    gatewayTokenConfigured?: boolean;
+  };
+};
+
 type ChatMessage = {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -383,6 +403,9 @@ export default function AppDashboard() {
   const [fullHealth, setFullHealth] = useState<FullHealthResponse | null>(null);
   const [fullHealthLoading, setFullHealthLoading] = useState(false);
   const [showHealthDetails, setShowHealthDetails] = useState(false);
+  const [setupCheck, setSetupCheck] = useState<SetupCheckResponse | null>(null);
+  const [setupCheckLoading, setSetupCheckLoading] = useState(false);
+  const [setupCheckError, setSetupCheckError] = useState<string | null>(null);
   const [licenseInfo, setLicenseInfo] = useState<LicenseResponse | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [chatNotice, setChatNotice] = useState<string | null>(null);
@@ -474,6 +497,17 @@ export default function AppDashboard() {
     document.title = 'PropAi Sync Control';
   }, []);
 
+  useEffect(() => {
+    void loadSetupCheck();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'Setup') {
+      return;
+    }
+    void loadSetupCheck();
+  }, [activeTab]);
+
   const loadGatewayHealth = async () => {
     setGatewayHealth('checking');
     try {
@@ -493,6 +527,20 @@ export default function AppDashboard() {
       setFullHealth(null);
     } finally {
       setFullHealthLoading(false);
+    }
+  };
+
+  const loadSetupCheck = async () => {
+    setSetupCheckLoading(true);
+    setSetupCheckError(null);
+    try {
+      const response = await apiGet<SetupCheckResponse>('/health/setup');
+      setSetupCheck(response ?? null);
+    } catch (error) {
+      setSetupCheck(null);
+      setSetupCheckError(normalizeError(error, 'Unable to load setup check.'));
+    } finally {
+      setSetupCheckLoading(false);
     }
   };
 
@@ -1213,6 +1261,35 @@ export default function AppDashboard() {
   const usageTtsRows = (usageData?.breakdown.tts ?? [])
     .filter((row) => ALLOWED_USAGE_PROVIDERS.has(row.provider))
     .sort((a, b) => (b.requests ?? 0) - (a.requests ?? 0));
+  const setupProviderKeys = setupCheck?.gateway?.providerKeys ?? {};
+  const setupGatewayAuthReady = Boolean(setupCheck?.gateway?.authTokenConfigured);
+  const setupAnyProviderReady = Boolean(setupCheck?.gateway?.anyProvider);
+  const setupControlLinkReady = Boolean(
+    setupCheck?.control?.gatewayUrlConfigured && setupCheck?.control?.gatewayTokenConfigured,
+  );
+  const setupPairingReady = setupGatewayAuthReady && setupControlLinkReady;
+  const setupReady = setupGatewayAuthReady && setupAnyProviderReady && setupControlLinkReady;
+  const setupChecklist = [
+    {
+      id: 'gateway-auth',
+      label: 'Gateway auth token',
+      ok: setupGatewayAuthReady,
+      detail: 'Set PROPAI_GATEWAY_TOKEN on the gateway service.',
+    },
+    {
+      id: 'provider-key',
+      label: 'AI provider key',
+      ok: setupAnyProviderReady,
+      detail: 'Set ANTHROPIC_API_KEY, OPENAI_API_KEY, or XAI_API_KEY on the gateway.',
+    },
+    {
+      id: 'control-link',
+      label: 'Control API link',
+      ok: setupControlLinkReady,
+      detail: 'Set CONTROL_GATEWAY_URL and CONTROL_GATEWAY_TOKEN on control-api.',
+    },
+  ];
+  const setupChecklistAllOk = setupChecklist.every((item) => item.ok);
 
   useEffect(() => {
     if (!chatEndRef.current) {
@@ -1765,6 +1842,59 @@ export default function AppDashboard() {
                 )}
               </section>
 
+              <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                  <div>
+                    <h3 className="text-base font-semibold">Setup checklist</h3>
+                    <p className="text-sm text-muted-foreground">
+                      These must be ready before onboarding and device pairing.
+                    </p>
+                  </div>
+                  <button
+                    onClick={loadSetupCheck}
+                    disabled={setupCheckLoading}
+                    className="text-xs font-semibold underline"
+                  >
+                    {setupCheckLoading ? 'Checking…' : 'Recheck'}
+                  </button>
+                </div>
+                {setupCheckError && (
+                  <p className="text-xs text-destructive">{setupCheckError}</p>
+                )}
+                <div className="space-y-3">
+                  {setupChecklist.map((item) => (
+                    <div key={item.id} className="flex gap-3 items-start bg-muted/40 border border-border rounded-xl px-4 py-3">
+                      {item.ok ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 text-destructive mt-0.5" />
+                      )}
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold">{item.label}</p>
+                        <p className="text-xs text-muted-foreground">{item.detail}</p>
+                        {item.id === 'provider-key' && setupCheck && (
+                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                            OpenAI: {setupProviderKeys.openai ? 'On' : 'Off'} · Anthropic:{' '}
+                            {setupProviderKeys.anthropic ? 'On' : 'Off'} · xAI:{' '}
+                            {setupProviderKeys.xai ? 'On' : 'Off'} · ElevenLabs:{' '}
+                            {setupProviderKeys.elevenlabs ? 'On' : 'Off'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {setupCheck && (
+                  <div className="text-xs font-semibold">
+                    {setupChecklistAllOk ? (
+                      <span className="text-emerald-600">All setup checks passed.</span>
+                    ) : (
+                      <span className="text-destructive">Complete the missing items above to continue.</span>
+                    )}
+                  </div>
+                )}
+              </section>
+
               {!controlToken ? (
                 <section className="bg-card border border-border rounded-2xl p-6 space-y-3">
                   <h3 className="text-base font-semibold">Sign in to continue</h3>
@@ -2017,12 +2147,18 @@ export default function AppDashboard() {
                         <input
                           type="checkbox"
                           checked={settingsDraft.onboardingComplete}
+                          disabled={!setupReady}
                           onChange={(event) =>
                             setSettingsDraft((prev) => ({ ...prev, onboardingComplete: event.target.checked }))
                           }
                         />
                         Mark setup as complete
                       </label>
+                      {!setupReady && (
+                        <p className="text-xs text-destructive">
+                          Complete the setup checklist before marking onboarding complete.
+                        </p>
+                      )}
                     </div>
                     <button
                       onClick={saveTenantSettings}
@@ -2424,11 +2560,16 @@ export default function AppDashboard() {
                     )}
                     <button
                       onClick={handleGenerateAndroidSetup}
-                      disabled={androidSetupLoading}
+                      disabled={androidSetupLoading || !setupPairingReady}
                       className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-xl text-sm font-bold"
                     >
                       {androidSetupLoading ? 'Generating…' : 'Generate setup code + QR'}
                     </button>
+                    {!setupPairingReady && (
+                      <p className="text-xs text-destructive text-center">
+                        Finish the setup checklist before generating a pairing code.
+                      </p>
+                    )}
                     {androidSetupError && (
                       <p className="text-xs text-destructive text-center">{androidSetupError}</p>
                     )}

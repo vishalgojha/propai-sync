@@ -187,7 +187,12 @@ const db = openDatabase(DB_PATH);
 initSchema(db);
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, dbPath: DB_PATH });
+  res.json({
+    ok: true,
+    dbPath: DB_PATH,
+    gatewayUrlConfigured: Boolean(CONTROL_GATEWAY_URL),
+    gatewayTokenConfigured: Boolean(CONTROL_GATEWAY_TOKEN),
+  });
 });
 
 app.post("/v1/auth/register", (req, res) => {

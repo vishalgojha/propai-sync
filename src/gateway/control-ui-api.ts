@@ -34,6 +34,19 @@ function resolveEnv(): ControlUiApiEnv {
   return { licensingUrl, gatewayUrl, controlApiUrl, gatewayToken };
 }
 
+function resolveGatewayProviderKeys() {
+  const openai = Boolean(process.env.OPENAI_API_KEY || process.env.OPENAI_KEY);
+  const anthropic = Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_KEY);
+  const xai = Boolean(process.env.XAI_API_KEY);
+  const elevenlabs = Boolean(process.env.ELEVENLABS_API_KEY);
+  return {
+    openai,
+    anthropic,
+    xai,
+    elevenlabs,
+  };
+}
+
 function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -233,6 +246,50 @@ export async function handleControlUiApiRequest(
       ui: { ok: uiOk, indexPath: ui.indexPath },
       control: { ok: controlOk, status: controlStatus, payload: controlPayload },
       gateway: { ok: gatewayOk, status: gatewayStatus, payload: gatewayPayload },
+    });
+    return true;
+  }
+
+  if (pathname === "/api/health/setup") {
+    const providerKeys = resolveGatewayProviderKeys();
+    const anyProvider = Object.values(providerKeys).some(Boolean);
+    const gatewayAuthConfigured = Boolean(env.gatewayToken);
+
+    let controlOk = false;
+    let gatewayUrlConfigured = false;
+    let gatewayTokenConfigured = false;
+    try {
+      const response = await fetch(`${env.controlApiUrl}/health`, {
+        headers: { Accept: "application/json" },
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        gatewayUrlConfigured?: boolean;
+        gatewayTokenConfigured?: boolean;
+      };
+      controlOk = response.ok;
+      gatewayUrlConfigured = Boolean(payload.gatewayUrlConfigured);
+      gatewayTokenConfigured = Boolean(payload.gatewayTokenConfigured);
+    } catch {
+      controlOk = false;
+    }
+
+    const controlLinkOk = gatewayUrlConfigured && gatewayTokenConfigured;
+    const ok = gatewayAuthConfigured && anyProvider && controlLinkOk;
+
+    sendJson(res, ok ? 200 : 503, {
+      ok,
+      gateway: {
+        authTokenConfigured: gatewayAuthConfigured,
+        providerKeys,
+        anyProvider,
+        licensingUrl: env.licensingUrl,
+      },
+      control: {
+        ok: controlOk,
+        gatewayUrlConfigured,
+        gatewayTokenConfigured,
+      },
     });
     return true;
   }
