@@ -62,6 +62,13 @@ function loadRows<T>(db: DatabaseSync, sql: string): T[] {
   return db.prepare(sql).all() as T[];
 }
 
+function tableExists(db: DatabaseSync, tableName: string): boolean {
+  const row = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
+    .get(tableName) as { name?: string } | undefined;
+  return Boolean(row?.name);
+}
+
 async function main() {
   const db = new DatabaseSync(SQLITE_PATH);
   db.exec("PRAGMA foreign_keys = ON;");
@@ -94,44 +101,49 @@ async function main() {
     db,
     "SELECT id, tenant_id, email, role, token_hash, expires_at, created_at, accepted_at FROM invites",
   );
-  const whatsappIdentities = loadRows<{
-    phone: string;
-    user_id: string;
-    tenant_id: string;
-    created_at: string;
-  }>(db, "SELECT phone, user_id, tenant_id, created_at FROM whatsapp_identities");
-  const tenantSettings = loadRows<{ tenant_id: string; data: string; updated_at: string }>(
-    db,
-    "SELECT tenant_id, data, updated_at FROM tenant_settings",
-  ).map((row) => ({
-    tenant_id: row.tenant_id,
-    data: parseJsonSafe(row.data),
-    updated_at: row.updated_at,
-  }));
-
-  const usageEvents = SKIP_USAGE
-    ? []
-    : loadRows<{
-        id: string;
+  const whatsappIdentities = tableExists(db, "whatsapp_identities")
+    ? loadRows<{
+        phone: string;
+        user_id: string;
         tenant_id: string;
-        provider: string;
-        model: string;
-        kind: string;
-        input_tokens: number | null;
-        output_tokens: number | null;
-        cache_read_tokens: number | null;
-        cache_write_tokens: number | null;
-        total_tokens: number | null;
-        characters: number | null;
-        latency_ms: number | null;
-        session_id: string | null;
-        run_id: string | null;
-        source: string | null;
         created_at: string;
-      }>(
+      }>(db, "SELECT phone, user_id, tenant_id, created_at FROM whatsapp_identities")
+    : [];
+  const tenantSettings = tableExists(db, "tenant_settings")
+    ? loadRows<{ tenant_id: string; data: string; updated_at: string }>(
         db,
-        "SELECT id, tenant_id, provider, model, kind, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, total_tokens, characters, latency_ms, session_id, run_id, source, created_at FROM usage_events",
-      );
+        "SELECT tenant_id, data, updated_at FROM tenant_settings",
+      ).map((row) => ({
+        tenant_id: row.tenant_id,
+        data: parseJsonSafe(row.data),
+        updated_at: row.updated_at,
+      }))
+    : [];
+
+  const usageEvents =
+    SKIP_USAGE || !tableExists(db, "usage_events")
+      ? []
+      : loadRows<{
+          id: string;
+          tenant_id: string;
+          provider: string;
+          model: string;
+          kind: string;
+          input_tokens: number | null;
+          output_tokens: number | null;
+          cache_read_tokens: number | null;
+          cache_write_tokens: number | null;
+          total_tokens: number | null;
+          characters: number | null;
+          latency_ms: number | null;
+          session_id: string | null;
+          run_id: string | null;
+          source: string | null;
+          created_at: string;
+        }>(
+          db,
+          "SELECT id, tenant_id, provider, model, kind, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, total_tokens, characters, latency_ms, session_id, run_id, source, created_at FROM usage_events",
+        );
 
   await upsertRows("tenants", tenants, "id");
   await upsertRows("users", users, "id");
