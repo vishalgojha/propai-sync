@@ -21,6 +21,7 @@ const CONTROL_API_URL = (process.env.CONTROL_API_URL || fallbackControlApiUrl).r
 const META_WA_VERIFY_TOKEN = process.env.META_WA_VERIFY_TOKEN || process.env.WHATSAPP_VERIFY_TOKEN || '';
 const META_WA_APP_SECRET = process.env.META_WA_APP_SECRET || process.env.WHATSAPP_APP_SECRET || '';
 const GATEWAY_TOKEN = process.env.GATEWAY_TOKEN || process.env.PROPAI_GATEWAY_TOKEN || '';
+const CONTROL_ADMIN_KEY = process.env.CONTROL_ADMIN_KEY || process.env.ADMIN_KEY || '';
 
 app.use('/webhooks/whatsapp', express.raw({ type: '*/*' }));
 app.use(express.json({ limit: '1mb' }));
@@ -333,6 +334,40 @@ app.post('/api/licensing/refresh', (req, res) => {
 
 app.post('/api/licensing/verify', (req, res) => {
   forwardJson(res, `${LICENSING_URL}/verify`, req.body);
+});
+
+app.all('/api/admin/*', async (req, res) => {
+  if (!CONTROL_ADMIN_KEY) {
+    res.status(403).json({ ok: false, message: 'Admin access not configured.' });
+    return;
+  }
+  const upstreamPath = req.originalUrl.replace('/api/admin', '/v1/admin');
+  const url = `${CONTROL_API_URL}${upstreamPath}`;
+  try {
+    const headers = {
+      Accept: 'application/json',
+      'x-admin-key': CONTROL_ADMIN_KEY,
+    };
+    if (req.headers['content-type']) {
+      headers['Content-Type'] = req.headers['content-type'];
+    }
+    const options = {
+      method: req.method,
+      headers,
+    };
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      options.body = JSON.stringify(req.body ?? {});
+      if (!headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
+    }
+    const response = await fetch(url, options);
+    const payload = await response.json().catch(() => ({}));
+    res.status(response.status).json(payload);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Admin request failed.';
+    sendProxyError(res, message);
+  }
 });
 
 app.all('/api/control/*', async (req, res) => {

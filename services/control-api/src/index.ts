@@ -5,11 +5,15 @@ import { DatabaseSync } from "node:sqlite";
 import express from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { z } from "zod";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const PORT = Number(process.env.PORT ?? "8788");
 const DB_PATH =
   process.env.CONTROL_DB_PATH?.trim() || path.join(process.cwd(), ".data", "control.sqlite");
 const ADMIN_KEY = process.env.CONTROL_ADMIN_KEY ?? "";
+const SUPABASE_URL = process.env.SUPABASE_URL ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+const SUPABASE_ENABLED = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 const isRailway = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
 const fallbackGatewayUrl = isRailway ? "http://gateway.railway.internal:8080" : "http://localhost:8080";
 const CONTROL_GATEWAY_URL = (process.env.CONTROL_GATEWAY_URL || process.env.GATEWAY_URL || fallbackGatewayUrl).replace(
@@ -164,6 +168,12 @@ const usageRangeSchema = z.enum(["24h", "7d", "30d"]);
 const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 const RETRY_POLICY = { initialMs: 500, maxMs: 8000, factor: 2, jitter: 0.2, maxRetries: 3 };
 
+const supabase: SupabaseClient | null = SUPABASE_ENABLED
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+  : null;
+
 function computeBackoff(attempt: number) {
   const base = RETRY_POLICY.initialMs * RETRY_POLICY.factor ** Math.max(attempt - 1, 0);
   const jitter = base * RETRY_POLICY.jitter * Math.random();
@@ -261,6 +271,9 @@ registerGlobalErrorHandlers();
 
 const db = openDatabase(DB_PATH);
 initSchema(db);
+if (SUPABASE_ENABLED) {
+  console.log("[control-api] storage: supabase");
+}
 
 const CONTROL_UI_URL = (process.env.CONTROL_UI_URL || process.env.APP_URL || "https://www.propai.live/app").replace(
   /\/+$/,
@@ -276,7 +289,7 @@ app.get("/health", (_req, res) => {
   });
 });
 
-app.post("/v1/auth/register", (req, res) => {
+app.post("/v1/auth/register", async (req, res) => {
   const payload = registerSchema.safeParse(req.body);
   if (!payload.success) {
     res.status(400).json({ error: payload.error.message });
@@ -284,7 +297,13 @@ app.post("/v1/auth/register", (req, res) => {
   }
   const { email, password, tenantName } = payload.data;
 
-  const existing = getUserByEmail(email);
+  let existing: UserRow | undefined;
+  try {
+    existing = await getUserByEmail(email);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load account." });
+    return;
+  }
   if (existing) {
     res.status(409).json({ error: "Email already registered." });
     return;
@@ -296,19 +315,41 @@ app.post("/v1/auth/register", (req, res) => {
   const membershipId = randomId("mem");
 
   try {
-    db.exec("BEGIN;");
-    db.prepare(
-      "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
-    ).run(tenantId, tenantName, now);
-    db.prepare(
-      "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
-    ).run(userId, email, hashPassword(password), now);
-    db.prepare(
-      "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
-    ).run(membershipId, tenantId, userId, "owner", now);
-    db.exec("COMMIT;");
+    if (!SUPABASE_ENABLED) {
+      db.exec("BEGIN;");
+      db.prepare(
+        "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
+      ).run(tenantId, tenantName, now);
+      db.prepare(
+        "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
+      ).run(userId, email, hashPassword(password), now);
+      db.prepare(
+        "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
+      ).run(membershipId, tenantId, userId, "owner", now);
+      db.exec("COMMIT;");
+    } else {
+      await insertTenantRow({ id: tenantId, name: tenantName, created_at: now });
+      await insertUserRow({ id: userId, email, password_hash: hashPassword(password), created_at: now });
+      await insertMembershipRow({
+        id: membershipId,
+        tenant_id: tenantId,
+        user_id: userId,
+        role: "owner",
+        created_at: now,
+      });
+    }
   } catch (err) {
-    db.exec("ROLLBACK;");
+    if (!SUPABASE_ENABLED) {
+      db.exec("ROLLBACK;");
+    } else {
+      try {
+        await deleteMembershipRow(tenantId, userId);
+        await deleteUserRow(userId);
+        await deleteTenantRow(tenantId);
+      } catch {
+        // best-effort cleanup
+      }
+    }
     res.status(500).json({ error: "Failed to create account." });
     return;
   }
@@ -321,20 +362,31 @@ app.post("/v1/auth/register", (req, res) => {
   });
 });
 
-app.post("/v1/auth/bootstrap", (req, res) => {
+app.post("/v1/auth/bootstrap", async (req, res) => {
   const payload = bootstrapSchema.safeParse(req.body);
   if (!payload.success) {
     res.status(400).json({ error: payload.error.message });
     return;
   }
 
-  if (countUsers() > 0) {
-    res.status(409).json({ error: "Bootstrap closed. Sign in instead." });
+  try {
+    if ((await countUsers()) > 0) {
+      res.status(409).json({ error: "Bootstrap closed. Sign in instead." });
+      return;
+    }
+  } catch (err) {
+    res.status(500).json({ error: "Failed to check bootstrap state." });
     return;
   }
 
   const { email, tenantName } = payload.data;
-  const existing = getUserByEmail(email);
+  let existing: UserRow | undefined;
+  try {
+    existing = await getUserByEmail(email);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load account." });
+    return;
+  }
   if (existing) {
     res.status(409).json({ error: "Email already registered." });
     return;
@@ -347,19 +399,41 @@ app.post("/v1/auth/bootstrap", (req, res) => {
   const tempPassword = `${createToken()}${createToken()}`;
 
   try {
-    db.exec("BEGIN;");
-    db.prepare(
-      "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
-    ).run(tenantId, tenantName, now);
-    db.prepare(
-      "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
-    ).run(userId, email, hashPassword(tempPassword), now);
-    db.prepare(
-      "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
-    ).run(membershipId, tenantId, userId, "owner", now);
-    db.exec("COMMIT;");
+    if (!SUPABASE_ENABLED) {
+      db.exec("BEGIN;");
+      db.prepare(
+        "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
+      ).run(tenantId, tenantName, now);
+      db.prepare(
+        "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
+      ).run(userId, email, hashPassword(tempPassword), now);
+      db.prepare(
+        "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
+      ).run(membershipId, tenantId, userId, "owner", now);
+      db.exec("COMMIT;");
+    } else {
+      await insertTenantRow({ id: tenantId, name: tenantName, created_at: now });
+      await insertUserRow({ id: userId, email, password_hash: hashPassword(tempPassword), created_at: now });
+      await insertMembershipRow({
+        id: membershipId,
+        tenant_id: tenantId,
+        user_id: userId,
+        role: "owner",
+        created_at: now,
+      });
+    }
   } catch (err) {
-    db.exec("ROLLBACK;");
+    if (!SUPABASE_ENABLED) {
+      db.exec("ROLLBACK;");
+    } else {
+      try {
+        await deleteMembershipRow(tenantId, userId);
+        await deleteUserRow(userId);
+        await deleteTenantRow(tenantId);
+      } catch {
+        // best-effort cleanup
+      }
+    }
     res.status(500).json({ error: "Failed to create account." });
     return;
   }
@@ -373,7 +447,7 @@ app.post("/v1/auth/bootstrap", (req, res) => {
   });
 });
 
-app.post("/v1/auth/login", (req, res) => {
+app.post("/v1/auth/login", async (req, res) => {
   const payload = loginSchema.safeParse(req.body);
   if (!payload.success) {
     res.status(400).json({ error: payload.error.message });
@@ -381,13 +455,25 @@ app.post("/v1/auth/login", (req, res) => {
   }
 
   const { email, password } = payload.data;
-  const user = getUserByEmail(email);
+  let user: UserRow | undefined;
+  try {
+    user = await getUserByEmail(email);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load account." });
+    return;
+  }
   if (!user || !verifyPassword(password, user.password_hash)) {
     res.status(401).json({ error: "Invalid email or password." });
     return;
   }
 
-  const memberships = listMemberships(user.id);
+  let memberships: Array<{ tenant_id: string; tenant_name: string; role: Role }> = [];
+  try {
+    memberships = await listMemberships(user.id);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load memberships." });
+    return;
+  }
   const token = signToken(user.id);
   res.json({
     token,
@@ -396,17 +482,14 @@ app.post("/v1/auth/login", (req, res) => {
   });
 });
 
-app.post("/v1/auth/password", requireAuth, (req, res) => {
+app.post("/v1/auth/password", requireAuth, async (req, res) => {
   const payload = passwordUpdateSchema.safeParse(req.body);
   if (!payload.success) {
     res.status(400).json({ error: payload.error.message });
     return;
   }
   try {
-    db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(
-      hashPassword(payload.data.password),
-      req.auth.uid,
-    );
+    await updateUserPassword(req.auth.uid, hashPassword(payload.data.password));
   } catch (err) {
     res.status(500).json({ error: "Failed to update password." });
     return;
@@ -414,7 +497,7 @@ app.post("/v1/auth/password", requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-app.post("/v1/whatsapp/join", (req, res) => {
+app.post("/v1/whatsapp/join", async (req, res) => {
   const payload = whatsappJoinSchema.safeParse(req.body);
   if (!payload.success) {
     res.status(400).json({ error: payload.error.message });
@@ -427,10 +510,23 @@ app.post("/v1/whatsapp/join", (req, res) => {
     return;
   }
 
-  const existingIdentity = getWhatsappIdentity(phone);
+  let existingIdentity: { phone: string; user_id: string; tenant_id: string } | undefined;
+  try {
+    existingIdentity = await getWhatsappIdentity(phone);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to check WhatsApp identity." });
+    return;
+  }
   if (existingIdentity) {
-    const user = getUserById(existingIdentity.user_id);
-    const tenant = getTenantById(existingIdentity.tenant_id);
+    let user: UserRow | undefined;
+    let tenant: TenantRow | undefined;
+    try {
+      user = await getUserById(existingIdentity.user_id);
+      tenant = await getTenantById(existingIdentity.tenant_id);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to load existing account." });
+      return;
+    }
     if (user && tenant) {
       const token = signToken(user.id);
       res.json({
@@ -456,22 +552,45 @@ app.post("/v1/whatsapp/join", (req, res) => {
   const tempPassword = `${createToken()}${createToken()}`;
 
   try {
-    db.exec("BEGIN;");
-    db.prepare(
-      "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
-    ).run(tenantId, tenantName, now);
-    db.prepare(
-      "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
-    ).run(userId, email, hashPassword(tempPassword), now);
-    db.prepare(
-      "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
-    ).run(membershipId, tenantId, userId, "owner", now);
-    db.prepare(
-      "INSERT INTO whatsapp_identities (phone, user_id, tenant_id, created_at) VALUES (?, ?, ?, ?)",
-    ).run(phone, userId, tenantId, now);
-    db.exec("COMMIT;");
+    if (!SUPABASE_ENABLED) {
+      db.exec("BEGIN;");
+      db.prepare(
+        "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
+      ).run(tenantId, tenantName, now);
+      db.prepare(
+        "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
+      ).run(userId, email, hashPassword(tempPassword), now);
+      db.prepare(
+        "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
+      ).run(membershipId, tenantId, userId, "owner", now);
+      db.prepare(
+        "INSERT INTO whatsapp_identities (phone, user_id, tenant_id, created_at) VALUES (?, ?, ?, ?)",
+      ).run(phone, userId, tenantId, now);
+      db.exec("COMMIT;");
+    } else {
+      await insertTenantRow({ id: tenantId, name: tenantName, created_at: now });
+      await insertUserRow({ id: userId, email, password_hash: hashPassword(tempPassword), created_at: now });
+      await insertMembershipRow({
+        id: membershipId,
+        tenant_id: tenantId,
+        user_id: userId,
+        role: "owner",
+        created_at: now,
+      });
+      await insertWhatsappIdentityRow(phone, userId, tenantId, now);
+    }
   } catch (err) {
-    db.exec("ROLLBACK;");
+    if (!SUPABASE_ENABLED) {
+      db.exec("ROLLBACK;");
+    } else {
+      try {
+        await deleteMembershipRow(tenantId, userId);
+        await deleteUserRow(userId);
+        await deleteTenantRow(tenantId);
+      } catch {
+        // best-effort cleanup
+      }
+    }
     res.status(500).json({ error: "Failed to create WhatsApp account." });
     return;
   }
@@ -486,20 +605,32 @@ app.post("/v1/whatsapp/join", (req, res) => {
   });
 });
 
-app.get("/v1/me", requireAuth, (req, res) => {
-  const user = getUserById(req.auth.uid);
+app.get("/v1/me", requireAuth, async (req, res) => {
+  let user: UserRow | undefined;
+  try {
+    user = await getUserById(req.auth.uid);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load user." });
+    return;
+  }
   if (!user) {
     res.status(401).json({ error: "User not found." });
     return;
   }
-  const memberships = listMemberships(user.id);
+  let memberships: Array<{ tenant_id: string; tenant_name: string; role: Role }> = [];
+  try {
+    memberships = await listMemberships(user.id);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load memberships." });
+    return;
+  }
   res.json({
     user: { id: user.id, email: user.email },
     tenants: memberships.map((m) => ({ id: m.tenant_id, name: m.tenant_name, role: m.role })),
   });
 });
 
-app.post("/v1/tenants", requireAuth, (req, res) => {
+app.post("/v1/tenants", requireAuth, async (req, res) => {
   const payload = createTenantSchema.safeParse(req.body);
   if (!payload.success) {
     res.status(400).json({ error: payload.error.message });
@@ -511,16 +642,36 @@ app.post("/v1/tenants", requireAuth, (req, res) => {
   const membershipId = randomId("mem");
 
   try {
-    db.exec("BEGIN;");
-    db.prepare(
-      "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
-    ).run(tenantId, name, now);
-    db.prepare(
-      "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
-    ).run(membershipId, tenantId, req.auth.uid, "owner", now);
-    db.exec("COMMIT;");
+    if (!SUPABASE_ENABLED) {
+      db.exec("BEGIN;");
+      db.prepare(
+        "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
+      ).run(tenantId, name, now);
+      db.prepare(
+        "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
+      ).run(membershipId, tenantId, req.auth.uid, "owner", now);
+      db.exec("COMMIT;");
+    } else {
+      await insertTenantRow({ id: tenantId, name, created_at: now });
+      await insertMembershipRow({
+        id: membershipId,
+        tenant_id: tenantId,
+        user_id: req.auth.uid,
+        role: "owner",
+        created_at: now,
+      });
+    }
   } catch (err) {
-    db.exec("ROLLBACK;");
+    if (!SUPABASE_ENABLED) {
+      db.exec("ROLLBACK;");
+    } else {
+      try {
+        await deleteMembershipRow(tenantId, req.auth.uid);
+        await deleteTenantRow(tenantId);
+      } catch {
+        // best-effort cleanup
+      }
+    }
     res.status(500).json({ error: "Failed to create tenant." });
     return;
   }
@@ -528,9 +679,15 @@ app.post("/v1/tenants", requireAuth, (req, res) => {
   res.json({ tenant: { id: tenantId, name, role: "owner" } });
 });
 
-app.post("/v1/tenants/:tenantId/invites", requireAuth, (req, res) => {
+app.post("/v1/tenants/:tenantId/invites", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership || !hasRole(membership.role, ["owner", "manager"])) {
     res.status(403).json({ error: "Not allowed." });
     return;
@@ -552,28 +709,58 @@ app.post("/v1/tenants/:tenantId/invites", requireAuth, (req, res) => {
   const expiresAt = new Date(Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const inviteId = randomId("inv");
 
-  db.prepare(
-    "INSERT INTO invites (id, tenant_id, email, role, token_hash, expires_at, created_at, accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, NULL)",
-  ).run(inviteId, tenantId, payload.data.email.toLowerCase(), payload.data.role, hashToken(inviteToken), expiresAt, now);
+  try {
+    await insertInviteRow({
+      id: inviteId,
+      tenant_id: tenantId,
+      email: payload.data.email.toLowerCase(),
+      role: payload.data.role,
+      token_hash: hashToken(inviteToken),
+      expires_at: expiresAt,
+      created_at: now,
+      accepted_at: null,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create invite." });
+    return;
+  }
 
   res.json({ inviteToken, expiresAt });
 });
 
-app.get("/v1/tenants/:tenantId/settings", requireAuth, (req, res) => {
+app.get("/v1/tenants/:tenantId/settings", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership) {
     res.status(403).json({ error: "Not allowed." });
     return;
   }
 
-  const settings = getTenantSettings(tenantId);
+  let settings: Record<string, unknown> = {};
+  try {
+    settings = await getTenantSettings(tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load settings." });
+    return;
+  }
   res.json({ settings });
 });
 
-app.put("/v1/tenants/:tenantId/settings", requireAuth, (req, res) => {
+app.put("/v1/tenants/:tenantId/settings", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership || !hasRole(membership.role, ["owner", "manager"])) {
     res.status(403).json({ error: "Not allowed." });
     return;
@@ -585,15 +772,32 @@ app.put("/v1/tenants/:tenantId/settings", requireAuth, (req, res) => {
     return;
   }
 
-  const existing = getTenantSettings(tenantId);
+  let existing: Record<string, unknown> = {};
+  try {
+    existing = await getTenantSettings(tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load settings." });
+    return;
+  }
   const merged = mergeSettings(existing, payload.data);
-  upsertTenantSettings(tenantId, merged);
+  try {
+    await upsertTenantSettings(tenantId, merged);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to save settings." });
+    return;
+  }
   res.json({ settings: merged });
 });
 
 app.get("/v1/tenants/:tenantId/android/setup", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership || !hasRole(membership.role, ["owner", "manager"])) {
     res.status(403).json({ error: "Not allowed." });
     return;
@@ -605,7 +809,13 @@ app.get("/v1/tenants/:tenantId/android/setup", requireAuth, async (req, res) => 
 
 app.post("/v1/tenants/:tenantId/android/setup", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership || !hasRole(membership.role, ["owner", "manager"])) {
     res.status(403).json({ error: "Not allowed." });
     return;
@@ -623,7 +833,13 @@ app.post("/v1/tenants/:tenantId/android/setup", requireAuth, async (req, res) =>
 
 app.get("/v1/tenants/:tenantId/android/devices", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership || !hasRole(membership.role, ["owner", "manager"])) {
     res.status(403).json({ error: "Not allowed." });
     return;
@@ -633,7 +849,13 @@ app.get("/v1/tenants/:tenantId/android/devices", requireAuth, async (req, res) =
 
 app.post("/v1/tenants/:tenantId/android/devices/approve", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership || !hasRole(membership.role, ["owner", "manager"])) {
     res.status(403).json({ error: "Not allowed." });
     return;
@@ -648,7 +870,13 @@ app.post("/v1/tenants/:tenantId/android/devices/approve", requireAuth, async (re
 
 app.post("/v1/tenants/:tenantId/android/devices/reject", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership || !hasRole(membership.role, ["owner", "manager"])) {
     res.status(403).json({ error: "Not allowed." });
     return;
@@ -663,7 +891,13 @@ app.post("/v1/tenants/:tenantId/android/devices/reject", requireAuth, async (req
 
 app.delete("/v1/tenants/:tenantId/android/devices/:deviceId", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership || !hasRole(membership.role, ["owner", "manager"])) {
     res.status(403).json({ error: "Not allowed." });
     return;
@@ -678,13 +912,19 @@ app.delete("/v1/tenants/:tenantId/android/devices/:deviceId", requireAuth, async
   });
 });
 
-app.post("/v1/tenants/:tenantId/usage/ingest", (req, res) => {
+app.post("/v1/tenants/:tenantId/usage/ingest", async (req, res) => {
   if (!CONTROL_USAGE_INGEST_KEY || req.get("x-usage-key") !== CONTROL_USAGE_INGEST_KEY) {
     res.status(401).json({ error: "Invalid usage key." });
     return;
   }
   const tenantId = req.params.tenantId;
-  const tenant = getTenantById(tenantId);
+  let tenant: TenantRow | undefined;
+  try {
+    tenant = await getTenantById(tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load tenant." });
+    return;
+  }
   if (!tenant) {
     res.status(404).json({ error: "Tenant not found." });
     return;
@@ -696,69 +936,114 @@ app.post("/v1/tenants/:tenantId/usage/ingest", (req, res) => {
   }
 
   const now = nowIso();
-  const insert = db.prepare(
-    `INSERT INTO usage_events (
-      id,
-      tenant_id,
-      provider,
-      model,
-      kind,
-      input_tokens,
-      output_tokens,
-      cache_read_tokens,
-      cache_write_tokens,
-      total_tokens,
-      characters,
-      latency_ms,
-      session_id,
-      run_id,
-      source,
-      created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  );
   let inserted = 0;
-  try {
-    db.exec("BEGIN;");
-    for (const event of payload.data.events) {
-      const provider = normalizeUsageProvider(event.provider);
-      if (!ALLOWED_USAGE_PROVIDERS.has(provider)) {
-        continue;
-      }
-      const model = event.model.trim() || "unknown";
-      const createdAt = parseUsageTimestamp(event.timestamp) ?? now;
-      insert.run(
-        randomId("use"),
-        tenantId,
+  if (!SUPABASE_ENABLED) {
+    const insert = db.prepare(
+      `INSERT INTO usage_events (
+        id,
+        tenant_id,
         provider,
         model,
-        event.kind,
-        event.inputTokens ?? null,
-        event.outputTokens ?? null,
-        event.cacheReadTokens ?? null,
-        event.cacheWriteTokens ?? null,
-        event.totalTokens ?? null,
-        event.characters ?? null,
-        event.latencyMs ?? null,
-        event.sessionId ?? null,
-        event.runId ?? null,
-        event.source ?? "gateway",
-        createdAt,
-      );
-      inserted += 1;
+        kind,
+        input_tokens,
+        output_tokens,
+        cache_read_tokens,
+        cache_write_tokens,
+        total_tokens,
+        characters,
+        latency_ms,
+        session_id,
+        run_id,
+        source,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    );
+    try {
+      db.exec("BEGIN;");
+      for (const event of payload.data.events) {
+        const provider = normalizeUsageProvider(event.provider);
+        if (!ALLOWED_USAGE_PROVIDERS.has(provider)) {
+          continue;
+        }
+        const model = event.model.trim() || "unknown";
+        const createdAt = parseUsageTimestamp(event.timestamp) ?? now;
+        insert.run(
+          randomId("use"),
+          tenantId,
+          provider,
+          model,
+          event.kind,
+          event.inputTokens ?? null,
+          event.outputTokens ?? null,
+          event.cacheReadTokens ?? null,
+          event.cacheWriteTokens ?? null,
+          event.totalTokens ?? null,
+          event.characters ?? null,
+          event.latencyMs ?? null,
+          event.sessionId ?? null,
+          event.runId ?? null,
+          event.source ?? "gateway",
+          createdAt,
+        );
+        inserted += 1;
+      }
+      db.exec("COMMIT;");
+    } catch (err) {
+      db.exec("ROLLBACK;");
+      res.status(500).json({ error: "Failed to record usage." });
+      return;
     }
-    db.exec("COMMIT;");
-  } catch (err) {
-    db.exec("ROLLBACK;");
-    res.status(500).json({ error: "Failed to record usage." });
-    return;
+  } else if (supabase) {
+    const rows = payload.data.events
+      .map((event) => {
+        const provider = normalizeUsageProvider(event.provider);
+        if (!ALLOWED_USAGE_PROVIDERS.has(provider)) {
+          return null;
+        }
+        const model = event.model.trim() || "unknown";
+        const createdAt = parseUsageTimestamp(event.timestamp) ?? now;
+        return {
+          id: randomId("use"),
+          tenant_id: tenantId,
+          provider,
+          model,
+          kind: event.kind,
+          input_tokens: event.inputTokens ?? null,
+          output_tokens: event.outputTokens ?? null,
+          cache_read_tokens: event.cacheReadTokens ?? null,
+          cache_write_tokens: event.cacheWriteTokens ?? null,
+          total_tokens: event.totalTokens ?? null,
+          characters: event.characters ?? null,
+          latency_ms: event.latencyMs ?? null,
+          session_id: event.sessionId ?? null,
+          run_id: event.runId ?? null,
+          source: event.source ?? "gateway",
+          created_at: createdAt,
+        };
+      })
+      .filter(Boolean) as Array<Record<string, unknown>>;
+    if (rows.length) {
+      const { error } = await supabase.from("usage_events").insert(rows);
+      if (error) {
+        res.status(500).json({ error: "Failed to record usage." });
+        return;
+      }
+      inserted = rows.length;
+    }
   }
 
   res.json({ ok: true, inserted });
 });
 
-app.get("/v1/tenants/:tenantId/usage", requireAuth, (req, res) => {
+app.get("/v1/tenants/:tenantId/usage", requireAuth, async (req, res) => {
   const tenantId = req.params.tenantId;
-  const membership = getMembership(req.auth.uid, tenantId);
+  let membership: MembershipRow | undefined;
+  try {
+    membership = await getMembership(req.auth.uid, tenantId);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load membership." });
+    return;
+  }
   if (!membership) {
     res.status(403).json({ error: "Not allowed." });
     return;
@@ -770,34 +1055,6 @@ app.get("/v1/tenants/:tenantId/usage", requireAuth, (req, res) => {
     return;
   }
   const { from, to } = resolveUsageRange(range.data);
-
-  const summaryRows = db
-    .prepare(
-      `SELECT
-        kind,
-        COUNT(*) as requests,
-        SUM(COALESCE(input_tokens, 0)) as input_tokens,
-        SUM(COALESCE(output_tokens, 0)) as output_tokens,
-        SUM(COALESCE(cache_read_tokens, 0)) as cache_read_tokens,
-        SUM(COALESCE(cache_write_tokens, 0)) as cache_write_tokens,
-        SUM(COALESCE(total_tokens, 0)) as total_tokens,
-        SUM(COALESCE(characters, 0)) as characters,
-        AVG(COALESCE(latency_ms, 0)) as avg_latency_ms
-      FROM usage_events
-      WHERE tenant_id = ? AND created_at >= ?
-      GROUP BY kind`,
-    )
-    .all(tenantId, from) as Array<{
-    kind: "llm" | "tts";
-    requests: number;
-    input_tokens: number;
-    output_tokens: number;
-    cache_read_tokens: number;
-    cache_write_tokens: number;
-    total_tokens: number;
-    characters: number;
-    avg_latency_ms: number;
-  }>;
 
   const summary = {
     llm: {
@@ -815,57 +1072,6 @@ app.get("/v1/tenants/:tenantId/usage", requireAuth, (req, res) => {
       avgLatencyMs: 0,
     },
   };
-
-  for (const row of summaryRows) {
-    if (row.kind === "llm") {
-      summary.llm = {
-        requests: row.requests ?? 0,
-        inputTokens: row.input_tokens ?? 0,
-        outputTokens: row.output_tokens ?? 0,
-        cacheReadTokens: row.cache_read_tokens ?? 0,
-        cacheWriteTokens: row.cache_write_tokens ?? 0,
-        totalTokens: row.total_tokens ?? 0,
-        avgLatencyMs: row.avg_latency_ms ?? 0,
-      };
-    } else {
-      summary.tts = {
-        requests: row.requests ?? 0,
-        characters: row.characters ?? 0,
-        avgLatencyMs: row.avg_latency_ms ?? 0,
-      };
-    }
-  }
-
-  const breakdownRows = db
-    .prepare(
-      `SELECT
-        provider,
-        model,
-        kind,
-        COUNT(*) as requests,
-        SUM(COALESCE(input_tokens, 0)) as input_tokens,
-        SUM(COALESCE(output_tokens, 0)) as output_tokens,
-        SUM(COALESCE(cache_read_tokens, 0)) as cache_read_tokens,
-        SUM(COALESCE(cache_write_tokens, 0)) as cache_write_tokens,
-        SUM(COALESCE(total_tokens, 0)) as total_tokens,
-        SUM(COALESCE(characters, 0)) as characters
-      FROM usage_events
-      WHERE tenant_id = ? AND created_at >= ?
-      GROUP BY provider, model, kind
-      ORDER BY requests DESC`,
-    )
-    .all(tenantId, from) as Array<{
-    provider: string;
-    model: string;
-    kind: "llm" | "tts";
-    requests: number;
-    input_tokens: number;
-    output_tokens: number;
-    cache_read_tokens: number;
-    cache_write_tokens: number;
-    total_tokens: number;
-    characters: number;
-  }>;
 
   const breakdown = {
     llm: [] as Array<{
@@ -886,36 +1092,219 @@ app.get("/v1/tenants/:tenantId/usage", requireAuth, (req, res) => {
     }>,
   };
 
-  for (const row of breakdownRows) {
-    const provider = normalizeUsageProvider(row.provider);
-    if (!ALLOWED_USAGE_PROVIDERS.has(provider)) {
-      continue;
+  if (!SUPABASE_ENABLED) {
+    const summaryRows = db
+      .prepare(
+        `SELECT
+          kind,
+          COUNT(*) as requests,
+          SUM(COALESCE(input_tokens, 0)) as input_tokens,
+          SUM(COALESCE(output_tokens, 0)) as output_tokens,
+          SUM(COALESCE(cache_read_tokens, 0)) as cache_read_tokens,
+          SUM(COALESCE(cache_write_tokens, 0)) as cache_write_tokens,
+          SUM(COALESCE(total_tokens, 0)) as total_tokens,
+          SUM(COALESCE(characters, 0)) as characters,
+          AVG(COALESCE(latency_ms, 0)) as avg_latency_ms
+        FROM usage_events
+        WHERE tenant_id = ? AND created_at >= ?
+        GROUP BY kind`,
+      )
+      .all(tenantId, from) as Array<{
+      kind: "llm" | "tts";
+      requests: number;
+      input_tokens: number;
+      output_tokens: number;
+      cache_read_tokens: number;
+      cache_write_tokens: number;
+      total_tokens: number;
+      characters: number;
+      avg_latency_ms: number;
+    }>;
+
+    for (const row of summaryRows) {
+      if (row.kind === "llm") {
+        summary.llm = {
+          requests: row.requests ?? 0,
+          inputTokens: row.input_tokens ?? 0,
+          outputTokens: row.output_tokens ?? 0,
+          cacheReadTokens: row.cache_read_tokens ?? 0,
+          cacheWriteTokens: row.cache_write_tokens ?? 0,
+          totalTokens: row.total_tokens ?? 0,
+          avgLatencyMs: row.avg_latency_ms ?? 0,
+        };
+      } else {
+        summary.tts = {
+          requests: row.requests ?? 0,
+          characters: row.characters ?? 0,
+          avgLatencyMs: row.avg_latency_ms ?? 0,
+        };
+      }
     }
-    if (row.kind === "llm") {
-      breakdown.llm.push({
-        provider,
-        model: row.model,
-        requests: row.requests ?? 0,
-        inputTokens: row.input_tokens ?? 0,
-        outputTokens: row.output_tokens ?? 0,
-        cacheReadTokens: row.cache_read_tokens ?? 0,
-        cacheWriteTokens: row.cache_write_tokens ?? 0,
-        totalTokens: row.total_tokens ?? 0,
-      });
-    } else {
-      breakdown.tts.push({
-        provider,
-        model: row.model,
-        requests: row.requests ?? 0,
-        characters: row.characters ?? 0,
-      });
+
+    const breakdownRows = db
+      .prepare(
+        `SELECT
+          provider,
+          model,
+          kind,
+          COUNT(*) as requests,
+          SUM(COALESCE(input_tokens, 0)) as input_tokens,
+          SUM(COALESCE(output_tokens, 0)) as output_tokens,
+          SUM(COALESCE(cache_read_tokens, 0)) as cache_read_tokens,
+          SUM(COALESCE(cache_write_tokens, 0)) as cache_write_tokens,
+          SUM(COALESCE(total_tokens, 0)) as total_tokens,
+          SUM(COALESCE(characters, 0)) as characters
+        FROM usage_events
+        WHERE tenant_id = ? AND created_at >= ?
+        GROUP BY provider, model, kind
+        ORDER BY requests DESC`,
+      )
+      .all(tenantId, from) as Array<{
+      provider: string;
+      model: string;
+      kind: "llm" | "tts";
+      requests: number;
+      input_tokens: number;
+      output_tokens: number;
+      cache_read_tokens: number;
+      cache_write_tokens: number;
+      total_tokens: number;
+      characters: number;
+    }>;
+
+    for (const row of breakdownRows) {
+      const provider = normalizeUsageProvider(row.provider);
+      if (!ALLOWED_USAGE_PROVIDERS.has(provider)) {
+        continue;
+      }
+      if (row.kind === "llm") {
+        breakdown.llm.push({
+          provider,
+          model: row.model,
+          requests: row.requests ?? 0,
+          inputTokens: row.input_tokens ?? 0,
+          outputTokens: row.output_tokens ?? 0,
+          cacheReadTokens: row.cache_read_tokens ?? 0,
+          cacheWriteTokens: row.cache_write_tokens ?? 0,
+          totalTokens: row.total_tokens ?? 0,
+        });
+      } else {
+        breakdown.tts.push({
+          provider,
+          model: row.model,
+          requests: row.requests ?? 0,
+          characters: row.characters ?? 0,
+        });
+      }
     }
+  } else if (supabase) {
+    const { data, error } = await supabase
+      .from("usage_events")
+      .select(
+        "provider,model,kind,input_tokens,output_tokens,cache_read_tokens,cache_write_tokens,total_tokens,characters,latency_ms",
+      )
+      .eq("tenant_id", tenantId)
+      .gte("created_at", from)
+      .lte("created_at", to);
+    if (error) {
+      res.status(500).json({ error: "Failed to load usage." });
+      return;
+    }
+    const summaryLatency = { llm: 0, tts: 0 };
+    const breakdownMap = new Map<string, {
+      provider: string;
+      model: string;
+      kind: "llm" | "tts";
+      requests: number;
+      inputTokens: number;
+      outputTokens: number;
+      cacheReadTokens: number;
+      cacheWriteTokens: number;
+      totalTokens: number;
+      characters: number;
+    }>();
+    for (const row of data ?? []) {
+      const provider = normalizeUsageProvider(row.provider);
+      if (!ALLOWED_USAGE_PROVIDERS.has(provider)) {
+        continue;
+      }
+      const kind = row.kind as "llm" | "tts";
+      const requests = 1;
+      if (kind === "llm") {
+        summary.llm.requests += requests;
+        summary.llm.inputTokens += row.input_tokens ?? 0;
+        summary.llm.outputTokens += row.output_tokens ?? 0;
+        summary.llm.cacheReadTokens += row.cache_read_tokens ?? 0;
+        summary.llm.cacheWriteTokens += row.cache_write_tokens ?? 0;
+        summary.llm.totalTokens += row.total_tokens ?? 0;
+        summaryLatency.llm += row.latency_ms ?? 0;
+      } else {
+        summary.tts.requests += requests;
+        summary.tts.characters += row.characters ?? 0;
+        summaryLatency.tts += row.latency_ms ?? 0;
+      }
+      const key = `${provider}::${row.model}::${kind}`;
+      const current =
+        breakdownMap.get(key) ??
+        ({
+          provider,
+          model: row.model,
+          kind,
+          requests: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+          cacheReadTokens: 0,
+          cacheWriteTokens: 0,
+          totalTokens: 0,
+          characters: 0,
+        } as const);
+      const next = {
+        ...current,
+        requests: current.requests + requests,
+        inputTokens: current.inputTokens + (row.input_tokens ?? 0),
+        outputTokens: current.outputTokens + (row.output_tokens ?? 0),
+        cacheReadTokens: current.cacheReadTokens + (row.cache_read_tokens ?? 0),
+        cacheWriteTokens: current.cacheWriteTokens + (row.cache_write_tokens ?? 0),
+        totalTokens: current.totalTokens + (row.total_tokens ?? 0),
+        characters: current.characters + (row.characters ?? 0),
+      };
+      breakdownMap.set(key, next);
+    }
+    summary.llm.avgLatencyMs = summary.llm.requests
+      ? Math.round(summaryLatency.llm / summary.llm.requests)
+      : 0;
+    summary.tts.avgLatencyMs = summary.tts.requests
+      ? Math.round(summaryLatency.tts / summary.tts.requests)
+      : 0;
+    for (const row of breakdownMap.values()) {
+      if (row.kind === "llm") {
+        breakdown.llm.push({
+          provider: row.provider,
+          model: row.model,
+          requests: row.requests,
+          inputTokens: row.inputTokens,
+          outputTokens: row.outputTokens,
+          cacheReadTokens: row.cacheReadTokens,
+          cacheWriteTokens: row.cacheWriteTokens,
+          totalTokens: row.totalTokens,
+        });
+      } else {
+        breakdown.tts.push({
+          provider: row.provider,
+          model: row.model,
+          requests: row.requests,
+          characters: row.characters,
+        });
+      }
+    }
+    breakdown.llm.sort((a, b) => b.requests - a.requests);
+    breakdown.tts.sort((a, b) => b.requests - a.requests);
   }
 
   res.json({ range: range.data, from, to, summary, breakdown });
 });
 
-app.post("/v1/invites/accept", (req, res) => {
+app.post("/v1/invites/accept", async (req, res) => {
   const payload = acceptInviteSchema.safeParse(req.body);
   if (!payload.success) {
     res.status(400).json({ error: payload.error.message });
@@ -923,7 +1312,13 @@ app.post("/v1/invites/accept", (req, res) => {
   }
 
   const tokenHash = hashToken(payload.data.token);
-  const invite = getInviteByTokenHash(tokenHash);
+  let invite: InviteRow | undefined;
+  try {
+    invite = await getInviteByTokenHash(tokenHash);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load invite." });
+    return;
+  }
   if (!invite || invite.accepted_at) {
     res.status(404).json({ error: "Invite not found." });
     return;
@@ -934,34 +1329,74 @@ app.post("/v1/invites/accept", (req, res) => {
   }
 
   const email = invite.email.toLowerCase();
-  let user = getUserByEmail(email);
+  let user: UserRow | undefined;
+  try {
+    user = await getUserByEmail(email);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load account." });
+    return;
+  }
 
   try {
-    db.exec("BEGIN;");
-    if (!user) {
-      if (!payload.data.password) {
-        db.exec("ROLLBACK;");
-        res.status(400).json({ error: "Password required for new account." });
-        return;
+    if (!SUPABASE_ENABLED) {
+      db.exec("BEGIN;");
+      if (!user) {
+        if (!payload.data.password) {
+          db.exec("ROLLBACK;");
+          res.status(400).json({ error: "Password required for new account." });
+          return;
+        }
+        const userId = randomId("usr");
+        db.prepare(
+          "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
+        ).run(userId, email, hashPassword(payload.data.password), nowIso());
+        user = db.prepare("SELECT * FROM users WHERE id = ?").get(userId) as UserRow | undefined;
       }
-      const userId = randomId("usr");
-      db.prepare(
-        "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
-      ).run(userId, email, hashPassword(payload.data.password), nowIso());
-      user = getUserById(userId);
-    }
 
-    const existingMembership = getMembership(user!.id, invite.tenant_id);
-    if (!existingMembership) {
-      db.prepare(
-        "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
-      ).run(randomId("mem"), invite.tenant_id, user!.id, invite.role, nowIso());
-    }
+      const existingMembership = db
+        .prepare("SELECT * FROM memberships WHERE tenant_id = ? AND user_id = ?")
+        .get(invite.tenant_id, user!.id) as MembershipRow | undefined;
+      if (!existingMembership) {
+        db.prepare(
+          "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
+        ).run(randomId("mem"), invite.tenant_id, user!.id, invite.role, nowIso());
+      }
 
-    db.prepare("UPDATE invites SET accepted_at = ? WHERE id = ?").run(nowIso(), invite.id);
-    db.exec("COMMIT;");
+      db.prepare("UPDATE invites SET accepted_at = ? WHERE id = ?").run(nowIso(), invite.id);
+      db.exec("COMMIT;");
+    } else {
+      if (!user) {
+        if (!payload.data.password) {
+          res.status(400).json({ error: "Password required for new account." });
+          return;
+        }
+        const userId = randomId("usr");
+        await insertUserRow({
+          id: userId,
+          email,
+          password_hash: hashPassword(payload.data.password),
+          created_at: nowIso(),
+        });
+        user = await getUserById(userId);
+      }
+
+      const existingMembership = await getMembership(user!.id, invite.tenant_id);
+      if (!existingMembership) {
+        await insertMembershipRow({
+          id: randomId("mem"),
+          tenant_id: invite.tenant_id,
+          user_id: user!.id,
+          role: invite.role,
+          created_at: nowIso(),
+        });
+      }
+
+      await markInviteAccepted(invite.id, nowIso());
+    }
   } catch (err) {
-    db.exec("ROLLBACK;");
+    if (!SUPABASE_ENABLED) {
+      db.exec("ROLLBACK;");
+    }
     res.status(500).json({ error: "Failed to accept invite." });
     return;
   }
@@ -973,26 +1408,42 @@ app.post("/v1/invites/accept", (req, res) => {
 app.get(
   "/v1/tenants/:tenantId/users",
   requireAuth,
-  (req, res) => {
+  async (req, res) => {
     const tenantId = req.params.tenantId;
-    const membership = getMembership(req.auth.uid, tenantId);
+    let membership: MembershipRow | undefined;
+    try {
+      membership = await getMembership(req.auth.uid, tenantId);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to load membership." });
+      return;
+    }
     if (!membership || !hasRole(membership.role, ["owner", "manager"])) {
       res.status(403).json({ error: "Not allowed." });
       return;
     }
 
-    const users = listTenantUsers(tenantId);
-    res.json({ users });
+    try {
+      const users = await listTenantUsers(tenantId);
+      res.json({ users });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to load users." });
+    }
   },
 );
 
 app.patch(
   "/v1/tenants/:tenantId/users/:userId",
   requireAuth,
-  (req, res) => {
+  async (req, res) => {
     const tenantId = req.params.tenantId;
     const targetUserId = req.params.userId;
-    const membership = getMembership(req.auth.uid, tenantId);
+    let membership: MembershipRow | undefined;
+    try {
+      membership = await getMembership(req.auth.uid, tenantId);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to load membership." });
+      return;
+    }
     if (!membership || membership.role !== "owner") {
       res.status(403).json({ error: "Owner role required." });
       return;
@@ -1004,59 +1455,72 @@ app.patch(
       return;
     }
 
-    if (payload.data.role !== "owner" && isLastOwner(tenantId, targetUserId)) {
-      res.status(409).json({ error: "Cannot remove the last owner." });
+    try {
+      if (payload.data.role !== "owner" && (await isLastOwner(tenantId, targetUserId))) {
+        res.status(409).json({ error: "Cannot remove the last owner." });
+        return;
+      }
+    } catch (err) {
+      res.status(500).json({ error: "Failed to validate owner role." });
       return;
     }
 
-    const updated = db.prepare(
-      "UPDATE memberships SET role = ? WHERE tenant_id = ? AND user_id = ?",
-    ).run(payload.data.role, tenantId, targetUserId);
-
-    if (updated.changes === 0) {
-      res.status(404).json({ error: "Membership not found." });
-      return;
+    try {
+      const updated = await updateMembershipRole(tenantId, targetUserId, payload.data.role);
+      if (!updated) {
+        res.status(404).json({ error: "Membership not found." });
+        return;
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update role." });
     }
-
-    res.json({ ok: true });
   },
 );
 
 app.delete(
   "/v1/tenants/:tenantId/users/:userId",
   requireAuth,
-  (req, res) => {
+  async (req, res) => {
     const tenantId = req.params.tenantId;
     const targetUserId = req.params.userId;
-    const membership = getMembership(req.auth.uid, tenantId);
+    let membership: MembershipRow | undefined;
+    try {
+      membership = await getMembership(req.auth.uid, tenantId);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to load membership." });
+      return;
+    }
     if (!membership || membership.role !== "owner") {
       res.status(403).json({ error: "Owner role required." });
       return;
     }
 
-    if (isLastOwner(tenantId, targetUserId)) {
-      res.status(409).json({ error: "Cannot remove the last owner." });
+    try {
+      if (await isLastOwner(tenantId, targetUserId)) {
+        res.status(409).json({ error: "Cannot remove the last owner." });
+        return;
+      }
+    } catch (err) {
+      res.status(500).json({ error: "Failed to validate owner role." });
       return;
     }
 
-    const result = db.prepare(
-      "DELETE FROM memberships WHERE tenant_id = ? AND user_id = ?",
-    ).run(tenantId, targetUserId);
-
-    if (result.changes === 0) {
-      res.status(404).json({ error: "Membership not found." });
-      return;
+    try {
+      const removed = await deleteMembershipRow(tenantId, targetUserId);
+      if (!removed) {
+        res.status(404).json({ error: "Membership not found." });
+        return;
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to remove user." });
     }
-
-    res.json({ ok: true });
   },
 );
 
 app.post("/v1/admin/tenants", (req, res) => {
-  if (!ADMIN_KEY || req.get("x-admin-key") !== ADMIN_KEY) {
-    res.status(401).json({ error: "Admin key required." });
-    return;
-  }
+  if (!requireAdmin(req, res)) return;
   const payload = createTenantSchema.safeParse(req.body);
   if (!payload.success) {
     res.status(400).json({ error: payload.error.message });
@@ -1064,10 +1528,34 @@ app.post("/v1/admin/tenants", (req, res) => {
   }
   const now = nowIso();
   const tenantId = randomId("tnt");
-  db.prepare(
-    "INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)",
-  ).run(tenantId, payload.data.name, now);
-  res.json({ tenant: { id: tenantId, name: payload.data.name } });
+  insertTenantRow({ id: tenantId, name: payload.data.name, created_at: now })
+    .then(() => {
+      res.json({ tenant: { id: tenantId, name: payload.data.name } });
+    })
+    .catch(() => {
+      res.status(500).json({ error: "Failed to create tenant." });
+    });
+});
+
+app.get("/v1/admin/tenants", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const rows = await listAdminTenants();
+    res.json({ tenants: rows });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load tenants." });
+  }
+});
+
+app.get("/v1/admin/tenants/:tenantId/users", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const tenantId = req.params.tenantId;
+  try {
+    const users = await listAdminTenantUsers(tenantId);
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load users." });
+  }
 });
 
 app.listen(PORT, () => {
@@ -1213,28 +1701,6 @@ function signToken(userId: string): string {
   return jwt.sign({ typ: "control", uid: userId }, jwtSecret, { expiresIn: `${JWT_TTL_DAYS}d` });
 }
 
-function getTenantSettings(tenantId: string): Record<string, unknown> {
-  const row = db.prepare(
-    "SELECT data FROM tenant_settings WHERE tenant_id = ?",
-  ).get(tenantId) as { data: string } | undefined;
-  if (!row?.data) {
-    return {};
-  }
-  try {
-    return JSON.parse(row.data) as Record<string, unknown>;
-  } catch {
-    return {};
-  }
-}
-
-function upsertTenantSettings(tenantId: string, data: Record<string, unknown>) {
-  db.prepare(
-    `INSERT INTO tenant_settings (tenant_id, data, updated_at)
-     VALUES (?, ?, ?)
-     ON CONFLICT(tenant_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`,
-  ).run(tenantId, JSON.stringify(data ?? {}), nowIso());
-}
-
 function mergeSettings<T>(base: T, patch: Partial<T>): T {
   if (patch === null || typeof patch !== "object" || Array.isArray(patch)) {
     return patch as T;
@@ -1315,13 +1781,26 @@ function hasRole(role: Role, allowed: Role[]): boolean {
   return allowed.includes(role);
 }
 
-function getUserByEmail(email: string): UserRow | undefined {
-  return db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase()) as
-    | UserRow
-    | undefined;
+async function getUserByEmail(email: string): Promise<UserRow | undefined> {
+  const normalized = email.toLowerCase();
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase.from("users").select("*").eq("email", normalized).maybeSingle();
+    if (error) {
+      throw error;
+    }
+    return data ?? undefined;
+  }
+  return db.prepare("SELECT * FROM users WHERE email = ?").get(normalized) as UserRow | undefined;
 }
 
-function countUsers(): number {
+async function countUsers(): Promise<number> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { count, error } = await supabase.from("users").select("id", { count: "exact", head: true });
+    if (error) {
+      throw error;
+    }
+    return count ?? 0;
+  }
   const row = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count?: number } | undefined;
   return row?.count ?? 0;
 }
@@ -1346,7 +1825,20 @@ function phoneToEmail(phone: string): string {
   return `wa+${digits}@propai.live`;
 }
 
-function getWhatsappIdentity(phone: string): { phone: string; user_id: string; tenant_id: string } | undefined {
+async function getWhatsappIdentity(
+  phone: string,
+): Promise<{ phone: string; user_id: string; tenant_id: string } | undefined> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase
+      .from("whatsapp_identities")
+      .select("phone,user_id,tenant_id")
+      .eq("phone", phone)
+      .maybeSingle();
+    if (error) {
+      throw error;
+    }
+    return data ?? undefined;
+  }
   return db
     .prepare("SELECT phone, user_id, tenant_id FROM whatsapp_identities WHERE phone = ?")
     .get(phone) as { phone: string; user_id: string; tenant_id: string } | undefined;
@@ -1361,15 +1853,49 @@ function buildControlLoginUrl(token: string, tenantId?: string): string {
   return url.toString();
 }
 
-function getUserById(userId: string): UserRow | undefined {
+async function getUserById(userId: string): Promise<UserRow | undefined> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle();
+    if (error) {
+      throw error;
+    }
+    return data ?? undefined;
+  }
   return db.prepare("SELECT * FROM users WHERE id = ?").get(userId) as UserRow | undefined;
 }
 
-function getTenantById(tenantId: string): TenantRow | undefined {
+function requireAdmin(req: express.Request, res: express.Response): boolean {
+  if (!ADMIN_KEY || req.get("x-admin-key") !== ADMIN_KEY) {
+    res.status(401).json({ error: "Admin key required." });
+    return false;
+  }
+  return true;
+}
+
+async function getTenantById(tenantId: string): Promise<TenantRow | undefined> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase.from("tenants").select("*").eq("id", tenantId).maybeSingle();
+    if (error) {
+      throw error;
+    }
+    return data ?? undefined;
+  }
   return db.prepare("SELECT * FROM tenants WHERE id = ?").get(tenantId) as TenantRow | undefined;
 }
 
-function getMembership(userId: string, tenantId: string): MembershipRow | undefined {
+async function getMembership(userId: string, tenantId: string): Promise<MembershipRow | undefined> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase
+      .from("memberships")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) {
+      throw error;
+    }
+    return data ?? undefined;
+  }
   return db
     .prepare("SELECT * FROM memberships WHERE tenant_id = ? AND user_id = ?")
     .get(tenantId, userId) as MembershipRow | undefined;
@@ -1400,7 +1926,28 @@ function parseUsageTimestamp(value?: string): string | undefined {
   return parsed.toISOString();
 }
 
-function isLastOwner(tenantId: string, userId: string): boolean {
+async function isLastOwner(tenantId: string, userId: string): Promise<boolean> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { count: ownerCount, error: ownersError } = await supabase
+      .from("memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .eq("role", "owner");
+    if (ownersError) {
+      throw ownersError;
+    }
+    const { data: ownerRow, error: ownerError } = await supabase
+      .from("memberships")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("user_id", userId)
+      .eq("role", "owner")
+      .maybeSingle();
+    if (ownerError) {
+      throw ownerError;
+    }
+    return Boolean(ownerRow?.id) && (ownerCount ?? 0) <= 1;
+  }
   const owners = db
     .prepare("SELECT COUNT(*) as count FROM memberships WHERE tenant_id = ? AND role = 'owner'")
     .get(tenantId) as { count: number } | undefined;
@@ -1410,7 +1957,24 @@ function isLastOwner(tenantId: string, userId: string): boolean {
   return Boolean(isOwner?.exists) && (owners?.count ?? 0) <= 1;
 }
 
-function listMemberships(userId: string): Array<{ tenant_id: string; tenant_name: string; role: Role }> {
+async function listMemberships(
+  userId: string,
+): Promise<Array<{ tenant_id: string; tenant_name: string; role: Role }>> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase
+      .from("memberships")
+      .select("tenant_id, role, tenants(name)")
+      .eq("user_id", userId)
+      .order("tenant_id", { ascending: true });
+    if (error) {
+      throw error;
+    }
+    return (data ?? []).map((row) => ({
+      tenant_id: row.tenant_id as string,
+      tenant_name: (row.tenants as { name?: string } | null)?.name ?? "Workspace",
+      role: row.role as Role,
+    }));
+  }
   return db
     .prepare(
       "SELECT memberships.tenant_id as tenant_id, tenants.name as tenant_name, memberships.role as role FROM memberships JOIN tenants ON tenants.id = memberships.tenant_id WHERE memberships.user_id = ? ORDER BY tenants.name",
@@ -1418,7 +1982,24 @@ function listMemberships(userId: string): Array<{ tenant_id: string; tenant_name
     .all(userId) as Array<{ tenant_id: string; tenant_name: string; role: Role }>;
 }
 
-function listTenantUsers(tenantId: string): Array<{ id: string; email: string; role: Role }> {
+async function listTenantUsers(tenantId: string): Promise<Array<{ id: string; email: string; role: Role }>> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase
+      .from("memberships")
+      .select("role, users(id,email)")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: true });
+    if (error) {
+      throw error;
+    }
+    return (data ?? [])
+      .map((row) => ({
+        id: (row.users as { id?: string } | null)?.id ?? "",
+        email: (row.users as { email?: string } | null)?.email ?? "",
+        role: row.role as Role,
+      }))
+      .filter((row) => Boolean(row.id));
+  }
   return db
     .prepare(
       "SELECT users.id as id, users.email as email, memberships.role as role FROM memberships JOIN users ON users.id = memberships.user_id WHERE memberships.tenant_id = ? ORDER BY users.email",
@@ -1426,10 +2007,324 @@ function listTenantUsers(tenantId: string): Array<{ id: string; email: string; r
     .all(tenantId) as Array<{ id: string; email: string; role: Role }>;
 }
 
-function getInviteByTokenHash(tokenHash: string): InviteRow | undefined {
+async function getInviteByTokenHash(tokenHash: string): Promise<InviteRow | undefined> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase.from("invites").select("*").eq("token_hash", tokenHash).maybeSingle();
+    if (error) {
+      throw error;
+    }
+    return data ?? undefined;
+  }
   return db
     .prepare("SELECT * FROM invites WHERE token_hash = ?")
     .get(tokenHash) as InviteRow | undefined;
+}
+
+async function insertTenantRow(tenant: TenantRow): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("tenants").insert(tenant);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)").run(
+    tenant.id,
+    tenant.name,
+    tenant.created_at,
+  );
+}
+
+async function insertUserRow(user: UserRow): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("users").insert(user);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)").run(
+    user.id,
+    user.email,
+    user.password_hash,
+    user.created_at,
+  );
+}
+
+async function insertMembershipRow(membership: MembershipRow): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("memberships").insert(membership);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)").run(
+    membership.id,
+    membership.tenant_id,
+    membership.user_id,
+    membership.role,
+    membership.created_at,
+  );
+}
+
+async function deleteUserRow(userId: string): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("users").delete().eq("id", userId);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("DELETE FROM users WHERE id = ?").run(userId);
+}
+
+async function deleteTenantRow(tenantId: string): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("tenants").delete().eq("id", tenantId);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("DELETE FROM tenants WHERE id = ?").run(tenantId);
+}
+
+async function insertInviteRow(invite: InviteRow): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("invites").insert(invite);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare(
+    "INSERT INTO invites (id, tenant_id, email, role, token_hash, expires_at, created_at, accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  ).run(
+    invite.id,
+    invite.tenant_id,
+    invite.email,
+    invite.role,
+    invite.token_hash,
+    invite.expires_at,
+    invite.created_at,
+    invite.accepted_at ?? null,
+  );
+}
+
+async function markInviteAccepted(inviteId: string, acceptedAt: string): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("invites").update({ accepted_at: acceptedAt }).eq("id", inviteId);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("UPDATE invites SET accepted_at = ? WHERE id = ?").run(acceptedAt, inviteId);
+}
+
+async function insertWhatsappIdentityRow(
+  phone: string,
+  userId: string,
+  tenantId: string,
+  createdAt: string,
+): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase
+      .from("whatsapp_identities")
+      .insert({ phone, user_id: userId, tenant_id: tenantId, created_at: createdAt });
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("INSERT INTO whatsapp_identities (phone, user_id, tenant_id, created_at) VALUES (?, ?, ?, ?)").run(
+    phone,
+    userId,
+    tenantId,
+    createdAt,
+  );
+}
+
+async function updateUserPassword(userId: string, passwordHash: string): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("users").update({ password_hash: passwordHash }).eq("id", userId);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(passwordHash, userId);
+}
+
+async function updateMembershipRole(tenantId: string, userId: string, role: Role): Promise<boolean> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error, data } = await supabase
+      .from("memberships")
+      .update({ role })
+      .eq("tenant_id", tenantId)
+      .eq("user_id", userId)
+      .select("id");
+    if (error) {
+      throw error;
+    }
+    return Boolean(data && data.length);
+  }
+  const updated = db.prepare("UPDATE memberships SET role = ? WHERE tenant_id = ? AND user_id = ?").run(
+    role,
+    tenantId,
+    userId,
+  );
+  return updated.changes > 0;
+}
+
+async function deleteMembershipRow(tenantId: string, userId: string): Promise<boolean> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error, data } = await supabase
+      .from("memberships")
+      .delete()
+      .eq("tenant_id", tenantId)
+      .eq("user_id", userId)
+      .select("id");
+    if (error) {
+      throw error;
+    }
+    return Boolean(data && data.length);
+  }
+  const result = db.prepare("DELETE FROM memberships WHERE tenant_id = ? AND user_id = ?").run(tenantId, userId);
+  return result.changes > 0;
+}
+
+async function getTenantSettings(tenantId: string): Promise<Record<string, unknown>> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase
+      .from("tenant_settings")
+      .select("data")
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    if (error) {
+      throw error;
+    }
+    const row = data?.data;
+    if (!row) {
+      return {};
+    }
+    return typeof row === "string" ? JSON.parse(row) : (row as Record<string, unknown>);
+  }
+  const row = db.prepare("SELECT data FROM tenant_settings WHERE tenant_id = ?").get(tenantId) as
+    | { data: string }
+    | undefined;
+  if (!row?.data) {
+    return {};
+  }
+  return JSON.parse(row.data);
+}
+
+async function upsertTenantSettings(tenantId: string, data: Record<string, unknown>) {
+  const payload = SUPABASE_ENABLED ? data : JSON.stringify(data);
+  const now = nowIso();
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase
+      .from("tenant_settings")
+      .upsert({ tenant_id: tenantId, data: payload, updated_at: now });
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare(
+    `INSERT INTO tenant_settings (tenant_id, data, updated_at)
+     VALUES (?, ?, ?)
+     ON CONFLICT(tenant_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`,
+  ).run(tenantId, payload, now);
+}
+
+async function listAdminTenants(): Promise<
+  Array<{ id: string; name: string; created_at: string; members: number; owners: number }>
+> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data: tenants, error } = await supabase
+      .from("tenants")
+      .select("id,name,created_at")
+      .order("created_at", { ascending: false });
+    if (error) {
+      throw error;
+    }
+    const rows = tenants ?? [];
+    const enriched = await Promise.all(
+      rows.map(async (tenant) => {
+        const { count: membersCount, error: membersError } = await supabase
+          .from("memberships")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenant.id);
+        if (membersError) {
+          throw membersError;
+        }
+        const { count: ownersCount, error: ownersError } = await supabase
+          .from("memberships")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenant.id)
+          .eq("role", "owner");
+        if (ownersError) {
+          throw ownersError;
+        }
+        return {
+          id: tenant.id,
+          name: tenant.name,
+          created_at: tenant.created_at,
+          members: membersCount ?? 0,
+          owners: ownersCount ?? 0,
+        };
+      }),
+    );
+    return enriched;
+  }
+  return db
+    .prepare(
+      `SELECT tenants.id as id,
+        tenants.name as name,
+        tenants.created_at as created_at,
+        (SELECT COUNT(*) FROM memberships WHERE tenant_id = tenants.id) as members,
+        (SELECT COUNT(*) FROM memberships WHERE tenant_id = tenants.id AND role = 'owner') as owners
+       FROM tenants
+       ORDER BY tenants.created_at DESC`,
+    )
+    .all() as Array<{ id: string; name: string; created_at: string; members: number; owners: number }>;
+}
+
+async function listAdminTenantUsers(
+  tenantId: string,
+): Promise<Array<{ id: string; email: string; role: Role; joined_at: string }>> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase
+      .from("memberships")
+      .select("role, created_at, users(id,email)")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: true });
+    if (error) {
+      throw error;
+    }
+    return (data ?? [])
+      .map((row) => ({
+        id: (row.users as { id?: string } | null)?.id ?? "",
+        email: (row.users as { email?: string } | null)?.email ?? "",
+        role: row.role as Role,
+        joined_at: row.created_at as string,
+      }))
+      .filter((row) => Boolean(row.id));
+  }
+  return db
+    .prepare(
+      `SELECT users.id as id,
+        users.email as email,
+        memberships.role as role,
+        memberships.created_at as joined_at
+       FROM memberships
+       JOIN users ON users.id = memberships.user_id
+       WHERE memberships.tenant_id = ?
+       ORDER BY users.email`,
+    )
+    .all(tenantId) as Array<{ id: string; email: string; role: Role; joined_at: string }>;
 }
 
 declare global {

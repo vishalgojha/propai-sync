@@ -14,6 +14,7 @@ import {
   RefreshCw,
   CheckCircle2,
   ShieldCheck,
+  UserCog,
   Cpu,
   Package,
   Monitor,
@@ -27,7 +28,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Link } from 'react-router-dom';
 import { cn } from '../../lib/utils';
-import { ANDROID_APK_URL } from '../../lib/links';
+import { ADMIN_UI_ENABLED, ANDROID_APK_URL, LICENSING_DISABLED } from '../../lib/links';
 import { apiGet, apiPost, apiDeleteAuth, apiGetAuth, apiPatchAuth, apiPostAuth, apiPutAuth } from '../../lib/api';
 import QRCode from 'qrcode';
 
@@ -37,6 +38,7 @@ const ACTIVATION_KEY_STORAGE = 'propai_activation_key';
 const ACTIVATION_TOKEN_STORAGE = 'propai_activation_token';
 const CONTROL_TOKEN_STORAGE = 'propai_control_token';
 const CONTROL_TENANT_STORAGE = 'propai_control_tenant';
+const LICENSING_DISABLED_STORAGE = 'propai_licensing_disabled';
 
 type LicenseResponse = {
   valid: boolean;
@@ -106,6 +108,21 @@ type ControlUserRow = {
   id: string;
   email: string;
   role: string;
+};
+
+type AdminTenantRow = {
+  id: string;
+  name: string;
+  createdAt: string;
+  members: number;
+  owners: number;
+};
+
+type AdminTenantUser = {
+  id: string;
+  email: string;
+  role: string;
+  joinedAt: string;
 };
 
 type TenantSettings = {
@@ -398,6 +415,13 @@ export default function AppDashboard() {
   const [controlTenants, setControlTenants] = useState<ControlTenant[]>([]);
   const [teamMembers, setTeamMembers] = useState<ControlUserRow[]>([]);
   const [controlError, setControlError] = useState<string | null>(null);
+  const [adminTenants, setAdminTenants] = useState<AdminTenantRow[]>([]);
+  const [adminTenantName, setAdminTenantName] = useState('');
+  const [adminError, setAdminError] = useState<string | null>(null);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminCreating, setAdminCreating] = useState(false);
+  const [adminUsersByTenant, setAdminUsersByTenant] = useState<Record<string, AdminTenantUser[]>>({});
+  const [adminUsersLoading, setAdminUsersLoading] = useState<Record<string, boolean>>({});
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
@@ -430,6 +454,16 @@ export default function AppDashboard() {
   const [setupCheckLoading, setSetupCheckLoading] = useState(false);
   const [setupCheckError, setSetupCheckError] = useState<string | null>(null);
   const [setupAutoOpened, setSetupAutoOpened] = useState(false);
+  const [licensingDisabled, setLicensingDisabled] = useState(() => {
+    if (typeof window === 'undefined') {
+      return LICENSING_DISABLED;
+    }
+    const stored = window.localStorage.getItem(LICENSING_DISABLED_STORAGE);
+    if (stored === null) {
+      return LICENSING_DISABLED;
+    }
+    return stored === 'true';
+  });
   const [licenseInfo, setLicenseInfo] = useState<LicenseResponse | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [chatNotice, setChatNotice] = useState<string | null>(null);
@@ -513,6 +547,13 @@ export default function AppDashboard() {
       window.localStorage.removeItem(CONTROL_TENANT_STORAGE);
     }
   }, [selectedTenantId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.localStorage.setItem(LICENSING_DISABLED_STORAGE, licensingDisabled ? 'true' : 'false');
+  }, [licensingDisabled]);
 
   useEffect(() => {
     if (typeof document === 'undefined') {
@@ -1009,17 +1050,94 @@ export default function AppDashboard() {
     setInviteToken(null);
   };
 
+  const loadAdminTenants = async () => {
+    setAdminLoading(true);
+    setAdminError(null);
+    try {
+      const response = await apiGet<{
+        tenants: Array<{
+          id: string;
+          name: string;
+          created_at: string;
+          members: number;
+          owners: number;
+        }>;
+      }>('/admin/tenants');
+      const rows = response.tenants ?? [];
+      setAdminTenants(
+        rows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          createdAt: row.created_at,
+          members: row.members,
+          owners: row.owners,
+        })),
+      );
+    } catch (error) {
+      setAdminError(normalizeError(error, 'Unable to load tenants.'));
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleAdminCreateTenant = async () => {
+    if (!adminTenantName.trim()) {
+      setAdminError('Workspace name is required.');
+      return;
+    }
+    setAdminCreating(true);
+    setAdminError(null);
+    try {
+      await apiPost<{ tenant: { id: string; name: string } }>('/admin/tenants', {
+        name: adminTenantName.trim(),
+      });
+      setAdminTenantName('');
+      await loadAdminTenants();
+    } catch (error) {
+      setAdminError(normalizeError(error, 'Unable to create tenant.'));
+    } finally {
+      setAdminCreating(false);
+    }
+  };
+
+  const loadAdminUsers = async (tenantId: string) => {
+    setAdminUsersLoading((prev) => ({ ...prev, [tenantId]: true }));
+    setAdminError(null);
+    try {
+      const response = await apiGet<{
+        users: Array<{ id: string; email: string; role: string; joined_at: string }>;
+      }>(`/admin/tenants/${tenantId}/users`);
+      const users = response.users ?? [];
+      setAdminUsersByTenant((prev) => ({
+        ...prev,
+        [tenantId]: users.map((row) => ({
+          id: row.id,
+          email: row.email,
+          role: row.role,
+          joinedAt: row.joined_at,
+        })),
+      }));
+    } catch (error) {
+      setAdminError(normalizeError(error, 'Unable to load tenant users.'));
+    } finally {
+      setAdminUsersLoading((prev) => ({ ...prev, [tenantId]: false }));
+    }
+  };
+
   useEffect(() => {
     loadGatewayHealth();
     loadFullHealth();
   }, []);
 
   useEffect(() => {
+    if (licensingDisabled) {
+      return;
+    }
     if (activationToken || activationKey) {
       handleRefreshStatus();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [licensingDisabled]);
 
   useEffect(() => {
     if (!controlToken) {
@@ -1028,6 +1146,17 @@ export default function AppDashboard() {
     loadControlProfile(controlToken);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controlToken]);
+
+  useEffect(() => {
+    if (!ADMIN_UI_ENABLED) {
+      return;
+    }
+    if (activeTab !== 'Admin') {
+      return;
+    }
+    loadAdminTenants();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   useEffect(() => {
     if (!controlToken || !selectedTenantId) {
@@ -1093,6 +1222,12 @@ export default function AppDashboard() {
   };
 
   const handleRequestTrial = async () => {
+    if (licensingDisabled) {
+      setTrialError(null);
+      setTrialDetails(null);
+      setTrialMessage('Licensing is disabled for this environment.');
+      return;
+    }
     if (!email.trim()) {
       setTrialError('Please enter your email address to request access.');
       setShowErrorDetails(false);
@@ -1125,6 +1260,12 @@ export default function AppDashboard() {
   };
 
   const handleActivateTrial = async () => {
+    if (licensingDisabled) {
+      setTrialError(null);
+      setTrialDetails(null);
+      setTrialMessage('Licensing is disabled for this environment.');
+      return;
+    }
     if (!activationKey.trim()) {
       setTrialError('Please enter your activation key.');
       setShowErrorDetails(false);
@@ -1159,6 +1300,12 @@ export default function AppDashboard() {
   };
 
   const handleRefreshStatus = async () => {
+    if (licensingDisabled) {
+      setTrialError(null);
+      setTrialDetails(null);
+      setTrialMessage('Licensing is disabled for this environment.');
+      return;
+    }
     const token = activationToken || activationKey;
     if (!token.trim()) {
       setTrialError('Please enter your activation key first.');
@@ -1304,7 +1451,8 @@ export default function AppDashboard() {
     }
   };
 
-  const licenseActive = trialStatus === 'active';
+  const licensingEnabled = !licensingDisabled;
+  const licenseActive = licensingDisabled || trialStatus === 'active';
   const hasGroqKey = Boolean(tenantSettings.providers?.groq?.apiKey);
   const hasOpenRouterKey = Boolean(tenantSettings.providers?.openrouter?.apiKey);
   const hasOpenAiKey = Boolean(tenantSettings.providers?.openai?.apiKey);
@@ -1391,6 +1539,18 @@ export default function AppDashboard() {
     chatEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [activeSessionId, activeMessages.length]);
 
+  const settingsItems = [
+    { id: 'Settings', label: 'Settings', icon: Settings },
+    { id: 'Support', label: 'Support', icon: LifeBuoy },
+    { id: 'Activity Log', label: 'Activity Log', icon: ClipboardList },
+    { id: 'Resources', label: 'Resources', icon: FolderOpen },
+    { id: 'Docs', label: 'Docs', icon: FileText },
+  ];
+
+  if (ADMIN_UI_ENABLED) {
+    settingsItems.unshift({ id: 'Admin', label: 'Admin', icon: UserCog });
+  }
+
   const sidebarGroups = [
     {
       label: 'Chat',
@@ -1422,13 +1582,7 @@ export default function AppDashboard() {
     },
     {
       label: 'Settings',
-      items: [
-        { id: 'Settings', label: 'Settings', icon: Settings },
-        { id: 'Support', label: 'Support', icon: LifeBuoy },
-        { id: 'Activity Log', label: 'Activity Log', icon: ClipboardList },
-        { id: 'Resources', label: 'Resources', icon: FolderOpen },
-        { id: 'Docs', label: 'Docs', icon: FileText },
-      ]
+      items: settingsItems,
     }
   ];
 
@@ -1443,15 +1597,19 @@ export default function AppDashboard() {
                   <h2 className="text-lg font-bold">Assistant</h2>
                   <p className="text-sm text-muted-foreground">Chat with your AI assistant to see how it handles leads.</p>
                 </div>
-                {licenseActive ? (
-                  <div className="bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-emerald-500/20">
-                    <ShieldCheck className="w-3 h-3" /> License active
-                  </div>
-                ) : (
-                  <div className="bg-destructive/10 text-destructive px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-destructive/20">
-                    <ShieldCheck className="w-3 h-3" /> License required
-                  </div>
-                )}
+                  {licensingDisabled ? (
+                    <div className="bg-amber-500/10 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-amber-500/20">
+                      <ShieldCheck className="w-3 h-3" /> Licensing bypassed
+                    </div>
+                  ) : licenseActive ? (
+                    <div className="bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-emerald-500/20">
+                      <ShieldCheck className="w-3 h-3" /> License active
+                    </div>
+                  ) : (
+                    <div className="bg-destructive/10 text-destructive px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-destructive/20">
+                      <ShieldCheck className="w-3 h-3" /> License required
+                    </div>
+                  )}
               </div>
               
               <div className="flex-1 overflow-y-auto p-6">
@@ -1464,12 +1622,12 @@ export default function AppDashboard() {
                       {sessions.find((session) => session.id === activeSessionId)?.name ?? 'Main Session'}
                     </h3>
                     <div className="w-px h-12 bg-border"></div>
-                    <div className="space-y-2 max-w-xs">
-                      {!licenseActive ? (
-                        <p className="text-sm font-medium text-destructive flex items-center justify-center gap-2">
-                          <AlertCircle className="w-4 h-4" /> License required to send messages.
-                        </p>
-                      ) : gatewayHealth !== 'online' ? (
+                      <div className="space-y-2 max-w-xs">
+                        {licensingEnabled && !licenseActive ? (
+                          <p className="text-sm font-medium text-destructive flex items-center justify-center gap-2">
+                            <AlertCircle className="w-4 h-4" /> License required to send messages.
+                          </p>
+                        ) : gatewayHealth !== 'online' ? (
                         <p className="text-sm font-medium text-amber-500 flex items-center justify-center gap-2">
                           <AlertCircle className="w-4 h-4" /> Gateway not connected. Please try again.
                         </p>
@@ -1543,10 +1701,12 @@ export default function AppDashboard() {
                   <p className="mt-3 text-xs font-semibold text-muted-foreground">{chatNotice}</p>
                 )}
               </div>
-            </section>
+              </section>
+            )}
 
             {/* Trial Access Section (Visible on Assistant page as per user flow) */}
-            <section className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+            {licensingEnabled && (
+              <section className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
               <div className="p-6 border-b border-border bg-muted/30">
                 <h2 className="text-lg font-bold">Trial access</h2>
                 <p className="text-sm text-muted-foreground">
@@ -2563,10 +2723,31 @@ export default function AppDashboard() {
                 </div>
               )}
               {controlError && <p className="text-sm text-destructive">{controlError}</p>}
-            </section>
+              </section>
 
-            <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
-              <h2 className="text-lg font-bold">Invite team members</h2>
+              <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
+                <h2 className="text-lg font-bold">Licensing</h2>
+                <p className="text-sm text-muted-foreground">
+                  Temporarily bypass licensing checks in the UI while the licensing service is offline.
+                </p>
+                <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/30 px-4 py-3">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold">Disable licensing checks</p>
+                    <p className="text-xs text-muted-foreground">
+                      Chat and setup will stay unblocked until licensing is back online.
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={licensingDisabled}
+                    onChange={(event) => setLicensingDisabled(event.target.checked)}
+                    className="h-5 w-5 accent-primary"
+                  />
+                </label>
+              </section>
+
+              <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
+                <h2 className="text-lg font-bold">Invite team members</h2>
               {!controlToken ? (
                 <p className="text-sm text-muted-foreground">Sign in to invite your team.</p>
               ) : (
@@ -2587,6 +2768,113 @@ export default function AppDashboard() {
                       Invite token: {inviteToken}
                     </div>
                   )}
+                </div>
+              )}
+            </section>
+          </div>
+        );
+      case 'Admin':
+        return (
+          <div className="space-y-6">
+            <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
+              <div className="space-y-2">
+                <h2 className="text-lg font-bold">Platform Admin</h2>
+                <p className="text-sm text-muted-foreground">
+                  Owner-only workspace management. This tab appears when <span className="font-mono">VITE_ADMIN_UI=true</span>.
+                </p>
+              </div>
+              {!ADMIN_UI_ENABLED && (
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-lg p-3">
+                  Admin UI is disabled. Set <span className="font-mono">VITE_ADMIN_UI=true</span> and configure
+                  <span className="font-mono"> CONTROL_ADMIN_KEY</span> on the web service to enable this view.
+                </div>
+              )}
+              <div className="bg-muted/30 border border-border rounded-xl p-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Admin access</p>
+                <p className="text-sm text-muted-foreground">
+                  Requests are signed server-side with <span className="font-mono">CONTROL_ADMIN_KEY</span>.
+                </p>
+              </div>
+              <div className="flex flex-col md:flex-row gap-3 items-stretch">
+                <input
+                  value={adminTenantName}
+                  onChange={(event) => setAdminTenantName(event.target.value)}
+                  placeholder="New workspace name"
+                  className="flex-1 bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm"
+                />
+                <button
+                  onClick={handleAdminCreateTenant}
+                  disabled={adminCreating}
+                  className="bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold"
+                >
+                  {adminCreating ? 'Creating…' : 'Create workspace'}
+                </button>
+              </div>
+              {adminError && <p className="text-sm text-destructive">{adminError}</p>}
+            </section>
+
+            <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold">Workspaces</h3>
+                  <p className="text-xs text-muted-foreground">Manage broker accounts and owners.</p>
+                </div>
+                <button
+                  onClick={loadAdminTenants}
+                  disabled={adminLoading}
+                  className="text-xs font-semibold underline"
+                >
+                  {adminLoading ? 'Refreshing…' : 'Refresh list'}
+                </button>
+              </div>
+
+              {adminLoading && adminTenants.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Loading tenants…</p>
+              ) : adminTenants.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No workspaces yet. Create the first one above.</p>
+              ) : (
+                <div className="space-y-4">
+                  {adminTenants.map((tenant) => (
+                    <div key={tenant.id} className="border border-border rounded-xl p-4 space-y-3">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold">{tenant.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            ID {tenant.id} · Created {formatDate(tenant.createdAt) ?? '—'}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => loadAdminUsers(tenant.id)}
+                          className="text-xs font-semibold underline"
+                        >
+                          {adminUsersLoading[tenant.id] ? 'Loading…' : 'View users'}
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="bg-muted/50 border border-border rounded-full px-3 py-1">
+                          Members {tenant.members}
+                        </span>
+                        <span className="bg-muted/50 border border-border rounded-full px-3 py-1">
+                          Owners {tenant.owners}
+                        </span>
+                      </div>
+                      {adminUsersByTenant[tenant.id] && (
+                        <div className="border-t border-border pt-3 space-y-2">
+                          {adminUsersByTenant[tenant.id].length === 0 ? (
+                            <p className="text-xs text-muted-foreground">No users attached yet.</p>
+                          ) : (
+                            adminUsersByTenant[tenant.id].map((user) => (
+                              <div key={user.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs">
+                                <span className="font-medium">{user.email}</span>
+                                <span className="text-muted-foreground">Role: {user.role}</span>
+                                <span className="text-muted-foreground">Joined {formatDate(user.joinedAt) ?? '—'}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </section>

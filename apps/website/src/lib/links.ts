@@ -7,3 +7,9 @@ export const ANDROID_APK_URL =
 
 export const WHATSAPP_JOIN_URL =
   import.meta.env.VITE_WHATSAPP_JOIN_URL ?? '';
+
+export const LICENSING_DISABLED =
+  (import.meta.env.VITE_DISABLE_LICENSING ?? '').toString().toLowerCase() === 'true';
+
+export const ADMIN_UI_ENABLED =
+  (import.meta.env.VITE_ADMIN_UI ?? '').toString().toLowerCase() === 'true';

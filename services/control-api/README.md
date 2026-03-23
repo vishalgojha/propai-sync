@@ -14,6 +14,8 @@ This service provides basic multi-tenant user management and role-based access c
 - `CONTROL_ADMIN_KEY` (optional)
 - `CONTROL_JWT_TTL_DAYS` (default: 30)
 - `CONTROL_INVITE_TTL_DAYS` (default: 7)
+- `SUPABASE_URL` (optional, enables Supabase storage)
+- `SUPABASE_SERVICE_ROLE_KEY` (optional, enables Supabase storage)
 
 ## Endpoints
 - `POST /v1/auth/register` `{ email, password, tenantName }`
@@ -29,3 +31,10 @@ This service provides basic multi-tenant user management and role-based access c
 ## Notes
 - Invites return an `inviteToken`. You can email it or embed in a link.
 - This is a minimal RBAC layer; wire it to the hosted UI and gateway for full isolation.
+
+## Supabase migration
+1. Apply `supabase-schema.sql` in the Supabase SQL editor.
+2. Set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on the control-api service.
+3. Run migration (one time):
+   - `pnpm --filter @propai/control-api migrate:sqlite-to-supabase`
+   - Optional envs: `SQLITE_PATH`, `CHUNK_SIZE`, `DRY_RUN=true`, `SKIP_USAGE=true`
