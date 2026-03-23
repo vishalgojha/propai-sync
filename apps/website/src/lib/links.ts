@@ -1,5 +1,5 @@
 export const APP_URL =
-  import.meta.env.VITE_APP_URL ?? 'https://www.propai.live/app';
+  import.meta.env.VITE_APP_URL ?? 'https://app.propai.live';
 
 export const ANDROID_APK_URL =
   import.meta.env.VITE_ANDROID_APK_URL ??

@@ -18,6 +18,8 @@ const fallbackGatewayUrl = isRailway ? 'http://gateway.railway.internal:8080' : 
 const fallbackControlApiUrl = isRailway ? 'http://control-api.railway.internal:8080' : 'http://localhost:8788';
 const GATEWAY_URL = (process.env.GATEWAY_URL || fallbackGatewayUrl).replace(/\/+$/, '');
 const CONTROL_API_URL = (process.env.CONTROL_API_URL || fallbackControlApiUrl).replace(/\/+$/, '');
+const CONTROL_UI_REDIRECT_URL = (process.env.CONTROL_UI_REDIRECT_URL || process.env.VITE_APP_URL || 'https://app.propai.live')
+  .replace(/\/+$/, '');
 const META_WA_VERIFY_TOKEN = process.env.META_WA_VERIFY_TOKEN || process.env.WHATSAPP_VERIFY_TOKEN || '';
 const META_WA_APP_SECRET = process.env.META_WA_APP_SECRET || process.env.WHATSAPP_APP_SECRET || '';
 const GATEWAY_TOKEN = process.env.GATEWAY_TOKEN || process.env.PROPAI_GATEWAY_TOKEN || '';
@@ -334,6 +336,11 @@ app.post('/api/licensing/refresh', (req, res) => {
 
 app.post('/api/licensing/verify', (req, res) => {
   forwardJson(res, `${LICENSING_URL}/verify`, req.body);
+});
+
+app.get(/^\/app(\/.*)?$/, (req, res) => {
+  const suffix = req.originalUrl.replace(/^\/app/, '');
+  res.redirect(302, `${CONTROL_UI_REDIRECT_URL}${suffix}`);
 });
 
 app.all('/api/admin/*', async (req, res) => {
