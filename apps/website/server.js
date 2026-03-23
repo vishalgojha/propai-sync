@@ -86,6 +86,10 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true, service: 'propai-web' });
 });
 
+app.get('/healthz', (_req, res) => {
+  res.status(200).send('ok');
+});
+
 app.get('/api/health/ui', (_req, res) => {
   const indexPath = path.join(distDir, 'index.html');
   const exists = fs.existsSync(indexPath);
