@@ -7,12 +7,22 @@ import TermsOfService from './marketing/pages/TermsOfService';
 import CookiePolicy from './marketing/pages/CookiePolicy';
 import ContactPage from './marketing/pages/ContactPage';
 
+function isAppHost(hostname: string) {
+  if (!hostname) {
+    return false;
+  }
+  return hostname === 'app.propai.live' || hostname.startsWith('app.') || hostname.includes('gateway');
+}
+
 export default function App() {
+  const hostname = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
+  const serveDashboardAtRoot = isAppHost(hostname);
+
   return (
     <ThemeProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<MarketingPage />} />
+          <Route path="/" element={serveDashboardAtRoot ? <AppDashboard /> : <MarketingPage />} />
           <Route path="/app" element={<AppDashboard />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
