@@ -280,6 +280,7 @@ const CONTROL_UI_URL = (process.env.CONTROL_UI_URL || process.env.APP_URL || "ht
   "",
 );
 
+// Health payload exposes runtime storage mode so hosted deploys are easy to verify.
 app.get("/health", (_req, res) => {
   res.json({
     ok: true,
