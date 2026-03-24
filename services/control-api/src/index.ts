@@ -283,6 +283,8 @@ const CONTROL_UI_URL = (process.env.CONTROL_UI_URL || process.env.APP_URL || "ht
 app.get("/health", (_req, res) => {
   res.json({
     ok: true,
+    storageMode: SUPABASE_ENABLED ? "supabase" : "sqlite",
+    supabaseConfigured: SUPABASE_ENABLED,
     dbPath: DB_PATH,
     gatewayUrlConfigured: Boolean(CONTROL_GATEWAY_URL),
     gatewayTokenConfigured: Boolean(CONTROL_GATEWAY_TOKEN),
