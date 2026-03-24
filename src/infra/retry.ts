@@ -71,6 +71,8 @@ export async function withRetry<T>(
   }
 }
 
+export const retryAsync = withRetry;
+
 type FetchRetryOptions = RetryOptions & {
   fetchImpl?: typeof fetch;
   retryOnStatuses?: number[];
@@ -133,3 +135,4 @@ export async function fetchWithRetry(
     },
   );
 }
+

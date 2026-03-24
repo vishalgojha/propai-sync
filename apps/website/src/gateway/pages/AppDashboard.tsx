@@ -573,19 +573,6 @@ export default function AppDashboard() {
     void loadSetupCheck();
   }, [activeTab]);
 
-  useEffect(() => {
-    if (!setupCheck) {
-      return;
-    }
-    if (setupReady) {
-      setSetupAutoOpened(false);
-      return;
-    }
-    if (!setupAutoOpened) {
-      setActiveTab('Setup');
-      setSetupAutoOpened(true);
-    }
-  }, [setupCheck, setupReady, setupAutoOpened]);
 
   const loadGatewayHealth = async () => {
     setGatewayHealth('checking');
@@ -1504,6 +1491,19 @@ export default function AppDashboard() {
       detail: 'Set CONTROL_GATEWAY_URL and CONTROL_GATEWAY_TOKEN on control-api.',
     },
   ];
+  useEffect(() => {
+    if (!setupCheck) {
+      return;
+    }
+    if (setupReady) {
+      setSetupAutoOpened(false);
+      return;
+    }
+    if (!setupAutoOpened) {
+      setActiveTab('Setup');
+      setSetupAutoOpened(true);
+    }
+  }, [setupCheck, setupReady, setupAutoOpened]);
   const setupChecklistAllOk = setupChecklist.every((item) => item.ok);
   const setupMissingLabels = setupChecklist.filter((item) => !item.ok).map((item) => item.label);
   const setupMissingSummary = setupMissingLabels.length > 0 ? setupMissingLabels.join(' · ') : '';
@@ -3338,3 +3338,4 @@ function ZapIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
