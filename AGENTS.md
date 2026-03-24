@@ -1,5 +1,38 @@
 # Repository Guidelines
 
+- **PropAi Sync Snapshot (2026-03-23)**  
+  Purpose: quick project map so agents stop asking basic questions.
+  - Repo: `C:\Users\visha\propai-sync` (PropAi Sync)
+  - Hosting: Railway (project: `propai-sync`, env: `production`)
+  - Services (Railway):
+    - `gateway` → Control UI + gateway runtime
+    - `control-api` → onboarding + tenants/users + WhatsApp identities
+    - `licensing` → activation/refresh/verify endpoints
+    - `website` → marketing site + proxy APIs
+  - Domains (intended):
+    - `app.propai.live` → **gateway** (Control UI)
+    - `api.propai.live` → **control-api**
+    - `license.propai.live` → **licensing**
+    - `www.propai.live` → **website**
+    - `www.propai.live/app` should redirect → `https://app.propai.live`
+  - DNS authority:
+    - Current authoritative NS returns `dns1.domain.name` / `dns2.domain.name` (not GoDaddy).
+    - If domains don’t route correctly, update DNS in **domain.name** (or switch NS to GoDaddy).
+  - Supabase:
+    - Project URL: `https://wnrwntumacbirbndfvwg.supabase.co`
+    - Schema file: `services/control-api/supabase-schema.sql` (must be applied once).
+    - Required envs on `control-api`: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+    - Migration script: `pnpm --filter @propai/control-api migrate:sqlite-to-supabase`
+      - Local `.data/control.sqlite` is empty; migration from local yields 0 rows (expected).
+  - Recent fixes:
+    - Website `/app` redirect added in `apps/website/server.js`.
+    - Website health endpoint `/healthz`.
+    - Control UI links default to `https://app.propai.live` in `apps/website/src/lib/links.ts`.
+  - Known issues to verify:
+    - `app.propai.live` showing marketing site = DNS or Railway mapping issue.
+    - `/app` blank until website redeploy picks up redirect.
+    - Supabase counts stay 0 until Control UI submits a new request and control-api is redeployed.
+
 - Repo: https://github.com/propai/propai
 - In chat replies, file references must be repo-root relative only (example: `extensions/bluebubbles/src/channel.ts:80`); never absolute paths or `~/...`.
 - GitHub issues/comments/PR comments: use literal multiline strings or `-F - <<'EOF'` (or $'...') for real newlines; never embed "\\n".
