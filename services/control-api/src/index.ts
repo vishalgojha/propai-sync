@@ -285,6 +285,8 @@ app.get("/health", (_req, res) => {
     ok: true,
     storageMode: SUPABASE_ENABLED ? "supabase" : "sqlite",
     supabaseConfigured: SUPABASE_ENABLED,
+    supabaseUrlConfigured: Boolean(SUPABASE_URL),
+    supabaseServiceRoleKeyConfigured: Boolean(SUPABASE_SERVICE_ROLE_KEY),
     dbPath: DB_PATH,
     gatewayUrlConfigured: Boolean(CONTROL_GATEWAY_URL),
     gatewayTokenConfigured: Boolean(CONTROL_GATEWAY_TOKEN),
