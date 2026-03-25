@@ -45,7 +45,28 @@ if (!jwtSecret) {
 
 const ROLE_VALUES = ["owner", "manager", "agent", "viewer"] as const;
 type Role = (typeof ROLE_VALUES)[number];
+const WHATSAPP_ONBOARDING_STEP_VALUES = ["ownerName", "businessName", "city", "email", "businessType", "done"] as const;
+type WhatsAppOnboardingStep = (typeof WHATSAPP_ONBOARDING_STEP_VALUES)[number];
 const ALLOWED_USAGE_PROVIDERS = new Set(["openai", "anthropic", "xai", "elevenlabs"]);
+
+type WorkspaceProfile = {
+  ownerName?: string;
+  businessName?: string;
+  city?: string;
+  email?: string;
+  businessType?: string;
+  phone?: string;
+};
+
+type WhatsAppOnboardingState = {
+  status?: "active" | "complete";
+  step?: WhatsAppOnboardingStep;
+  startedAt?: string;
+  updatedAt?: string;
+  completedAt?: string;
+  emailSkipped?: boolean;
+  source?: string;
+};
 
 type AuthClaims = JwtPayload & {
   typ: "control";
@@ -109,6 +130,12 @@ const whatsappJoinSchema = z.object({
   name: z.string().min(1).optional(),
   tenantName: z.string().min(2).optional(),
   email: z.string().email().optional(),
+});
+
+const whatsappOnboardingMessageSchema = z.object({
+  phone: z.string().min(6),
+  text: z.string().min(1),
+  name: z.string().min(1).optional(),
 });
 
 const createTenantSchema = z.object({
@@ -232,8 +259,29 @@ function registerGlobalErrorHandlers() {
   });
 }
 
+const workspaceProfileSchema = z.object({
+  ownerName: z.string().min(1).optional(),
+  businessName: z.string().min(2).optional(),
+  city: z.string().min(2).optional(),
+  email: z.string().email().optional(),
+  businessType: z.string().min(2).optional(),
+  phone: z.string().min(6).optional(),
+});
+
+const whatsappOnboardingStateSchema = z.object({
+  status: z.enum(["active", "complete"]).optional(),
+  step: z.enum(WHATSAPP_ONBOARDING_STEP_VALUES).optional(),
+  startedAt: z.string().min(1).optional(),
+  updatedAt: z.string().min(1).optional(),
+  completedAt: z.string().min(1).optional(),
+  emailSkipped: z.boolean().optional(),
+  source: z.string().min(1).optional(),
+});
+
 const settingsSchema = z.object({
   onboardingComplete: z.boolean().optional(),
+  workspaceProfile: workspaceProfileSchema.optional(),
+  whatsappOnboarding: whatsappOnboardingStateSchema.optional(),
   whatsapp: z
     .object({
       phone: z.string().min(6).optional(),
@@ -276,7 +324,7 @@ if (SUPABASE_ENABLED) {
   console.log("[control-api] storage: supabase");
 }
 
-const CONTROL_UI_URL = (process.env.CONTROL_UI_URL || process.env.APP_URL || "https://www.propai.live/app").replace(
+const CONTROL_UI_URL = (process.env.CONTROL_UI_URL || process.env.APP_URL || "https://app.propai.live").replace(
   /\/+$/,
   "",
 );
@@ -624,6 +672,38 @@ app.post("/v1/whatsapp/join", async (req, res) => {
     tenant: { id: tenantId, name: tenantName, role: "owner" },
     existing: false,
   });
+});
+
+app.post("/v1/whatsapp/onboarding/message", async (req, res) => {
+  const payload = whatsappOnboardingMessageSchema.safeParse(req.body);
+  if (!payload.success) {
+    res.status(400).json({ error: payload.error.message });
+    return;
+  }
+
+  const phone = normalizeWhatsAppPhone(payload.data.phone);
+  if (!phone) {
+    res.status(400).json({ error: "Phone required." });
+    return;
+  }
+
+  const text = payload.data.text.trim();
+  try {
+    const result = await handleWhatsAppOnboardingMessage({
+      phone,
+      text,
+      senderName: payload.data.name?.trim() || undefined,
+    });
+    res.json(result);
+  } catch (error) {
+    console.error(
+      `[control-api] whatsapp onboarding failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}`
+    );
+    res.status(500).json({
+      handled: isWhatsAppOnboardingTrigger(text),
+      reply: "We hit a setup hiccup. Please send join again in a minute.",
+    });
+  }
 });
 
 app.get("/v1/me", requireAuth, async (req, res) => {
@@ -1844,6 +1924,395 @@ function normalizeWhatsAppPhone(value: string): string | null {
 function phoneToEmail(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   return `wa+${digits}@propai.live`;
+}
+
+function isSyntheticWhatsAppEmail(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  return normalized.startsWith("wa+") && normalized.endsWith("@propai.live");
+}
+
+function isWhatsAppOnboardingTrigger(text: string): boolean {
+  const normalized = text.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  return (
+    normalized === "join" ||
+    normalized === "start" ||
+    normalized === "get started" ||
+    normalized.startsWith("join ") ||
+    normalized.startsWith("start ")
+  );
+}
+
+function readWorkspaceProfile(settings: Record<string, unknown>): WorkspaceProfile {
+  const raw = settings.workspaceProfile;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return {};
+  }
+  return { ...(raw as WorkspaceProfile) };
+}
+
+function readWhatsAppOnboardingState(settings: Record<string, unknown>): WhatsAppOnboardingState {
+  const raw = settings.whatsappOnboarding;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return {};
+  }
+  return { ...(raw as WhatsAppOnboardingState) };
+}
+
+function resolveWhatsAppOnboardingStep(
+  profile: WorkspaceProfile,
+  onboarding: WhatsAppOnboardingState,
+  userEmail: string,
+): WhatsAppOnboardingStep {
+  if (!profile.ownerName?.trim()) {
+    return "ownerName";
+  }
+  if (!profile.businessName?.trim()) {
+    return "businessName";
+  }
+  if (!profile.city?.trim()) {
+    return "city";
+  }
+  const hasRealEmail = Boolean(profile.email?.trim()) || (Boolean(userEmail.trim()) && !isSyntheticWhatsAppEmail(userEmail));
+  if (!hasRealEmail && !onboarding.emailSkipped) {
+    return "email";
+  }
+  if (!profile.businessType?.trim()) {
+    return "businessType";
+  }
+  return "done";
+}
+
+function buildWhatsAppOnboardingPrompt(step: WhatsAppOnboardingStep, profile: WorkspaceProfile): string {
+  switch (step) {
+    case "ownerName":
+      return "Welcome to PropAi. Let us get your workspace ready. What name should I use for you?";
+    case "businessName":
+      return `Nice to meet you${profile.ownerName ? `, ${profile.ownerName}` : ""}. What should we call your business or team inside PropAi?`;
+    case "city":
+      return "Which city or market do you mainly work in?";
+    case "email":
+      return 'What email should we use for recovery, billing, and admin updates? Reply "skip" if you want to add it later.';
+    case "businessType":
+      return "Last quick one: what best describes you — independent broker, broker team, channel partner, or developer sales?";
+    case "done":
+    default:
+      return "You are all set.";
+  }
+}
+
+async function updateUserEmailRow(userId: string, email: string): Promise<void> {
+  const normalized = email.trim().toLowerCase();
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("users").update({ email: normalized }).eq("id", userId);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("UPDATE users SET email = ? WHERE id = ?").run(normalized, userId);
+}
+
+async function updateTenantNameRow(tenantId: string, name: string): Promise<void> {
+  const normalized = name.trim();
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("tenants").update({ name: normalized }).eq("id", tenantId);
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare("UPDATE tenants SET name = ? WHERE id = ?").run(normalized, tenantId);
+}
+
+async function createWhatsAppOnboardingAccount(params: {
+  phone: string;
+  senderName?: string;
+}): Promise<{ user: UserRow; tenant: TenantRow; createdAt: string }> {
+  const now = nowIso();
+  const tenantId = randomId("tnt");
+  const userId = randomId("usr");
+  const membershipId = randomId("mem");
+  const tenantName = params.senderName?.trim() || `Broker ${params.phone.replace(/\D/g, "").slice(-4)}`;
+  const email = phoneToEmail(params.phone);
+  const tempPassword = `${createToken()}${createToken()}`;
+
+  try {
+    if (!SUPABASE_ENABLED) {
+      db.exec("BEGIN;");
+      db.prepare("INSERT INTO tenants (id, name, created_at) VALUES (?, ?, ?)").run(tenantId, tenantName, now);
+      db.prepare("INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)").run(
+        userId,
+        email,
+        hashPassword(tempPassword),
+        now,
+      );
+      db.prepare(
+        "INSERT INTO memberships (id, tenant_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)",
+      ).run(membershipId, tenantId, userId, "owner", now);
+      db.prepare(
+        "INSERT INTO whatsapp_identities (phone, user_id, tenant_id, created_at) VALUES (?, ?, ?, ?)",
+      ).run(params.phone, userId, tenantId, now);
+      db.exec("COMMIT;");
+    } else {
+      await insertTenantRow({ id: tenantId, name: tenantName, created_at: now });
+      await insertUserRow({ id: userId, email, password_hash: hashPassword(tempPassword), created_at: now });
+      await insertMembershipRow({
+        id: membershipId,
+        tenant_id: tenantId,
+        user_id: userId,
+        role: "owner",
+        created_at: now,
+      });
+      await insertWhatsappIdentityRow(params.phone, userId, tenantId, now);
+    }
+  } catch (error) {
+    if (!SUPABASE_ENABLED) {
+      db.exec("ROLLBACK;");
+    } else {
+      try {
+        await deleteMembershipRow(tenantId, userId);
+        await deleteUserRow(userId);
+        await deleteTenantRow(tenantId);
+      } catch {
+        // best-effort cleanup
+      }
+    }
+    throw error;
+  }
+
+  return {
+    createdAt: now,
+    user: { id: userId, email, password_hash: "", created_at: now },
+    tenant: { id: tenantId, name: tenantName, created_at: now },
+  };
+}
+
+async function handleWhatsAppOnboardingMessage(params: {
+  phone: string;
+  text: string;
+  senderName?: string;
+}): Promise<{ handled: boolean; reply?: string; loginUrl?: string; complete?: boolean }> {
+  const answer = params.text.trim();
+  const explicitStart = isWhatsAppOnboardingTrigger(answer);
+
+  let identity = await getWhatsappIdentity(params.phone);
+  let user: UserRow | undefined;
+  let tenant: TenantRow | undefined;
+
+  if (!identity) {
+    if (!explicitStart) {
+      return { handled: false };
+    }
+    const created = await createWhatsAppOnboardingAccount({
+      phone: params.phone,
+      senderName: params.senderName,
+    });
+    identity = { phone: params.phone, user_id: created.user.id, tenant_id: created.tenant.id };
+    user = created.user;
+    tenant = created.tenant;
+
+    const initialProfile: WorkspaceProfile = {
+      phone: params.phone,
+      ...(params.senderName?.trim() ? { ownerName: params.senderName.trim() } : {}),
+    };
+    const initialOnboarding: WhatsAppOnboardingState = {
+      status: "active",
+      step: initialProfile.ownerName ? "businessName" : "ownerName",
+      startedAt: created.createdAt,
+      updatedAt: created.createdAt,
+      source: "whatsapp-cloud",
+    };
+    await upsertTenantSettings(created.tenant.id, {
+      whatsapp: { phone: params.phone },
+      workspaceProfile: initialProfile as unknown as Record<string, unknown>,
+      whatsappOnboarding: initialOnboarding as unknown as Record<string, unknown>,
+      onboardingComplete: false,
+    });
+    return {
+      handled: true,
+      reply: buildWhatsAppOnboardingPrompt(initialOnboarding.step!, initialProfile),
+    };
+  }
+
+  user = await getUserById(identity.user_id);
+  tenant = await getTenantById(identity.tenant_id);
+  if (!user || !tenant) {
+    return {
+      handled: explicitStart,
+      reply: explicitStart ? "We found an incomplete account record. Please try again in a minute." : undefined,
+    };
+  }
+
+  const settings = await getTenantSettings(tenant.id);
+  let profile = readWorkspaceProfile(settings);
+  let onboarding = readWhatsAppOnboardingState(settings);
+  profile = {
+    ...profile,
+    phone: params.phone,
+    ...(profile.email ? {} : !isSyntheticWhatsAppEmail(user.email) ? { email: user.email } : {}),
+  };
+
+  const now = nowIso();
+  const requestedRestart = answer.toLowerCase() === "restart";
+  if (requestedRestart) {
+    profile = {
+      phone: params.phone,
+      ...(params.senderName?.trim() ? { ownerName: params.senderName.trim() } : {}),
+    };
+    onboarding = {
+      status: "active",
+      step: profile.ownerName ? "businessName" : "ownerName",
+      startedAt: now,
+      updatedAt: now,
+      source: "whatsapp-cloud",
+      emailSkipped: false,
+    };
+    await upsertTenantSettings(tenant.id, mergeSettings(settings, {
+      whatsapp: { phone: params.phone },
+      workspaceProfile: profile as unknown as Record<string, unknown>,
+      whatsappOnboarding: onboarding as unknown as Record<string, unknown>,
+      onboardingComplete: false,
+    }));
+    return { handled: true, reply: `Starting over. ${buildWhatsAppOnboardingPrompt(onboarding.step!, profile)}` };
+  }
+
+  const currentStep = resolveWhatsAppOnboardingStep(profile, onboarding, user.email);
+  if (currentStep === "done" || onboarding.status === "complete") {
+    if (!explicitStart) {
+      return { handled: false };
+    }
+    const token = signToken(user.id);
+    const loginUrl = buildControlLoginUrl(token, tenant.id);
+    return {
+      handled: true,
+      complete: true,
+      loginUrl,
+      reply: `You are already onboarded. Open this link to continue in PropAi: ${loginUrl}`,
+    };
+  }
+
+  if (explicitStart) {
+    onboarding = {
+      ...onboarding,
+      status: "active",
+      step: currentStep,
+      startedAt: onboarding.startedAt ?? now,
+      updatedAt: now,
+      source: onboarding.source ?? "whatsapp-cloud",
+    };
+    await upsertTenantSettings(tenant.id, mergeSettings(settings, {
+      whatsapp: { phone: params.phone },
+      workspaceProfile: profile as unknown as Record<string, unknown>,
+      whatsappOnboarding: onboarding as unknown as Record<string, unknown>,
+      onboardingComplete: false,
+    }));
+    return { handled: true, reply: buildWhatsAppOnboardingPrompt(currentStep, profile) };
+  }
+
+  const normalizedAnswer = answer.trim();
+  if (!normalizedAnswer) {
+    return { handled: true, reply: buildWhatsAppOnboardingPrompt(currentStep, profile) };
+  }
+
+  switch (currentStep) {
+    case "ownerName": {
+      if (normalizedAnswer.length < 2) {
+        return { handled: true, reply: "Please send the name you want us to use for your workspace." };
+      }
+      profile.ownerName = normalizedAnswer;
+      break;
+    }
+    case "businessName": {
+      if (normalizedAnswer.length < 2) {
+        return { handled: true, reply: "Please send the business or team name you want to use inside PropAi." };
+      }
+      profile.businessName = normalizedAnswer;
+      await updateTenantNameRow(tenant.id, normalizedAnswer);
+      tenant = { ...tenant, name: normalizedAnswer };
+      break;
+    }
+    case "city": {
+      if (normalizedAnswer.length < 2) {
+        return { handled: true, reply: "Please send the city or market you mainly work in." };
+      }
+      profile.city = normalizedAnswer;
+      break;
+    }
+    case "email": {
+      if (normalizedAnswer.toLowerCase() === "skip") {
+        onboarding.emailSkipped = true;
+        break;
+      }
+      const emailCheck = z.string().email().safeParse(normalizedAnswer.toLowerCase());
+      if (!emailCheck.success) {
+        return { handled: true, reply: 'That email does not look right. Send a valid email or reply "skip".' };
+      }
+      const existingEmailUser = await getUserByEmail(emailCheck.data);
+      if (existingEmailUser && existingEmailUser.id !== user.id) {
+        return { handled: true, reply: "That email is already in use. Send another email or reply skip." };
+      }
+      await updateUserEmailRow(user.id, emailCheck.data);
+      user = { ...user, email: emailCheck.data };
+      profile.email = emailCheck.data;
+      onboarding.emailSkipped = false;
+      break;
+    }
+    case "businessType": {
+      if (normalizedAnswer.length < 2) {
+        return { handled: true, reply: "Please describe your business type in a couple of words, like independent broker or broker team." };
+      }
+      profile.businessType = normalizedAnswer;
+      break;
+    }
+    case "done":
+    default:
+      break;
+  }
+
+  const nextStep = resolveWhatsAppOnboardingStep(profile, onboarding, user.email);
+  if (nextStep === "done") {
+    const completedOnboarding: WhatsAppOnboardingState = {
+      ...onboarding,
+      status: "complete",
+      step: "done",
+      updatedAt: now,
+      completedAt: now,
+      source: onboarding.source ?? "whatsapp-cloud",
+    };
+    await upsertTenantSettings(tenant.id, mergeSettings(settings, {
+      whatsapp: { phone: params.phone },
+      workspaceProfile: profile as unknown as Record<string, unknown>,
+      whatsappOnboarding: completedOnboarding as unknown as Record<string, unknown>,
+      onboardingComplete: false,
+    }));
+    const token = signToken(user.id);
+    const loginUrl = buildControlLoginUrl(token, tenant.id);
+    return {
+      handled: true,
+      complete: true,
+      loginUrl,
+      reply: `Perfect. ${profile.businessName ?? tenant.name} is ready. Open this secure link to finish setup in PropAi: ${loginUrl}`,
+    };
+  }
+
+  const activeOnboarding: WhatsAppOnboardingState = {
+    ...onboarding,
+    status: "active",
+    step: nextStep,
+    updatedAt: now,
+    startedAt: onboarding.startedAt ?? now,
+    source: onboarding.source ?? "whatsapp-cloud",
+  };
+  await upsertTenantSettings(tenant.id, mergeSettings(settings, {
+    whatsapp: { phone: params.phone },
+    workspaceProfile: profile as unknown as Record<string, unknown>,
+    whatsappOnboarding: activeOnboarding as unknown as Record<string, unknown>,
+    onboardingComplete: false,
+  }));
+  return { handled: true, reply: buildWhatsAppOnboardingPrompt(nextStep, profile) };
 }
 
 async function getPrimaryWhatsappForUser(userId: string): Promise<string | null> {

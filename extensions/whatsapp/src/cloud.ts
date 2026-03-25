@@ -98,7 +98,7 @@ function resolveControlApiUrl(): string {
   return (process.env.CONTROL_API_URL || fallback).replace(/\/+$/, "");
 }
 
-function shouldHandleJoinMessage(text: string): boolean {
+function isExplicitOnboardingTrigger(text: string): boolean {
   const normalized = text.trim().toLowerCase();
   if (!normalized) {
     return false;
@@ -112,56 +112,41 @@ function shouldHandleJoinMessage(text: string): boolean {
   );
 }
 
-function extractJoinTenantName(text: string): string | null {
-  const trimmed = text.trim();
-  if (!trimmed) {
-    return null;
-  }
-  const lower = trimmed.toLowerCase();
-  const prefixes = ["join ", "start ", "get started "];
-  for (const prefix of prefixes) {
-    if (lower.startsWith(prefix)) {
-      const raw = trimmed.slice(prefix.length).trim();
-      if (raw.length >= 2) {
-        return raw;
-      }
-      return null;
-    }
-  }
-  return null;
-}
-
-async function tryHandleWhatsAppJoin(params: {
+async function tryHandleWhatsAppOnboarding(params: {
   text: string;
   senderE164?: string;
   senderName?: string | null;
   reply: (text: string) => Promise<void>;
 }): Promise<boolean> {
-  if (!shouldHandleJoinMessage(params.text)) {
+  const trimmed = params.text.trim();
+  if (!trimmed) {
     return false;
   }
+  const explicitTrigger = isExplicitOnboardingTrigger(trimmed);
   const phone = params.senderE164 ?? null;
   if (!phone) {
-    await params.reply("Please send from a WhatsApp number so we can onboard you.");
-    return true;
+    if (explicitTrigger) {
+      await params.reply("Please send from a WhatsApp number so we can onboard you.");
+      return true;
+    }
+    return false;
   }
   const controlApiUrl = resolveControlApiUrl();
-  const tenantName = extractJoinTenantName(params.text);
   try {
     const log = getWhatsAppRuntime().logging.getChildLogger({ module: "whatsapp-cloud" });
     const response = await fetchWithRetry(
-      `${controlApiUrl}/v1/whatsapp/join`,
+      `${controlApiUrl}/v1/whatsapp/onboarding/message`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           phone,
+          text: trimmed,
           name: params.senderName ?? undefined,
-          tenantName: tenantName ?? undefined,
         }),
       },
       {
-        context: "whatsapp-cloud join",
+        context: "whatsapp-cloud onboarding",
         onRetry: (info) => {
           log.warn(
             {
@@ -169,23 +154,32 @@ async function tryHandleWhatsAppJoin(params: {
               maxRetries: info.maxRetries,
               delayMs: info.delayMs,
             },
-            "control-api join failed, retrying",
+            "control-api onboarding failed, retrying",
           );
         },
       },
     );
-    const payload = (await response.json().catch(() => ({}))) as { loginUrl?: string };
-    if (!response.ok || !payload.loginUrl) {
-      await params.reply("We could not complete onboarding. Please try again in a minute.");
-      return true;
+    const payload = (await response.json().catch(() => ({}))) as { handled?: boolean; reply?: string };
+    if (!response.ok) {
+      if (explicitTrigger) {
+        await params.reply("We could not complete onboarding right now. Please try again in a minute.");
+        return true;
+      }
+      return false;
     }
-    await params.reply(
-      `Welcome to PropAi Sync! Open this link to finish setup: ${payload.loginUrl}`,
-    );
+    if (!payload.handled) {
+      return false;
+    }
+    if (payload.reply?.trim()) {
+      await params.reply(payload.reply.trim());
+    }
     return true;
   } catch {
-    await params.reply("We could not reach the onboarding service. Please try again shortly.");
-    return true;
+    if (explicitTrigger) {
+      await params.reply("We could not reach the onboarding service. Please try again shortly.");
+      return true;
+    }
+    return false;
   }
 }
 
@@ -504,7 +498,7 @@ export async function handleWhatsAppCloudWebhook(
           },
         };
 
-        const handledJoin = await tryHandleWhatsAppJoin({
+        const handledJoin = await tryHandleWhatsAppOnboarding({
           text,
           senderE164: inbound.senderE164,
           senderName: contactName,

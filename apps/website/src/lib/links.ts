@@ -5,8 +5,12 @@ export const ANDROID_APK_URL =
   import.meta.env.VITE_ANDROID_APK_URL ??
   'https://www.propai.live/downloads/propai-sync-android-latest.apk';
 
+const DEFAULT_WHATSAPP_JOIN_NUMBER =
+  import.meta.env.VITE_WHATSAPP_JOIN_NUMBER ?? '919819471310';
+
 export const WHATSAPP_JOIN_URL =
-  import.meta.env.VITE_WHATSAPP_JOIN_URL ?? '';
+  import.meta.env.VITE_WHATSAPP_JOIN_URL ??
+  `https://wa.me/${DEFAULT_WHATSAPP_JOIN_NUMBER}?text=${encodeURIComponent('join')}`;
 
 export const LICENSING_DISABLED =
   (import.meta.env.VITE_DISABLE_LICENSING ?? '').toString().toLowerCase() === 'true';

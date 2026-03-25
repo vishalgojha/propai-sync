@@ -131,6 +131,19 @@ type AdminTenantUser = {
 
 type TenantSettings = {
   onboardingComplete?: boolean;
+  workspaceProfile?: {
+    ownerName?: string;
+    businessName?: string;
+    city?: string;
+    email?: string;
+    businessType?: string;
+    phone?: string;
+  };
+  whatsappOnboarding?: {
+    status?: 'active' | 'complete';
+    step?: string;
+    completedAt?: string;
+  };
   whatsapp?: {
     phone?: string;
     businessId?: string;
@@ -2406,6 +2419,17 @@ export default function AppDashboard() {
                                 <p className="text-sm font-semibold">{teamMembers.length > 0 ? teamMembers.length : 1} connected</p>
                               </div>
                             </div>
+                            {tenantSettings.workspaceProfile && (
+                              <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 space-y-2 text-sm">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Captured from WhatsApp</p>
+                                <p className="font-semibold">
+                                  {[tenantSettings.workspaceProfile.ownerName, tenantSettings.workspaceProfile.businessName].filter(Boolean).join(' · ') || 'Profile captured'}
+                                </p>
+                                <p className="text-muted-foreground">
+                                  {[tenantSettings.workspaceProfile.city, tenantSettings.workspaceProfile.businessType, tenantSettings.workspaceProfile.email].filter(Boolean).join(' · ')}
+                                </p>
+                              </div>
+                            )}
                             <div className="flex flex-col sm:flex-row gap-3">
                               <button
                                 onClick={() => setSetupWizardStep('whatsapp')}
