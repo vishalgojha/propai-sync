@@ -1519,21 +1519,27 @@ export default function AppDashboard() {
   const setupChecklist = [
     {
       id: 'gateway-auth',
-      label: 'Gateway auth token',
+      step: '01',
+      label: 'Secure app access',
       ok: setupGatewayAuthReady,
-      detail: 'Set PROPAI_GATEWAY_TOKEN on the gateway service.',
+      detail: 'Add one shared gateway token so only your team and apps can connect.',
+      action: 'Set PROPAI_GATEWAY_TOKEN on the gateway service.',
     },
     {
       id: 'provider-key',
-      label: 'AI provider key',
+      step: '02',
+      label: 'Connect an AI brain',
       ok: setupAnyProviderReady,
-      detail: 'Set ANTHROPIC_API_KEY, OPENAI_API_KEY, or XAI_API_KEY on the gateway.',
+      detail: 'You only need one provider key to get started with assistant replies and automation.',
+      action: 'Set ANTHROPIC_API_KEY, OPENAI_API_KEY, or XAI_API_KEY on the gateway.',
     },
     {
       id: 'control-link',
-      label: 'Control API link',
+      step: '03',
+      label: 'Link the app to control',
       ok: setupControlLinkReady,
-      detail: 'Set CONTROL_GATEWAY_URL and CONTROL_GATEWAY_TOKEN on control-api.',
+      detail: 'This lets the setup page, reports, and device pairing talk to the gateway correctly.',
+      action: 'Set CONTROL_GATEWAY_URL and CONTROL_GATEWAY_TOKEN on control-api.',
     },
   ];
   useEffect(() => {
@@ -1550,8 +1556,16 @@ export default function AppDashboard() {
     }
   }, [activateTab, setupCheck, setupReady, setupAutoOpened]);
   const setupChecklistAllOk = setupChecklist.every((item) => item.ok);
+  const setupProgressCount = setupChecklist.filter((item) => item.ok).length;
+  const setupRemainingCount = setupChecklist.length - setupProgressCount;
   const setupMissingLabels = setupChecklist.filter((item) => !item.ok).map((item) => item.label);
   const setupMissingSummary = setupMissingLabels.length > 0 ? setupMissingLabels.join(' · ') : '';
+  const setupProgressPercent = Math.round((setupProgressCount / setupChecklist.length) * 100);
+  const setupStatusSummary = !setupCheck
+    ? 'Checking what is already connected…'
+    : setupChecklistAllOk
+      ? 'Everything essential is ready. You can finish the last form fields and go live.'
+      : `${setupRemainingCount} ${setupRemainingCount === 1 ? 'item still needs' : 'items still need'} attention.`;
   const setupEnvSnippet = [
     '# Gateway service',
     'PROPAI_GATEWAY_TOKEN=',
@@ -2127,360 +2141,369 @@ export default function AppDashboard() {
         case 'Setup':
           return (
             <div className="space-y-6">
-              <section className="bg-card border border-border rounded-2xl p-6 space-y-2">
-                <h2 className="text-lg font-bold">Setup your workspace</h2>
-                <p className="text-sm text-muted-foreground">
-                  Add your AI keys, WhatsApp details, and choose what PropAi should handle automatically.
-                </p>
+              <section className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-5 shadow-sm">
+                <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="max-w-3xl space-y-3">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-primary">Guided setup</p>
+                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Get PropAi ready for your team</h2>
+                    <p className="text-sm md:text-base text-muted-foreground leading-7">
+                      Start simple: connect one AI provider, add your WhatsApp number, and save the defaults you want PropAi to use.
+                      We will keep the technical checks in the background and show you only what still needs attention.
+                    </p>
+                  </div>
+                  <div className="min-w-[260px] rounded-2xl border border-border bg-muted/30 p-5 space-y-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Setup progress</p>
+                        <p className="text-3xl font-bold">{setupProgressCount}/{setupChecklist.length}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold">{setupProgressPercent}%</p>
+                        <p className="text-xs text-muted-foreground">core setup done</p>
+                      </div>
+                    </div>
+                    <div className="h-2 rounded-full bg-border overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${setupProgressPercent}%` }} />
+                    </div>
+                    <p className={cn('text-sm font-medium', setupChecklistAllOk ? 'text-emerald-600' : 'text-muted-foreground')}>
+                      {setupStatusSummary}
+                    </p>
+                    {setupMissingSummary && !setupChecklistAllOk && (
+                      <p className="text-xs text-muted-foreground">Still pending: {setupMissingSummary}</p>
+                    )}
+                  </div>
+                </div>
                 {settingsMessage && (
-                  <div className="text-xs text-emerald-600 font-semibold">{settingsMessage}</div>
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700">
+                    {settingsMessage}
+                  </div>
                 )}
                 {settingsError && (
-                  <div className="text-xs text-destructive font-semibold">{settingsError}</div>
+                  <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
+                    {settingsError}
+                  </div>
                 )}
               </section>
 
-              <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                  <div>
-                    <h3 className="text-base font-semibold">Setup checklist</h3>
-                    <p className="text-sm text-muted-foreground">
-                      These must be ready before onboarding and device pairing.
-                    </p>
-                  </div>
-                  <button
-                    onClick={loadSetupCheck}
-                    disabled={setupCheckLoading}
-                    className="text-xs font-semibold underline"
-                  >
-                    {setupCheckLoading ? 'Checking…' : 'Recheck'}
-                  </button>
-                </div>
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <p className="text-xs text-muted-foreground">
-                      Need help setting env vars? Copy the starter block below.
-                    </p>
+              <section className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+                <div className="bg-card border border-border rounded-3xl p-6 space-y-5 shadow-sm">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-bold">Before you go live</h3>
+                      <p className="text-sm text-muted-foreground">
+                        These are the only platform checks that must be ready before onboarding and device pairing can work smoothly.
+                      </p>
+                    </div>
                     <button
-                      onClick={copySetupEnvSnippet}
-                      className="text-xs font-semibold underline"
+                      onClick={loadSetupCheck}
+                      disabled={setupCheckLoading}
+                      className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-accent disabled:opacity-60"
                     >
-                      Copy env snippet
+                      <RefreshCw className={cn('w-3.5 h-3.5', setupCheckLoading && 'animate-spin')} />
+                      {setupCheckLoading ? 'Checking…' : 'Recheck'}
                     </button>
                   </div>
-                  <pre className="text-[11px] leading-relaxed bg-muted/40 border border-border rounded-xl p-3 overflow-x-auto">
-                    {setupEnvSnippet}
-                  </pre>
-                </div>
-                {setupCheckError && (
-                  <p className="text-xs text-destructive">{setupCheckError}</p>
-                )}
-                <div className="space-y-3">
-                  {setupChecklist.map((item) => (
-                    <div key={item.id} className="flex gap-3 items-start bg-muted/40 border border-border rounded-xl px-4 py-3">
-                      {item.ok ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-destructive mt-0.5" />
-                      )}
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold">{item.label}</p>
-                        <p className="text-xs text-muted-foreground">{item.detail}</p>
+
+                  {setupCheckError && (
+                    <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                      <p className="font-semibold">We could not verify the setup just now.</p>
+                      <p className="text-xs mt-1 opacity-90">{setupCheckError}</p>
+                    </div>
+                  )}
+
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    {setupChecklist.map((item) => (
+                      <div key={item.id} className="rounded-2xl border border-border bg-muted/30 p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">Step {item.step}</p>
+                            <h4 className="text-sm font-bold mt-2">{item.label}</h4>
+                          </div>
+                          <span
+                            className={cn(
+                              'inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest',
+                              item.ok ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-700',
+                            )}
+                          >
+                            {item.ok ? 'Ready' : 'Needs setup'}
+                          </span>
+                        </div>
+                        <p className="text-sm leading-6 text-muted-foreground">{item.detail}</p>
+                        <div className="rounded-xl border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+                          {item.action}
+                        </div>
                         {item.id === 'provider-key' && setupCheck && (
                           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                            OpenAI: {setupProviderKeys.openai ? 'On' : 'Off'} · Anthropic:{' '}
-                            {setupProviderKeys.anthropic ? 'On' : 'Off'} · xAI:{' '}
-                            {setupProviderKeys.xai ? 'On' : 'Off'} · ElevenLabs:{' '}
-                            {setupProviderKeys.elevenlabs ? 'On' : 'Off'}
+                            OpenAI: {setupProviderKeys.openai ? 'On' : 'Off'} · Anthropic: {setupProviderKeys.anthropic ? 'On' : 'Off'} · xAI: {setupProviderKeys.xai ? 'On' : 'Off'} · ElevenLabs: {setupProviderKeys.elevenlabs ? 'On' : 'Off'}
                           </p>
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-                {setupCheck && (
-                  <div className="text-xs font-semibold">
-                    {setupChecklistAllOk ? (
-                      <span className="text-emerald-600">All setup checks passed.</span>
-                    ) : (
-                      <span className="text-destructive">Complete the missing items above to continue.</span>
-                    )}
+                    ))}
                   </div>
-                )}
+
+                  <details className="rounded-2xl border border-border bg-muted/20 px-4 py-4">
+                    <summary className="cursor-pointer list-none text-sm font-semibold flex items-center justify-between gap-4">
+                      <span>For your technical teammate: Railway env block</span>
+                      <span className="text-xs text-muted-foreground">Copy once and paste into Railway</span>
+                    </summary>
+                    <div className="mt-4 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <p className="text-xs text-muted-foreground">
+                          You usually only do this once. After that, most of the setup happens from this page.
+                        </p>
+                        <button
+                          onClick={copySetupEnvSnippet}
+                          className="text-xs font-semibold underline"
+                        >
+                          Copy env snippet
+                        </button>
+                      </div>
+                      <pre className="text-[11px] leading-relaxed bg-background border border-border rounded-xl p-3 overflow-x-auto">
+                        {setupEnvSnippet}
+                      </pre>
+                    </div>
+                  </details>
+                </div>
+
+                <div className="space-y-4">
+                  <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
+                    <h3 className="text-base font-bold">Recommended order</h3>
+                    <ol className="space-y-3 text-sm text-muted-foreground">
+                      <li>1. Sign in to this workspace.</li>
+                      <li>2. Make sure one AI provider key is connected.</li>
+                      <li>3. Add your WhatsApp number and defaults below.</li>
+                      <li>4. Save setup and mark onboarding complete.</li>
+                    </ol>
+                  </section>
+
+                  {!controlToken ? (
+                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
+                      <div className="space-y-2">
+                        <h3 className="text-base font-bold">Sign in before editing settings</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Use your email sign-in first so this workspace can save your setup, pairing status, and automation defaults.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => activateTab('Settings')}
+                        className="w-full px-5 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
+                      >
+                        Go to sign in
+                      </button>
+                    </section>
+                  ) : (
+                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
+                      <div className="space-y-2">
+                        <h3 className="text-base font-bold">Workspace status</h3>
+                        <p className="text-sm text-muted-foreground">
+                          You are signed in. Finish the form below and save once you are happy with the defaults.
+                        </p>
+                      </div>
+                      <div className="grid gap-3">
+                        <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Chat provider</p>
+                          <p className="text-sm font-semibold mt-1">{activeChatProvider || 'Not selected yet'}</p>
+                        </div>
+                        <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Default model</p>
+                          <p className="text-sm font-semibold mt-1 break-all">{activeChatModel || 'Not selected yet'}</p>
+                        </div>
+                        <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">WhatsApp number</p>
+                          <p className="text-sm font-semibold mt-1">{tenantSettings.whatsapp?.phone || 'Not added yet'}</p>
+                        </div>
+                      </div>
+                    </section>
+                  )}
+                </div>
               </section>
 
-              {!controlToken ? (
-                <section className="bg-card border border-border rounded-2xl p-6 space-y-3">
-                  <h3 className="text-base font-semibold">Sign in to continue</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Use your email to sign in and connect this workspace.
-                  </p>
-                  <button
-                    onClick={() => activateTab('Settings')}
-                    className="px-5 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
-                  >
-                    Go to sign in
-                  </button>
-                </section>
-              ) : (
+              {!controlToken ? null : (
                 <>
-                  <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                    <h3 className="text-base font-semibold">WhatsApp details</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
+                  <section className="grid gap-6 xl:grid-cols-2">
+                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">WhatsApp number</label>
-                        <input
-                          value={settingsDraft.whatsappPhone}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, whatsappPhone: event.target.value }))
-                          }
-                          placeholder="+91 98765 43210"
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Step 1</p>
+                        <h3 className="text-lg font-bold">Your WhatsApp details</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Add the number and business IDs you want PropAi to use. You can start with just the number and come back for the optional IDs later.
+                        </p>
                       </div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5 md:col-span-2">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">WhatsApp number</label>
+                          <input
+                            value={settingsDraft.whatsappPhone}
+                            onChange={(event) =>
+                              setSettingsDraft((prev) => ({ ...prev, whatsappPhone: event.target.value }))
+                            }
+                            placeholder="+91 98765 43210"
+                            className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Business ID (optional)</label>
+                          <input
+                            value={settingsDraft.whatsappBusinessId}
+                            onChange={(event) =>
+                              setSettingsDraft((prev) => ({ ...prev, whatsappBusinessId: event.target.value }))
+                            }
+                            placeholder="Meta business ID"
+                            className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Phone number ID (optional)</label>
+                          <input
+                            value={settingsDraft.whatsappPhoneNumberId}
+                            onChange={(event) =>
+                              setSettingsDraft((prev) => ({ ...prev, whatsappPhoneNumberId: event.target.value }))
+                            }
+                            placeholder="Meta phone number ID"
+                            className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Business ID (optional)</label>
-                        <input
-                          value={settingsDraft.whatsappBusinessId}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, whatsappBusinessId: event.target.value }))
-                          }
-                          placeholder="Meta business ID"
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Step 2</p>
+                        <h3 className="text-lg font-bold">Connect an AI provider</h3>
+                        <p className="text-sm text-muted-foreground">
+                          One provider key is enough to get started. Add more only if you want backup options or voice later.
+                        </p>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Phone number ID (optional)</label>
-                        <input
-                          value={settingsDraft.whatsappPhoneNumberId}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, whatsappPhoneNumberId: event.target.value }))
-                          }
-                          placeholder="Meta phone number ID"
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenAI API key</label>
+                          <input type="password" value={settingsDraft.openaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openaiKey: event.target.value }))} placeholder={hasOpenAiKey ? 'Saved — enter to replace' : 'sk-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Anthropic API key</label>
+                          <input type="password" value={settingsDraft.anthropicKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, anthropicKey: event.target.value }))} placeholder={hasAnthropicKey ? 'Saved — enter to replace' : 'sk-ant-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">xAI API key</label>
+                          <input type="password" value={settingsDraft.xaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, xaiKey: event.target.value }))} placeholder={hasXaiKey ? 'Saved — enter to replace' : 'xai-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Groq API key (optional)</label>
+                          <input type="password" value={settingsDraft.groqKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, groqKey: event.target.value }))} placeholder={hasGroqKey ? 'Saved — enter to replace' : 'gsk_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenRouter API key (optional)</label>
+                          <input type="password" value={settingsDraft.openrouterKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openrouterKey: event.target.value }))} placeholder={hasOpenRouterKey ? 'Saved — enter to replace' : 'sk-or-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">ElevenLabs API key (optional)</label>
+                          <input type="password" value={settingsDraft.elevenKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, elevenKey: event.target.value }))} placeholder={hasElevenKey ? 'Saved — enter to replace' : 'eleven_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
                       </div>
-                    </div>
+                    </section>
                   </section>
 
-                  <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                    <h3 className="text-base font-semibold">AI provider keys</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
+                  <section className="grid gap-6 xl:grid-cols-2">
+                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenAI API key</label>
-                        <input
-                          type="password"
-                          value={settingsDraft.openaiKey}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, openaiKey: event.target.value }))
-                          }
-                          placeholder={hasOpenAiKey ? 'Saved — enter to replace' : 'sk-...'}
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Step 3</p>
+                        <h3 className="text-lg font-bold">Conversation defaults</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Pick the provider and model PropAi should use by default when your team chats from the app.
+                        </p>
                       </div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Chat provider</label>
+                          <select value={settingsDraft.chatProvider} onChange={(event) => { const provider = event.target.value; setSettingsDraft((prev) => ({ ...prev, chatProvider: provider, chatModel: resolveDefaultChatModel(provider) })); }} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary">
+                            {CHAT_PROVIDER_OPTIONS.map((option) => (
+                              <option key={option.id} value={option.id}>{option.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Default model</label>
+                          <input value={settingsDraft.chatModel} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, chatModel: event.target.value }))} placeholder={resolveDefaultChatModel(settingsDraft.chatProvider)} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Use the provider and model your team trusts most. One default is enough to start.</p>
+                    </section>
+
+                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Anthropic API key</label>
-                        <input
-                          type="password"
-                          value={settingsDraft.anthropicKey}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, anthropicKey: event.target.value }))
-                          }
-                          placeholder={hasAnthropicKey ? 'Saved — enter to replace' : 'sk-ant-...'}
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Step 4</p>
+                        <h3 className="text-lg font-bold">Voice and skills</h3>
+                        <p className="text-sm text-muted-foreground">These are optional but useful once the basics are working.</p>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">xAI API key</label>
-                        <input
-                          type="password"
-                          value={settingsDraft.xaiKey}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, xaiKey: event.target.value }))
-                          }
-                          placeholder={hasXaiKey ? 'Saved — enter to replace' : 'xai-...'}
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">TTS provider</label>
+                          <select value={settingsDraft.ttsProvider} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, ttsProvider: event.target.value }))} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary">
+                            {TTS_PROVIDER_OPTIONS.map((option) => (
+                              <option key={option.id} value={option.id}>{option.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Voice name</label>
+                          <input value={settingsDraft.ttsVoice} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, ttsVoice: event.target.value }))} placeholder="Rachel" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Groq API key</label>
-                        <input
-                          type="password"
-                          value={settingsDraft.groqKey}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, groqKey: event.target.value }))
-                          }
-                          placeholder={hasGroqKey ? 'Saved — enter to replace' : 'gsk_...'}
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
+                      <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">Choose the first workflows PropAi should focus on.</p>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          {SKILL_OPTIONS.map((skill) => {
+                            const checked = settingsDraft.skills.includes(skill.id);
+                            return (
+                              <label key={skill.id} className="flex items-center gap-2 text-sm rounded-xl border border-border bg-muted/20 px-3 py-2">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={(event) => {
+                                    setSettingsDraft((prev) => {
+                                      const next = new Set(prev.skills);
+                                      if (event.target.checked) next.add(skill.id);
+                                      else next.delete(skill.id);
+                                      return { ...prev, skills: Array.from(next) };
+                                    });
+                                  }}
+                                />
+                                {skill.label}
+                              </label>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenRouter API key</label>
-                        <input
-                          type="password"
-                          value={settingsDraft.openrouterKey}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, openrouterKey: event.target.value }))
-                          }
-                          placeholder={hasOpenRouterKey ? 'Saved — enter to replace' : 'sk-or-...'}
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">ElevenLabs API key</label>
-                        <input
-                          type="password"
-                          value={settingsDraft.elevenKey}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, elevenKey: event.target.value }))
-                          }
-                          placeholder={hasElevenKey ? 'Saved — enter to replace' : 'eleven_...'}
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
+                    </section>
                   </section>
 
-                  <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                    <h3 className="text-base font-semibold">AI chat routing</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
+                  <section className="bg-card border border-border rounded-3xl p-6 space-y-5 shadow-sm">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Chat provider</label>
-                        <select
-                          value={settingsDraft.chatProvider}
-                          onChange={(event) => {
-                            const provider = event.target.value;
-                            setSettingsDraft((prev) => ({
-                              ...prev,
-                              chatProvider: provider,
-                              chatModel: resolveDefaultChatModel(provider),
-                            }));
-                          }}
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        >
-                          {CHAT_PROVIDER_OPTIONS.map((option) => (
-                            <option key={option.id} value={option.id}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Final step</p>
+                        <h3 className="text-lg font-bold">Save setup and go live</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Once saved, your workspace will keep these defaults and you can move on to pairing, conversations, and live follow-up.
+                        </p>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Default model</label>
-                        <input
-                          value={settingsDraft.chatModel}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, chatModel: event.target.value }))
-                          }
-                          placeholder={resolveDefaultChatModel(settingsDraft.chatProvider)}
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      We’ll route chat to the provider you pick. Use model IDs like `gpt-4.1-mini`, `claude-3-5-haiku-20241022`,
-                      `anthropic/claude-3.5-sonnet`, or `llama-3.1-8b-instant`.
-                    </p>
-                  </section>
-
-                  <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                    <h3 className="text-base font-semibold">Voice (ElevenLabs)</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">TTS provider</label>
-                        <select
-                          value={settingsDraft.ttsProvider}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, ttsProvider: event.target.value }))
-                          }
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        >
-                          {TTS_PROVIDER_OPTIONS.map((option) => (
-                            <option key={option.id} value={option.id}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Voice name</label>
-                        <input
-                          value={settingsDraft.ttsVoice}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, ttsVoice: event.target.value }))
-                          }
-                          placeholder="Rachel"
-                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Voice output will use ElevenLabs when available.
-                    </p>
-                  </section>
-
-                  <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                    <h3 className="text-base font-semibold">Choose your skills</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Pick the workflows PropAi should focus on first.
-                    </p>
-                    <div className="grid md:grid-cols-2 gap-3">
-                      {SKILL_OPTIONS.map((skill) => {
-                        const checked = settingsDraft.skills.includes(skill.id);
-                        return (
-                          <label key={skill.id} className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={(event) => {
-                                setSettingsDraft((prev) => {
-                                  const next = new Set(prev.skills);
-                                  if (event.target.checked) {
-                                    next.add(skill.id);
-                                  } else {
-                                    next.delete(skill.id);
-                                  }
-                                  return { ...prev, skills: Array.from(next) };
-                                });
-                              }}
-                            />
-                            {skill.label}
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </section>
-
-                  <section className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                      <div>
-                        <h3 className="text-base font-semibold">Finish setup</h3>
-                        <p className="text-sm text-muted-foreground">Save your setup and mark onboarding complete.</p>
-                      </div>
-                      <label className="flex items-center gap-2 text-sm font-semibold">
-                        <input
-                          type="checkbox"
-                          checked={settingsDraft.onboardingComplete}
-                          disabled={!setupReady}
-                          onChange={(event) =>
-                            setSettingsDraft((prev) => ({ ...prev, onboardingComplete: event.target.checked }))
-                          }
-                        />
+                      <label className="flex items-center gap-2 text-sm font-semibold rounded-xl border border-border px-4 py-3 bg-muted/20">
+                        <input type="checkbox" checked={settingsDraft.onboardingComplete} disabled={!setupReady} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, onboardingComplete: event.target.checked }))} />
                         Mark setup as complete
                       </label>
-                      {!setupReady && (
-                        <p className="text-xs text-destructive">
-                          Complete the setup checklist before marking onboarding complete.
-                        </p>
-                      )}
                     </div>
-                    <button
-                      onClick={saveTenantSettings}
-                      disabled={settingsSaving}
-                      className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-60"
-                    >
-                      {settingsSaving ? 'Saving…' : 'Save setup'}
-                    </button>
+                    {!setupReady && (
+                      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
+                        Finish the checklist above before marking onboarding complete.
+                      </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button onClick={saveTenantSettings} disabled={settingsSaving} className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-60">
+                        {settingsSaving ? 'Saving…' : 'Save setup'}
+                      </button>
+                      <button onClick={() => activateTab('WhatsApp')} className="px-6 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent">
+                        Review WhatsApp tab
+                      </button>
+                    </div>
                   </section>
                 </>
               )}
@@ -3382,4 +3405,5 @@ function ZapIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
 
