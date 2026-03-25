@@ -16,7 +16,13 @@ export type RetryAttemptInfo = {
 
 export type RetryOptions = {
   context?: string;
+  label?: string;
+  attempts?: number;
   maxRetries?: number;
+  minDelayMs?: number;
+  maxDelayMs?: number;
+  factor?: number;
+  jitter?: number;
   policy?: Partial<BackoffPolicy>;
   abortSignal?: AbortSignal;
   shouldRetry?: (err: unknown) => boolean;
@@ -37,12 +43,14 @@ export async function withRetry<T>(
   fn: (attempt: number) => Promise<T>,
   opts: RetryOptions = {},
 ): Promise<T> {
-  const maxRetries = Math.max(opts.maxRetries ?? DEFAULT_POLICY.maxRetries, 3);
+  const requestedMaxRetries =
+    opts.maxRetries ?? (typeof opts.attempts === 'number' ? Math.max(opts.attempts - 1, 0) : DEFAULT_POLICY.maxRetries);
+  const maxRetries = Math.max(requestedMaxRetries, 3);
   const policy: BackoffPolicy = {
-    initialMs: opts.policy?.initialMs ?? DEFAULT_POLICY.initialMs,
-    maxMs: opts.policy?.maxMs ?? DEFAULT_POLICY.maxMs,
-    factor: opts.policy?.factor ?? DEFAULT_POLICY.factor,
-    jitter: opts.policy?.jitter ?? DEFAULT_POLICY.jitter,
+    initialMs: opts.policy?.initialMs ?? opts.minDelayMs ?? DEFAULT_POLICY.initialMs,
+    maxMs: opts.policy?.maxMs ?? opts.maxDelayMs ?? DEFAULT_POLICY.maxMs,
+    factor: opts.policy?.factor ?? opts.factor ?? DEFAULT_POLICY.factor,
+    jitter: opts.policy?.jitter ?? opts.jitter ?? DEFAULT_POLICY.jitter,
   };
   const shouldRetry = opts.shouldRetry ?? defaultShouldRetry;
   let attempt = 0;
@@ -64,7 +72,7 @@ export async function withRetry<T>(
         maxRetries,
         delayMs,
         error: err,
-        context: opts.context,
+        context: opts.context ?? opts.label,
       });
       await sleepWithAbort(delayMs, opts.abortSignal);
     }

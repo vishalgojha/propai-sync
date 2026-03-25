@@ -88,12 +88,7 @@ async function postUsageEvents(events: UsageEvent[]): Promise<void> {
         abortSignal: controller.signal,
         onRetry: (info) => {
           log.warn(
-            {
-              attempt: info.retryCount + 1,
-              maxRetries: info.maxRetries,
-              delayMs: info.delayMs,
-            },
-            "usage ingest failed, retrying",
+            `usage ingest failed, retrying attempt ${info.retryCount + 1}/${info.maxRetries} in ${info.delayMs}ms`,
           );
         },
       },
