@@ -23,13 +23,14 @@ import {
   X,
   Download
 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ThemeToggle } from '../../components/ThemeToggle';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { ADMIN_UI_ENABLED, ANDROID_APK_URL, LICENSING_DISABLED } from '../../lib/links';
 import { apiGet, apiPost, apiDeleteAuth, apiGetAuth, apiPatchAuth, apiPostAuth, apiPutAuth } from '../../lib/api';
+import { type DashboardTabId, getPathForTab, getTabForPath } from '../tabRoutes';
 import QRCode from 'qrcode';
 
 const APP_VERSION = 'web-2026.3.11';
@@ -359,7 +360,14 @@ function normalizeError(err: unknown, fallback: string) {
 }
 
 export default function AppDashboard() {
-  const [activeTab, setActiveTab] = useState('Assistant');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTabState] = useState<DashboardTabId>(() => {
+    if (typeof window === 'undefined') {
+      return 'Assistant';
+    }
+    return getTabForPath(window.location.pathname) ?? 'Assistant';
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const deviceId = useMemo(() => getOrCreateDeviceId(), []);
   const webhookUrl = useMemo(() => {
@@ -561,6 +569,36 @@ export default function AppDashboard() {
     }
     document.title = 'PropAi Sync Control';
   }, []);
+
+  const activateTab = useCallback(
+    (tabId: DashboardTabId, opts?: { closeSidebar?: boolean; replace?: boolean }) => {
+      setActiveTabState(tabId);
+      const nextPath = getPathForTab(tabId);
+      if (location.pathname !== nextPath) {
+        navigate(nextPath, { replace: opts?.replace });
+      }
+      if (opts?.closeSidebar) {
+        setIsSidebarOpen(false);
+      }
+    },
+    [location.pathname, navigate],
+  );
+
+  useEffect(() => {
+    const tabFromPath = getTabForPath(location.pathname);
+    if (!tabFromPath) {
+      if (location.pathname !== getPathForTab('Assistant')) {
+        navigate(getPathForTab('Assistant'), { replace: true });
+      }
+      if (activeTab !== 'Assistant') {
+        setActiveTabState('Assistant');
+      }
+      return;
+    }
+    if (tabFromPath !== activeTab) {
+      setActiveTabState(tabFromPath);
+    }
+  }, [activeTab, location.pathname, navigate]);
 
   useEffect(() => {
     void loadSetupCheck();
@@ -1182,9 +1220,9 @@ export default function AppDashboard() {
       return;
     }
     if (!tenantSettings.onboardingComplete && activeTab === 'Assistant') {
-      setActiveTab('Setup');
+      activateTab('Setup', { replace: true });
     }
-  }, [tenantSettings.onboardingComplete, controlToken, activeTab]);
+  }, [tenantSettings.onboardingComplete, controlToken, activeTab, activateTab]);
 
   const updateTrialState = (payload: LicenseResponse) => {
     const status = payload.status ?? (payload.valid ? 'active' : 'invalid');
@@ -1500,10 +1538,10 @@ export default function AppDashboard() {
       return;
     }
     if (!setupAutoOpened) {
-      setActiveTab('Setup');
+      activateTab('Setup', { replace: true });
       setSetupAutoOpened(true);
     }
-  }, [setupCheck, setupReady, setupAutoOpened]);
+  }, [activateTab, setupCheck, setupReady, setupAutoOpened]);
   const setupChecklistAllOk = setupChecklist.every((item) => item.ok);
   const setupMissingLabels = setupChecklist.filter((item) => !item.ok).map((item) => item.label);
   const setupMissingSummary = setupMissingLabels.length > 0 ? setupMissingLabels.join(' · ') : '';
@@ -1702,7 +1740,6 @@ export default function AppDashboard() {
                 )}
               </div>
               </section>
-            )}
 
             {/* Trial Access Section (Visible on Assistant page as per user flow) */}
             {licensingEnabled && (
@@ -1819,6 +1856,7 @@ export default function AppDashboard() {
                 <Link to="/contact" className="text-xs font-medium text-primary hover:underline">Need help? Contact support</Link>
               </div>
             </section>
+            )}
           </div>
         );
       case 'Dashboard':
@@ -2171,7 +2209,7 @@ export default function AppDashboard() {
                     Use your email to sign in and connect this workspace.
                   </p>
                   <button
-                    onClick={() => setActiveTab('Settings')}
+                    onClick={() => activateTab('Settings')}
                     className="px-5 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
                   >
                     Go to sign in
@@ -2453,7 +2491,7 @@ export default function AppDashboard() {
                     </p>
                   </div>
                   <button
-                    onClick={() => setActiveTab('Setup')}
+                    onClick={() => activateTab('Setup')}
                     className="text-xs font-semibold underline"
                   >
                     Edit in setup
@@ -2496,7 +2534,7 @@ export default function AppDashboard() {
                       Sync via an Android phone when you need app-level automation or local device workflows.
                     </p>
                     <button
-                      onClick={() => setActiveTab('Android Agent')}
+                      onClick={() => activateTab('Android Agent')}
                       className="text-xs font-semibold underline"
                     >
                       Open Android Agent
@@ -2521,7 +2559,7 @@ export default function AppDashboard() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setActiveTab('Webhooks')}
+                  onClick={() => activateTab('Webhooks')}
                   className="text-xs font-semibold underline"
                 >
                   Open webhook checklist
@@ -3134,7 +3172,7 @@ export default function AppDashboard() {
               className="fixed inset-y-0 left-0 w-72 bg-card border-r border-border flex flex-col z-[70] md:hidden overflow-y-auto"
             >
               <div className="p-6 flex items-center justify-between">
-                <Link to="/" className="flex items-center gap-2">
+                <Link to={getPathForTab('Assistant')} className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
                     <ZapIcon className="text-primary-foreground w-5 h-5" />
                   </div>
@@ -3159,8 +3197,7 @@ export default function AppDashboard() {
                       <button
                         key={item.id}
                         onClick={() => {
-                          setActiveTab(item.id);
-                          setIsSidebarOpen(false);
+                          activateTab(item.id, { closeSidebar: true });
                         }}
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm font-medium",
@@ -3184,7 +3221,7 @@ export default function AppDashboard() {
       {/* Desktop Sidebar */}
       <aside className="w-56 lg:w-64 bg-card border-r border-border hidden md:flex flex-col z-50 overflow-y-auto">
         <div className="p-6">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to={getPathForTab('Assistant')} className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
               <ZapIcon className="text-primary-foreground w-5 h-5" />
             </div>
@@ -3202,7 +3239,7 @@ export default function AppDashboard() {
               {group.items.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => activateTab(item.id)}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm font-medium",
                     activeTab === item.id 
@@ -3298,7 +3335,7 @@ export default function AppDashboard() {
                     {setupCheckLoading ? 'Checking…' : 'Recheck'}
                   </button>
                   <button
-                    onClick={() => setActiveTab('Setup')}
+                    onClick={() => activateTab('Setup')}
                     className="px-3 py-2 rounded-lg text-xs font-semibold bg-destructive text-destructive-foreground"
                   >
                     Go to setup
