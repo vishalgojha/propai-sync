@@ -28,7 +28,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/utils';
-import { ADMIN_UI_ENABLED, ANDROID_APK_URL, LICENSING_DISABLED } from '../../lib/links';
+import { ADMIN_UI_ENABLED, ANDROID_APK_URL, LICENSING_DISABLED, WHATSAPP_JOIN_URL } from '../../lib/links';
 import { apiGet, apiPost, apiDeleteAuth, apiGetAuth, apiPatchAuth, apiPostAuth, apiPutAuth } from '../../lib/api';
 import { type DashboardTabId, getPathForTab, getTabForPath } from '../tabRoutes';
 import QRCode from 'qrcode';
@@ -99,6 +99,7 @@ type ChatMessage = {
 type ControlUser = {
   id: string;
   email: string;
+  primaryWhatsapp?: string | null;
 };
 
 type ControlTenant = {
@@ -1595,8 +1596,8 @@ export default function AppDashboard() {
     {
       id: 'account',
       step: '01',
-      title: 'Sign in',
-      description: 'Connect this workspace so PropAi can save your setup.',
+      title: 'Identity',
+      description: 'Start on WhatsApp first, then fall back to email only if needed.',
     },
     {
       id: 'whatsapp',
@@ -2334,22 +2335,22 @@ export default function AppDashboard() {
                         {!controlToken ? (
                           <>
                             <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 space-y-2 text-sm text-amber-900">
-                              <p className="font-semibold">Start here: sign in once so PropAi can save this workspace.</p>
+                              <p className="font-semibold">Start here on WhatsApp so PropAi can verify your number and create your workspace.</p>
                               <p>
-                                Signing in unlocks setup saving, device approvals, team access, and your workspace settings.
+                                WhatsApp is the main identity for day-to-day use. Email stays as your backup for recovery, billing, and admin access.
                               </p>
                             </div>
                             <div className="grid gap-4 md:grid-cols-3">
                               <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
-                                <p className="text-sm font-semibold">Create or join your workspace</p>
+                                <p className="text-sm font-semibold">Start with your real WhatsApp number</p>
                                 <p className="text-sm text-muted-foreground">
-                                  Use the same email you want to manage PropAi with long-term.
+                                  This becomes your primary identity inside PropAi.
                                 </p>
                               </div>
                               <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
-                                <p className="text-sm font-semibold">Your setup progress gets saved</p>
+                                <p className="text-sm font-semibold">Email becomes a backup contact</p>
                                 <p className="text-sm text-muted-foreground">
-                                  You will not need to re-enter the basics every time you return.
+                                  We still capture it, but only for recovery, billing, and admin tasks.
                                 </p>
                               </div>
                               <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
@@ -2360,17 +2361,28 @@ export default function AppDashboard() {
                               </div>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3">
+                              {WHATSAPP_JOIN_URL ? (
+                                <a
+                                  href={WHATSAPP_JOIN_URL}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 text-center"
+                                >
+                                  Continue on WhatsApp
+                                </a>
+                              ) : (
+                                <button
+                                  onClick={() => setSetupWizardStep('whatsapp')}
+                                  className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90"
+                                >
+                                  Continue to WhatsApp setup
+                                </button>
+                              )}
                               <button
                                 onClick={() => activateTab('Settings')}
-                                className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90"
-                              >
-                                Go to sign in
-                              </button>
-                              <button
-                                onClick={() => setSetupWizardStep('whatsapp')}
                                 className="px-6 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
                               >
-                                I already signed in elsewhere
+                                Use email admin access instead
                               </button>
                             </div>
                           </>
@@ -2382,8 +2394,8 @@ export default function AppDashboard() {
                             </div>
                             <div className="grid gap-4 md:grid-cols-3">
                               <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Signed in as</p>
-                                <p className="text-sm font-semibold break-all">{controlUser?.email ?? 'Connected account'}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Primary identity</p>
+                                <p className="text-sm font-semibold break-all">{controlUser?.primaryWhatsapp ?? controlUser?.email ?? 'Connected account'}</p>
                               </div>
                               <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Workspace</p>
@@ -2689,7 +2701,7 @@ export default function AppDashboard() {
                   <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
                     <h3 className="text-base font-bold">What happens on first run</h3>
                     <ol className="space-y-3 text-sm text-muted-foreground">
-                      <li>1. Sign in once so PropAi can save this workspace.</li>
+                      <li>1. Start on WhatsApp so PropAi can verify your number and create your workspace.</li>
                       <li>2. Add the WhatsApp number you want leads to message.</li>
                       <li>3. Paste one AI key and keep one default model.</li>
                       <li>4. Pick the first tasks PropAi should help with.</li>
@@ -2995,11 +3007,12 @@ export default function AppDashboard() {
         return (
           <div className="space-y-6">
             <section className="bg-card border border-border rounded-2xl p-6 space-y-6">
-              <h2 className="text-lg font-bold">Account & Team Access</h2>
+              <h2 className="text-lg font-bold">Identity, Recovery & Team Access</h2>
               {controlUser ? (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">Signed in as</p>
-                  <p className="text-sm font-semibold">{controlUser.email}</p>
+                  <p className="text-sm font-semibold">{controlUser.primaryWhatsapp ?? controlUser.email}</p>
+                  <p className="text-xs text-muted-foreground">Backup email: {controlUser.email}</p>
                   <button onClick={handleSignOut} className="text-xs font-semibold text-destructive underline">
                     Sign out
                   </button>
@@ -3024,9 +3037,21 @@ export default function AppDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 space-y-3">
+                    <p className="text-sm font-semibold">Preferred path: continue with WhatsApp</p>
+                    <p className="text-sm text-muted-foreground">Use your WhatsApp number as the main identity. We will capture email later as a backup for recovery, billing, and admin tasks.</p>
+                    {WHATSAPP_JOIN_URL ? (
+                      <a href={WHATSAPP_JOIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground hover:opacity-90">
+                        Continue with WhatsApp
+                      </a>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">WhatsApp onboarding link not configured yet.</p>
+                    )}
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <p className="text-sm font-semibold">Sign in</p>
+                    <p className="text-sm font-semibold">Email sign in (admin or recovery)</p>
                     <input value={loginEmail} onChange={(event) => setLoginEmail(event.target.value)} placeholder="Email" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
                     <input type="password" value={loginPassword} onChange={(event) => setLoginPassword(event.target.value)} placeholder="Password" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
                     <button onClick={handleLogin} disabled={authLoading} className="bg-primary text-primary-foreground px-5 py-3 rounded-xl text-sm font-bold">
@@ -3034,15 +3059,16 @@ export default function AppDashboard() {
                     </button>
                   </div>
                   <div className="space-y-3">
-                    <p className="text-sm font-semibold">Create workspace</p>
-                    <input value={registerEmail} onChange={(event) => setRegisterEmail(event.target.value)} placeholder="Owner email" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
-                    <input type="password" value={registerPassword} onChange={(event) => setRegisterPassword(event.target.value)} placeholder="Password (optional)" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
-                    <p className="text-xs text-muted-foreground">Leave password blank to quick-start. You can set it later.</p>
+                    <p className="text-sm font-semibold">Create workspace manually</p>
+                    <input value={registerEmail} onChange={(event) => setRegisterEmail(event.target.value)} placeholder="Backup owner email" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
+                    <input type="password" value={registerPassword} onChange={(event) => setRegisterPassword(event.target.value)} placeholder="Password (optional admin fallback)" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
+                    <p className="text-xs text-muted-foreground">Only use this if you need manual admin access. The normal path is WhatsApp-first.</p>
                     <input value={registerTenant} onChange={(event) => setRegisterTenant(event.target.value)} placeholder="Workspace name" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2 text-sm" />
                     <button onClick={handleRegister} disabled={authLoading} className="bg-secondary text-secondary-foreground px-5 py-3 rounded-xl text-sm font-bold">
                       {authLoading ? 'Creating…' : 'Create workspace'}
                     </button>
                   </div>
+                </div>
                 </div>
               )}
               {controlError && <p className="text-sm text-destructive">{controlError}</p>}

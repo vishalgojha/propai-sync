@@ -108,6 +108,7 @@ const whatsappJoinSchema = z.object({
   phone: z.string().min(6),
   name: z.string().min(1).optional(),
   tenantName: z.string().min(2).optional(),
+  email: z.string().email().optional(),
 });
 
 const createTenantSchema = z.object({
@@ -362,7 +363,7 @@ app.post("/v1/auth/register", async (req, res) => {
   const token = signToken(userId);
   res.json({
     token,
-    user: { id: userId, email },
+    user: await buildControlUserPayload({ id: userId, email, password_hash: "", created_at: now }),
     tenant: { id: tenantId, name: tenantName, role: "owner" },
   });
 });
@@ -446,7 +447,7 @@ app.post("/v1/auth/bootstrap", async (req, res) => {
   const token = signToken(userId);
   res.json({
     token,
-    user: { id: userId, email },
+    user: await buildControlUserPayload({ id: userId, email, password_hash: "", created_at: now }),
     tenant: { id: tenantId, name: tenantName, role: "owner" },
     bootstrap: true,
   });
@@ -482,7 +483,7 @@ app.post("/v1/auth/login", async (req, res) => {
   const token = signToken(user.id);
   res.json({
     token,
-    user: { id: user.id, email: user.email },
+    user: await buildControlUserPayload(user),
     tenants: memberships.map((m) => ({ id: m.tenant_id, name: m.tenant_name, role: m.role })),
   });
 });
@@ -515,6 +516,21 @@ app.post("/v1/whatsapp/join", async (req, res) => {
     return;
   }
 
+  const requestedEmail = payload.data.email?.trim().toLowerCase();
+  if (requestedEmail) {
+    let existingEmailUser: UserRow | undefined;
+    try {
+      existingEmailUser = await getUserByEmail(requestedEmail);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to check backup email." });
+      return;
+    }
+    if (existingEmailUser) {
+      res.status(409).json({ error: "Email already registered. Use WhatsApp sign-in or another backup email." });
+      return;
+    }
+  }
+
   let existingIdentity: { phone: string; user_id: string; tenant_id: string } | undefined;
   try {
     existingIdentity = await getWhatsappIdentity(phone);
@@ -537,7 +553,7 @@ app.post("/v1/whatsapp/join", async (req, res) => {
       res.json({
         token,
         loginUrl: buildControlLoginUrl(token, tenant.id),
-        user: { id: user.id, email: user.email },
+        user: await buildControlUserPayload(user),
         tenant: { id: tenant.id, name: tenant.name, role: "owner" },
         existing: true,
       });
@@ -553,7 +569,7 @@ app.post("/v1/whatsapp/join", async (req, res) => {
     payload.data.tenantName?.trim() ||
     payload.data.name?.trim() ||
     `Broker ${phone.replace(/\D/g, "").slice(-4)}`;
-  const email = phoneToEmail(phone);
+  const email = requestedEmail || phoneToEmail(phone);
   const tempPassword = `${createToken()}${createToken()}`;
 
   try {
@@ -604,7 +620,7 @@ app.post("/v1/whatsapp/join", async (req, res) => {
   res.json({
     token,
     loginUrl: buildControlLoginUrl(token, tenantId),
-    user: { id: userId, email },
+    user: await buildControlUserPayload({ id: userId, email, password_hash: "", created_at: now }),
     tenant: { id: tenantId, name: tenantName, role: "owner" },
     existing: false,
   });
@@ -630,7 +646,7 @@ app.get("/v1/me", requireAuth, async (req, res) => {
     return;
   }
   res.json({
-    user: { id: user.id, email: user.email },
+    user: await buildControlUserPayload(user),
     tenants: memberships.map((m) => ({ id: m.tenant_id, name: m.tenant_name, role: m.role })),
   });
 });
@@ -1828,6 +1844,34 @@ function normalizeWhatsAppPhone(value: string): string | null {
 function phoneToEmail(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   return `wa+${digits}@propai.live`;
+}
+
+async function getPrimaryWhatsappForUser(userId: string): Promise<string | null> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase
+      .from("whatsapp_identities")
+      .select("phone")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      throw error;
+    }
+    return data?.phone ?? null;
+  }
+  const row = db
+    .prepare("SELECT phone FROM whatsapp_identities WHERE user_id = ? ORDER BY created_at ASC LIMIT 1")
+    .get(userId) as { phone?: string } | undefined;
+  return row?.phone ?? null;
+}
+
+async function buildControlUserPayload(user: UserRow): Promise<{ id: string; email: string; primaryWhatsapp: string | null }> {
+  return {
+    id: user.id,
+    email: user.email,
+    primaryWhatsapp: await getPrimaryWhatsappForUser(user.id),
+  };
 }
 
 async function getWhatsappIdentity(
