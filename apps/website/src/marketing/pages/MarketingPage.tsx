@@ -43,6 +43,23 @@ const FAQ_ITEMS = [
     a: 'PropAi Sync is designed for controlled team workflows, with a separate app, API, and licensing surface instead of a single public endpoint.',
   },
 ] as const;
+const SEO_PAGES = [
+  {
+    to: '/ai-whatsapp-automation-real-estate',
+    title: 'AI WhatsApp Automation for Real Estate',
+    description: 'A public explainer page for teams searching for WhatsApp-first AI automation in real estate.',
+  },
+  {
+    to: '/whatsapp-lead-qualification',
+    title: 'WhatsApp Lead Qualification for Brokers',
+    description: 'How PropAi Sync helps brokers qualify budget, locality, urgency, and buying intent directly in chat.',
+  },
+  {
+    to: '/real-estate-ai-assistant-india',
+    title: 'Real Estate AI Assistant in India',
+    description: 'An India-focused landing page for broker teams looking for a practical AI assistant workflow.',
+  },
+] as const;
 
 function upsertMeta(attribute: 'name' | 'property', key: string, content: string) {
   if (typeof document === 'undefined') return;
@@ -452,6 +469,38 @@ export default function MarketingPage() {
         </div>
       </section>
 
+      {/* SEO Landing Pages */}
+      <section className="py-20 border-t border-border/60">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="max-w-3xl mb-10">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary mb-3">Popular Searches</p>
+            <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-4">
+              Explore more ways PropAi Sync fits your workflow.
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              These focused pages help broker teams, buyers, and AI search tools understand exactly what PropAi Sync is best at.
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {SEO_PAGES.map((page) => (
+              <Link
+                key={page.to}
+                to={page.to}
+                className="group rounded-3xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">{page.title}</h3>
+                    <p className="text-sm leading-7 text-muted-foreground">{page.description}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 shrink-0 text-primary" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section id="faq" className="py-24 bg-muted/30">
         <div className="max-w-3xl mx-auto px-4">
@@ -537,3 +586,4 @@ function ShieldCheckIcon({ className }: { className?: string }) {
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
   );
 }
+

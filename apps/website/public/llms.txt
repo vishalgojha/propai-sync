@@ -16,6 +16,9 @@
 - App: https://app.propai.live/assistant
 - Docs: https://app.propai.live/docs
 - API health: https://api.propai.live/health
+- AI WhatsApp automation for real estate: https://www.propai.live/ai-whatsapp-automation-real-estate
+- WhatsApp lead qualification for brokers: https://www.propai.live/whatsapp-lead-qualification
+- Real estate AI assistant in India: https://www.propai.live/real-estate-ai-assistant-india
 
 ## Intended Audience
 
@@ -36,3 +39,4 @@
 
 - Brand: PropAi Sync
 - Built by: Chaos Craft Labs
+
