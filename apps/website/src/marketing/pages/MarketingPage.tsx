@@ -16,12 +16,130 @@ import { ThemeToggle } from '../../components/ThemeToggle';
 import { Link } from 'react-router-dom';
 import { ANDROID_APK_URL, APP_URL, WHATSAPP_JOIN_URL } from '../../lib/links';
 
+const MARKETING_TITLE = 'PropAi Sync | AI WhatsApp Automation for Indian Real Estate Teams';
+const MARKETING_DESCRIPTION =
+  'PropAi Sync helps Indian real estate teams automate WhatsApp lead follow-ups, qualify prospects, and book site visits faster.';
+const MARKETING_CANONICAL_URL = 'https://www.propai.live/';
+
+const FAQ_ITEMS = [
+  {
+    q: 'Does this replace my agents?',
+    a: 'No. It handles repetitive first contact and qualification so your team can focus on site visits, negotiation, and closing.',
+  },
+  {
+    q: 'Is it difficult to set up?',
+    a: 'No. You can connect your WhatsApp workflows with a guided setup and move from marketing site to app in a few minutes.',
+  },
+  {
+    q: 'Can I jump into a conversation?',
+    a: 'Yes. The control panel keeps conversation visibility so brokers or managers can take over whenever needed.',
+  },
+  {
+    q: "What happens if the AI doesn't know the answer?",
+    a: 'It can defer gracefully and hand the conversation back to your team instead of guessing.',
+  },
+  {
+    q: 'Is my data secure?',
+    a: 'PropAi Sync is designed for controlled team workflows, with a separate app, API, and licensing surface instead of a single public endpoint.',
+  },
+] as const;
+
+function upsertMeta(attribute: 'name' | 'property', key: string, content: string) {
+  if (typeof document === 'undefined') return;
+  let node = document.head.querySelector(`meta[${attribute}="${key}"]`) as HTMLMetaElement | null;
+  if (!node) {
+    node = document.createElement('meta');
+    node.setAttribute(attribute, key);
+    document.head.appendChild(node);
+  }
+  node.setAttribute('content', content);
+}
+
+function upsertCanonical(href: string) {
+  if (typeof document === 'undefined') return;
+  let node = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+  if (!node) {
+    node = document.createElement('link');
+    node.setAttribute('rel', 'canonical');
+    document.head.appendChild(node);
+  }
+  node.setAttribute('href', href);
+}
+
+function upsertJsonLd(id: string, payload: Record<string, unknown>) {
+  if (typeof document === 'undefined') return;
+  let node = document.getElementById(id) as HTMLScriptElement | null;
+  if (!node) {
+    node = document.createElement('script');
+    node.type = 'application/ld+json';
+    node.id = id;
+    document.head.appendChild(node);
+  }
+  node.textContent = JSON.stringify(payload);
+}
+
 export default function MarketingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [companyName, setCompanyName] = useState('');
 
   useEffect(() => {
-    document.title = 'PropAi Sync';
+    document.title = MARKETING_TITLE;
+    upsertMeta('name', 'description', MARKETING_DESCRIPTION);
+    upsertMeta('name', 'robots', 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1');
+    upsertMeta('property', 'og:title', MARKETING_TITLE);
+    upsertMeta('property', 'og:description', MARKETING_DESCRIPTION);
+    upsertMeta('property', 'og:type', 'website');
+    upsertMeta('property', 'og:url', MARKETING_CANONICAL_URL);
+    upsertMeta('property', 'og:site_name', 'PropAi Sync');
+    upsertMeta('name', 'twitter:card', 'summary_large_image');
+    upsertMeta('name', 'twitter:title', MARKETING_TITLE);
+    upsertMeta('name', 'twitter:description', MARKETING_DESCRIPTION);
+    upsertCanonical(MARKETING_CANONICAL_URL);
+    upsertJsonLd('propai-website-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'PropAi Sync',
+      url: MARKETING_CANONICAL_URL,
+      description: MARKETING_DESCRIPTION,
+      publisher: {
+        '@type': 'Organization',
+        name: 'Chaos Craft Labs',
+      },
+    });
+    upsertJsonLd('propai-software-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'PropAi Sync',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web, Android',
+      url: MARKETING_CANONICAL_URL,
+      description: MARKETING_DESCRIPTION,
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+      audience: {
+        '@type': 'Audience',
+        audienceType: 'Indian real estate teams',
+      },
+      provider: {
+        '@type': 'Organization',
+        name: 'Chaos Craft Labs',
+      },
+    });
+    upsertJsonLd('propai-faq-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQ_ITEMS.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.a,
+        },
+      })),
+    });
   }, []);
 
   useEffect(() => {
@@ -339,13 +457,7 @@ export default function MarketingPage() {
         <div className="max-w-3xl mx-auto px-4">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-12 text-center">FAQ</h2>
           <div className="space-y-6">
-            {[
-              { q: "Does this replace my agents?", a: "Not at all. It handles the repetitive initial contact and qualification, allowing your team to focus on high-value tasks like site visits and negotiations." },
-              { q: "Is it difficult to set up?", a: "No. You can connect your WhatsApp account in under 2 minutes using our step-by-step guide." },
-              { q: "Can I jump into a conversation?", a: "Yes, at any time. The dashboard gives you full control to take over any chat manually." },
-              { q: "What happens if the AI doesn't know the answer?", a: "It will politely inform the lead that a human agent will get back to them shortly and alert your team immediately." },
-              { q: "Is my data secure?", a: "We use industry-standard encryption and never share your lead data with third parties." }
-            ].map((item, i) => (
+            {FAQ_ITEMS.map((item, i) => (
               <div key={i} className="bg-background p-6 rounded-2xl border border-border">
                 <h3 className="font-bold mb-2 flex items-center justify-between">
                   {item.q}

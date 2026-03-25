@@ -568,6 +568,13 @@ export default function AppDashboard() {
       return;
     }
     document.title = 'PropAi Sync Control';
+    let robotsMeta = document.head.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (!robotsMeta) {
+      robotsMeta = document.createElement('meta');
+      robotsMeta.setAttribute('name', 'robots');
+      document.head.appendChild(robotsMeta);
+    }
+    robotsMeta.setAttribute('content', 'noindex,nofollow,noarchive');
   }, []);
 
   const activateTab = useCallback(

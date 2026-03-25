@@ -1,0 +1,38 @@
+# PropAi Sync
+
+> PropAi Sync is an AI-powered WhatsApp follow-up and lead qualification platform for Indian real estate teams.
+
+## What PropAi Sync Does
+
+- Automates first-response lead conversations on WhatsApp
+- Qualifies buyers by budget, locality, and timeline
+- Helps brokers schedule site visits and team follow-ups
+- Gives teams a shared control panel for setup, usage, devices, webhooks, and conversations
+
+## Primary URLs
+
+- Website: https://www.propai.live/
+- Contact: https://www.propai.live/contact
+- App: https://app.propai.live/assistant
+- Docs: https://app.propai.live/docs
+- API health: https://api.propai.live/health
+
+## Intended Audience
+
+- Real estate brokers
+- Channel partners
+- Sales teams using WhatsApp as a primary lead channel
+- Indian real estate agencies that want faster lead response without losing human handoff control
+
+## Key Topics
+
+- AI WhatsApp automation
+- Real estate lead qualification
+- Site visit scheduling
+- Broker team workflows
+- WhatsApp Business API setup
+
+## Company
+
+- Brand: PropAi Sync
+- Built by: Chaos Craft Labs
