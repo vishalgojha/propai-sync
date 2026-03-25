@@ -87,6 +87,8 @@ type SetupCheckResponse = {
   };
 };
 
+type SetupWizardStep = 'account' | 'whatsapp' | 'ai' | 'automation' | 'launch';
+
 type ChatMessage = {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -501,6 +503,7 @@ export default function AppDashboard() {
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
+  const [setupWizardStep, setSetupWizardStep] = useState<SetupWizardStep>('account');
   const [androidSetup, setAndroidSetup] = useState<AndroidSetupResponse | null>(null);
   const [androidQrCode, setAndroidQrCode] = useState<string | null>(null);
   const [androidSetupLoading, setAndroidSetupLoading] = useState(false);
@@ -1566,6 +1569,60 @@ export default function AppDashboard() {
     : setupChecklistAllOk
       ? 'Everything essential is ready. You can finish the last form fields and go live.'
       : `${setupRemainingCount} ${setupRemainingCount === 1 ? 'item still needs' : 'items still need'} attention.`;
+  const hasAnyDraftProviderKey = Boolean(
+    settingsDraft.openaiKey.trim() ||
+      settingsDraft.anthropicKey.trim() ||
+      settingsDraft.xaiKey.trim() ||
+      settingsDraft.groqKey.trim() ||
+      settingsDraft.openrouterKey.trim() ||
+      settingsDraft.elevenKey.trim(),
+  );
+  const suggestedSetupStep: SetupWizardStep = !controlToken
+    ? 'account'
+    : !settingsDraft.whatsappPhone.trim()
+      ? 'whatsapp'
+      : !(setupAnyProviderReady || hasAnyDraftProviderKey)
+        ? 'ai'
+        : !settingsDraft.onboardingComplete
+          ? 'automation'
+          : 'launch';
+  const setupWizardSteps: Array<{
+    id: SetupWizardStep;
+    step: string;
+    title: string;
+    description: string;
+  }> = [
+    {
+      id: 'account',
+      step: '01',
+      title: 'Sign in',
+      description: 'Connect this workspace so PropAi can save your setup.',
+    },
+    {
+      id: 'whatsapp',
+      step: '02',
+      title: 'WhatsApp',
+      description: 'Add the number and business details you want to use.',
+    },
+    {
+      id: 'ai',
+      step: '03',
+      title: 'AI',
+      description: 'Connect one provider and choose the default model.',
+    },
+    {
+      id: 'automation',
+      step: '04',
+      title: 'Behavior',
+      description: 'Pick voice and the first workflows PropAi should handle.',
+    },
+    {
+      id: 'launch',
+      step: '05',
+      title: 'Launch',
+      description: 'Review, save, and test your live workspace.',
+    },
+  ];
   const setupEnvSnippet = [
     '# Gateway service',
     'PROPAI_GATEWAY_TOKEN=',
@@ -1577,6 +1634,12 @@ export default function AppDashboard() {
     'CONTROL_GATEWAY_URL=http://gateway.railway.internal:8080',
     'CONTROL_GATEWAY_TOKEN=',
   ].join('\n');
+
+  useEffect(() => {
+    if (!controlToken && setupWizardStep !== 'account') {
+      setSetupWizardStep('account');
+    }
+  }, [controlToken, setupWizardStep]);
 
   const copySetupEnvSnippet = async () => {
     try {
@@ -2138,20 +2201,33 @@ export default function AppDashboard() {
               </section>
             </div>
           );
-        case 'Setup':
+        case 'Setup': {
+          const setupCurrentStep = setupWizardSteps.find((step) => step.id === setupWizardStep) ?? setupWizardSteps[0];
+          const suggestedStepMeta = setupWizardSteps.find((step) => step.id === suggestedSetupStep) ?? setupWizardSteps[0];
+          const setupCurrentIndex = setupWizardSteps.findIndex((step) => step.id === setupCurrentStep.id);
+          const setupPreviousStep = setupCurrentIndex > 0 ? setupWizardSteps[setupCurrentIndex - 1] : null;
+          const setupNextStep = setupCurrentIndex < setupWizardSteps.length - 1 ? setupWizardSteps[setupCurrentIndex + 1] : null;
+          const setupStepStatus: Record<SetupWizardStep, boolean> = {
+            account: Boolean(controlToken),
+            whatsapp: Boolean(settingsDraft.whatsappPhone.trim()),
+            ai: Boolean(setupAnyProviderReady || hasAnyDraftProviderKey),
+            automation: Boolean(settingsDraft.chatProvider && settingsDraft.chatModel.trim()),
+            launch: Boolean(settingsDraft.onboardingComplete),
+          };
           return (
             <div className="space-y-6">
               <section className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-5 shadow-sm">
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                   <div className="max-w-3xl space-y-3">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-primary">Guided setup</p>
-                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Get PropAi ready for your team</h2>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-primary">First-time setup</p>
+                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Set up PropAi in one guided flow</h2>
                     <p className="text-sm md:text-base text-muted-foreground leading-7">
-                      Start simple: connect one AI provider, add your WhatsApp number, and save the defaults you want PropAi to use.
-                      We will keep the technical checks in the background and show you only what still needs attention.
+                      We will get your workspace ready in five simple steps: sign in, connect WhatsApp, add one AI key,
+                      choose how PropAi should help, and then test before you go live. Technical details stay tucked away
+                      unless you need them.
                     </p>
                   </div>
-                  <div className="min-w-[260px] rounded-2xl border border-border bg-muted/30 p-5 space-y-3">
+                  <div className="min-w-[280px] rounded-2xl border border-border bg-muted/30 p-5 space-y-3">
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Setup progress</p>
@@ -2159,7 +2235,7 @@ export default function AppDashboard() {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold">{setupProgressPercent}%</p>
-                        <p className="text-xs text-muted-foreground">core setup done</p>
+                        <p className="text-xs text-muted-foreground">platform ready</p>
                       </div>
                     </div>
                     <div className="h-2 rounded-full bg-border overflow-hidden">
@@ -2168,8 +2244,13 @@ export default function AppDashboard() {
                     <p className={cn('text-sm font-medium', setupChecklistAllOk ? 'text-emerald-600' : 'text-muted-foreground')}>
                       {setupStatusSummary}
                     </p>
-                    {setupMissingSummary && !setupChecklistAllOk && (
-                      <p className="text-xs text-muted-foreground">Still pending: {setupMissingSummary}</p>
+                    {!setupChecklistAllOk && (
+                      <button
+                        onClick={() => setSetupWizardStep(suggestedSetupStep)}
+                        className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
+                      >
+                        Continue with {suggestedStepMeta.title}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -2185,76 +2266,491 @@ export default function AppDashboard() {
                 )}
               </section>
 
-              <section className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-                <div className="bg-card border border-border rounded-3xl p-6 space-y-5 shadow-sm">
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-bold">Before you go live</h3>
+              <section className="grid gap-6 xl:grid-cols-[1.45fr_0.55fr]">
+                <div className="space-y-6">
+                  <section className="bg-card border border-border rounded-3xl p-4 md:p-5 space-y-4 shadow-sm">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">Guided setup flow</p>
+                        <p className="text-xs text-muted-foreground">Move step by step. You can always come back later.</p>
+                      </div>
+                      {suggestedSetupStep !== setupWizardStep && (
+                        <button
+                          onClick={() => setSetupWizardStep(suggestedSetupStep)}
+                          className="text-xs font-semibold underline underline-offset-4"
+                        >
+                          Jump to suggested next step
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-5">
+                      {setupWizardSteps.map((step) => {
+                        const selected = step.id === setupWizardStep;
+                        const completed = setupStepStatus[step.id];
+                        return (
+                          <button
+                            key={step.id}
+                            onClick={() => setSetupWizardStep(step.id)}
+                            className={cn(
+                              'rounded-2xl border px-4 py-4 text-left transition-all',
+                              selected
+                                ? 'border-primary bg-primary/10 shadow-sm'
+                                : 'border-border bg-muted/20 hover:bg-accent',
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">Step {step.step}</p>
+                                <p className="mt-2 text-sm font-semibold">{step.title}</p>
+                              </div>
+                              {completed ? (
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                              ) : (
+                                <span className="mt-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 shrink-0" />
+                              )}
+                            </div>
+                            <p className="mt-2 text-xs leading-5 text-muted-foreground">{step.description}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  <section className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Step {setupCurrentStep.step}</p>
+                        <h3 className="text-2xl font-bold tracking-tight">{setupCurrentStep.title}</h3>
+                        <p className="text-sm text-muted-foreground leading-7">{setupCurrentStep.description}</p>
+                      </div>
+                      <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground max-w-sm">
+                        First-time tip: keep this simple on day one. One WhatsApp number, one AI provider, one default model,
+                        then test in Assistant before expanding anything else.
+                      </div>
+                    </div>
+
+                    {setupWizardStep === 'account' && (
+                      <div className="space-y-5">
+                        {!controlToken ? (
+                          <>
+                            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 space-y-2 text-sm text-amber-900">
+                              <p className="font-semibold">Start here: sign in once so PropAi can save this workspace.</p>
+                              <p>
+                                Signing in unlocks setup saving, device approvals, team access, and your workspace settings.
+                              </p>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-3">
+                              <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                                <p className="text-sm font-semibold">Create or join your workspace</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Use the same email you want to manage PropAi with long-term.
+                                </p>
+                              </div>
+                              <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                                <p className="text-sm font-semibold">Your setup progress gets saved</p>
+                                <p className="text-sm text-muted-foreground">
+                                  You will not need to re-enter the basics every time you return.
+                                </p>
+                              </div>
+                              <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                                <p className="text-sm font-semibold">Your team can be added later</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Finish the basics first, then invite brokers or assistants from Settings.
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              <button
+                                onClick={() => activateTab('Settings')}
+                                className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90"
+                              >
+                                Go to sign in
+                              </button>
+                              <button
+                                onClick={() => setSetupWizardStep('whatsapp')}
+                                className="px-6 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
+                              >
+                                I already signed in elsewhere
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 space-y-2 text-sm text-emerald-800">
+                              <p className="font-semibold">You are connected and ready to keep going.</p>
+                              <p>Great — this workspace can now save your setup, team access, and onboarding progress.</p>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-3">
+                              <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Signed in as</p>
+                                <p className="text-sm font-semibold break-all">{controlUser?.email ?? 'Connected account'}</p>
+                              </div>
+                              <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Workspace</p>
+                                <p className="text-sm font-semibold">{controlTenants.find((tenant) => tenant.id === selectedTenantId)?.name ?? 'Current workspace'}</p>
+                              </div>
+                              <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Team members</p>
+                                <p className="text-sm font-semibold">{teamMembers.length > 0 ? teamMembers.length : 1} connected</p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              <button
+                                onClick={() => setSetupWizardStep('whatsapp')}
+                                className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90"
+                              >
+                                Continue to WhatsApp
+                              </button>
+                              <button
+                                onClick={() => activateTab('Settings')}
+                                className="px-6 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
+                              >
+                                Manage account
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {setupWizardStep === 'whatsapp' && (
+                      <div className="space-y-5">
+                        <div className="grid gap-4 md:grid-cols-3">
+                          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                            <p className="text-sm font-semibold">Use your primary business number</p>
+                            <p className="text-sm text-muted-foreground">This is the number leads should message first.</p>
+                          </div>
+                          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                            <p className="text-sm font-semibold">Start with the phone number</p>
+                            <p className="text-sm text-muted-foreground">Business ID and Phone Number ID can be filled now or later.</p>
+                          </div>
+                          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                            <p className="text-sm font-semibold">You can refine later</p>
+                            <p className="text-sm text-muted-foreground">The dedicated WhatsApp tab will still be there after launch.</p>
+                          </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5 md:col-span-2">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">WhatsApp number</label>
+                            <input
+                              value={settingsDraft.whatsappPhone}
+                              onChange={(event) =>
+                                setSettingsDraft((prev) => ({ ...prev, whatsappPhone: event.target.value }))
+                              }
+                              placeholder="+91 98765 43210"
+                              className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            <p className="text-xs text-muted-foreground">Use the same format you plan to publish to clients.</p>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Business ID (optional)</label>
+                            <input
+                              value={settingsDraft.whatsappBusinessId}
+                              onChange={(event) =>
+                                setSettingsDraft((prev) => ({ ...prev, whatsappBusinessId: event.target.value }))
+                              }
+                              placeholder="Meta business ID"
+                              className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Phone number ID (optional)</label>
+                            <input
+                              value={settingsDraft.whatsappPhoneNumberId}
+                              onChange={(event) =>
+                                setSettingsDraft((prev) => ({ ...prev, whatsappPhoneNumberId: event.target.value }))
+                              }
+                              placeholder="Meta phone number ID"
+                              className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {setupWizardStep === 'ai' && (
+                      <div className="space-y-5">
+                        <div className="rounded-2xl border border-border bg-muted/20 p-4 text-sm text-muted-foreground leading-7">
+                          Start with one provider only. OpenAI or Anthropic is enough for your first live test. You can add backup
+                          providers later without changing the rest of the setup.
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenAI API key</label>
+                            <input type="password" value={settingsDraft.openaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openaiKey: event.target.value }))} placeholder={hasOpenAiKey ? 'Saved — enter to replace' : 'sk-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Anthropic API key</label>
+                            <input type="password" value={settingsDraft.anthropicKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, anthropicKey: event.target.value }))} placeholder={hasAnthropicKey ? 'Saved — enter to replace' : 'sk-ant-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">xAI API key (optional)</label>
+                            <input type="password" value={settingsDraft.xaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, xaiKey: event.target.value }))} placeholder={hasXaiKey ? 'Saved — enter to replace' : 'xai-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Groq API key (optional)</label>
+                            <input type="password" value={settingsDraft.groqKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, groqKey: event.target.value }))} placeholder={hasGroqKey ? 'Saved — enter to replace' : 'gsk_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenRouter API key (optional)</label>
+                            <input type="password" value={settingsDraft.openrouterKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openrouterKey: event.target.value }))} placeholder={hasOpenRouterKey ? 'Saved — enter to replace' : 'sk-or-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">ElevenLabs API key (optional)</label>
+                            <input type="password" value={settingsDraft.elevenKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, elevenKey: event.target.value }))} placeholder={hasElevenKey ? 'Saved — enter to replace' : 'eleven_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                          </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Default provider</label>
+                            <select value={settingsDraft.chatProvider} onChange={(event) => { const provider = event.target.value; setSettingsDraft((prev) => ({ ...prev, chatProvider: provider, chatModel: resolveDefaultChatModel(provider) })); }} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary">
+                              {CHAT_PROVIDER_OPTIONS.map((option) => (
+                                <option key={option.id} value={option.id}>{option.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Default model</label>
+                            <input value={settingsDraft.chatModel} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, chatModel: event.target.value }))} placeholder={resolveDefaultChatModel(settingsDraft.chatProvider)} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {setupWizardStep === 'automation' && (
+                      <div className="space-y-5">
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                            <p className="text-sm font-semibold">What PropAi should do first</p>
+                            <p className="text-sm text-muted-foreground">
+                              Focus on the basics first: answer quickly, qualify leads, and hand off anything sensitive.
+                            </p>
+                          </div>
+                          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                            <p className="text-sm font-semibold">Keep your first live version narrow</p>
+                            <p className="text-sm text-muted-foreground">
+                              It is better to go live with two useful automations than ten half-configured ones.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Voice provider</label>
+                            <select value={settingsDraft.ttsProvider} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, ttsProvider: event.target.value }))} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary">
+                              {TTS_PROVIDER_OPTIONS.map((option) => (
+                                <option key={option.id} value={option.id}>{option.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Voice name</label>
+                            <input value={settingsDraft.ttsVoice} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, ttsVoice: event.target.value }))} placeholder="Rachel" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <p className="text-sm font-semibold">Choose the first workflows PropAi should handle</p>
+                          <p className="text-sm text-muted-foreground">These are your day-one defaults. You can expand after the first week.</p>
+                          <div className="grid md:grid-cols-2 gap-3">
+                            {SKILL_OPTIONS.map((skill) => {
+                              const checked = settingsDraft.skills.includes(skill.id);
+                              return (
+                                <label key={skill.id} className="flex items-center gap-2 text-sm rounded-xl border border-border bg-muted/20 px-3 py-3">
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={(event) => {
+                                      setSettingsDraft((prev) => {
+                                        const next = new Set(prev.skills);
+                                        if (event.target.checked) next.add(skill.id);
+                                        else next.delete(skill.id);
+                                        return { ...prev, skills: Array.from(next) };
+                                      });
+                                    }}
+                                  />
+                                  {skill.label}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {setupWizardStep === 'launch' && (
+                      <div className="space-y-5">
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Account</p>
+                            <p className="text-sm font-semibold">{controlToken ? 'Connected' : 'Needs sign-in'}</p>
+                          </div>
+                          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">WhatsApp</p>
+                            <p className="text-sm font-semibold">{settingsDraft.whatsappPhone.trim() || 'Add your number'}</p>
+                          </div>
+                          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">AI</p>
+                            <p className="text-sm font-semibold">{setupAnyProviderReady || hasAnyDraftProviderKey ? settingsDraft.chatProvider : 'Connect one provider'}</p>
+                          </div>
+                          <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Gateway checks</p>
+                            <p className="text-sm font-semibold">{setupReady ? 'Ready to launch' : 'Still needs attention'}</p>
+                          </div>
+                        </div>
+
+                        {setupCheckError && (
+                          <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                            <p className="font-semibold">We could not verify the technical checks just now.</p>
+                            <p className="text-xs mt-1 opacity-90">{setupCheckError}</p>
+                          </div>
+                        )}
+
+                        <div className="space-y-3">
+                          {setupChecklist.map((item) => (
+                            <div key={item.id} className="rounded-2xl border border-border bg-muted/20 px-4 py-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  {item.ok ? (
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                  ) : (
+                                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                                  )}
+                                  <p className="text-sm font-semibold">{item.label}</p>
+                                </div>
+                                <p className="text-sm text-muted-foreground">{item.detail}</p>
+                              </div>
+                              <div className="rounded-xl border border-border bg-background px-3 py-2 text-xs text-muted-foreground md:max-w-xs">
+                                {item.action}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {!setupReady && (
+                          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
+                            You can still save your workspace details now, but one or more technical launch checks are unfinished.
+                          </div>
+                        )}
+
+                        <label className="flex items-center gap-2 text-sm font-semibold rounded-xl border border-border px-4 py-3 bg-muted/20">
+                          <input type="checkbox" checked={settingsDraft.onboardingComplete} disabled={!setupReady} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, onboardingComplete: event.target.checked }))} />
+                          Mark setup as complete
+                        </label>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        {setupPreviousStep ? (
+                          <button
+                            onClick={() => setSetupWizardStep(setupPreviousStep.id)}
+                            className="px-5 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
+                          >
+                            Back
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => activateTab('Dashboard')}
+                            className="px-5 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
+                          >
+                            Back to dashboard
+                          </button>
+                        )}
+                        {setupNextStep && (
+                          <button
+                            onClick={() => setSetupWizardStep(setupNextStep.id)}
+                            className="px-5 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90"
+                          >
+                            Continue to {setupNextStep.title}
+                          </button>
+                        )}
+                      </div>
+                      {setupWizardStep === 'launch' && (
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button
+                            onClick={saveTenantSettings}
+                            disabled={settingsSaving}
+                            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-60"
+                          >
+                            {settingsSaving ? 'Saving…' : 'Save setup'}
+                          </button>
+                          <button
+                            onClick={() => activateTab('Assistant')}
+                            className="px-6 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
+                          >
+                            Test in Assistant
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                </div>
+
+                <div className="space-y-4">
+                  <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
+                    <h3 className="text-base font-bold">What happens on first run</h3>
+                    <ol className="space-y-3 text-sm text-muted-foreground">
+                      <li>1. Sign in once so PropAi can save this workspace.</li>
+                      <li>2. Add the WhatsApp number you want leads to message.</li>
+                      <li>3. Paste one AI key and keep one default model.</li>
+                      <li>4. Pick the first tasks PropAi should help with.</li>
+                      <li>5. Save, then test from Assistant before inviting your full team.</li>
+                    </ol>
+                  </section>
+
+                  <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
+                    <div className="space-y-2">
+                      <h3 className="text-base font-bold">Recommended next action</h3>
                       <p className="text-sm text-muted-foreground">
-                        These are the only platform checks that must be ready before onboarding and device pairing can work smoothly.
+                        Right now, the best next move is <span className="font-semibold text-foreground">{suggestedStepMeta.title}</span>.
                       </p>
                     </div>
                     <button
-                      onClick={loadSetupCheck}
-                      disabled={setupCheckLoading}
-                      className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-accent disabled:opacity-60"
+                      onClick={() => setSetupWizardStep(suggestedSetupStep)}
+                      className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
                     >
-                      <RefreshCw className={cn('w-3.5 h-3.5', setupCheckLoading && 'animate-spin')} />
-                      {setupCheckLoading ? 'Checking…' : 'Recheck'}
+                      Open {suggestedStepMeta.title}
                     </button>
-                  </div>
+                    <p className="text-xs text-muted-foreground">
+                      We keep the flow simple on purpose so the first live version goes out quickly.
+                    </p>
+                  </section>
 
-                  {setupCheckError && (
-                    <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                      <p className="font-semibold">We could not verify the setup just now.</p>
-                      <p className="text-xs mt-1 opacity-90">{setupCheckError}</p>
-                    </div>
-                  )}
-
-                  <div className="grid gap-4 lg:grid-cols-3">
-                    {setupChecklist.map((item) => (
-                      <div key={item.id} className="rounded-2xl border border-border bg-muted/30 p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">Step {item.step}</p>
-                            <h4 className="text-sm font-bold mt-2">{item.label}</h4>
-                          </div>
-                          <span
-                            className={cn(
-                              'inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest',
-                              item.ok ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-700',
-                            )}
-                          >
-                            {item.ok ? 'Ready' : 'Needs setup'}
-                          </span>
-                        </div>
-                        <p className="text-sm leading-6 text-muted-foreground">{item.detail}</p>
-                        <div className="rounded-xl border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
-                          {item.action}
-                        </div>
-                        {item.id === 'provider-key' && setupCheck && (
-                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                            OpenAI: {setupProviderKeys.openai ? 'On' : 'Off'} · Anthropic: {setupProviderKeys.anthropic ? 'On' : 'Off'} · xAI: {setupProviderKeys.xai ? 'On' : 'Off'} · ElevenLabs: {setupProviderKeys.elevenlabs ? 'On' : 'Off'}
-                          </p>
-                        )}
+                  <details className="bg-card border border-border rounded-3xl p-6 shadow-sm">
+                    <summary className="cursor-pointer list-none flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-base font-bold">Technical setup details</p>
+                        <p className="text-xs text-muted-foreground mt-1">Only needed if you or a teammate are wiring Railway.</p>
                       </div>
-                    ))}
-                  </div>
-
-                  <details className="rounded-2xl border border-border bg-muted/20 px-4 py-4">
-                    <summary className="cursor-pointer list-none text-sm font-semibold flex items-center justify-between gap-4">
-                      <span>For your technical teammate: Railway env block</span>
-                      <span className="text-xs text-muted-foreground">Copy once and paste into Railway</span>
+                      <span className="text-xs font-semibold underline underline-offset-4">Open</span>
                     </summary>
-                    <div className="mt-4 space-y-3">
+                    <div className="mt-5 space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <p className="text-xs text-muted-foreground">
-                          You usually only do this once. After that, most of the setup happens from this page.
-                        </p>
+                        <p className="text-sm text-muted-foreground">Use this only when you need to finish service-level checks.</p>
                         <button
-                          onClick={copySetupEnvSnippet}
-                          className="text-xs font-semibold underline"
+                          onClick={loadSetupCheck}
+                          disabled={setupCheckLoading}
+                          className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-accent disabled:opacity-60"
                         >
+                          <RefreshCw className={cn('w-3.5 h-3.5', setupCheckLoading && 'animate-spin')} />
+                          {setupCheckLoading ? 'Checking…' : 'Recheck'}
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {setupChecklist.map((item) => (
+                          <div key={item.id} className="rounded-2xl border border-border bg-muted/20 px-4 py-3 space-y-1.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-sm font-semibold">{item.label}</p>
+                              <span className={cn('text-[10px] font-bold uppercase tracking-widest', item.ok ? 'text-emerald-600' : 'text-amber-700')}>
+                                {item.ok ? 'Ready' : 'Needs setup'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{item.action}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <p className="text-xs text-muted-foreground">Copy once and paste into Railway if you are wiring services manually.</p>
+                        <button onClick={copySetupEnvSnippet} className="text-xs font-semibold underline underline-offset-4">
                           Copy env snippet
                         </button>
                       </div>
@@ -2264,251 +2760,10 @@ export default function AppDashboard() {
                     </div>
                   </details>
                 </div>
-
-                <div className="space-y-4">
-                  <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
-                    <h3 className="text-base font-bold">Recommended order</h3>
-                    <ol className="space-y-3 text-sm text-muted-foreground">
-                      <li>1. Sign in to this workspace.</li>
-                      <li>2. Make sure one AI provider key is connected.</li>
-                      <li>3. Add your WhatsApp number and defaults below.</li>
-                      <li>4. Save setup and mark onboarding complete.</li>
-                    </ol>
-                  </section>
-
-                  {!controlToken ? (
-                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
-                      <div className="space-y-2">
-                        <h3 className="text-base font-bold">Sign in before editing settings</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Use your email sign-in first so this workspace can save your setup, pairing status, and automation defaults.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => activateTab('Settings')}
-                        className="w-full px-5 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
-                      >
-                        Go to sign in
-                      </button>
-                    </section>
-                  ) : (
-                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
-                      <div className="space-y-2">
-                        <h3 className="text-base font-bold">Workspace status</h3>
-                        <p className="text-sm text-muted-foreground">
-                          You are signed in. Finish the form below and save once you are happy with the defaults.
-                        </p>
-                      </div>
-                      <div className="grid gap-3">
-                        <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Chat provider</p>
-                          <p className="text-sm font-semibold mt-1">{activeChatProvider || 'Not selected yet'}</p>
-                        </div>
-                        <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Default model</p>
-                          <p className="text-sm font-semibold mt-1 break-all">{activeChatModel || 'Not selected yet'}</p>
-                        </div>
-                        <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">WhatsApp number</p>
-                          <p className="text-sm font-semibold mt-1">{tenantSettings.whatsapp?.phone || 'Not added yet'}</p>
-                        </div>
-                      </div>
-                    </section>
-                  )}
-                </div>
               </section>
-
-              {!controlToken ? null : (
-                <>
-                  <section className="grid gap-6 xl:grid-cols-2">
-                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Step 1</p>
-                        <h3 className="text-lg font-bold">Your WhatsApp details</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Add the number and business IDs you want PropAi to use. You can start with just the number and come back for the optional IDs later.
-                        </p>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5 md:col-span-2">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">WhatsApp number</label>
-                          <input
-                            value={settingsDraft.whatsappPhone}
-                            onChange={(event) =>
-                              setSettingsDraft((prev) => ({ ...prev, whatsappPhone: event.target.value }))
-                            }
-                            placeholder="+91 98765 43210"
-                            className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Business ID (optional)</label>
-                          <input
-                            value={settingsDraft.whatsappBusinessId}
-                            onChange={(event) =>
-                              setSettingsDraft((prev) => ({ ...prev, whatsappBusinessId: event.target.value }))
-                            }
-                            placeholder="Meta business ID"
-                            className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Phone number ID (optional)</label>
-                          <input
-                            value={settingsDraft.whatsappPhoneNumberId}
-                            onChange={(event) =>
-                              setSettingsDraft((prev) => ({ ...prev, whatsappPhoneNumberId: event.target.value }))
-                            }
-                            placeholder="Meta phone number ID"
-                            className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Step 2</p>
-                        <h3 className="text-lg font-bold">Connect an AI provider</h3>
-                        <p className="text-sm text-muted-foreground">
-                          One provider key is enough to get started. Add more only if you want backup options or voice later.
-                        </p>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenAI API key</label>
-                          <input type="password" value={settingsDraft.openaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openaiKey: event.target.value }))} placeholder={hasOpenAiKey ? 'Saved — enter to replace' : 'sk-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Anthropic API key</label>
-                          <input type="password" value={settingsDraft.anthropicKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, anthropicKey: event.target.value }))} placeholder={hasAnthropicKey ? 'Saved — enter to replace' : 'sk-ant-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">xAI API key</label>
-                          <input type="password" value={settingsDraft.xaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, xaiKey: event.target.value }))} placeholder={hasXaiKey ? 'Saved — enter to replace' : 'xai-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Groq API key (optional)</label>
-                          <input type="password" value={settingsDraft.groqKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, groqKey: event.target.value }))} placeholder={hasGroqKey ? 'Saved — enter to replace' : 'gsk_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenRouter API key (optional)</label>
-                          <input type="password" value={settingsDraft.openrouterKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openrouterKey: event.target.value }))} placeholder={hasOpenRouterKey ? 'Saved — enter to replace' : 'sk-or-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">ElevenLabs API key (optional)</label>
-                          <input type="password" value={settingsDraft.elevenKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, elevenKey: event.target.value }))} placeholder={hasElevenKey ? 'Saved — enter to replace' : 'eleven_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
-                        </div>
-                      </div>
-                    </section>
-                  </section>
-
-                  <section className="grid gap-6 xl:grid-cols-2">
-                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Step 3</p>
-                        <h3 className="text-lg font-bold">Conversation defaults</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Pick the provider and model PropAi should use by default when your team chats from the app.
-                        </p>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Chat provider</label>
-                          <select value={settingsDraft.chatProvider} onChange={(event) => { const provider = event.target.value; setSettingsDraft((prev) => ({ ...prev, chatProvider: provider, chatModel: resolveDefaultChatModel(provider) })); }} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary">
-                            {CHAT_PROVIDER_OPTIONS.map((option) => (
-                              <option key={option.id} value={option.id}>{option.label}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Default model</label>
-                          <input value={settingsDraft.chatModel} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, chatModel: event.target.value }))} placeholder={resolveDefaultChatModel(settingsDraft.chatProvider)} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Use the provider and model your team trusts most. One default is enough to start.</p>
-                    </section>
-
-                    <section className="bg-card border border-border rounded-3xl p-6 space-y-4 shadow-sm">
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Step 4</p>
-                        <h3 className="text-lg font-bold">Voice and skills</h3>
-                        <p className="text-sm text-muted-foreground">These are optional but useful once the basics are working.</p>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">TTS provider</label>
-                          <select value={settingsDraft.ttsProvider} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, ttsProvider: event.target.value }))} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary">
-                            {TTS_PROVIDER_OPTIONS.map((option) => (
-                              <option key={option.id} value={option.id}>{option.label}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Voice name</label>
-                          <input value={settingsDraft.ttsVoice} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, ttsVoice: event.target.value }))} placeholder="Rachel" className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <p className="text-sm text-muted-foreground">Choose the first workflows PropAi should focus on.</p>
-                        <div className="grid md:grid-cols-2 gap-3">
-                          {SKILL_OPTIONS.map((skill) => {
-                            const checked = settingsDraft.skills.includes(skill.id);
-                            return (
-                              <label key={skill.id} className="flex items-center gap-2 text-sm rounded-xl border border-border bg-muted/20 px-3 py-2">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={(event) => {
-                                    setSettingsDraft((prev) => {
-                                      const next = new Set(prev.skills);
-                                      if (event.target.checked) next.add(skill.id);
-                                      else next.delete(skill.id);
-                                      return { ...prev, skills: Array.from(next) };
-                                    });
-                                  }}
-                                />
-                                {skill.label}
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </section>
-                  </section>
-
-                  <section className="bg-card border border-border rounded-3xl p-6 space-y-5 shadow-sm">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Final step</p>
-                        <h3 className="text-lg font-bold">Save setup and go live</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Once saved, your workspace will keep these defaults and you can move on to pairing, conversations, and live follow-up.
-                        </p>
-                      </div>
-                      <label className="flex items-center gap-2 text-sm font-semibold rounded-xl border border-border px-4 py-3 bg-muted/20">
-                        <input type="checkbox" checked={settingsDraft.onboardingComplete} disabled={!setupReady} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, onboardingComplete: event.target.checked }))} />
-                        Mark setup as complete
-                      </label>
-                    </div>
-                    {!setupReady && (
-                      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
-                        Finish the checklist above before marking onboarding complete.
-                      </div>
-                    )}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <button onClick={saveTenantSettings} disabled={settingsSaving} className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-60">
-                        {settingsSaving ? 'Saving…' : 'Save setup'}
-                      </button>
-                      <button onClick={() => activateTab('WhatsApp')} className="px-6 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent">
-                        Review WhatsApp tab
-                      </button>
-                    </div>
-                  </section>
-                </>
-              )}
             </div>
           );
+        }
         case 'WhatsApp':
           return (
             <div className="space-y-6">
@@ -3340,7 +3595,7 @@ export default function AppDashboard() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10">
-          {(setupCheckError || (setupCheck && !setupReady)) && (
+          {activeTab !== 'Setup' && (setupCheckError || (setupCheck && !setupReady)) && (
             <div className="sticky top-0 z-20 mb-4">
               <div className="bg-destructive/10 border border-destructive/40 rounded-2xl px-4 py-3 md:px-6 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div className="space-y-1">
