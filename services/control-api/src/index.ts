@@ -46,6 +46,8 @@ if (!jwtSecret) {
 
 const ROLE_VALUES = ["owner", "manager", "agent", "viewer"] as const;
 type Role = (typeof ROLE_VALUES)[number];
+const CONTACT_ROLE_VALUES = ["lead", "broker", "owner", "admin"] as const;
+type ContactRole = (typeof CONTACT_ROLE_VALUES)[number];
 const WHATSAPP_ONBOARDING_STEP_VALUES = ["ownerName", "businessName", "city", "email", "businessType", "done"] as const;
 type WhatsAppOnboardingStep = (typeof WHATSAPP_ONBOARDING_STEP_VALUES)[number];
 const ALLOWED_USAGE_PROVIDERS = new Set(["openai", "anthropic", "xai", "elevenlabs"]);
@@ -215,6 +217,7 @@ const webhookListingSchema = z.object({
 
 const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 const RETRY_POLICY = { initialMs: 500, maxMs: 8000, factor: 2, jitter: 0.2, maxRetries: 3 };
+const WEBHOOK_DB_TIMEOUT_MS = parsePositiveInt(process.env.WEBHOOK_DB_TIMEOUT_MS, 5000);
 
 const supabase: SupabaseClient | null = SUPABASE_ENABLED
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -233,6 +236,29 @@ async function sleep(ms: number) {
     return;
   }
   await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+class OperationTimeoutError extends Error {
+  constructor(context: string, timeoutMs: number) {
+    super(`${context} timed out after ${timeoutMs}ms`);
+    this.name = "OperationTimeoutError";
+  }
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, context: string): Promise<T> {
+  let timer: NodeJS.Timeout | null = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new OperationTimeoutError(context, timeoutMs)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
 }
 
 async function fetchWithRetry(
@@ -336,6 +362,14 @@ const settingsSchema = z.object({
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
+const jsonErrorHandler: express.ErrorRequestHandler = (err, _req, res, next) => {
+  if (err instanceof SyntaxError && "status" in err) {
+    res.status(400).json({ error: "Invalid JSON body." });
+    return;
+  }
+  next(err);
+};
+app.use(jsonErrorHandler);
 registerGlobalErrorHandlers();
 
 const db = openDatabase(DB_PATH);
@@ -375,17 +409,23 @@ app.post("/save-conversation", requireToolWebhookSecret, async (req, res) => {
     return;
   }
   try {
-    await insertConversationLog({
-      phone,
-      role: normalizeContactRole(payload.data.role),
-      message: payload.data.message.trim(),
-      sender: payload.data.sender?.trim() || "assistant",
-      timestamp: payload.data.timestamp?.trim() || nowIso(),
-    });
+    await withTimeout(
+      insertConversationLog({
+        phone,
+        role: normalizeContactRole(payload.data.role),
+        message: payload.data.message.trim(),
+        sender: payload.data.sender?.trim() || "assistant",
+        timestamp: payload.data.timestamp?.trim() || nowIso(),
+      }),
+      WEBHOOK_DB_TIMEOUT_MS,
+      "save-conversation insertConversationLog",
+    );
     res.json({ ok: true });
   } catch (err) {
+    console.error("[tool-webhook] save-conversation failed", err);
     const message = err instanceof Error ? err.message : "Failed to store conversation.";
-    res.status(500).json({ error: message });
+    const status = err instanceof OperationTimeoutError ? 504 : 500;
+    res.status(status).json({ error: message });
   }
 });
 
@@ -401,21 +441,31 @@ app.post("/save-lead", requireToolWebhookSecret, async (req, res) => {
     return;
   }
   try {
-    const existing = await getContactByPhone(phone);
+    const existing = await withTimeout(
+      getContactByPhone(phone),
+      WEBHOOK_DB_TIMEOUT_MS,
+      "save-lead getContactByPhone",
+    );
     const nextMetadata = {
       ...(existing?.metadata ?? {}),
       ...(payload.data.metadata ?? {}),
     };
-    const upserted = await upsertContact({
-      phone,
-      name: payload.data.name?.trim() || existing?.name || "Lead",
-      role: normalizeContactRole(payload.data.role ?? existing?.role),
-      metadata: nextMetadata,
-    });
+    const upserted = await withTimeout(
+      upsertContact({
+        phone,
+        name: payload.data.name?.trim() || existing?.name || "Lead",
+        role: normalizeContactRole(payload.data.role ?? existing?.role),
+        metadata: nextMetadata,
+      }),
+      WEBHOOK_DB_TIMEOUT_MS,
+      "save-lead upsertContact",
+    );
     res.json({ ok: true, contact: upserted });
   } catch (err) {
+    console.error("[tool-webhook] save-lead failed", err);
     const message = err instanceof Error ? err.message : "Failed to save lead.";
-    res.status(500).json({ error: message });
+    const status = err instanceof OperationTimeoutError ? 504 : 500;
+    res.status(status).json({ error: message });
   }
 });
 
@@ -431,23 +481,33 @@ app.post("/save-listing", requireToolWebhookSecret, async (req, res) => {
     return;
   }
   try {
-    const existing = await getContactByPhone(phone);
+    const existing = await withTimeout(
+      getContactByPhone(phone),
+      WEBHOOK_DB_TIMEOUT_MS,
+      "save-listing getContactByPhone",
+    );
     const existingMetadata = existing?.metadata ?? {};
     const listings = Array.isArray(existingMetadata.listings) ? existingMetadata.listings : [];
     const nextMetadata = {
       ...existingMetadata,
       listings: [...listings, payload.data.listing],
     };
-    const upserted = await upsertContact({
-      phone,
-      name: payload.data.name?.trim() || existing?.name || "Broker",
-      role: normalizeContactRole(payload.data.role ?? existing?.role ?? "broker"),
-      metadata: nextMetadata,
-    });
+    const upserted = await withTimeout(
+      upsertContact({
+        phone,
+        name: payload.data.name?.trim() || existing?.name || "Broker",
+        role: normalizeContactRole(payload.data.role ?? existing?.role ?? "broker"),
+        metadata: nextMetadata,
+      }),
+      WEBHOOK_DB_TIMEOUT_MS,
+      "save-listing upsertContact",
+    );
     res.json({ ok: true, contact: upserted });
   } catch (err) {
+    console.error("[tool-webhook] save-listing failed", err);
     const message = err instanceof Error ? err.message : "Failed to save listing.";
-    res.status(500).json({ error: message });
+    const status = err instanceof OperationTimeoutError ? 504 : 500;
+    res.status(status).json({ error: message });
   }
 });
 
