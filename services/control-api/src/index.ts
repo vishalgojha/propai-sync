@@ -26,6 +26,7 @@ const CONTROL_GATEWAY_TOKEN =
   process.env.PROPAI_GATEWAY_TOKEN ??
   "";
 const CONTROL_USAGE_INGEST_KEY = process.env.CONTROL_USAGE_INGEST_KEY ?? "";
+const TOOL_WEBHOOK_SECRET = process.env.TOOL_WEBHOOK_SECRET ?? "";
 const JWT_TTL_DAYS = parsePositiveInt(process.env.CONTROL_JWT_TTL_DAYS, 30);
 const INVITE_TTL_DAYS = parsePositiveInt(process.env.CONTROL_INVITE_TTL_DAYS, 7);
 const isDev =
@@ -192,6 +193,25 @@ const usageIngestSchema = z.object({
 });
 
 const usageRangeSchema = z.enum(["24h", "7d", "30d"]);
+const webhookConversationSchema = z.object({
+  phone: z.string().min(6),
+  role: z.string().min(2).optional(),
+  message: z.string().min(1),
+  sender: z.string().min(1).optional(),
+  timestamp: z.string().min(1).optional(),
+});
+const webhookLeadSchema = z.object({
+  phone: z.string().min(6),
+  name: z.string().min(1).optional(),
+  role: z.string().min(2).optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+const webhookListingSchema = z.object({
+  phone: z.string().min(6),
+  name: z.string().min(1).optional(),
+  role: z.string().min(2).optional(),
+  listing: z.record(z.unknown()),
+});
 
 const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 const RETRY_POLICY = { initialMs: 500, maxMs: 8000, factor: 2, jitter: 0.2, maxRetries: 3 };
@@ -341,6 +361,94 @@ app.get("/health", (_req, res) => {
     gatewayUrlConfigured: Boolean(CONTROL_GATEWAY_URL),
     gatewayTokenConfigured: Boolean(CONTROL_GATEWAY_TOKEN),
   });
+});
+
+app.post("/save-conversation", requireToolWebhookSecret, async (req, res) => {
+  const payload = webhookConversationSchema.safeParse(req.body);
+  if (!payload.success) {
+    res.status(400).json({ error: payload.error.message });
+    return;
+  }
+  const phone = normalizeWhatsAppPhone(payload.data.phone);
+  if (!phone) {
+    res.status(400).json({ error: "Invalid phone." });
+    return;
+  }
+  try {
+    await insertConversationLog({
+      phone,
+      role: normalizeContactRole(payload.data.role),
+      message: payload.data.message.trim(),
+      sender: payload.data.sender?.trim() || "assistant",
+      timestamp: payload.data.timestamp?.trim() || nowIso(),
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to store conversation.";
+    res.status(500).json({ error: message });
+  }
+});
+
+app.post("/save-lead", requireToolWebhookSecret, async (req, res) => {
+  const payload = webhookLeadSchema.safeParse(req.body);
+  if (!payload.success) {
+    res.status(400).json({ error: payload.error.message });
+    return;
+  }
+  const phone = normalizeWhatsAppPhone(payload.data.phone);
+  if (!phone) {
+    res.status(400).json({ error: "Invalid phone." });
+    return;
+  }
+  try {
+    const existing = await getContactByPhone(phone);
+    const nextMetadata = {
+      ...(existing?.metadata ?? {}),
+      ...(payload.data.metadata ?? {}),
+    };
+    const upserted = await upsertContact({
+      phone,
+      name: payload.data.name?.trim() || existing?.name || "Lead",
+      role: normalizeContactRole(payload.data.role ?? existing?.role),
+      metadata: nextMetadata,
+    });
+    res.json({ ok: true, contact: upserted });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to save lead.";
+    res.status(500).json({ error: message });
+  }
+});
+
+app.post("/save-listing", requireToolWebhookSecret, async (req, res) => {
+  const payload = webhookListingSchema.safeParse(req.body);
+  if (!payload.success) {
+    res.status(400).json({ error: payload.error.message });
+    return;
+  }
+  const phone = normalizeWhatsAppPhone(payload.data.phone);
+  if (!phone) {
+    res.status(400).json({ error: "Invalid phone." });
+    return;
+  }
+  try {
+    const existing = await getContactByPhone(phone);
+    const existingMetadata = existing?.metadata ?? {};
+    const listings = Array.isArray(existingMetadata.listings) ? existingMetadata.listings : [];
+    const nextMetadata = {
+      ...existingMetadata,
+      listings: [...listings, payload.data.listing],
+    };
+    const upserted = await upsertContact({
+      phone,
+      name: payload.data.name?.trim() || existing?.name || "Broker",
+      role: normalizeContactRole(payload.data.role ?? existing?.role ?? "broker"),
+      metadata: nextMetadata,
+    });
+    res.json({ ok: true, contact: upserted });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to save listing.";
+    res.status(500).json({ error: message });
+  }
 });
 
 app.post("/v1/auth/register", async (req, res) => {
@@ -1878,8 +1986,162 @@ function requireAuth(req: express.Request, res: express.Response, next: express.
   }
 }
 
+function requireToolWebhookSecret(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (!TOOL_WEBHOOK_SECRET) {
+    next();
+    return;
+  }
+  const supplied = req.get("x-webhook-secret") ?? "";
+  if (!supplied || !safeEqual(supplied, TOOL_WEBHOOK_SECRET)) {
+    res.status(401).json({ error: "Unauthorized tool webhook." });
+    return;
+  }
+  next();
+}
+
 function hasRole(role: Role, allowed: Role[]): boolean {
   return allowed.includes(role);
+}
+
+function normalizeContactRole(value: string | undefined): ContactRole {
+  const normalized = value?.trim().toLowerCase();
+  if (!normalized) {
+    return "lead";
+  }
+  if ((CONTACT_ROLE_VALUES as readonly string[]).includes(normalized)) {
+    return normalized as ContactRole;
+  }
+  return "lead";
+}
+
+type ContactRecord = {
+  phone: string;
+  name: string | null;
+  role: ContactRole;
+  metadata: Record<string, unknown>;
+};
+
+function parseMetadataObject(value: unknown): Record<string, unknown> {
+  if (!value) {
+    return {};
+  }
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+      return {};
+    } catch {
+      return {};
+    }
+  }
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
+async function getContactByPhone(phone: string): Promise<ContactRecord | null> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase.from("contacts").select("*").eq("phone", phone).maybeSingle();
+    if (error) {
+      throw error;
+    }
+    if (!data) {
+      return null;
+    }
+    return {
+      phone: data.phone,
+      name: data.name ?? null,
+      role: normalizeContactRole(data.role),
+      metadata: parseMetadataObject(data.metadata),
+    };
+  }
+  const row = db.prepare("SELECT phone, name, role, metadata FROM contacts WHERE phone = ?").get(phone) as
+    | { phone: string; name: string | null; role: string; metadata: string | null }
+    | undefined;
+  if (!row) {
+    return null;
+  }
+  return {
+    phone: row.phone,
+    name: row.name ?? null,
+    role: normalizeContactRole(row.role),
+    metadata: parseMetadataObject(row.metadata),
+  };
+}
+
+async function upsertContact(input: {
+  phone: string;
+  name: string;
+  role: ContactRole;
+  metadata: Record<string, unknown>;
+}): Promise<ContactRecord> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { data, error } = await supabase
+      .from("contacts")
+      .upsert(
+        {
+          phone: input.phone,
+          name: input.name,
+          role: input.role,
+          metadata: input.metadata,
+        },
+        { onConflict: "phone" },
+      )
+      .select("*")
+      .single();
+    if (error) {
+      throw error;
+    }
+    return {
+      phone: data.phone,
+      name: data.name ?? null,
+      role: normalizeContactRole(data.role),
+      metadata: parseMetadataObject(data.metadata),
+    };
+  }
+  db.prepare(
+    `INSERT INTO contacts (phone, name, role, metadata)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(phone) DO UPDATE SET
+       name = excluded.name,
+       role = excluded.role,
+       metadata = excluded.metadata`,
+  ).run(input.phone, input.name, input.role, JSON.stringify(input.metadata ?? {}));
+  return {
+    phone: input.phone,
+    name: input.name,
+    role: input.role,
+    metadata: input.metadata,
+  };
+}
+
+async function insertConversationLog(input: {
+  phone: string;
+  role: ContactRole;
+  message: string;
+  sender: string;
+  timestamp: string;
+}): Promise<void> {
+  if (SUPABASE_ENABLED && supabase) {
+    const { error } = await supabase.from("conversations").insert({
+      phone: input.phone,
+      role: input.role,
+      message: input.message,
+      sender: input.sender,
+      timestamp: input.timestamp,
+    });
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+  db.prepare(
+    `INSERT INTO conversations (id, phone, role, message, sender, timestamp)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+  ).run(randomId("conv"), input.phone, input.role, input.message, input.sender, input.timestamp);
 }
 
 async function getUserByEmail(email: string): Promise<UserRow | undefined> {
@@ -1996,7 +2258,7 @@ function buildWhatsAppOnboardingPrompt(step: WhatsAppOnboardingStep, profile: Wo
     case "email":
       return 'What email should we use for recovery, billing, and admin updates? Reply "skip" if you want to add it later.';
     case "businessType":
-      return "Last quick one: what best describes you — independent broker, broker team, channel partner, or developer sales?";
+      return "Last quick one: what best describes you ï¿½ independent broker, broker team, channel partner, or developer sales?";
     case "done":
     default:
       return "You are all set.";
@@ -2852,3 +3114,7 @@ declare global {
     }
   }
 }
+
+
+
+
