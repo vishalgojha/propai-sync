@@ -1,0 +1,15 @@
+**/.git
+**/node_modules
+**/dist
+**/.turbo
+**/.cache
+**/.DS_Store
+**/.idea
+**/.vscode
+**/.agent
+**/.agents
+**/_incoming
+**/test-fixtures
+**/vendor
+**/docs-i18n.out.log
+**/docs-i18n.err.log
