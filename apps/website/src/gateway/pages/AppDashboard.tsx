@@ -523,6 +523,7 @@ export default function AppDashboard() {
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [setupWizardStep, setSetupWizardStep] = useState<SetupWizardStep>('account');
   const [androidSetup, setAndroidSetup] = useState<AndroidSetupResponse | null>(null);
+  const [showSecrets, setShowSecrets] = useState(false);
   const [androidQrCode, setAndroidQrCode] = useState<string | null>(null);
   const [androidSetupLoading, setAndroidSetupLoading] = useState(false);
   const [androidSetupError, setAndroidSetupError] = useState<string | null>(null);
@@ -2298,6 +2299,64 @@ export default function AppDashboard() {
                     {settingsError}
                   </div>
                 )}
+                {licensingEnabled && !licenseActive && (
+                  <div className="rounded-2xl border border-border bg-muted/30 p-5 space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="text-base font-bold">Activate your workspace</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Enter your admin-issued key to unlock setup. If you do not have one, request access and wait for approval.
+                      </p>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-[1.2fr_0.8fr]">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Activation key</label>
+                        <input
+                          type="text"
+                          value={activationKey}
+                          onChange={(event) => setActivationKey(event.target.value)}
+                          placeholder="propai_sync_..."
+                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Work email</label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(event) => setEmail(event.target.value)}
+                          placeholder="you@agency.com"
+                          className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        onClick={handleActivateTrial}
+                        disabled={isActivating}
+                        className="px-5 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-60"
+                      >
+                        {isActivating ? 'Activating...' : 'Activate now'}
+                      </button>
+                      <button
+                        onClick={handleRequestTrial}
+                        disabled={isRequesting}
+                        className="px-5 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent disabled:opacity-60"
+                      >
+                        {isRequesting ? 'Requesting...' : 'Request access'}
+                      </button>
+                    </div>
+                    {trialMessage && (
+                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-700">
+                        {trialMessage}
+                      </div>
+                    )}
+                    {trialError && (
+                      <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+                        {trialError}
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
 
               <section className="grid gap-6 xl:grid-cols-[1.45fr_0.55fr]">
@@ -2521,6 +2580,21 @@ export default function AppDashboard() {
                             />
                           </div>
                         </div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button
+                            onClick={saveTenantSettings}
+                            disabled={settingsSaving}
+                            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-60"
+                          >
+                            {settingsSaving ? 'Saving...' : 'Save WhatsApp settings'}
+                          </button>
+                          <button
+                            onClick={() => setSetupWizardStep('ai')}
+                            className="px-6 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
+                          >
+                            Continue to AI setup
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -2530,30 +2604,39 @@ export default function AppDashboard() {
                           Start with one provider only. OpenAI or Anthropic is enough for your first live test. You can add backup
                           providers later without changing the rest of the setup.
                         </div>
+                        <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/20 px-4 py-3">
+                          <p className="text-sm font-semibold">API keys</p>
+                          <button
+                            onClick={() => setShowSecrets((prev) => !prev)}
+                            className="text-xs font-semibold underline underline-offset-4"
+                          >
+                            {showSecrets ? 'Hide keys' : 'Show keys'}
+                          </button>
+                        </div>
                         <div className="grid md:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
                             <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenAI API key</label>
-                            <input type="password" value={settingsDraft.openaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openaiKey: event.target.value }))} placeholder={hasOpenAiKey ? 'Saved — enter to replace' : 'sk-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                            <input type={showSecrets ? 'text' : 'password'} value={settingsDraft.openaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openaiKey: event.target.value }))} placeholder={hasOpenAiKey ? 'Saved — enter to replace' : 'sk-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Anthropic API key</label>
-                            <input type="password" value={settingsDraft.anthropicKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, anthropicKey: event.target.value }))} placeholder={hasAnthropicKey ? 'Saved — enter to replace' : 'sk-ant-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                            <input type={showSecrets ? 'text' : 'password'} value={settingsDraft.anthropicKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, anthropicKey: event.target.value }))} placeholder={hasAnthropicKey ? 'Saved — enter to replace' : 'sk-ant-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">xAI API key (optional)</label>
-                            <input type="password" value={settingsDraft.xaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, xaiKey: event.target.value }))} placeholder={hasXaiKey ? 'Saved — enter to replace' : 'xai-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                            <input type={showSecrets ? 'text' : 'password'} value={settingsDraft.xaiKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, xaiKey: event.target.value }))} placeholder={hasXaiKey ? 'Saved — enter to replace' : 'xai-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Groq API key (optional)</label>
-                            <input type="password" value={settingsDraft.groqKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, groqKey: event.target.value }))} placeholder={hasGroqKey ? 'Saved — enter to replace' : 'gsk_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                            <input type={showSecrets ? 'text' : 'password'} value={settingsDraft.groqKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, groqKey: event.target.value }))} placeholder={hasGroqKey ? 'Saved — enter to replace' : 'gsk_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">OpenRouter API key (optional)</label>
-                            <input type="password" value={settingsDraft.openrouterKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openrouterKey: event.target.value }))} placeholder={hasOpenRouterKey ? 'Saved — enter to replace' : 'sk-or-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                            <input type={showSecrets ? 'text' : 'password'} value={settingsDraft.openrouterKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, openrouterKey: event.target.value }))} placeholder={hasOpenRouterKey ? 'Saved — enter to replace' : 'sk-or-...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">ElevenLabs API key (optional)</label>
-                            <input type="password" value={settingsDraft.elevenKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, elevenKey: event.target.value }))} placeholder={hasElevenKey ? 'Saved — enter to replace' : 'eleven_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                            <input type={showSecrets ? 'text' : 'password'} value={settingsDraft.elevenKey} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, elevenKey: event.target.value }))} placeholder={hasElevenKey ? 'Saved — enter to replace' : 'eleven_...'} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
                           </div>
                         </div>
                         <div className="grid md:grid-cols-2 gap-4">
@@ -2569,6 +2652,21 @@ export default function AppDashboard() {
                             <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Default model</label>
                             <input value={settingsDraft.chatModel} onChange={(event) => setSettingsDraft((prev) => ({ ...prev, chatModel: event.target.value }))} placeholder={resolveDefaultChatModel(settingsDraft.chatProvider)} className="w-full bg-accent/50 border border-border rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
                           </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button
+                            onClick={saveTenantSettings}
+                            disabled={settingsSaving}
+                            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-60"
+                          >
+                            {settingsSaving ? 'Saving...' : 'Save AI settings'}
+                          </button>
+                          <button
+                            onClick={() => setSetupWizardStep('automation')}
+                            className="px-6 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
+                          >
+                            Continue to Behaviors
+                          </button>
                         </div>
                       </div>
                     )}
@@ -2628,6 +2726,21 @@ export default function AppDashboard() {
                               );
                             })}
                           </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button
+                            onClick={saveTenantSettings}
+                            disabled={settingsSaving}
+                            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-60"
+                          >
+                            {settingsSaving ? 'Saving...' : 'Save behavior'}
+                          </button>
+                          <button
+                            onClick={() => setSetupWizardStep('launch')}
+                            className="px-6 py-3 rounded-xl border border-border text-sm font-semibold hover:bg-accent"
+                          >
+                            Continue to Launch
+                          </button>
                         </div>
                       </div>
                     )}
