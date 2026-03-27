@@ -31,3 +31,5 @@ export function createDefaultDeps(): Required<
     cwd: () => process.cwd(),
   };
 }
+
+export { createOutboundSendDeps } from "./outbound-send-deps.js";
