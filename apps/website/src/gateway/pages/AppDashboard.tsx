@@ -331,6 +331,10 @@ function formatDate(value?: string | null) {
   return parsed.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function isLikelyEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 function formatTimestamp(value?: number) {
   if (!value) {
     return 'â€”';
@@ -1299,10 +1303,17 @@ export default function AppDashboard() {
           setActivationKey((response as { token?: string }).token ?? '');
         }
         setTrialStatus('pending');
-        setTrialMessage(response.message ?? 'Trial request sent. Waiting for admin approval.');
+        setTrialMessage(response.message ?? 'Access request sent. Waiting for admin approval.');
       }
     } catch (error) {
-      setTrialError(normalizeError(error, 'We could not submit your trial request.'));
+      const normalized = normalizeError(error, 'We could not submit your access request.');
+      const lowered = normalized.toLowerCase();
+      if (lowered.includes('invalid request') || lowered.includes('message.startswith')) {
+        setTrialError('Access request flow is temporarily unavailable. Ask PropAI admin for an activation key and use Activate trial.');
+        setTrialDetails(normalized);
+        return;
+      }
+      setTrialError(normalized);
     } finally {
       setIsRequesting(false);
     }
@@ -1315,8 +1326,17 @@ export default function AppDashboard() {
       setTrialMessage('Licensing is disabled for this environment.');
       return;
     }
-    if (!activationKey.trim()) {
+    const trimmedKey = activationKey.trim();
+    if (!trimmedKey) {
       setTrialError('Please enter your activation key.');
+      setShowErrorDetails(false);
+      return;
+    }
+    if (isLikelyEmail(trimmedKey)) {
+      if (!email.trim()) {
+        setEmail(trimmedKey);
+      }
+      setTrialError('Activation key must be a key like propai_sync_..., not an email.');
       setShowErrorDetails(false);
       return;
     }
@@ -1326,7 +1346,7 @@ export default function AppDashboard() {
     setShowErrorDetails(false);
     try {
       const response = await apiPost<LicenseResponse>('/licensing/activate', {
-        token: activationKey.trim(),
+        token: trimmedKey,
         deviceId,
         appVersion: APP_VERSION,
         client: {
@@ -1339,7 +1359,7 @@ export default function AppDashboard() {
         const until = formatDate(response.expiresAt ?? null);
         setTrialMessage(until ? `Trial active until ${until}.` : 'Trial active.');
       } else if ((response.status ?? '') === 'pending') {
-        setTrialMessage('Trial request sent. Waiting for admin approval.');
+        setTrialMessage('Access request sent. Waiting for admin approval.');
       }
     } catch (error) {
       setTrialError(normalizeError(error, 'We could not activate this key.'));
@@ -1380,7 +1400,7 @@ export default function AppDashboard() {
         const until = formatDate(response.expiresAt ?? null);
         setTrialMessage(until ? `Trial active until ${until}.` : 'Trial active.');
       } else if ((response.status ?? '') === 'pending') {
-        setTrialMessage('Trial request sent. Waiting for admin approval.');
+        setTrialMessage('Access request sent. Waiting for admin approval.');
       }
     } catch (error) {
       setTrialError(normalizeError(error, 'We could not refresh this trial status.'));
@@ -1845,7 +1865,7 @@ export default function AppDashboard() {
               <div className="p-6 border-b border-border bg-muted/30">
                 <h2 className="text-lg font-bold">Trial access</h2>
                 <p className="text-sm text-muted-foreground">
-                  Request access first. We will review it by email, then you can come back and activate this desktop.
+                  Activate instantly with an admin-issued key. If you do not have one, submit an access request.
                 </p>
               </div>
               <div className="p-8 space-y-6">
@@ -1899,7 +1919,7 @@ export default function AppDashboard() {
                     disabled={isRequesting}
                     className="bg-primary text-primary-foreground px-6 py-3 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {isRequesting ? 'Requestingâ€¦' : 'Request trial'}
+                    {isRequesting ? 'Requestingâ€¦' : 'Request access'}
                   </button>
                   <button
                     onClick={handleRefreshStatus}
@@ -1949,7 +1969,7 @@ export default function AppDashboard() {
                 )}
 
                 <p className="text-xs text-muted-foreground">
-                  Approval happens by email. This screen can refresh your trial after approval.
+                  Admin approves requests and issues keys. Enter the key here to activate this desktop.
                 </p>
                 <Link to="/contact" className="text-xs font-medium text-primary hover:underline">Need help? Contact support</Link>
               </div>
@@ -2423,10 +2443,10 @@ export default function AppDashboard() {
                               <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 space-y-2 text-sm">
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Captured from WhatsApp</p>
                                 <p className="font-semibold">
-                                  {[tenantSettings.workspaceProfile.ownerName, tenantSettings.workspaceProfile.businessName].filter(Boolean).join(' · ') || 'Profile captured'}
+                                  {[tenantSettings.workspaceProfile.ownerName, tenantSettings.workspaceProfile.businessName].filter(Boolean).join(' | ') || 'Profile captured'}
                                 </p>
                                 <p className="text-muted-foreground">
-                                  {[tenantSettings.workspaceProfile.city, tenantSettings.workspaceProfile.businessType, tenantSettings.workspaceProfile.email].filter(Boolean).join(' · ')}
+                                  {[tenantSettings.workspaceProfile.city, tenantSettings.workspaceProfile.businessType, tenantSettings.workspaceProfile.email].filter(Boolean).join(' | ')}
                                 </p>
                               </div>
                             )}
@@ -3710,5 +3730,3 @@ function ZapIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-
-
