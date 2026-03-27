@@ -126,4 +126,4 @@ dist/protocol.schema.json
 # Synthing
 **/.stfolder/
 .dev-state
-
+.railway-gateway/
