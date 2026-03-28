@@ -41,10 +41,12 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const hasWebCredsSync = (() => {
   try {
+    return require("../../../dist/src/web/auth-store.js").hasWebCredsSync;
+  } catch {}
+  try {
     return require("../../../dist/web/auth-store.js").hasWebCredsSync;
-  } catch {
-    return require("../../../src/web/auth-store.js").hasWebCredsSync;
-  }
+  } catch {}
+  return require("../../../src/web/auth-store.js").hasWebCredsSync;
 })();
 import { sendCloudMedia, sendCloudText } from "./cloud.js";
 import { getWhatsAppRuntime } from "./runtime.js";
@@ -555,4 +557,3 @@ export const whatsappPlugin: ChannelPlugin<ResolvedWhatsAppAccount> = {
     },
   },
 };
-
